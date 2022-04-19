@@ -67,6 +67,9 @@ function tracegeodesics(
 end
 
 export tracegeodesics,
-    map_impact_parameters, AbstractAutoDiffStaticAxisSymmetricParams, metric_components
+    map_impact_parameters,
+    AbstractAutoDiffMetricParams,
+    AbstractAutoDiffStaticAxisSymmetricParams,
+    metric_components
 
 end # module

@@ -74,7 +74,7 @@ collision_callback(m::AbstractAccretionGeometry{T}) where {T} =
     (u, λ, integrator) -> intersects_geometry(m, line_element(u, integrator))
 
 
-export tracegeodesics,
-    rendergeodesics, prerendergeodesics, MeshAccretionGeometry, GeometricThinDisc
+export AbstractAccretionGeometry,
+    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc
 
 end # module

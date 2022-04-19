@@ -50,6 +50,6 @@ rms(M, a, ±) = M * (3 + Z₂(M, a) ± √((3 - Z₁(M, a)) * (3 + Z₁(M, a) + 
 rms(M, a) = a > 0.0 ? rms(M, a, -) : rms(M, a, +)
 
 
-export FirstOrderGeodesicPoint, BoyerLindquistFO
+export AbstractFirstOrderMetricParams, FirstOrderGeodesicPoint, BoyerLindquistFO
 
 end # module
