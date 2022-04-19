@@ -56,6 +56,14 @@ function renderprofile(
     __renderprofile(m, model, d, n_samples, (0.0, max_time); kwargs...)
 end
 
-export AbstractCoronaModel, tracegeodesics, renderprofile
+export AbstractCoronaModel,
+    LampPostModel,
+    tracegeodesics,
+    renderprofile,
+    LowerHemisphere,
+    BothHemispheres,
+    RandomSampler,
+    EvenSampler,
+    WeierstrassSampler
 
 end # module

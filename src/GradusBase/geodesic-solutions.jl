@@ -46,5 +46,3 @@ function get_endpoint(
 ) where {T,N,S}
     map(sol -> get_endpoint(m, sol), simsol)
 end
-
-export get_endpoint, GeodesicPoint

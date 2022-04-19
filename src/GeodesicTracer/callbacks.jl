@@ -10,7 +10,7 @@ end
 
 function create_callback_set(
     m::AbstractMetricParams{T},
-    cb::NTuple{N,SciMLBase.DECallback}
+    cb::NTuple{N,SciMLBase.DECallback},
 ) where {T,N}
     mcb = metric_callback(m)
     mcb isa Tuple ? CallbackSet(mcb..., cb...) : CallbackSet(mcb, cb...)

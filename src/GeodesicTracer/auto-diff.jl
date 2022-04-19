@@ -43,7 +43,7 @@ inv(metric)
             (g1 * g3 * g4 - (g5^2) * g3) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
             (g1 * g2 * g4 - (g5^2) * g2) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
             (g1 * g2 * g3) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
-            (-g2 * g3 * g5) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3)
+            (-g2 * g3 * g5) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
         )
     end
 end
@@ -109,11 +109,11 @@ jacobian = (j0, j1_mat, j2_mat, j0)
         -2(0.5ginv[4] * j1[4] + 0.5ginv[5] * j1[5]) * v[2] * v[4] -
         2(0.5ginv[4] * j2[4] + 0.5ginv[5] * j2[5]) * v[3] * v[4] -
         2(0.5ginv[5] * j1[1] + 0.5ginv[4] * j1[5]) * v[1] * v[2] -
-        2(0.5ginv[4] * j2[5] + 0.5ginv[5] * j2[1]) * v[1] * v[3]
+        2(0.5ginv[4] * j2[5] + 0.5ginv[5] * j2[1]) * v[1] * v[3],
     ]
 end
 
-@fastmath function constrain_time(g_comp, v, μ=0.0, positive::Bool = true)
+@fastmath function constrain_time(g_comp, v, μ = 0.0, positive::Bool = true)
     @inbounds begin
         discriminant = (
             -g_comp[1] * g_comp[2] * v[2]^2 - g_comp[1] * g_comp[3] * v[3]^2 -
@@ -127,16 +127,21 @@ end
     end
 end
 
-function constrain(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, u, v; μ::T = 0.0) where {T}
+function constrain(
+    m::AbstractAutoDiffStaticAxisSymmetricParams{T},
+    u,
+    v;
+    μ::T = 0.0,
+) where {T}
     rθ = @SVector [u[2], u[3]]
-    g_comps = metric_components(m, rθ) 
+    g_comps = metric_components(m, rθ)
     constrain_time(g_comps, v, μ)
 end
 
 @inbounds function geodesic_eq(
     m::AbstractAutoDiffStaticAxisSymmetricParams{T},
     u,
-    v
+    v,
 ) where {T}
     # get the only position components we need for this metric type
     rθ = @SVector [u[2], u[3]]
@@ -149,5 +154,3 @@ end
     # calculate acceleration
     compute_geodesic_equation(ginv_comps, jacs[:, 1], jacs[:, 2], v)
 end
-
-export AbstractAutoDiffStaticAxisSymmetricParams

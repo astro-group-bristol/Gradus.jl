@@ -48,7 +48,7 @@ function in_nearby_region(m::MeshAccretionGeometry{T}, line_element) where {T}
     p = line_element[2]
     @inbounds m.x_extent[1] < p[1] < m.x_extent[2] &&
               m.y_extent[1] < p[2] < m.y_extent[2] &&
-              m.z_extent[1] < p[3] < m.z_extent[2] 
+              m.z_extent[1] < p[3] < m.z_extent[2]
 end
 
 function has_intersect(m::MeshAccretionGeometry{T}, line_element) where {T}
@@ -66,6 +66,3 @@ end
 function collision_callback(m::MeshAccretionGeometry{T}) where {T}
     (u, λ, integrator) -> intersects_geometry(m, cartesian_line_element(u, integrator))
 end
-
-
-export MeshAccretionGeometry

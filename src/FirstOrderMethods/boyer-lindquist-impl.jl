@@ -1,4 +1,4 @@
-module CarterMethodBLCoords
+module BoyerLindquistFOCoords
 
 using ..FirstOrderMethods
 using DocStringExtensions

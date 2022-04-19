@@ -78,6 +78,3 @@ metric(m::AbstractMetricParams{T}, u) where {T} =
 #Evaluate the metric at a point `u`.
 #"""
 #metric(m::AbstractMetric{T}, u) where {T} = error("Not implemented for metric $(typeof(m))")
-
-export AbstractMetricParams,
-    geodesic_eq, geodesic_eq!, constrain, on_chart, inner_radius, metric_type

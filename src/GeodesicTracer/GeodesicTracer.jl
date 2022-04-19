@@ -50,7 +50,7 @@ function tracegeodesics(
     time_domain::Tuple{T,T};
     solver = Tsit5(),
     μ = 0.0,
-    solver_opts...
+    solver_opts...,
 ) where {T}
     __tracegeodesics(
         m,
@@ -62,10 +62,11 @@ function tracegeodesics(
         callback = nothing,
         abstol = 1e-8,
         reltol = 1e-8,
-        solver_opts...
+        solver_opts...,
     )
 end
 
-export tracegeodesics
+export tracegeodesics,
+    map_impact_parameters, AbstractAutoDiffStaticAxisSymmetricParams, metric_components
 
 end # module

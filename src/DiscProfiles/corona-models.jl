@@ -36,5 +36,3 @@ function sample_velocity(
         @SVector [T(0.0), r, t, p]
     end
 end
-
-export LampPostModel

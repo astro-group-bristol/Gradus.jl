@@ -51,5 +51,3 @@ function sample_elevation(sm::WeierstrassSampler{BothHemispheres}, i)
 end
 sample_angles(sm::WeierstrassSampler{D}, i, N) where {D} =
     (sample_elevation(sm, i), sample_azimuth(sm, i))
-
-export LowerHemisphere, BothHemispheres, RandomSampler, EvenSampler, WeierstrassSampler

@@ -15,13 +15,13 @@ function flip_angular_sign!(integrator)
     integrator.sol.prob.p.changes[2] = integrator.t[end]
 end
 
-function radial_negative_check(m::CarterMethodBL{T}) where {T}
+function radial_negative_check(m::BoyerLindquistFO{T}) where {T}
     (u, λ, integrator) -> begin
         Vr(m, u, integrator.p) < 0
     end
 end
 
-function angular_negative_check(m::CarterMethodBL{T}) where {T}
+function angular_negative_check(m::BoyerLindquistFO{T}) where {T}
     (u, λ, integrator) -> begin
         Vθ(m, u, integrator.p) < 0
     end

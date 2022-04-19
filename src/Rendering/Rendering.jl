@@ -54,9 +54,8 @@ function prerendergeodesics(
 end
 
 
-export (
-    rendergeodesics, prerendergeodesics,
-    PointFunction, FilterPointFunction, ConstPointFunctions
-)
+export rendergeodesics,
+    prerendergeodesics, PointFunction, FilterPointFunction, ConstPointFunctions
+
 
 end # module

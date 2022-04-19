@@ -3,7 +3,7 @@ function constrain_all(
     m::AbstractMetricParams{T},
     us::AbstractArray{T,2},
     vs::AbstractArray{T,2},
-    μ
+    μ,
 ) where {T<:Number}
     us_cols = eachcol(us)
     vs_cols = eachcol(vs)
@@ -17,7 +17,7 @@ function constrain_all(
     m::AbstractMetricParams{T},
     us::SMatrix{4,M,T,L},
     vs::SMatrix{4,M,T,L},
-    μ
+    μ,
 ) where {M,T<:Number,L}
     alloc_vs = constrain_all(m, us, similar(vs), μ)
     SMatrix{4,M}(alloc_vs)
@@ -33,7 +33,7 @@ function constrain_all(
     m::AbstractMetricParams{T},
     u::AbstractVector{T},
     v::AbstractVector{T},
-    μ
+    μ,
 ) where {T<:Number}
     v[1] = constrain(m, u, v, μ = μ)
     v
@@ -43,7 +43,7 @@ function constrain_all(
     m::AbstractMetricParams{T},
     u::StaticVector{S,T},
     v::StaticVector{S,T},
-    μ
+    μ,
 ) where {S,T<:Number}
     mut = MVector{S,T}(v)
     mut[1] = constrain(m, u, v, μ = μ)

@@ -20,5 +20,3 @@ function has_intersect(d::GeometricThinDisc{T}, line_element) where {T}
 
     s1 * s2 ≤ 0
 end
-
-export GeometricThinDisc

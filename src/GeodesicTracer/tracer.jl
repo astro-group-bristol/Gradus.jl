@@ -6,7 +6,7 @@ function __tracegeodesics(
     time_domain::Tuple{T,T},
     solver;
     callback,
-    kwargs...
+    kwargs...,
 ) where {T}
     prob = integrator_problem(m, init_pos, init_vel, time_domain)
     cbs = create_callback_set(m, callback)
@@ -22,13 +22,13 @@ function __tracegeodesics(
     solver;
     ensemble = EnsembleThreads(),
     callback,
-    kwargs...
+    kwargs...,
 ) where {T}
     prob = integrator_problem(
         m,
         @view(init_positions[:, 1]),
         @view(init_velocities[:, 1]),
-        time_domain
+        time_domain,
     )
     ens_prob = EnsembleProblem(
         prob,
@@ -36,9 +36,9 @@ function __tracegeodesics(
             m,
             @view(init_positions[:, i]),
             @view(init_velocities[:, i]),
-            time_domain
+            time_domain,
         ),
-        safetycopy = false
+        safetycopy = false,
     )
 
     cbs = create_callback_set(m, callback)
@@ -48,7 +48,7 @@ function __tracegeodesics(
         ensemble;
         trajectories = size(init_velocities, 2),
         callback = cbs,
-        kwargs...
+        kwargs...,
     )
 end
 
@@ -61,14 +61,14 @@ function __tracegeodesics(
     solver;
     ensemble = EnsembleThreads(),
     callback,
-    kwargs...
+    kwargs...,
 ) where {T}
     prob = integrator_problem(m, init_positions[1], init_velocities[1], time_domain)
     ens_prob = EnsembleProblem(
         prob,
         prob_func = (prob, i, repeat) ->
             integrator_problem(m, init_positions[i], init_velocities[i], time_domain),
-        safetycopy = false
+        safetycopy = false,
     )
 
     cbs = create_callback_set(m, callback)
@@ -78,7 +78,7 @@ function __tracegeodesics(
         ensemble;
         trajectories = length(init_velocities),
         callback = cbs,
-        kwargs...
+        kwargs...,
     )
 end
 

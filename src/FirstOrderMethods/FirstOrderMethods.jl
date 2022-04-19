@@ -28,8 +28,8 @@ import ..GeodesicTracer:
 
 abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 
-include("carter-method-bl-impl.jl")
-include("carter-method-bl-interface.jl")
+include("boyer-lindquist-impl.jl")
+include("boyer-lindquist.jl")
 include("implementation.jl")
 include("callbacks.jl")
 
@@ -48,5 +48,8 @@ The choice of ``\\pm`` is chosen by the sign of ``a``.
 """
 rms(M, a, ±) = M * (3 + Z₂(M, a) ± √((3 - Z₁(M, a)) * (3 + Z₁(M, a) + 2 * Z₂(M, a))))
 rms(M, a) = a > 0.0 ? rms(M, a, -) : rms(M, a, +)
+
+
+export FirstOrderGeodesicPoint, BoyerLindquistFO
 
 end # module
