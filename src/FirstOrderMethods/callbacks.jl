@@ -1,4 +1,4 @@
-function ensure_domain(m::AbstractMetricParams{T}) where {T}
+function ensure_domain(m::AbstractFirstOrderMetricParams{T}) where {T}
     min_r = inner_radius(m)
     (u, λ, integrator) -> u[2] ≤ min_r * 1.1 || u[2] > 1200.0
 end
@@ -15,14 +15,10 @@ function flip_angular_sign!(integrator)
     integrator.sol.prob.p.changes[2] = integrator.t[end]
 end
 
-function radial_negative_check(m::BoyerLindquistFO{T}) where {T}
-    (u, λ, integrator) -> begin
-        Vr(m, u, integrator.p) < 0
-    end
+function radial_negative_check(m::AbstractFirstOrderMetricParams{T}) where {T}
+    (u, λ, integrator) -> Vr(m, u, integrator.p) < 0
 end
 
-function angular_negative_check(m::BoyerLindquistFO{T}) where {T}
-    (u, λ, integrator) -> begin
-        Vθ(m, u, integrator.p) < 0
-    end
+function angular_negative_check(m::AbstractFirstOrderMetricParams{T}) where {T}
+    (u, λ, integrator) -> Vθ(m, u, integrator.p) < 0
 end

@@ -28,8 +28,6 @@ import ..GeodesicTracer:
 
 abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 
-include("boyer-lindquist-impl.jl")
-include("boyer-lindquist.jl")
 include("implementation.jl")
 include("callbacks.jl")
 

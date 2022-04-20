@@ -14,6 +14,9 @@ using .Rendering
 using .AccretionGeometry
 using .DiscProfiles
 
+using StaticArrays
+using Parameters
+using DocStringExtensions
 
 # GradusBase
 export AbstractMetricParams,
@@ -59,5 +62,10 @@ export AbstractCoronaModel,
     EvenSampler,
     WeierstrassSampler
 
+
+# pre-defined metrics
+include("metrics/metrics.jl")
+
+export BoyerLindquistAD, BoyerLindquistFO, JohannsenAD, MorrisThorneAD
 
 end # module
