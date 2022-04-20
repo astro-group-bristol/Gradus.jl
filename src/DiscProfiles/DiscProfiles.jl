@@ -47,9 +47,9 @@ end
 function renderprofile(
     m::AbstractMetricParams{T},
     model::AbstractCoronaModel{T},
-    max_time::T,
-    d::AbstractAccretionGeometry{T};
-    n_samples = 2048,
+    d::AbstractAccretionGeometry{T},
+    max_time::T;
+    n_samples = 1024,
     sampler = WeierstrassSampler(res = 100.0),
     kwargs...,
 ) where {T}
@@ -58,7 +58,6 @@ end
 
 export AbstractCoronaModel,
     LampPostModel,
-    tracegeodesics,
     renderprofile,
     LowerHemisphere,
     BothHemispheres,

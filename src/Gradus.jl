@@ -54,7 +54,6 @@ export AbstractAccretionGeometry,
 # DiscProfiles
 export AbstractCoronaModel,
     LampPostModel,
-    tracegeodesics,
     renderprofile,
     LowerHemisphere,
     BothHemispheres,
