@@ -30,7 +30,7 @@ xfm_backward(ddp::DelaunayDiscProfile{T}, p) where {T} =
 function __renderprofile(
     m::AbstractMetricParams{T},
     model::AbstractCoronaModel{T},
-    d::AbstractAccretionGeometry{T}N,
+    d::AbstractAccretionGeometry{T},
     time_domain;
     sampler,
     kwargs...,
@@ -43,7 +43,7 @@ end
 function __renderprofile(
     m::AbstractMetricParams{T},
     model::AbstractCoronaModel{T},
-    d::GeometricThinDisc{T}N,
+    d::GeometricThinDisc{T},
     time_domain;
     sampler,
     kwargs...,
