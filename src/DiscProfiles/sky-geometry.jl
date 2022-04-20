@@ -3,45 +3,54 @@ abstract type AbstractSkyDomain end
 struct LowerHemisphere <: AbstractSkyDomain end
 struct BothHemispheres <: AbstractSkyDomain end
 
-abstract type AbstractDirectionSampler{AbstractSkyDomain} end
+abstract type AbstractGenerator end
 
-struct RandomSampler{D} <: AbstractDirectionSampler{D}
-    RandomSampler(domain::AbstractSkyDomain) = new{domain}()
-    RandomSampler(; domain::AbstractSkyDomain = LowerHemisphere()) = new{typeof(domain)}()
+struct RandomGenerator <: AbstractGenerator end
+struct GoldenSpiralGenerator <: AbstractGenerator end
+
+abstract type AbstractDirectionSampler{AbstractSkyDomain,AbstractGenerator} end
+
+struct EvenSampler{D,G} <: AbstractDirectionSampler{D,G}
+    EvenSampler(domain::AbstractSkyDomain, generator::AbstractGenerator) =
+        new{typeof(domain),typeof(generator)}()
+    EvenSampler(;
+        domain::AbstractSkyDomain = LowerHemisphere(),
+        generator::AbstractGenerator = GoldenSpiralGenerator(),
+    ) = EvenSampler(domain, generator)
 end
-struct EvenSampler{D} <: AbstractDirectionSampler{D}
-    EvenSampler(domain::AbstractSkyDomain) = new{domain}()
-    EvenSampler(; domain::AbstractSkyDomain = LowerHemisphere()) = new{typeof(domain)}()
-end
-struct WeierstrassSampler{D} <: AbstractDirectionSampler{D}
+struct WeierstrassSampler{D,G} <: AbstractDirectionSampler{D,G}
     resolution::Float64
-    WeierstrassSampler(res, domain::AbstractSkyDomain) = new{typeof(domain)}(res)
-    WeierstrassSampler(; res = 100.0, domain::AbstractSkyDomain = LowerHemisphere()) =
-        WeierstrassSampler(res, domain)
+    WeierstrassSampler(res, domain::AbstractSkyDomain, generator::AbstractGenerator) =
+        new{typeof(domain),typeof(generator)}(res)
+    WeierstrassSampler(;
+        res = 100.0,
+        domain::AbstractSkyDomain = LowerHemisphere(),
+        generator::AbstractGenerator = GoldenSpiralGenerator(),
+    ) = WeierstrassSampler(res, domain, generator)
 end
 
-sample_azimuth(sm::AbstractDirectionSampler{D}, i) where {D} =
-    error("Not implemented for $(typeof(sm)).")
-sample_elevation(sm::AbstractDirectionSampler{D}, i) where {D} =
-    error("Not implemented for $(typeof(sm)).")
-sample_angles(sm::AbstractDirectionSampler{D}, i, N) where {D} =
+@inline geti(::AbstractDirectionSampler{D,RandomGenerator}, i, N) where {D} =
+    rand(Float64) * N
+@inline geti(::AbstractDirectionSampler{D,G}, i, N) where {D,G} = i
+
+@inline sample_azimuth(::AbstractDirectionSampler{D,GoldenSpiralGenerator}, i) where {D} =
+    π * (1 + √5) * i
+@inline sample_azimuth(::AbstractDirectionSampler{D,G}, i) where {D,G} = 2π * i
+
+
+sample_angles(sm::AbstractDirectionSampler{D,G}, i, N) where {D,G} =
     (sample_elevation(sm, i / N), sample_azimuth(sm, i))
+@inline sample_angles(sm::WeierstrassSampler{D}, i, N) where {D} =
+    (sample_elevation(sm, i), sample_azimuth(sm, i))
 
-# even
-sample_azimuth(::RandomSampler{D}, i) where {D} = rand(Float64) * 2π
-sample_elevation(::RandomSampler{LowerHemisphere}, i) = acos(1 - rand(Float64))
-sample_elevation(::RandomSampler{BothHemispheres}, i) = acos(1 - 2 * rand(Float64))
 
-# even
-sample_azimuth(::EvenSampler{D}, i) where {D} = π * (1 + √5) * i
-sample_elevation(::EvenSampler{LowerHemisphere}, i) = acos(1 - i)
-sample_elevation(::EvenSampler{BothHemispheres}, i) = acos(1 - 2i)
-
-# uniform
-sample_azimuth(::WeierstrassSampler{D}, i) where {D} = π * (1 + √5) * i
-sample_elevation(sm::WeierstrassSampler{LowerHemisphere}, i) =
+sample_elevation(sm::AbstractDirectionSampler{D,G}, i) where {D,G} =
+    error("Not implemented for $(typeof(sm)).")
+@inline sample_elevation(::EvenSampler{LowerHemisphere}, i) = acos(1 - i)
+@inline sample_elevation(::EvenSampler{BothHemispheres}, i) = acos(1 - 2i)
+@inline sample_elevation(sm::WeierstrassSampler{LowerHemisphere}, i) =
     π - 2atan(√(sm.resolution / i))
-function sample_elevation(sm::WeierstrassSampler{BothHemispheres}, i)
+@inline function sample_elevation(sm::WeierstrassSampler{BothHemispheres}, i)
     ϕ = 2atan(√(sm.resolution / i))
     if iseven(i)
         ϕ
@@ -49,5 +58,3 @@ function sample_elevation(sm::WeierstrassSampler{BothHemispheres}, i)
         π - ϕ
     end
 end
-sample_angles(sm::WeierstrassSampler{D}, i, N) where {D} =
-    (sample_elevation(sm, i), sample_azimuth(sm, i))

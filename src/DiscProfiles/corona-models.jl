@@ -22,9 +22,11 @@ function sample_velocity(
     us,
     N,
 ) where {T}
-    map(1:N) do i
+    map(1:N) do index
+        # todo: sampler should have proper iterator interface
+        i = geti(sampler, index, N)
         θ, ϕ = sample_angles(sampler, i, N)
-        r, t, p = vector_to_local_sky(m, us[i], θ, ϕ)
+        r, t, p = vector_to_local_sky(m, us[index], θ, ϕ)
         @SVector [T(0.0), r, t, p]
     end
 end

@@ -58,10 +58,10 @@ export AbstractCoronaModel,
     renderprofile,
     LowerHemisphere,
     BothHemispheres,
-    RandomSampler,
     EvenSampler,
-    WeierstrassSampler
-
+    WeierstrassSampler,
+    RandomGenerator,
+    GoldenSpiralGenerator
 
 # pre-defined metrics
 include("metrics/metrics.jl")

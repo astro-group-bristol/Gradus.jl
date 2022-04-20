@@ -46,6 +46,7 @@ function convert_angles(a, r, θ, ϕ, θ_obs, ϕ_obs)
     -o1 / sigma, -o2 / sigma, o3 / R
 end
 
+# for disc profile models
 function GradusBase.vector_to_local_sky(m::BoyerLindquistAD{T}, u, θ, ϕ) where {T}
     convert_angles(m.a, u[2], u[3], u[4], θ, ϕ)
 end

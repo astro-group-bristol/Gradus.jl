@@ -62,8 +62,10 @@ export AbstractCoronaModel,
     renderprofile,
     LowerHemisphere,
     BothHemispheres,
-    RandomSampler,
     EvenSampler,
-    WeierstrassSampler
+    WeierstrassSampler,
+    RandomGenerator,
+    GoldenSpiralGenerator
+
 
 end # module
