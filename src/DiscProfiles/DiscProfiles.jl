@@ -7,7 +7,7 @@ import StaticArrays: @SVector
 
 import ..GradusBase: AbstractMetricParams
 import ..GeodesicTracer: tracegeodesics
-import ..AccretionGeometry: AbstractAccretionGeometry, tracegeodesics
+import ..AccretionGeometry: AbstractAccretionGeometry
 
 import GeometricalPredicates: Point2D, getx, gety, geta, getb, getc
 

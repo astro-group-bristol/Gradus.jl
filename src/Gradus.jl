@@ -68,4 +68,10 @@ include("metrics/metrics.jl")
 
 export BoyerLindquistAD, BoyerLindquistFO, JohannsenAD, MorrisThorneAD
 
+# downstream modules and work
+include("special-radii.jl")
+include("AccretionFormulae/AccretionFormulae.jl")
+
+export redshift
+
 end # module
