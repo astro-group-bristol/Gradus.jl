@@ -1,6 +1,6 @@
 # Gradus.jl
 
-A spacetime generic relativistic ray tracing toolkit, leveraging AD and CAS, capable of calculating reverberations lags around accreting black holes and observational signatures.
+A spacetime generic relativistic ray tracing toolkit, leveraging AD and CAS, capable of calculating reverberation lags around accreting black holes and observational signatures.
 
 <p align="center"> <i> This package is in development. Please see the documentation.</i> </p>
 
