@@ -23,4 +23,4 @@ end
 # implementation
 GeodesicTracer.metric_components(m::MorrisThorneAD{T}, rθ) where {T} =
     __MorrisThorneAD.metric_components(m.b, rθ)
-GradusBase.inner_radius(m::MorrisThorneAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+GradusBase.inner_radius(m::MorrisThorneAD{T}) where {T} = 0.0

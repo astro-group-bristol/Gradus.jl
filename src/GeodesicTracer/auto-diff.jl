@@ -90,7 +90,7 @@ jacobian = (j0, j1_mat, j2_mat, j0)
 @tullio δxδλ[i] := -v[j] * Γ[i, j, k] * v[k]
 ```
 """
-@fastmath function compute_geodesic_equation(ginv, j1, j2, v::SVector{4,T}) where {T}
+@fastmath function compute_geodesic_equation(ginv, j1, j2, v::AbstractArray{T}) where {T}
     @inbounds @SVector [
         -2(0.5ginv[5] * j1[4] + 0.5ginv[1] * j1[5]) * v[2] * v[4] -
         2(0.5ginv[1] * j1[1] + 0.5ginv[5] * j1[5]) * v[1] * v[2] -

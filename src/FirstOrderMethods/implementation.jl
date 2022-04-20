@@ -18,7 +18,7 @@ function get_endpoint(
 ) where {T,N,S}
     us, ts, p = unpack_solution(sol)
     u = us[end]
-    v = four_velocity(u, m.E, m.M, m.a, p)
+    v = four_velocity(u, m, p)
     t = ts[end]
     FirstOrderGeodesicPoint(sol.retcode, t, u, convert_velocity_type(u, v), p)
 end

@@ -19,7 +19,7 @@ function rendergeodesics(
     m::AbstractMetricParams{T},
     init_pos,
     max_time;
-    vf = ConstValueFunctions.shadow,
+    pf = ConstPointFunctions.shadow,
     kwargs...,
 ) where {T}
     __rendergeodesics(
@@ -29,7 +29,7 @@ function rendergeodesics(
         image_height = 250,
         fov_factor = 3.0,
         max_time = convert(T, max_time),
-        vf = vf,
+        pf = pf,
         kwargs...,
     )
 end

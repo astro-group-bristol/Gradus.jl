@@ -147,7 +147,8 @@ function render_into_image!(
     image_height,
     fov_factor,
     max_time,
-    vf,
+    pf,
+    verbose=true,
     solver_opts...,
 ) where {T}
     y_mid = image_height ÷ 2
@@ -164,17 +165,19 @@ function render_into_image!(
 
         # do the render
         simsols =
-            tracegeodesics(m, us, vs, (T(0.0), max_time); save_on = false, solver_opts...)
-        apply_to_location!(m, @view(image[Y, :]), simsols, vf, max_time)
+            tracegeodesics(m, us, vs, (T(0.0), max_time); save_on = false, verbose = verbose, solver_opts...)
+        apply_to_location!(m, @view(image[Y, :]), simsols, pf, max_time)
 
-        println("+ $Y / $image_height ...")
+        if verbose
+            println("+ $Y / $image_height ...")
+        end
     end
 
     image
 end
 
-function apply_to_location!(m::AbstractMetricParams{T}, loc, sols, vf, max_time) where {T}
+function apply_to_location!(m::AbstractMetricParams{T}, loc, sols, pf, max_time) where {T}
     @threads for i = 1:length(sols)
-        loc[i] = vf(m, get_endpoint(m, sols[i]), max_time)
+        loc[i] = pf(m, get_endpoint(m, sols[i]), max_time)
     end
 end

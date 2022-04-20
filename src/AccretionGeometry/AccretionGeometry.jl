@@ -19,8 +19,8 @@ function tracegeodesics(
     m::AbstractMetricParams{T},
     init_positions,
     init_velocities,
-    time_domain::Tuple{T,T},
-    accretion_geometry;
+    accretion_geometry,
+    time_domain::Tuple{T,T};
     callback = nothing,
     kwargs...,
 ) where {T}
@@ -38,8 +38,8 @@ end
 function rendergeodesics(
     m::AbstractMetricParams{T},
     init_pos,
-    max_time::T,
-    accretion_geometry;
+    accretion_geometry,
+    max_time::T;
     callback = nothing,
     kwargs...,
 ) where {T}
@@ -50,8 +50,8 @@ end
 function prerendergeodesics(
     m::AbstractMetricParams{T},
     init_pos,
-    max_time::T,
-    accretion_geometry;
+    accretion_geometry,
+    max_time::T;
     callback = nothing,
     kwargs...,
 ) where {T}
