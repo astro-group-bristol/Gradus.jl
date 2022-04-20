@@ -31,8 +31,8 @@ end
 function tracegeodesics(
     m::AbstractMetricParams{T},
     model::AbstractCoronaModel{T},
-    time_domain::Tuple{T,T},
     d::AbstractAccretionGeometry{T},
+    time_domain::Tuple{T,T},
     ;
     n_samples = 1024,
     sampler = WeierstrassSampler(res = 100.0),
