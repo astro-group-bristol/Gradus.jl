@@ -1,0 +1,19 @@
+name = "Gradus"
+uuid = "c5b7b928-ea15-451c-ad6f-a331a0f3e4b7"
+authors = ["fjebaker <fergusbkr@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
+DiffEqCallbacks = "459566f4-90b8-5000-8ac3-15dfb0a30def"
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+GeometricalPredicates = "fd0ad045-b25c-564e-8f9c-8ef5c5f21267"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
