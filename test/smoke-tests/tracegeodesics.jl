@@ -41,11 +41,9 @@ using Test, Gradus, StaticArrays
     @testset "corona-models" begin
         # only implemented for BoyerLindquistAD at the moment
         # because of the vector to local sky methods
-        m = BoyerLindquistAD(M=1.0, a=0.0)
-        d = GeometricThinDisc(
-            Gradus.isco(m), 50.0, deg2rad(90.0)
-        )
-        model = LampPostModel(h = 10.0, θ=deg2rad(0.001))
+        m = BoyerLindquistAD(M = 1.0, a = 0.0)
+        d = GeometricThinDisc(Gradus.isco(m), 50.0, deg2rad(90.0))
+        model = LampPostModel(h = 10.0, θ = deg2rad(0.001))
 
         for Sampler in [EvenSampler, WeierstrassSampler],
             Generator in [GoldenSpiralGenerator, RandomGenerator],
@@ -55,10 +53,10 @@ using Test, Gradus, StaticArrays
                 m,
                 model,
                 (0.0, 200.0),
-                n_samples=32,
+                n_samples = 32,
                 d;
-                save_on=false,
-                sampler=Sampler(generator=Generator(), domain=Hemisphere())
+                save_on = false,
+                sampler = Sampler(generator = Generator(), domain = Hemisphere()),
             )
             # smoke test passed
             @test true
