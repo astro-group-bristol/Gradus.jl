@@ -322,6 +322,18 @@ function four_velocity(u, E, M, a, p)
         )
     end
 end
+
+"""
+From Bardeen et al. (1972) eq. (2.21):
+
+```math
+r_\\text{ms} = M \\left\\{ 3 + Z_2 \\pm \\sqrt{(3 - Z_1)(3 + Z_1 + 2 Z_2)} \\right\\}.
+```
+
+The choice of ``\\pm`` is chosen by the sign of ``a``.
+"""
+isco(M, a, ±) = M * (3 + Z₂(M, a) ± √((3 - Z₁(M, a)) * (3 + Z₁(M, a) + 2 * Z₂(M, a))))
+isco(M, a) = a > 0.0 ? isco(M, a, -) : isco(M, a, +)
 end # module 
 
 @with_kw struct BoyerLindquistFO{T} <: AbstractFirstOrderMetricParams{T}
@@ -352,3 +364,6 @@ function GeodesicTracer.alpha_beta_to_vel(m::BoyerLindquistFO{T}, u, α, β) whe
     sinΦ, sinΨ = __BoyerLindquistFO.sinΦsinΨ(m.M, u[2], m.a, u[3], α, β)
     (β < 0.0 ? -1.0 : 1.0, sinΦ, sinΨ)
 end
+
+# special radii
+isco(m::BoyerLindquistFO{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)

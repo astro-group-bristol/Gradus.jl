@@ -49,3 +49,6 @@ end
 function GradusBase.vector_to_local_sky(m::BoyerLindquistAD{T}, u, θ, ϕ) where {T}
     convert_angles(m.a, u[2], u[3], u[4], θ, ϕ)
 end
+
+# special radii
+isco(m::BoyerLindquistAD{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)

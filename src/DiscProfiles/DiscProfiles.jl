@@ -5,7 +5,7 @@ using Parameters
 import StaticArrays: @SVector
 
 
-import ..GradusBase: AbstractMetricParams
+import ..GradusBase: AbstractMetricParams, vector_to_local_sky
 import ..GeodesicTracer: tracegeodesics
 import ..AccretionGeometry: AbstractAccretionGeometry
 
@@ -40,7 +40,7 @@ function tracegeodesics(
 ) where {T}
     us = sample_position(m, model, n_samples)
     vs = sample_velocity(m, model, sampler, us, n_samples)
-    tracegeodesics(m, us, vs, time_domain, d; kwargs...)
+    tracegeodesics(m, us, vs, d, time_domain; kwargs...)
 end
 
 

@@ -2,14 +2,6 @@ abstract type AbstractCoronaModel{T} end
 
 sample_position(m::AbstractMetricParams{T}, model::AbstractCoronaModel{T}, N) where {T} =
     error("Not implemented for $(typeof(model)).")
-sample_velocity(
-    m::AbstractMetricParams{T},
-    model::AbstractCoronaModel{T},
-    sampler::AbstractDirectionSampler,
-    us,
-    N,
-) where {T} = error("Not implemented for $(typeof(model)).")
-
 
 @with_kw struct LampPostModel{T} <: AbstractCoronaModel{T}
     @deftype T
