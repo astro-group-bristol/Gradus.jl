@@ -21,7 +21,7 @@ using Test, Gradus, StaticArrays
                 verbose = false,
             )
             image_fingerprint = sum(filter(!isnan, img))
-            @test isapprox(expectation, image_fingerprint; atol=1.0, rtol=0.0)
+            @test isapprox(expectation, image_fingerprint; atol = 1.0, rtol = 0.0)
         end
     end
 
@@ -44,8 +44,8 @@ using Test, Gradus, StaticArrays
                 image_height = 50,
                 verbose = false,
             )
-            image_fingerprint = sum(filter(!isnan, img)) 
-            @test isapprox(expectation, image_fingerprint; atol=1.0, rtol=0.0)
+            image_fingerprint = sum(filter(!isnan, img))
+            @test isapprox(expectation, image_fingerprint; atol = 1.0, rtol = 0.0)
         end
     end
 
