@@ -52,9 +52,9 @@ using Test, Gradus, StaticArrays
             simsols = tracegeodesics(
                 m,
                 model,
-                (0.0, 200.0),
+                d,
+                (0.0, 200.0);
                 n_samples = 32,
-                d;
                 save_on = false,
                 sampler = Sampler(generator = Generator(), domain = Hemisphere()),
             )
