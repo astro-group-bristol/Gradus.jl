@@ -148,7 +148,7 @@ function render_into_image!(
     fov_factor,
     max_time,
     pf,
-    verbose=true,
+    verbose = true,
     solver_opts...,
 ) where {T}
     y_mid = image_height ÷ 2
@@ -164,8 +164,15 @@ function render_into_image!(
         calculate_velocities!(vs, m, init_pos, α_generator_row, β)
 
         # do the render
-        simsols =
-            tracegeodesics(m, us, vs, (T(0.0), max_time); save_on = false, verbose = verbose, solver_opts...)
+        simsols = tracegeodesics(
+            m,
+            us,
+            vs,
+            (T(0.0), max_time);
+            save_on = false,
+            verbose = verbose,
+            solver_opts...,
+        )
         apply_to_location!(m, @view(image[Y, :]), simsols, pf, max_time)
 
         if verbose
