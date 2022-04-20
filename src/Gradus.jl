@@ -45,7 +45,7 @@ export AbstractFirstOrderMetricParams, FirstOrderGeodesicPoint, BoyerLindquistFO
 
 # Rendering
 export rendergeodesics,
-    prerendergeodesics, PointFunction, FilterPointFunction, ConstPointFunctions
+    prerendergeodesics, PointFunction, FilterPointFunction, ConstPointFunctions, apply
 
 # AccretionGeometry
 export AbstractAccretionGeometry,
