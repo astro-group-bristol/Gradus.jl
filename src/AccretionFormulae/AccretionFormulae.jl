@@ -1,10 +1,15 @@
 module AccretionFormulae
 
-using ..GradusBase: AbstractMetricParams
+import ..Gradus
+import ..GradusBase: AbstractMetricParams, metric
+
 using ..FirstOrderMethods: FirstOrderGeodesicPoint
-using ..Gradus
 using ..Rendering: PointFunction
 
 include("redshift.jl")
+
+const redshift = PointFunction(_redshift_guard)
+
+export redshift
 
 end # module

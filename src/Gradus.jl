@@ -70,8 +70,10 @@ export BoyerLindquistAD, BoyerLindquistFO, JohannsenAD, MorrisThorneAD
 
 # downstream modules and work
 include("special-radii.jl")
+
 include("AccretionFormulae/AccretionFormulae.jl")
 
+using .AccretionFormulae
 export redshift
 
 end # module

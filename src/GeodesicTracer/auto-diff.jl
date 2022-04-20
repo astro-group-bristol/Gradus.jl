@@ -154,3 +154,15 @@ end
     # calculate acceleration
     compute_geodesic_equation(ginv_comps, jacs[:, 1], jacs[:, 2], v)
 end
+
+
+function metric(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, u) where {T}
+    rθ = @SVector [u[2], u[3]]
+    comps = metric_components(m, rθ)
+    @SMatrix [
+        comps[1] 0 0 comps[5]
+        0 comps[2] 0 0
+        0 0 comps[3] 0
+        comps[5] 0 0 comps[4]
+    ]
+end

@@ -1,5 +1,7 @@
 module RedshiftFunctions
-using ..Gradus
+import ..AccretionFormulae.Gradus
+import ..AccretionFormulae.Gradus: __BoyerLindquistFO
+import ..AccretionFormulae: AbstractMetricParams, metric
 using StaticArrays
 using Tullio: @tullio
 
@@ -153,22 +155,18 @@ function regular_pdotu_inv(L, M, r, a, θ)
 end
 
 @inline function regular_pdotu_inv(m::AbstractMetricParams{T}, u, v) where {T}
-    metric = GradusBase.metric(m, u)
+    metric_matrix = metric(m, u)
     # reverse signs of the velocity vector
     # since we're integrating backwards
     p = @inbounds @SVector [-v[1], 0, 0, -v[4]]
 
     # TODO: this only works for Kerr
-    disc_norm = (
-        AccretionFormulae.eⱽ(m.M, u[2], m.a, u[3]) *
-        √(1 - AccretionFormulae.Vₑ(m.M, u[2], m.a, u[3])^2)
-    )
+    disc_norm = (eⱽ(m.M, u[2], m.a, u[3]) * √(1 - Vₑ(m.M, u[2], m.a, u[3])^2))
 
-    u_disc =
-        @SVector [1 / disc_norm, 0, 0, AccretionFormulae.Ωₑ(m.M, u[2], m.a) / disc_norm]
+    u_disc = @SVector [1 / disc_norm, 0, 0, Ωₑ(m.M, u[2], m.a) / disc_norm]
 
     # use Tullio to do the einsum
-    @tullio g := metric[i, j] * (u_disc[i]) * p[j]
+    @tullio g := metric_matrix[i, j] * (u_disc[i]) * p[j]
     1 / g
 end
 
@@ -181,7 +179,7 @@ function plunging_p_dot_u(E, a, M, L, Q, rms, r, sign_r)
 end
 
 function plunging_p_dot_u(m::AbstractMetricParams{T}, u, v, rms) where {T}
-    metric = GradusBase.metric(m, u)
+    metric_matrix = metric(m, u)
 
     # reverse signs of the velocity vector
     # since we're integrating backwards
@@ -194,12 +192,12 @@ function plunging_p_dot_u(m::AbstractMetricParams{T}, u, v, rms) where {T}
         uᶲ(m.M, rms, u[2], m.a),
     ]
 
-    @tullio g := metric[i, j] * u_disc[i] * p[j]
+    @tullio g := metric_matrix[i, j] * u_disc[i] * p[j]
     1 / g
 end
 
-@inline function redshift_function(m::BoyerLindquistFO{T}, u, p, λ) where {T}
-    isco = Gradus.isco(m.M, m.a)
+@inline function redshift_function(m::Gradus.BoyerLindquistFO{T}, u, p, λ) where {T}
+    isco = Gradus.isco(m)
     if u[2] > isco
         @inbounds regular_pdotu_inv(p.L, m.M, u[2], m.a, u[3])
     else
@@ -214,7 +212,7 @@ end
 end
 
 @inline function redshift_function(m::AbstractMetricParams{T}, u, v) where {T}
-    isco = Gradus.isco(m.M, m.a)
+    isco = Gradus.isco(m)
     if u[2] > isco
         regular_pdotu_inv(m, u, v)
     else
@@ -226,7 +224,7 @@ end # module
 
 # point functions exports
 function _redshift_guard(
-    m::BoyerLindquistFO{T},
+    m::Gradus.BoyerLindquistFO{T},
     gp::FirstOrderGeodesicPoint{T},
     max_time,
 ) where {T}
@@ -235,5 +233,3 @@ end
 function _redshift_guard(m::AbstractMetricParams{T}, gp, max_time) where {T}
     RedshiftFunctions.redshift_function(m, gp.u, gp.v)
 end
-
-const redshift = PointFunction(_redshift_guard)
