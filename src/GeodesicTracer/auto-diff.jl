@@ -90,27 +90,32 @@ jacobian = (j0, j1_mat, j2_mat, j0)
 @tullio δxδλ[i] := -v[j] * Γ[i, j, k] * v[k]
 ```
 """
-@fastmath function compute_geodesic_equation(ginv, j1, j2, v::AbstractArray{T}) where {T}
-    @inbounds @SVector [
-        -2(0.5ginv[5] * j1[4] + 0.5ginv[1] * j1[5]) * v[2] * v[4] -
-        2(0.5ginv[1] * j1[1] + 0.5ginv[5] * j1[5]) * v[1] * v[2] -
-        2(0.5ginv[1] * j2[1] + 0.5ginv[5] * j2[5]) * v[1] * v[3] -
-        2(0.5ginv[5] * j2[4] + 0.5ginv[1] * j2[5]) * v[3] * v[4],
-        0.5(v[1]^2) * ginv[2] * j1[1] +
-        0.5(v[3]^2) * ginv[2] * j1[3] +
-        0.5(v[4]^2) * ginv[2] * j1[4] +
-        ginv[2] * j1[5] * v[1] * v[4] - 0.5(v[2]^2) * ginv[2] * j1[2] -
-        ginv[2] * j2[2] * v[2] * v[3],
-        0.5(v[1]^2) * ginv[3] * j2[1] +
-        0.5(v[2]^2) * ginv[3] * j2[2] +
-        0.5(v[4]^2) * ginv[3] * j2[4] +
-        ginv[3] * j2[5] * v[1] * v[4] - 0.5(v[3]^2) * ginv[3] * j2[3] -
-        ginv[3] * j1[3] * v[2] * v[3],
-        -2(0.5ginv[4] * j1[4] + 0.5ginv[5] * j1[5]) * v[2] * v[4] -
-        2(0.5ginv[4] * j2[4] + 0.5ginv[5] * j2[5]) * v[3] * v[4] -
-        2(0.5ginv[5] * j1[1] + 0.5ginv[4] * j1[5]) * v[1] * v[2] -
-        2(0.5ginv[4] * j2[5] + 0.5ginv[5] * j2[1]) * v[1] * v[3],
-    ]
+@fastmath function compute_geodesic_equation(ginv, j1, j2, v)
+    @inbounds let gi1 = ginv[1], gi2 = ginv[2], gi3 = ginv[3], gi4 = ginv[4], gi5 = ginv[5],
+            j11 = j1[1], j12 = j1[2], j13 = j1[3], j14 = j1[4], j15 = j1[5],
+            j21 = j2[1], j22 = j2[2], j23 = j2[3], j24 = j2[4], j25 = j2[5],
+            v1 = v[1], v2 = v[2], v3 = v[3], v4 = v[4]
+        (
+            -2(0.5gi5 * j14 + 0.5gi1 * j15) * v2 * v4 -
+            2(0.5gi1 * j11 + 0.5gi5 * j15) * v1 * v2 -
+            2(0.5gi1 * j21 + 0.5gi5 * j25) * v1 * v3 -
+            2(0.5gi5 * j24 + 0.5gi1 * j25) * v3 * v4,
+            0.5(v1^2) * gi2 * j11 +
+            0.5(v3^2) * gi2 * j13 +
+            0.5(v4^2) * gi2 * j14 +
+            gi2 * j15 * v1 * v4 - 0.5(v2^2) * gi2 * j12 -
+            gi2 * j22 * v2 * v3,
+            0.5(v1^2) * gi3 * j21 +
+            0.5(v2^2) * gi3 * j22 +
+            0.5(v4^2) * gi3 * j24 +
+            gi3 * j25 * v1 * v4 - 0.5(v3^2) * gi3 * j23 -
+            gi3 * j13 * v2 * v3,
+            -2(0.5gi4 * j14 + 0.5gi5 * j15) * v2 * v4 -
+            2(0.5gi4 * j24 + 0.5gi5 * j25) * v3 * v4 -
+            2(0.5gi5 * j11 + 0.5gi4 * j15) * v1 * v2 -
+            2(0.5gi4 * j25 + 0.5gi5 * j21) * v1 * v3,
+        )
+    end
 end
 
 @fastmath function constrain_time(g_comp, v, μ = 0.0, positive::Bool = true)
@@ -133,7 +138,7 @@ function constrain(
     v;
     μ::T = 0.0,
 ) where {T}
-    rθ = @SVector [u[2], u[3]]
+    rθ = (u[2], u[3])
     g_comps = metric_components(m, rθ)
     constrain_time(g_comps, v, μ)
 end
@@ -157,7 +162,7 @@ end
 
 
 function metric(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, u) where {T}
-    rθ = @SVector [u[2], u[3]]
+    rθ = (u[2], u[3])
     comps = metric_components(m, rθ)
     @SMatrix [
         comps[1] 0 0 comps[5]
