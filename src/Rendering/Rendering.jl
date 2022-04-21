@@ -1,6 +1,7 @@
 module Rendering
 
 import Base.Threads: @threads
+import ThreadsX
 
 using Parameters
 

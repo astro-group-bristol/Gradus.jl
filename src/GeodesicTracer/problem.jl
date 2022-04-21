@@ -5,7 +5,7 @@ function integrator_problem(
     time_domain,
 ) where {S,T}
     SecondOrderODEProblem{false}(vel, pos, time_domain, m) do v, u, p, λ
-        SVector(geodesic_eq(p, u, v)...)
+        SVector{S,T}(geodesic_eq(p, u, v)...)
     end
 end
 
