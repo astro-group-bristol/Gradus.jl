@@ -23,7 +23,10 @@ end
     rc::SolutionRenderCache{M,T,G};
     kwargs...,
 ) where {M,T,G}
-    ThreadsX.map(sol -> pf.f(rc.m, get_endpoint(m, sol), rc.max_time; kwargs...), rc.geodesics)
+    ThreadsX.map(
+        sol -> pf.f(rc.m, get_endpoint(m, sol), rc.max_time; kwargs...),
+        rc.geodesics,
+    )
 end
 
 @inline function apply(

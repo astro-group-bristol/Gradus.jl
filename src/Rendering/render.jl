@@ -87,8 +87,15 @@ function prerender_endpoints(
         α_generator_row = (T(x_to_α(X, x_mid, fov_factor)) for X = 1:image_width)
 
         calculate_velocities!(vs, m, init_pos, α_generator_row, β)
-        simsols =
-            tracegeodesics(m, us, vs, (T(0.0), max_time); save_on = false, verbose = verbose, solver_opts...)
+        simsols = tracegeodesics(
+            m,
+            us,
+            vs,
+            (T(0.0), max_time);
+            save_on = false,
+            verbose = verbose,
+            solver_opts...,
+        )
         if verbose
             println("+ $Y / $image_height ...")
         end

@@ -91,10 +91,26 @@ jacobian = (j0, j1_mat, j2_mat, j0)
 ```
 """
 @fastmath function compute_geodesic_equation(ginv, j1, j2, v)
-    @inbounds let gi1 = ginv[1], gi2 = ginv[2], gi3 = ginv[3], gi4 = ginv[4], gi5 = ginv[5],
-            j11 = j1[1], j12 = j1[2], j13 = j1[3], j14 = j1[4], j15 = j1[5],
-            j21 = j2[1], j22 = j2[2], j23 = j2[3], j24 = j2[4], j25 = j2[5],
-            v1 = v[1], v2 = v[2], v3 = v[3], v4 = v[4]
+    @inbounds let gi1 = ginv[1],
+        gi2 = ginv[2],
+        gi3 = ginv[3],
+        gi4 = ginv[4],
+        gi5 = ginv[5],
+        j11 = j1[1],
+        j12 = j1[2],
+        j13 = j1[3],
+        j14 = j1[4],
+        j15 = j1[5],
+        j21 = j2[1],
+        j22 = j2[2],
+        j23 = j2[3],
+        j24 = j2[4],
+        j25 = j2[5],
+        v1 = v[1],
+        v2 = v[2],
+        v3 = v[3],
+        v4 = v[4]
+
         (
             -2(0.5gi5 * j14 + 0.5gi1 * j15) * v2 * v4 -
             2(0.5gi1 * j11 + 0.5gi5 * j15) * v1 * v2 -
@@ -103,13 +119,11 @@ jacobian = (j0, j1_mat, j2_mat, j0)
             0.5(v1^2) * gi2 * j11 +
             0.5(v3^2) * gi2 * j13 +
             0.5(v4^2) * gi2 * j14 +
-            gi2 * j15 * v1 * v4 - 0.5(v2^2) * gi2 * j12 -
-            gi2 * j22 * v2 * v3,
+            gi2 * j15 * v1 * v4 - 0.5(v2^2) * gi2 * j12 - gi2 * j22 * v2 * v3,
             0.5(v1^2) * gi3 * j21 +
             0.5(v2^2) * gi3 * j22 +
             0.5(v4^2) * gi3 * j24 +
-            gi3 * j25 * v1 * v4 - 0.5(v3^2) * gi3 * j23 -
-            gi3 * j13 * v2 * v3,
+            gi3 * j25 * v1 * v4 - 0.5(v3^2) * gi3 * j23 - gi3 * j13 * v2 * v3,
             -2(0.5gi4 * j14 + 0.5gi5 * j15) * v2 * v4 -
             2(0.5gi4 * j24 + 0.5gi5 * j25) * v3 * v4 -
             2(0.5gi5 * j11 + 0.5gi4 * j15) * v1 * v2 -
