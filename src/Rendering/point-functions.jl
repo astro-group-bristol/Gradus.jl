@@ -23,7 +23,7 @@ end
     rc::SolutionRenderCache{M,T,G};
     kwargs...,
 ) where {M,T,G}
-    map(sol -> pf.f(rc.m, get_endpoint(m, sol), rc.max_time; kwargs...), rc.geodesics)
+    ThreadsX.map(sol -> pf.f(rc.m, get_endpoint(m, sol), rc.max_time; kwargs...), rc.geodesics)
 end
 
 @inline function apply(
@@ -31,24 +31,28 @@ end
     rc::EndpointRenderCache{M,T,P};
     kwargs...,
 ) where {M,T,P}
-    map(gp -> pf.f(rc.m, gp, rc.max_time; kwargs...), rc.points)
+    ThreadsX.map(gp -> pf.f(rc.m, gp, rc.max_time; kwargs...), rc.points)
 end
 
 @inline function Base.:∘(pf1::AbstractPointFunction, pf2::AbstractPointFunction)
-    PointFunction((m, gp, max_time; kwargs...) -> pf1.f(pf2.f(m, gp, max_time; kwargs...)))
+    let f1 = pf1.f, f2 = pf2.f
+        PointFunction((m, gp, max_time; kwargs...) -> f1(f2(m, gp, max_time; kwargs...)))
+    end
 end
 
 @inline function Base.:∘(pf1::AbstractPointFunction, pf2::FilterPointFunction{F}) where {F}
-    PointFunction(
-        (m, gp, max_time; kwargs...) -> begin
-            pass_on = pf2.f(m, gp, max_time; kwargs...)
-            if pass_on
-                pf1.f(m, gp, max_time; kwargs...)
-            else
-                pf2.default
-            end
-        end,
-    )
+    let f1 = pf1.f, f2 = pf2.f
+        PointFunction(
+            (m, gp, max_time; kwargs...) -> begin
+                pass_on = f2(m, gp, max_time; kwargs...)
+                if pass_on
+                    f1(m, gp, max_time; kwargs...)
+                else
+                    pf2.default
+                end
+            end,
+        )
+    end
 end
 
 module ConstPointFunctions
