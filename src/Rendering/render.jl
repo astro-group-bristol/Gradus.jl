@@ -63,6 +63,7 @@ function prerender_endpoints(
     image_height,
     fov_factor,
     max_time,
+    verbose = true,
     solver_opts...,
 ) where {T,V}
     y_mid = image_height ÷ 2
@@ -87,8 +88,10 @@ function prerender_endpoints(
 
         calculate_velocities!(vs, m, init_pos, α_generator_row, β)
         simsols =
-            tracegeodesics(m, us, vs, (T(0.0), max_time); save_on = false, solver_opts...)
-        println("+ $Y / $image_height ...")
+            tracegeodesics(m, us, vs, (T(0.0), max_time); save_on = false, verbose = verbose, solver_opts...)
+        if verbose
+            println("+ $Y / $image_height ...")
+        end
 
         point_cache[Y, :] = get_endpoint(m, simsols)
     end
@@ -103,6 +106,7 @@ function prerender_solutions(
     image_height,
     fov_factor,
     max_time,
+    verbose = true,
     solver_opts...,
 ) where {T}
     y_mid = image_height ÷ 2
@@ -130,9 +134,12 @@ function prerender_solutions(
             vs,
             (T(0.0), max_time);
             save_on = false,
+            verbose = verbose,
             solver_opts...,
         )
-        println("+ $Y / $image_height ...")
+        if verbose
+            println("+ $Y / $image_height ...")
+        end
         simsols
     end
 
