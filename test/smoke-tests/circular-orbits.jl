@@ -23,7 +23,7 @@ using Test, Gradus
         m = BoyerLindquistAD(M = 1.0, a = 0.0)
         Gradus.isco(m)
         r_range = 6.0:0.1:10.0
-        simsols = @time trace_equitorial_circular_orbit(m, r_range)
+        simsols = trace_equitorial_circular_orbit(m, r_range)
         # smoke test passed
         @test true
     end
