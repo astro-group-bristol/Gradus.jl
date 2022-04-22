@@ -13,8 +13,8 @@ struct WeightedPoint{T} <: Point2D
     _y::Float64
     _weight::T
 end
-GeometricalPredicates.getx(p::WeightedPoint{T}) where {T} = p._x
-GeometricalPredicates.gety(p::WeightedPoint{T}) where {T} = p._y
+#GeometricalPredicates.getx(p::WeightedPoint{T}) where {T} = p._x
+#GeometricalPredicates.gety(p::WeightedPoint{T}) where {T} = p._y
 getw(p::WeightedPoint{T}) where {T} = p._weight
 
 struct DelaunayDiscProfile{T} <: AbstractDelaunayProfile
