@@ -33,8 +33,8 @@ using Test, Gradus, StaticArrays
         for (m, expectation) in zip(
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
-            # last computed 20/04/2022: v0.1.0
-            [86795.10968236077, 86796.73210488849, 81959.05505753662, 36803.48713530963],
+            # last computed 22/04/2022: after default tolerance change 
+            [87034.280913570287, 87046.00747461354, 81491.03246385315, 36218.59567455362],
         )
             img = rendergeodesics(
                 m,
