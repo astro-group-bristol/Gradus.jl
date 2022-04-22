@@ -73,6 +73,6 @@ include("special-radii.jl")
 include("AccretionFormulae/AccretionFormulae.jl")
 
 using .AccretionFormulae
-export redshift
+export solve_equitorial_circular_orbit, trace_equitorial_circular_orbit
 
 end # module
