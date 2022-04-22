@@ -1,7 +1,7 @@
 # smoke test to make sure circular orbits work
 using Test, Gradus
 
-@testset "pointfunctions" begin
+@testset "circular-orbits" begin
 
     @testset "solve_equitorial_circular_orbit" begin
         # only implemented for the BoyerLindquist metrics at the moment
