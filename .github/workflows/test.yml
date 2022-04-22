@@ -1,12 +1,16 @@
-name: Smoke test
+name: Test
 
 on:
   pull_request:
     branches:
       - main
+    paths:
+      - '**.jl'
   push:
     branches:
       - main
+    paths:
+      - '**.jl'
 
 jobs:
 
