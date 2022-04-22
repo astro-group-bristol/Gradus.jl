@@ -22,7 +22,7 @@ using Test, Gradus, StaticArrays
     @testset "redshift" begin
         # only implemented for the BoyerLindquist metrics at the moment
         for m in [BoyerLindquistAD(), BoyerLindquistFO()]
-            run_pointfunction(m, redshift)
+            run_pointfunction(m, Gradus.redshift)
         end
         # smoke test passed
         @test true

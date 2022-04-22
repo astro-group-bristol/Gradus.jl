@@ -9,8 +9,6 @@ import ..GradusBase: AbstractMetricParams, vector_to_local_sky
 import ..GeodesicTracer: tracegeodesics
 import ..AccretionGeometry: AbstractAccretionGeometry
 
-import GeometricalPredicates: Point2D, getx, gety, geta, getb, getc
-
 include("sky-geometry.jl")
 include("corona-models.jl")
 
