@@ -23,7 +23,7 @@ using Test, Gradus, StaticArrays
             image_fingerprint = sum(filter(!isnan, img))
             # have to be really coarse cus the first order method is so variable???
             # the rest are very resolute
-            @test isapprox(expectation, image_fingerprint; atol = 2.0, rtol = 0.0)
+            @test isapprox(expectation, image_fingerprint; atol = 3.0, rtol = 0.0)
         end
     end
 
@@ -47,7 +47,7 @@ using Test, Gradus, StaticArrays
                 verbose = false,
             )
             image_fingerprint = sum(filter(!isnan, img))
-            @test isapprox(expectation, image_fingerprint; atol = 2.0, rtol = 0.0)
+            @test isapprox(expectation, image_fingerprint; atol = 3.0, rtol = 0.0)
         end
     end
 
