@@ -3,8 +3,8 @@
 <a href="https://codecov.io/gh/astro-group-bristol/Gradus.jl">
     <img src="https://codecov.io/gh/astro-group-bristol/Gradus.jl/branch/main/graph/badge.svg?token=A91E22KZR5"/>
 </a>
-<a href="https://github.com/astro-group-bristol/Gradus.jl/actions/workflows/smoke-test.yml">
-    <img src="https://github.com/astro-group-bristol/Gradus.jl/actions/workflows/smoke-test.yml/badge.svg"/>
+<a href="https://github.com/astro-group-bristol/Gradus.jl/actions/workflows/test.yml">
+    <img src="https://github.com/astro-group-bristol/Gradus.jl/actions/workflows/test.yml/badge.svg"/>
 </a>
 <a href="https://doi.org/10.5281/zenodo.6471796">
     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.6471796.svg" alt="DOI">
