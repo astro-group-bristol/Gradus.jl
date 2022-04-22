@@ -61,8 +61,8 @@ function tracegeodesics(
         time_domain,
         solver;
         callback = nothing,
-        abstol = 1e-8,
-        reltol = 1e-8,
+        abstol = 1e-9,
+        reltol = 1e-9,
         solver_opts...,
     )
 end
