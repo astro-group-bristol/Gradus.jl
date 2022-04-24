@@ -4,6 +4,7 @@ import Base.Threads: @threads
 import ThreadsX
 
 using Parameters
+using ProgressMeter
 
 import SciMLBase
 
@@ -21,35 +22,44 @@ function rendergeodesics(
     init_pos,
     max_time;
     pf = ConstPointFunctions.shadow,
+    image_width = 350,
+    image_height = 250,
+    fov_factor = 3.0,
     kwargs...,
 ) where {T}
-    __rendergeodesics(
+    image = zeros(T, (image_height, image_width))
+    render_into_image!(
+        image,
         m,
-        init_pos;
-        image_width = 350,
-        image_height = 250,
-        fov_factor = 3.0,
-        max_time = convert(T, max_time),
+        init_pos,
+        max_time;
         pf = pf,
+        image_width = image_width,
+        image_height = image_height,
+        fov_factor = fov_factor,
         kwargs...,
     )
+    image
 end
 
 function prerendergeodesics(
     m::AbstractMetricParams{T},
     init_pos,
     max_time;
-    cache = DefaultCache(),
+    cache = EndpointCache(),
+    image_width = 350,
+    image_height = 250,
+    fov_factor = 3.0,
     kwargs...,
 ) where {T}
     __prerendergeodesics(
         m,
         init_pos,
+        max_time,
         cache;
-        image_width = 350,
-        image_height = 250,
-        fov_factor = 3.0,
-        max_time = convert(T, max_time),
+        image_width = image_width,
+        image_height = image_height,
+        fov_factor = fov_factor,
         kwargs...,
     )
 end
