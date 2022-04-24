@@ -4,6 +4,7 @@ import Base.Threads: @threads
 import ThreadsX
 
 using Parameters
+using ProgressMeter
 
 import SciMLBase
 

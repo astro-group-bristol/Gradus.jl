@@ -67,17 +67,35 @@ function __render_geodesics(
     image_width,
     image_height,
     fov_factor,
-    verbose = true,
+    verbose = false,
     solver_opts...,
 ) where {T}
     y_mid = image_height ÷ 2
     x_mid = image_width ÷ 2
+
+    trajectories = image_width * image_height
+
+    if verbose
+        println("+ Starting trace...")
+    end
+
+    progress_bar = ProgressMeter.Progress(
+        trajectories
+        ;
+        desc="Rendering:",
+        dt=0.5, 
+        barglyphs=BarGlyphs("[=> ]"), 
+        barlen=40,
+        color=:none,
+        enabled = verbose
+    )
 
     function velfunc(i)
         X = i % image_width
         Y = i ÷ image_width
         α = x_to_α(X, x_mid, fov_factor)
         β = y_to_β(Y, y_mid, fov_factor)
+        ProgressMeter.next!(progress_bar)
         map_impact_parameters(m, init_pos, α, β)
     end
 
@@ -88,9 +106,13 @@ function __render_geodesics(
         (T(0.0), max_time);
         save_on = false,
         verbose = verbose,
-        trajectories = image_width * image_height,
+        trajectories = trajectories,
         solver_opts...,
     )
+
+    if verbose
+        println("+ Trace complete.")
+    end
     
     simsols
 end
