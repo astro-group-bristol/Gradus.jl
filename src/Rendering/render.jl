@@ -31,9 +31,11 @@ function __prerendergeodesics(
     init_pos,
     max_time,
     cache::SolutionCache;
+    image_height,
+    image_width,
     kwargs...,
 ) where {T}
-    simsols = __render_geodesics(m, init_pos, max_time; kwargs...)
+    simsols = __render_geodesics(m, init_pos, max_time; image_height = image_height, image_width = image_width, kwargs...)
     SolutionRenderCache(m, max_time, image_height, image_width, simsols.u)
 end
 
@@ -42,14 +44,15 @@ function __prerendergeodesics(
     init_pos,
     max_time,
     cache::EndpointCache;
+    image_height,
+    image_width,
     kwargs...,
 ) where {T}
-    simsols = __render_geodesics(m, init_pos, max_time; kwargs...)
+    simsols = __render_geodesics(m, init_pos, max_time; image_height = image_height, image_width = image_width, kwargs...)
 
     point_cache = get_endpoint(m, simsols)
-    reshape!(point_cache, (image_height, image_width))
 
-    EndpointRenderCache(m, max_time, image_height, image_width, point_cache)
+    EndpointRenderCache(m, max_time, image_height, image_width, reshape(point_cache, (image_height, image_width)))
 end
 
 function __render_geodesics(
@@ -82,8 +85,8 @@ function __render_geodesics(
     )
 
     function velfunc(i)
-        X = i % image_width
-        Y = i ÷ image_width
+        Y = i % image_height
+        X = i ÷ image_height
         α = x_to_α(X, x_mid, fov_factor)
         β = y_to_β(Y, y_mid, fov_factor)
         ProgressMeter.next!(progress_bar)

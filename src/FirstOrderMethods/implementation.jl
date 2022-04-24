@@ -24,9 +24,9 @@ function get_endpoint(
 end
 
 function metric_callback(
-    m::AbstractFirstOrderMetricParams{T};
-    closest_approach = 1.01,
-    effective_infinity = 1200.0,
+    m::AbstractFirstOrderMetricParams{T},
+    closest_approach,
+    effective_infinity,
 ) where {T}
     (
         DiscreteCallback(

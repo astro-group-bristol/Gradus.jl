@@ -63,7 +63,7 @@ function tracegeodesics(
         if eltype(position) !== eltype(velocity)
             error("Position and velocity must have the same element type.")
         end
-        velocity
+        constrain_all(m, position, velocity, μ)
     end
 
     cbs = create_callback_set(m, callback, closest_approach, effective_infinity)
