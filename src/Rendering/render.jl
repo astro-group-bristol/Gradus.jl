@@ -35,7 +35,14 @@ function __prerendergeodesics(
     image_width,
     kwargs...,
 ) where {T}
-    simsols = __render_geodesics(m, init_pos, max_time; image_height = image_height, image_width = image_width, kwargs...)
+    simsols = __render_geodesics(
+        m,
+        init_pos,
+        max_time;
+        image_height = image_height,
+        image_width = image_width,
+        kwargs...,
+    )
     SolutionRenderCache(m, max_time, image_height, image_width, simsols.u)
 end
 
@@ -48,11 +55,24 @@ function __prerendergeodesics(
     image_width,
     kwargs...,
 ) where {T}
-    simsols = __render_geodesics(m, init_pos, max_time; image_height = image_height, image_width = image_width, kwargs...)
+    simsols = __render_geodesics(
+        m,
+        init_pos,
+        max_time;
+        image_height = image_height,
+        image_width = image_width,
+        kwargs...,
+    )
 
     point_cache = get_endpoint(m, simsols)
 
-    EndpointRenderCache(m, max_time, image_height, image_width, reshape(point_cache, (image_height, image_width)))
+    EndpointRenderCache(
+        m,
+        max_time,
+        image_height,
+        image_width,
+        reshape(point_cache, (image_height, image_width)),
+    )
 end
 
 function __render_geodesics(
