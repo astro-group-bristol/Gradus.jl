@@ -1,6 +1,5 @@
 abstract type AbstractCacheStrategy end
 
-struct DefaultCache <: AbstractCacheStrategy end
 struct SolutionCache <: AbstractCacheStrategy end
 struct EndpointCache <: AbstractCacheStrategy end
 
