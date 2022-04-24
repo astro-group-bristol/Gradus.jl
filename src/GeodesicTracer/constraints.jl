@@ -30,3 +30,7 @@ function constrain_all(
     # reads nicer
     @inbounds SVector{S,T}(constrain(m, u, v, μ = μ), v[2], v[3], v[4])
 end
+
+function wrap_constraint(m::AbstractMetricParams{T}, position, velfunc::Function, μ) where {T}
+    (i) -> constrain_all(m, position, velfunc(i), μ)
+end

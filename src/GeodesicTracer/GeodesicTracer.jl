@@ -23,7 +23,7 @@ include("auto-diff.jl")
 """
     tracegeodesics(
         m::AbstractMetricParams{T}, 
-        init_positions, init_velocities, 
+        position, velocity, 
         time_domain::Tuple{T,T}
         ; 
         μ = 0.0f0, 
@@ -46,27 +46,37 @@ specifying the ensemble method to use.
 """
 function tracegeodesics(
     m::AbstractMetricParams{T},
-    init_positions,
-    init_velocities,
+    position,
+    velocity,
     time_domain::Tuple{T,T};
     solver = Tsit5(),
     μ = 0.0,
     closest_approach=1.01,
     effective_infinity=1200.0,
+    callback = nothing,
     solver_opts...,
 ) where {T}
+    
+    _velocity = if (velocity isa Function) && (eltype(position) === T)
+        wrap_constraint(m, position, velocity, μ)
+    else
+        if eltype(position) !== eltype(velocity)
+            error("Position and velocity must have the same element type.")
+        end
+        velocity
+    end
+
+    cbs = create_callback_set(m, callback, closest_approach, effective_infinity)
+
     __tracegeodesics(
         m,
-        init_positions,
-        # ensure everything already normalised
-        constrain_all(m, init_positions, init_velocities, μ),
+        position,
+        _velocity,
         time_domain,
         solver;
-        callback = nothing,
+        callback = cbs,
         abstol = 1e-9,
         reltol = 1e-9,
-        closest_approach = closest_approach,
-        effective_infinity = effective_infinity,
         solver_opts...,
     )
 end
