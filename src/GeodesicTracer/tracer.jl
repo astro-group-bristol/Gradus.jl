@@ -18,8 +18,7 @@ function __tracegeodesics(
     init_pos::AbstractVector{T},
     vel_func::Function,
     time_domain::Tuple{T,T},
-    solver
-    ;
+    solver;
     trajectories::Int,
     ensemble = EnsembleThreads(),
     kwargs...,
@@ -31,13 +30,7 @@ function __tracegeodesics(
             integrator_problem(m, init_pos, vel_func(i), time_domain),
         safetycopy = false,
     )
-    solve_geodesic(
-        solver,
-        ens_prob,
-        ensemble;
-        trajectories = trajectories,
-        kwargs...,
-    )
+    solve_geodesic(solver, ens_prob, ensemble; trajectories = trajectories, kwargs...)
 end
 
 # indexables

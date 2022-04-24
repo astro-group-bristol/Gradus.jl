@@ -2,18 +2,11 @@ function render_into_image!(
     image,
     m::AbstractMetricParams{T},
     init_pos,
-    max_time
-    ;
+    max_time;
     pf,
     kwargs...,
 ) where {T}
-    simsols = __render_geodesics(
-        m,
-        init_pos,
-        max_time,
-        ;
-        kwargs...
-    )
+    simsols = __render_geodesics(m, init_pos, max_time, ; kwargs...)
     apply_to_image!(m, image, simsols, pf, max_time)
     image
 end
@@ -51,7 +44,7 @@ function __prerendergeodesics(
     cache::EndpointCache;
     kwargs...,
 ) where {T}
-simsols = __render_geodesics(m, init_pos, max_time; kwargs...)
+    simsols = __render_geodesics(m, init_pos, max_time; kwargs...)
 
     point_cache = get_endpoint(m, simsols)
     reshape!(point_cache, (image_height, image_width))
@@ -62,8 +55,7 @@ end
 function __render_geodesics(
     m::AbstractMetricParams{T},
     init_pos,
-    max_time
-    ;
+    max_time;
     image_width,
     image_height,
     fov_factor,
@@ -80,14 +72,13 @@ function __render_geodesics(
     end
 
     progress_bar = ProgressMeter.Progress(
-        trajectories
-        ;
-        desc="Rendering:",
-        dt=0.5, 
-        barglyphs=BarGlyphs("[=> ]"), 
-        barlen=40,
-        color=:none,
-        enabled = verbose
+        trajectories;
+        desc = "Rendering:",
+        dt = 0.5,
+        barglyphs = BarGlyphs("[=> ]"),
+        barlen = 40,
+        color = :none,
+        enabled = verbose,
     )
 
     function velfunc(i)
@@ -113,6 +104,6 @@ function __render_geodesics(
     if verbose
         println("+ Trace complete.")
     end
-    
+
     simsols
 end

@@ -51,12 +51,12 @@ function tracegeodesics(
     time_domain::Tuple{T,T};
     solver = Tsit5(),
     μ = 0.0,
-    closest_approach=1.01,
-    effective_infinity=1200.0,
+    closest_approach = 1.01,
+    effective_infinity = 1200.0,
     callback = nothing,
     solver_opts...,
 ) where {T}
-    
+
     _velocity = if (velocity isa Function) && (eltype(position) === T)
         wrap_constraint(m, position, velocity, μ)
     else

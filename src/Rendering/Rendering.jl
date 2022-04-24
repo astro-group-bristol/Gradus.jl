@@ -32,8 +32,7 @@ function rendergeodesics(
         image,
         m,
         init_pos,
-        max_time
-        ;
+        max_time;
         pf = pf,
         image_width = image_width,
         image_height = image_height,
@@ -51,14 +50,13 @@ function prerendergeodesics(
     image_width = 350,
     image_height = 250,
     fov_factor = 3.0,
-    kwargs...
+    kwargs...,
 ) where {T}
     __prerendergeodesics(
         m,
         init_pos,
         max_time,
-        cache
-        ;
+        cache;
         image_width = image_width,
         image_height = image_height,
         fov_factor = fov_factor,

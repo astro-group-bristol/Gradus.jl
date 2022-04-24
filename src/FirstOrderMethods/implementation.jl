@@ -23,9 +23,16 @@ function get_endpoint(
     FirstOrderGeodesicPoint(sol.retcode, t, u, convert_velocity_type(u, v), p)
 end
 
-function metric_callback(m::AbstractFirstOrderMetricParams{T}; closest_approach=1.01, effective_infinity=1200.0) where {T}
+function metric_callback(
+    m::AbstractFirstOrderMetricParams{T};
+    closest_approach = 1.01,
+    effective_infinity = 1200.0,
+) where {T}
     (
-        DiscreteCallback(ensure_domain(m, closest_approach, effective_infinity), terminate!),
+        DiscreteCallback(
+            ensure_domain(m, closest_approach, effective_infinity),
+            terminate!,
+        ),
         DiscreteCallback(radial_negative_check(m), flip_radial_sign!),
         DiscreteCallback(angular_negative_check(m), flip_angular_sign!),
     )
