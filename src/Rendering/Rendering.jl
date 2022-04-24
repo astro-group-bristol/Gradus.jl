@@ -29,7 +29,7 @@ function rendergeodesics(
         image_width = 350,
         image_height = 250,
         fov_factor = 3.0,
-        max_time = convert(T, max_time),
+        max_time = max_time,
         pf = pf,
         kwargs...,
     )
@@ -49,7 +49,7 @@ function prerendergeodesics(
         image_width = 350,
         image_height = 250,
         fov_factor = 3.0,
-        max_time = convert(T, max_time),
+        max_time = max_time,
         kwargs...,
     )
 end

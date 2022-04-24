@@ -24,9 +24,11 @@ function constrain_all(
 end
 
 # vectors of vectors 
-function constrain_all(m::AbstractMetricParams{T}, us, vs, μ) where {T<:Number}
-    curried(u, v) = constrain_all(m, u, v, μ)
-    curried.(us, vs)
+function constrain_all(m::AbstractMetricParams{T}, us, vs, μ) where {T}
+    @inbounds for i in eachindex(vs)
+        vs[i] = constrain_all(m, us[i], vs[i], μ)
+    end
+    vs
 end
 
 function constrain_all(
@@ -45,7 +47,11 @@ function constrain_all(
     v::StaticVector{S,T},
     μ,
 ) where {S,T<:Number}
-    mut = MVector{S,T}(v)
-    mut[1] = constrain(m, u, v, μ = μ)
-    SVector{S,T}(mut)
+    # mut = MVector{S,T}(v)
+    # mut[1] = constrain(m, u, v, μ = μ)
+    # SVector{S,T}(mut)
+    #
+    # this results in no performance gain over the above, but i think it
+    # reads nicer
+    @inbounds SVector{S,T}(constrain(m, u, v, μ = μ), v[2], v[3], v[4])
 end
