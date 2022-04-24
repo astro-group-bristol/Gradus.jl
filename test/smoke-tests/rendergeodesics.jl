@@ -8,8 +8,8 @@ using Test, Gradus, StaticArrays
         for (m, expectation) in zip(
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
-            # last computed 20/04/2022: v0.1.0
-            [8949.345629557964, 8949.36445058427, 8961.703066256105, 306.88361044534764],
+            # last computed 24/04/2022: closest approach reduced to 1% RS
+            [8966.172562862197, 8966.172929103566, 8977.500037031317, 306.88361044534764],
         )
             img = rendergeodesics(
                 m,
@@ -33,8 +33,8 @@ using Test, Gradus, StaticArrays
         for (m, expectation) in zip(
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
-            # last computed 22/04/2022: after default tolerance change 
-            [87034.280913570287, 87046.00747461354, 81491.03246385315, 36218.59567455362],
+            # last computed 24/04/2022: closest approach reduced to 1% RS
+            [87044.35873353803, 87056.09986648493, 81500.87198429636, 36218.59567455362],
         )
             img = rendergeodesics(
                 m,

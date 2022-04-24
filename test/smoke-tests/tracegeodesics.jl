@@ -25,6 +25,8 @@ using Test, Gradus, StaticArrays
         for m in [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()]
             test_single(m, u, v)
             test_many(m, u, v)
+            # smoke test passed
+            @test true
         end
     end
 
@@ -35,6 +37,7 @@ using Test, Gradus, StaticArrays
         for m in [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()]
             test_single(m, u, v)
             test_many(m, u, v)
+            @test true
         end
     end
 
