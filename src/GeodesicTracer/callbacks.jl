@@ -6,7 +6,7 @@ function metric_callback(
     min_r = inner_radius(m)
     # terminate integration if we come within 1% of the black hole radius
     DiscreteCallback(
-        (u, λ, integrator) -> u[6] ≤ min_r * closest_approach || u[6] > effective_infinity,
+        (u, λ, integrator) -> u[2] ≤ min_r * closest_approach || u[2] > effective_infinity,
         terminate!,
     )
 end
