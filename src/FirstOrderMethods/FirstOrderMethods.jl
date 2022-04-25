@@ -24,7 +24,8 @@ import ..GeodesicTracer:
     metric_callback,
     create_callback_set,
     constrain,
-    alpha_beta_to_vel
+    alpha_beta_to_vel,
+    ensure_chart_callback
 
 abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 

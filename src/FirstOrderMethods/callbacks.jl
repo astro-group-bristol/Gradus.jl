@@ -1,12 +1,3 @@
-function ensure_domain(
-    m::AbstractFirstOrderMetricParams{T},
-    closest_approach,
-    effective_infinity,
-) where {T}
-    min_r = inner_radius(m)
-    (u, λ, integrator) -> u[2] ≤ min_r * closest_approach || u[2] > effective_infinity
-end
-
 function flip_radial_sign!(integrator)
     p = integrator.p
     integrator.p = @set p.r = -p.r
