@@ -16,7 +16,7 @@ end
 
 function measure_stability(m::AbstractMetricParams{T}, r, vϕ; tracer_args...) where {T}
     sol = trace_single_orbit(m, r, vϕ; tracer_args...)
-    rs = selectdim(sol, 1, 6)
+    rs = selectdim(sol, 1, 2)
     Qs(rs)
 end
 

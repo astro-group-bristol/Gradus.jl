@@ -34,8 +34,8 @@ function get_endpoint(
     sol::SciMLBase.AbstractODESolution{T,N,S},
 ) where {T,N,S}
     us, ts, _ = unpack_solution(sol)
-    u = us[end].x[2]
-    v = us[end].x[1]
+    u = us[end][1:4]
+    v = us[end][5:8]
     t = ts[end]
     GeodesicPoint(sol.retcode, t, u, v)
 end

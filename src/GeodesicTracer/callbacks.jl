@@ -1,14 +1,22 @@
-function metric_callback(
+@inline function ensure_chart_callback(
     m::AbstractMetricParams{T},
     closest_approach,
     effective_infinity,
 ) where {T}
     min_r = inner_radius(m)
-    # terminate integration if we come within 1% of the black hole radius
+    # terminate integration if we come within some % of the black hole radius
     DiscreteCallback(
-        (u, λ, integrator) -> u[6] ≤ min_r * closest_approach || u[6] > effective_infinity,
+        (u, λ, integrator) -> u[2] ≤ min_r * closest_approach || u[2] > effective_infinity,
         terminate!,
     )
+end
+
+function metric_callback(
+    m::AbstractMetricParams{T},
+    closest_approach,
+    effective_infinity,
+) where {T}
+    ensure_chart_callback(m, closest_approach, effective_infinity)
 end
 
 function create_callback_set(

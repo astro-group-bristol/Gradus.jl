@@ -34,7 +34,7 @@ using Test, Gradus, StaticArrays
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
             # last computed 24/04/2022: closest approach reduced to 1% RS
-            [87044.35873353803, 87056.09986648493, 81500.87198429636, 36218.59567455362],
+            [87197.374065253, 87069.09711527612, 81500.87198429636, 36314.983726028615],
         )
             img = rendergeodesics(
                 m,

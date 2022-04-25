@@ -29,10 +29,7 @@ function metric_callback(
     effective_infinity,
 ) where {T}
     (
-        DiscreteCallback(
-            ensure_domain(m, closest_approach, effective_infinity),
-            terminate!,
-        ),
+        ensure_chart_callback(m, closest_approach, effective_infinity),
         DiscreteCallback(radial_negative_check(m), flip_radial_sign!),
         DiscreteCallback(angular_negative_check(m), flip_angular_sign!),
     )
