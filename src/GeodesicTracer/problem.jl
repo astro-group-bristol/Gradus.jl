@@ -23,7 +23,7 @@ function integrator_problem(
     ODEProblem{true}(u_init, time_domain) do du, u, p, λ
         @inbounds let x = @view(u[1:4]), v = @view(u[5:8])
             dv = SVector{4}(geodesic_eq(m, x, v))
-            
+
             du[1:4] = v
             du[5:8] = dv
         end
