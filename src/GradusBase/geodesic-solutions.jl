@@ -29,20 +29,39 @@ function unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution{T,N,V}) wher
     map(unpack_solution, simsol)
 end
 
-function get_endpoint(
-    m::AbstractMetricParams{T},
-    sol::SciMLBase.AbstractODESolution{T,N,S},
-) where {T,N,S}
+function get_point_at(m::AbstractMetricParams{T}, sol::SciMLBase.AbstractODESolution{T,N,S}, i::Int) where {T,N,S}
     us, ts, _ = unpack_solution(sol)
-    u = us[end][1:4]
-    v = us[end][5:8]
-    t = ts[end]
-    GeodesicPoint(sol.retcode, t, u, v)
+    if i == -1
+        u = us[end][1:4]
+        v = us[end][5:8]
+        t = ts[end]
+        GeodesicPoint(sol.retcode, t, u, v)
+    else
+        u = us[i][1:4]
+        v = us[i][5:8]
+        t = ts[i]
+        GeodesicPoint(sol.retcode, t, u, v)
+    end
+end
+
+function get_point_at(
+    m::AbstractMetricParams{T},
+    simsol::SciMLBase.AbstractEnsembleSolution{T,N,S},
+    i
+) where {T,N,S}
+    map(sol -> get_point_at(m, sol, i), simsol)
 end
 
 function get_endpoint(
     m::AbstractMetricParams{T},
-    simsol::SciMLBase.AbstractEnsembleSolution{T,N,S},
-) where {T,N,S}
-    map(sol -> get_endpoint(m, sol), simsol)
+    sol_or_simsols,
+) where {T}
+    get_point_at(m, sol_or_simsols, -1)
+end
+
+function get_startpoint(
+    m::AbstractMetricParams{T},
+    sol_or_simsols,
+) where {T}
+    get_point_at(m, sol_or_simsols, 1)
 end
