@@ -11,6 +11,10 @@ abstract type AbstractGeodesicPoint{T} end
     # p::P
 end
 
+function Base.show(io::IO, ::GeodesicPoint{T}) where {T}
+    write(io, "GeodesicPoint{$T}")
+end
+
 function geodesic_point_type(m::AbstractMetricParams{T}) where {T}
     GeodesicPoint{T}
 end
@@ -29,7 +33,11 @@ function unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution{T,N,V}) wher
     map(unpack_solution, simsol)
 end
 
-function get_point_at(m::AbstractMetricParams{T}, sol::SciMLBase.AbstractODESolution{T,N,S}, i::Int) where {T,N,S}
+function get_point(
+    m::AbstractMetricParams{T},
+    sol::SciMLBase.AbstractODESolution{T,N,S},
+    i::Int,
+) where {T,N,S}
     us, ts, _ = unpack_solution(sol)
     if i == -1
         u = us[end][1:4]
@@ -44,24 +52,18 @@ function get_point_at(m::AbstractMetricParams{T}, sol::SciMLBase.AbstractODESolu
     end
 end
 
-function get_point_at(
+function get_point(
     m::AbstractMetricParams{T},
-    simsol::SciMLBase.AbstractEnsembleSolution{T,N,S},
-    i
-) where {T,N,S}
-    map(sol -> get_point_at(m, sol, i), simsol)
+    simsol::Union{SciMLBase.AbstractEnsembleSolution{T,N,S},AbstractArray{P}},
+    i,
+) where {T,N,S,P<:SciMLBase.AbstractODESolution}
+    map(sol -> get_point(m, sol, i), simsol)
 end
 
-function get_endpoint(
-    m::AbstractMetricParams{T},
-    sol_or_simsols,
-) where {T}
-    get_point_at(m, sol_or_simsols, -1)
+function get_endpoint(m::AbstractMetricParams{T}, sol_or_simsols) where {T}
+    get_point(m, sol_or_simsols, -1)
 end
 
-function get_startpoint(
-    m::AbstractMetricParams{T},
-    sol_or_simsols,
-) where {T}
-    get_point_at(m, sol_or_simsols, 1)
+function get_startpoint(m::AbstractMetricParams{T}, sol_or_simsols) where {T}
+    get_point(m, sol_or_simsols, 1)
 end

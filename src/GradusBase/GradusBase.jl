@@ -2,6 +2,7 @@ module GradusBase
 
 import Parameters: @with_kw
 import SciMLBase
+import Base
 
 include("metric-params.jl")
 include("physical-quantities.jl")
@@ -12,6 +13,8 @@ export AbstractMetricParams,
     metric_params,
     metric,
     get_endpoint,
+    get_startpoint,
+    get_point,
     GeodesicPoint,
     vector_to_local_sky,
     AbstractMetricParams,
