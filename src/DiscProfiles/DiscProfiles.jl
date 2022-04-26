@@ -5,12 +5,26 @@ using Parameters
 import StaticArrays: @SVector
 
 
-import ..GradusBase: AbstractMetricParams, vector_to_local_sky
+import ..GradusBase:
+    AbstractMetricParams, GeodesicPoint, vector_to_local_sky, get_endpoint, inner_radius
 import ..GeodesicTracer: tracegeodesics
-import ..AccretionGeometry: AbstractAccretionGeometry
+import ..AccretionGeometry:
+    AbstractAccretionGeometry,
+    AbstractAccretionDisc,
+    to_cartesian,
+    in_polygon,
+    getcycliclines
+
+import SciMLBase
+import VoronoiCells
+import ThreadsX
+import GeometryBasics
+
+import Base
 
 include("sky-geometry.jl")
 include("corona-models.jl")
+include("disc-profiles.jl")
 
 function tracegeodesics(
     m::AbstractMetricParams{T},
@@ -62,7 +76,9 @@ export AbstractCoronaModel,
     EvenSampler,
     WeierstrassSampler,
     RandomGenerator,
-    GoldenSpiralGenerator
+    GoldenSpiralGenerator,
+    VoronoiDiscProfile,
+    findindex
 
 
 end # module

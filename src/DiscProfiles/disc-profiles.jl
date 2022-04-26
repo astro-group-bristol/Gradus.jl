@@ -1,49 +1,213 @@
-# work in progress code
-# not actually used yet
 
-abstract type AbstractAccretionProfile end
-abstract type AbstractInterpolatedProfile <: AbstractAccretionProfile end
-abstract type AbstractDelaunayProfile <: AbstractAccretionProfile end
+"""
+    AbstractDiscProfile
 
-evaluate(aap::AbstractAccretionProfile, p) =
-    error("Not implemented for `$(typeof(aap))` yet.")
+Abstract type for binning structures over discs (e.g., radial bins, voronoi).
+"""
+abstract type AbstractDiscProfile end
 
-struct WeightedPoint{T} <: Point2D
-    _x::Float64
-    _y::Float64
-    _weight::T
+# evaluate(aap::AbstractAccretionProfile, p) =
+#     error("Not implemented for `$(typeof(aap))` yet.")
+
+struct VoronoiDiscProfile{D,T} <: AbstractDiscProfile
+    disc::D
+    polys::Vector{GeometryBasics.Polygon{2,T}}
+    generators::Vector{GeometryBasics.Point2{T}}
+    function VoronoiDiscProfile(
+        d::D,
+        polys::Vector{P},
+        gen::Vector{GeometryBasics.Point2{T}},
+    ) where {P<:GeometryBasics.AbstractPolygon,D<:AbstractAccretionDisc{T}} where {T}
+        if !isapprox(d.inclination, π / 2)
+            return error(
+                "Currently only supported for discs in the equitorial plane (θ=π/2).",
+            )
+        end
+        new{D,T}(d, polys, gen)
+    end
 end
-#GeometricalPredicates.getx(p::WeightedPoint{T}) where {T} = p._x
-#GeometricalPredicates.gety(p::WeightedPoint{T}) where {T} = p._y
-getw(p::WeightedPoint{T}) where {T} = p._weight
 
-struct DelaunayDiscProfile{T} <: AbstractDelaunayProfile
-    tesselation::DelaunayTessellation2D{WeightedPoint{T}}
-    radius::Float64
+function Base.show(io::IO, vdp::VoronoiDiscProfile{D,T}) where {D,T}
+    write(io, "VoronoiDiscProfile for $D with $(length(vdp.generators)) generators")
 end
-xfm_forward(ddp::DelaunayDiscProfile{T}, p) where {T} =
-    ((p .+ ddp.radius) ./ (2 .* ddp.radius)) .* 0.99 .+ 1.005
-xfm_backward(ddp::DelaunayDiscProfile{T}, p) where {T} =
-    (((points .- 1.005) ./ 0.99) .* 2 .* ddp.radius) .- ddp.radius
+
+function VoronoiDiscProfile(
+    m::AbstractMetricParams{T},
+    d::AbstractAccretionDisc{T},
+    endpoints::AbstractVector{GeodesicPoint{T}};
+    padding = 1,
+) where {T}
+    dim = d.outer_radius + padding
+    rect = VoronoiCells.Rectangle(
+        GeometryBasics.Point2(-dim, -dim),
+        GeometryBasics.Point2(dim, dim),
+    )
+
+    generators = to_cartesian.(endpoints)
+
+    tess = VoronoiCells.voronoicells(generators, rect)
+    polys = GeometryBasics.Polygon.(tess.Cells)
+    # cutchart!(polys, m, d)
+    VoronoiDiscProfile(d, polys, generators)
+end
+
+function VoronoiDiscProfile(
+    m::AbstractMetricParams{T},
+    d::AbstractAccretionDisc{T},
+    sols::AbstractArray{S},
+) where {T,S<:SciMLBase.AbstractODESolution}
+    VoronoiDiscProfile(m, d, map(sol -> get_endpoint(m, sol), sols))
+end
+
+function VoronoiDiscProfile(
+    m::AbstractMetricParams{T},
+    d::AbstractAccretionDisc{T},
+    simsols::SciMLBase.EnsembleSolution{T},
+) where {T}
+    mask = map(s -> s.retcode == :Intersected, simsols)
+    VoronoiDiscProfile(m, d, @view(simsols.u[mask]))
+end
+
+function findindex(
+    vdp::VoronoiDiscProfile{D,T},
+    p::GeometryBasics.Point2{T};
+    radius = 10,
+) where {D,T}
+    findfirst(vdp.polys) do poly
+        # check if we're at all close
+        p1 = poly.exterior.points[end].points[1]
+        d = sum((p1 .- p) .^ 2)
+
+        (d < radius^2) && in_polygon(poly, p)
+    end
+end
+
+@inline function findindex(
+    vdp::VoronoiDiscProfile{D,T},
+    gp::GeodesicPoint{T};
+    kwargs...,
+) where {D,T}
+    p = to_cartesian(gp)
+    findindex(vdp, p; kwargs...)
+end
+
+function findindex(
+    vdp::VoronoiDiscProfile{D,T},
+    gps::AbstractArray{GeodesicPoint{T}};
+    kwargs...,
+) where {D,T}
+    ThreadsX.map(gp -> findindex(vdp, gp), gps)
+end
+
+"""
+    cutchart!(polys, m::AbstractMetricParams{T}, d::AbstractAccretionDisc{T})
+
+Trims each polygon in `polys` to match the chart of the disc. Walks the edges of each
+polygon until some intersection ``A`` is found. Continues walking until a second intersection
+``B`` is found, and then interpolates an arc between ``A`` and ``B``.
+"""
+function cutchart!(polys, m::AbstractMetricParams{T}, d::AbstractAccretionDisc{T}) where {T}
+    rs = inner_radius(m)
+    inside_radius = rs < d.inner_radius ? d.inner_radius : rs
+    outside_radius = d.outer_radius
+    map(polys) do poly
+        poly = _cut_inner(inside_radius, poly)
+        #poly = _cut_outer(outside_radius, poly)
+        poly
+    end
+end
+
+function _cut_inner(radius, poly)
+    clines = getcycliclines(poly)
+    (i1, t1) = _circ_path_intersect(radius, clines)
+    if t1 > 0
+        (i2, t2) = _circ_path_intersect(radius, @view(clines[i1:end]))
+        _circ_connect(radius, clines, i1, t1, i2, t2)
+    else
+        poly
+    end
+end
+
+function _circ_connect(radius, clines, i1, t1, i2, t2)
+    # get intersection points
+    A = clines[i1][1] .+ t1 .* (clines[i1][2] - clines[i1][1])
+    B = clines[i2][1] .+ t2 .* (clines[i2][2] - clines[i2][1])
+
+    @assert length(clines) > 2
+
+    # check if we started in or outside of the circle
+    if √sum((clines[i1][1] .* clines[i1][1]) .^ 2) ≤ radius
+        # inside circle
+        keep2 = @views clines[i2+1:end]
+        keep1 = @views clines[1:i1-1]
+        keep = vcat(keep2, keep1)
+
+        GeometryBasics.Polygon(
+            vcat(
+                keep,
+                GeometryBasics.Line(keep[end][2], A),
+                GeometryBasics.Line(A, B),
+                GeometryBasics.Line(B, keep[1][1]),
+            ),
+        )
+    else
+        # outside circle
+        keep = @views clines[i1+1:i2-1]
+        if length(keep) > 0
+            GeometryBasics.Polygon(
+                vcat(
+                    keep,
+                    GeometryBasics.Line(keep[end][2], B),
+                    GeometryBasics.Line(B, A),
+                    GeometryBasics.Line(A, keep[1][1]),
+                ),
+            )
+        else
+            # triangle with only a single point inside circle
+            GeometryBasics.Polygon([
+                GeometryBasics.Line(clines[i1][2], A),
+                GeometryBasics.Line(A, B),
+                GeometryBasics.Line(B, clines[i1][2]),
+            ])
+        end
+    end
+end
+
+function _circ_path_intersect(
+    radius,
+    lines::AbstractArray{L},
+) where {L<:GeometryBasics.Line}
+    for (i, line) in enumerate(lines)
+        t = _circ_line_intersect(radius, line)
+        if t > 0
+            return i, t
+        end
+    end
+    -1, -1
+end
+
+function _circ_line_intersect(radius, line::GeometryBasics.Line)
+    let A = line.points[1], B = line.points[2]
+        d = B .- A
+        d2 = sum(d .* d)
+        A2 = sum(A .* A)
+        da = sum(d .* A)
+        Δ = da^2 - d2 * (A2 - radius^2)
+        if Δ > 0
+            tp = (-da + Δ) / d2
+            tn = (-da - Δ) / d2
+            (1 ≥ tp ≥ 0) && return tp
+            (1 ≥ tn ≥ 0) && return tn
+        end
+    end
+    -1
+end
 
 
 function __renderprofile(
     m::AbstractMetricParams{T},
     model::AbstractCoronaModel{T},
     d::AbstractAccretionGeometry{T},
-    time_domain;
-    sampler,
-    kwargs...,
-) where {T}
-    # TODO
-    error("Not implemented for $(typeof(d)).")
-end
-
-
-function __renderprofile(
-    m::AbstractMetricParams{T},
-    model::AbstractCoronaModel{T},
-    d::GeometricThinDisc{T},
     time_domain;
     sampler,
     kwargs...,
