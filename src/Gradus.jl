@@ -23,6 +23,8 @@ export AbstractMetricParams,
     metric_params,
     metric,
     get_endpoint,
+    get_startpoint,
+    get_point,
     GeodesicPoint,
     vector_to_local_sky,
     AbstractMetricParams,
@@ -49,7 +51,7 @@ export rendergeodesics,
 
 # AccretionGeometry
 export AbstractAccretionGeometry,
-    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc
+    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc, in_polygon, get_area
 
 # DiscProfiles
 export AbstractCoronaModel,
@@ -60,7 +62,8 @@ export AbstractCoronaModel,
     EvenSampler,
     WeierstrassSampler,
     RandomGenerator,
-    GoldenSpiralGenerator
+    GoldenSpiralGenerator,
+    VoronoiDiscProfile
 
 # pre-defined metrics
 include("metrics/metrics.jl")
