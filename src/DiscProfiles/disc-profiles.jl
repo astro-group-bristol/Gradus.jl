@@ -47,7 +47,10 @@ function VoronoiDiscProfile(
 
     tess = VoronoiCells.voronoicells(generators, rect)
     polys = GeometryBasics.Polygon.(tess.Cells)
-    # cutchart!(polys, m, d)
+
+    # cut the polygons down to shape
+    cutchart!(polys, m, d)
+
     VoronoiDiscProfile(d, polys, generators)
 end
 
@@ -110,25 +113,31 @@ function cutchart!(polys, m::AbstractMetricParams{T}, d::AbstractAccretionDisc{T
     rs = inner_radius(m)
     inside_radius = rs < d.inner_radius ? d.inner_radius : rs
     outside_radius = d.outer_radius
-    map(polys) do poly
-        poly = _cut_inner(inside_radius, poly)
-        #poly = _cut_outer(outside_radius, poly)
-        poly
+    for i in eachindex(polys)
+        poly = polys[i]
+        poly = _cut_polygon(inside_radius, poly; inner = true)
+        poly = _cut_polygon(outside_radius, poly; inner = false)
+        polys[i] = poly
     end
+    # filter!(!isnothing, polys)
 end
 
-function _cut_inner(radius, poly)
+function _cut_polygon(radius, poly; inner = true)
     clines = getcycliclines(poly)
     (i1, t1) = _circ_path_intersect(radius, clines)
     if t1 > 0
-        (i2, t2) = _circ_path_intersect(radius, @view(clines[i1:end]))
-        _circ_connect(radius, clines, i1, t1, i2, t2)
+        (i2, t2) = _circ_path_intersect(radius, @view(clines[i1+1:end]))
+        if inner
+            _circ_cut(radius, clines, i1, t1, i2 + i1, t2; outer = false)
+        else
+            _circ_cut(radius, clines, i1, t1, i2 + i1, t2)
+        end
     else
         poly
     end
 end
 
-function _circ_connect(radius, clines, i1, t1, i2, t2)
+function _circ_cut(radius, clines, i1, t1, i2, t2; outer = true)
     # get intersection points
     A = clines[i1][1] .+ t1 .* (clines[i1][2] - clines[i1][1])
     B = clines[i2][1] .+ t2 .* (clines[i2][2] - clines[i2][1])
@@ -136,42 +145,25 @@ function _circ_connect(radius, clines, i1, t1, i2, t2)
     @assert length(clines) > 2
 
     # check if we started in or outside of the circle
-    if √sum((clines[i1][1] .* clines[i1][1]) .^ 2) ≤ radius
+    dist = √sum(clines[1][1] .^ 2)
+    if (outer && (dist ≤ radius)) || (!outer && (dist ≥ radius))
         # inside circle
-        keep2 = @views clines[i2+1:end]
-        keep1 = @views clines[1:i1-1]
-        keep = vcat(keep2, keep1)
+        points = first.(@view(clines[1:i1]))
+        push!(points, A)
+        push!(points, B)
+        points = vcat(points, first.(@view(clines[i2+1:end])))
 
-        GeometryBasics.Polygon(
-            vcat(
-                keep,
-                GeometryBasics.Line(keep[end][2], A),
-                GeometryBasics.Line(A, B),
-                GeometryBasics.Line(B, keep[1][1]),
-            ),
-        )
+        return GeometryBasics.Polygon(points)
     else
         # outside circle
-        keep = @views clines[i1+1:i2-1]
-        if length(keep) > 0
-            GeometryBasics.Polygon(
-                vcat(
-                    keep,
-                    GeometryBasics.Line(keep[end][2], B),
-                    GeometryBasics.Line(B, A),
-                    GeometryBasics.Line(A, keep[1][1]),
-                ),
-            )
-        else
-            # triangle with only a single point inside circle
-            GeometryBasics.Polygon([
-                GeometryBasics.Line(clines[i1][2], A),
-                GeometryBasics.Line(A, B),
-                GeometryBasics.Line(B, clines[i1][2]),
-            ])
-        end
+        points = first.(@view(clines[i1+1:i2]))
+        push!(points, B)
+        push!(points, A)
+
+        return GeometryBasics.Polygon(points)
     end
 end
+
 
 function _circ_path_intersect(
     radius,
@@ -193,9 +185,11 @@ function _circ_line_intersect(radius, line::GeometryBasics.Line)
         A2 = sum(A .* A)
         da = sum(d .* A)
         Δ = da^2 - d2 * (A2 - radius^2)
+
         if Δ > 0
-            tp = (-da + Δ) / d2
-            tn = (-da - Δ) / d2
+            tp = (-da + √Δ) / d2
+            tn = (-da - √Δ) / d2
+
             (1 ≥ tp ≥ 0) && return tp
             (1 ≥ tn ≥ 0) && return tn
         end

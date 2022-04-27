@@ -11,10 +11,6 @@ abstract type AbstractGeodesicPoint{T} end
     # p::P
 end
 
-function Base.show(io::IO, ::GeodesicPoint{T}) where {T}
-    write(io, "GeodesicPoint{$T}")
-end
-
 function geodesic_point_type(m::AbstractMetricParams{T}) where {T}
     GeodesicPoint{T}
 end
