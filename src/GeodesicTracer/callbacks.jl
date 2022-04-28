@@ -21,30 +21,17 @@ end
 
 function create_callback_set(
     m::AbstractMetricParams{T},
-    cb::Nothing,
+    cb::C,
     closest_approach,
     effective_infinity,
-) where {T}
+) where {T,C<:Union{NTuple{N,SciMLBase.DECallback},SciMLBase.DECallback,Nothing}} where {N}
     mcb = metric_callback(m, closest_approach, effective_infinity)
-    mcb isa Tuple ? CallbackSet(mcb...) : mcb
-end
-
-function create_callback_set(
-    m::AbstractMetricParams{T},
-    cb::NTuple{N,SciMLBase.DECallback},
-    closest_approach,
-    effective_infinity,
-) where {T,N}
-    mcb = metric_callback(m, closest_approach, effective_infinity)
-    mcb isa Tuple ? CallbackSet(mcb..., cb...) : CallbackSet(mcb, cb...)
-end
-
-function create_callback_set(
-    m::AbstractMetricParams{T},
-    cb::SciMLBase.DECallback,
-    closest_approach,
-    effective_infinity,
-) where {T}
-    mcb = metric_callback(m, closest_approach, effective_infinity)
-    mcb isa Tuple ? CallbackSet(mcb..., cb) : CallbackSet(mcb, cb)
+    if C <: SciMLBase.DECallback
+        mcb isa Tuple ? CallbackSet(cb, mcb...) : CallbackSet(cb, mcb)
+    elseif eltype(C) <: SciMLBase.DECallback
+        mcb isa Tuple ? CallbackSet(cb..., mcb...) : CallbackSet(cb..., mcb)
+    else
+        # else C is Nothing
+        mcb isa Tuple ? CallbackSet(mcb...) : mcb
+    end
 end
