@@ -22,16 +22,16 @@ using DocStringExtensions
 export AbstractMetricParams,
     metric_params,
     metric,
-    get_endpoint,
-    get_startpoint,
-    get_point,
+    getendpoint,
+    getstartpoint,
+    getpoint,
     GeodesicPoint,
     vector_to_local_sky,
     AbstractMetricParams,
     geodesic_eq,
     geodesic_eq!,
     constrain,
-    on_chart,
+    onchart,
     inner_radius,
     metric_type
 
@@ -51,7 +51,7 @@ export rendergeodesics,
 
 # AccretionGeometry
 export AbstractAccretionGeometry,
-    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc, in_polygon, get_area
+    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc, inpolygon, getarea
 
 # DiscProfiles
 export AbstractCoronaModel,
@@ -63,7 +63,9 @@ export AbstractCoronaModel,
     WeierstrassSampler,
     RandomGenerator,
     GoldenSpiralGenerator,
-    VoronoiDiscProfile
+    VoronoiDiscProfile,
+    findindex,
+    getareas
 
 # pre-defined metrics
 include("metrics/metrics.jl")
@@ -77,5 +79,8 @@ include("AccretionFormulae/AccretionFormulae.jl")
 
 using .AccretionFormulae
 export solve_equitorial_circular_orbit, trace_equitorial_circular_orbit
+
+include("const-point-functions.jl")
+
 
 end # module

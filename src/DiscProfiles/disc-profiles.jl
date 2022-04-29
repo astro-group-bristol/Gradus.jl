@@ -59,7 +59,7 @@ function VoronoiDiscProfile(
     d::AbstractAccretionDisc{T},
     sols::AbstractArray{S},
 ) where {T,S<:SciMLBase.AbstractODESolution}
-    VoronoiDiscProfile(m, d, map(sol -> get_endpoint(m, sol), sols))
+    VoronoiDiscProfile(m, d, map(sol -> getendpoint(m, sol), sols))
 end
 
 function VoronoiDiscProfile(
@@ -67,8 +67,7 @@ function VoronoiDiscProfile(
     d::AbstractAccretionDisc{T},
     simsols::SciMLBase.EnsembleSolution{T},
 ) where {T}
-    mask = map(s -> s.retcode == :Intersected, simsols)
-    VoronoiDiscProfile(m, d, @view(simsols.u[mask]))
+    VoronoiDiscProfile(m, d, filter(i -> i.retcode == :Intersected, simsols.u))
 end
 
 function findindex(
@@ -81,7 +80,7 @@ function findindex(
         p1 = poly.exterior.points[end].points[1]
         d = sum((p1 .- p) .^ 2)
 
-        (d < radius^2) && in_polygon(poly, p)
+        (d < radius^2) && inpolygon(poly, p)
     end
 end
 
@@ -101,6 +100,8 @@ function findindex(
 ) where {D,T}
     ThreadsX.map(gp -> findindex(vdp, gp), gps)
 end
+
+getareas(vdp::VoronoiDiscProfile{D,T}) where {D,T} = getarea.(vdp.polys)
 
 """
     cutchart!(polys, m::AbstractMetricParams{T}, d::AbstractAccretionDisc{T})

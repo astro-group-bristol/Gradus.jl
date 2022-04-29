@@ -29,7 +29,7 @@ function unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution{T,N,V}) wher
     map(unpack_solution, simsol)
 end
 
-function get_point(
+function getpoint(
     m::AbstractMetricParams{T},
     sol::SciMLBase.AbstractODESolution{T,N,S},
     i::Int,
@@ -48,18 +48,18 @@ function get_point(
     end
 end
 
-function get_point(
+function getpoint(
     m::AbstractMetricParams{T},
     simsol::Union{SciMLBase.AbstractEnsembleSolution{T,N,S},AbstractArray{P}},
     i,
 ) where {T,N,S,P<:SciMLBase.AbstractODESolution}
-    map(sol -> get_point(m, sol, i), simsol)
+    map(sol -> getpoint(m, sol, i), simsol)
 end
 
-function get_endpoint(m::AbstractMetricParams{T}, sol_or_simsols) where {T}
-    get_point(m, sol_or_simsols, -1)
+function getendpoint(m::AbstractMetricParams{T}, sol_or_simsols) where {T}
+    getpoint(m, sol_or_simsols, -1)
 end
 
-function get_startpoint(m::AbstractMetricParams{T}, sol_or_simsols) where {T}
-    get_point(m, sol_or_simsols, 1)
+function getstartpoint(m::AbstractMetricParams{T}, sol_or_simsols) where {T}
+    getpoint(m, sol_or_simsols, 1)
 end

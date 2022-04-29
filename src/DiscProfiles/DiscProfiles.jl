@@ -6,13 +6,14 @@ import StaticArrays: @SVector
 
 
 import ..GradusBase:
-    AbstractMetricParams, GeodesicPoint, vector_to_local_sky, get_endpoint, inner_radius
+    AbstractMetricParams, GeodesicPoint, vector_to_local_sky, getendpoint, inner_radius
 import ..GeodesicTracer: tracegeodesics
 import ..AccretionGeometry:
     AbstractAccretionGeometry,
     AbstractAccretionDisc,
     to_cartesian,
-    in_polygon,
+    inpolygon,
+    getarea,
     getcycliclines
 
 import SciMLBase
@@ -78,7 +79,8 @@ export AbstractCoronaModel,
     RandomGenerator,
     GoldenSpiralGenerator,
     VoronoiDiscProfile,
-    findindex
+    findindex,
+    getareas
 
 
 end # module

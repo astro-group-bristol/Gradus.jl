@@ -64,7 +64,7 @@ function getcyclicpoints(poly::GeometryBasics.Polygon)
     points
 end
 
-function in_polygon(poly::GeometryBasics.Polygon, p::GeometryBasics.Point2)
+function inpolygon(poly::GeometryBasics.Polygon, p::GeometryBasics.Point2)
     lines = getcycliclines(poly)
     side = getorientation(lines[1], p)
     for i = 2:length(lines)
@@ -75,13 +75,14 @@ function in_polygon(poly::GeometryBasics.Polygon, p::GeometryBasics.Point2)
     true
 end
 
-# shoestring formula
-function get_area(poly::GeometryBasics.Polygon)
+# shoelace formula
+function getarea(poly::GeometryBasics.Polygon)
     a = 0.0
     ppoints = getcyclicpoints(poly)
     @inbounds for i = 2:length(ppoints)
         p1 = ppoints[i-1]
         p2 = ppoints[i]
+        # (x1 * y2) - (x2 * y1)
         a += (p1[1] * p2[2]) - (p2[1] * p1[2])
     end
     abs(a / 2)
