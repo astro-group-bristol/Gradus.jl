@@ -70,7 +70,7 @@ export AbstractCoronaModel,
 # pre-defined metrics
 include("metrics/metrics.jl")
 
-export BoyerLindquistAD, BoyerLindquistFO, JohannsenAD, MorrisThorneAD
+export BoyerLindquistAD, BoyerLindquistFO, JohannsenAD, MorrisThorneAD, KerrRefractiveAD
 
 # downstream modules and work
 include("special-radii.jl")
