@@ -1,5 +1,4 @@
 # Tests to make sure the basic `tracegeodesics` function works for (ideally) all metrics.
-using Test, Gradus, StaticArrays
 
 @testset "tracegeodesics" begin
     # tests if a single geodesic can be integrated

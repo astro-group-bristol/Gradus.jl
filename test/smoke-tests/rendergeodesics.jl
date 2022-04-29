@@ -1,5 +1,4 @@
 # Tests to make sure the basic `rendergeodesics` function works for (ideally) all metrics.
-using Test, Gradus, StaticArrays
 
 @testset "rendergeodesics" begin
 

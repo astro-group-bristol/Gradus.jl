@@ -1,5 +1,4 @@
 # Tests to make sure the basic pointfunctions work
-using Test, Gradus, StaticArrays
 
 @testset "pointfunctions" begin
 
@@ -22,7 +21,7 @@ using Test, Gradus, StaticArrays
     @testset "redshift" begin
         # only implemented for the BoyerLindquist metrics at the moment
         for m in [BoyerLindquistAD(), BoyerLindquistFO()]
-            run_pointfunction(m, Gradus.redshift)
+            run_pointfunction(m, Gradus.ConstPointFunctions.redshift)
         end
         # smoke test passed
         @test true
