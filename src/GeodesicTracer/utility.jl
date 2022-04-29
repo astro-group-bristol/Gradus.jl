@@ -32,6 +32,6 @@ function map_impact_parameters(
 end
 
 function alpha_beta_to_vel(m::AbstractMetricParams{T}, u, α, β) where {T}
-    reg = u[2]^2
-    -1.0, -β / reg, -α / reg
+    mcomp = metric_components(m, @view(u[2:3]))
+    -1.0, -β / mcomp[3], -α / √(mcomp[3] * mcomp[4])
 end
