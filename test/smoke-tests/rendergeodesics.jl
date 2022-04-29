@@ -7,8 +7,8 @@
         for (m, expectation) in zip(
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
-            # last computed 24/04/2022: closest approach reduced to 1% RS
-            [8966.172562862197, 8966.172929103566, 8977.500037031317, 306.88361044534764],
+            # last computed 29/04/2022: corrected impact parameter mapping
+            [8966.172562862197, 8966.172929103566, 8977.500037031317, 413.49944125849277],
         )
             img = rendergeodesics(
                 m,
@@ -32,8 +32,8 @@
         for (m, expectation) in zip(
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
-            # last computed 24/04/2022: closest approach reduced to 1% RS
-            [87197.374065253, 87069.09711527612, 81500.87198429636, 36314.983726028615],
+            # last computed 29/04/2022: corrected impact parameter mapping
+            [86114.71461584387, 86233.47133294544, 81500.87198429636, 36043.47951823861],
         )
             img = rendergeodesics(
                 m,
