@@ -12,7 +12,7 @@ import ..GradusBase:
     AbstractMetricParams,
     inner_radius,
     AbstractGeodesicPoint,
-    get_endpoint,
+    getendpoint,
     geodesic_point_type,
     unpack_solution,
     SciMLBase

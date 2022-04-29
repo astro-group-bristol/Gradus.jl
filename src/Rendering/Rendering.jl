@@ -11,6 +11,8 @@ import SciMLBase
 using ..GradusBase
 using ..GeodesicTracer
 
+import ..ConstPointFunctions
+
 include("utility.jl")
 include("render-cache.jl")
 include("point-functions.jl")

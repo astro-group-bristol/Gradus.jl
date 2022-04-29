@@ -24,7 +24,7 @@ end
     kwargs...,
 ) where {M,T,G}
     ThreadsX.map(
-        sol -> pf.f(rc.m, get_endpoint(m, sol), rc.max_time; kwargs...),
+        sol -> pf.f(rc.m, getendpoint(m, sol), rc.max_time; kwargs...),
         rc.geodesics,
     )
 end
@@ -57,17 +57,3 @@ end
         )
     end
 end
-
-module ConstPointFunctions
-import ..Rendering: PointFunction, FilterPointFunction
-
-const filter_early_term =
-    FilterPointFunction((m, gp, max_time; kwargs...) -> gp.t < max_time, NaN)
-
-const filter_intersected =
-    FilterPointFunction((m, gp, max_time; kwargs...) -> gp.retcode == :Intersected, NaN)
-
-const affine_time = PointFunction((m, gp, max_time; kwargs...) -> gp.t)
-
-const shadow = affine_time ∘ filter_early_term
-end # module

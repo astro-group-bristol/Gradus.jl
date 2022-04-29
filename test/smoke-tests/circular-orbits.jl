@@ -1,5 +1,4 @@
 # smoke test to make sure circular orbits work
-using Test, Gradus
 
 @testset "circular-orbits" begin
 

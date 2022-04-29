@@ -12,7 +12,7 @@ function geodesic_point_type(m::AbstractFirstOrderMetricParams{T}) where {T}
     FirstOrderGeodesicPoint{T,p_type}
 end
 
-function get_endpoint(
+function getendpoint(
     m::AbstractFirstOrderMetricParams{T},
     sol::SciMLBase.AbstractODESolution{T,N,S},
 ) where {T,N,S}

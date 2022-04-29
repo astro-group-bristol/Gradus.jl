@@ -9,7 +9,7 @@ using DocStringExtensions
 using Parameters
 
 import ..GradusBase:
-    AbstractMetricParams, geodesic_eq, constrain, on_chart, inner_radius, metric
+    AbstractMetricParams, geodesic_eq, constrain, onchart, inner_radius, metric
 
 import ForwardDiff
 

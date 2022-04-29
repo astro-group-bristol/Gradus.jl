@@ -75,6 +75,6 @@ collision_callback(m::AbstractAccretionGeometry{T}) where {T} =
 
 
 export AbstractAccretionGeometry,
-    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc
+    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc, inpolygon, getarea
 
 end # module
