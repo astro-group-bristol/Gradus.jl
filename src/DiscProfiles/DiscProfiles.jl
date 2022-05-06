@@ -27,6 +27,7 @@ import Base
 include("sky-geometry.jl")
 include("corona-models.jl")
 include("disc-profiles.jl")
+include("transfer-functions.jl")
 
 function tracegeodesics(
     m::AbstractMetricParams{T},
@@ -81,7 +82,8 @@ export AbstractCoronaModel,
     GoldenSpiralGenerator,
     VoronoiDiscProfile,
     findindex,
-    getareas
+    getareas,
+    bin_transfer_function
 
 
 end # module

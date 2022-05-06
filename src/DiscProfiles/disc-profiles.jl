@@ -75,16 +75,14 @@ function VoronoiDiscProfile(
     VoronoiDiscProfile(m, d, filter(i -> i.retcode == :Intersected, simsols.u))
 end
 
-@noinline function findindex(vdp::VoronoiDiscProfile{D,V}, p; radius = 2) where {D,V}
+@noinline function findindex(vdp::VoronoiDiscProfile{D,V}, p) where {D,V}
     for (i, poly) in enumerate(vdp.polys)
         # check if we're at all close
         let p1 = poly[1]
             d = @inbounds (p1[1] - p[1])^2 + (p1[2] - p[2])^2
 
-            if (d < radius^2)
-                if inpolygon(poly, p)
-                    return i
-                end
+            if inpolygon(poly, p)
+                return i
             end
         end
     end
@@ -211,7 +209,7 @@ end
             if (1 ≥ tp ≥ 0)
                 return tp
             end
-            if (1 ≥ tn ≥ 0) 
+            if (1 ≥ tn ≥ 0)
                 return tn
             end
         end
