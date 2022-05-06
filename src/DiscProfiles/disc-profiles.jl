@@ -208,8 +208,12 @@ end
             tp = (-da + √Δ) / d2
             tn = (-da - √Δ) / d2
 
-            (1 ≥ tp ≥ 0) && return tp
-            (1 ≥ tn ≥ 0) && return tn
+            if (1 ≥ tp ≥ 0)
+                return tp
+            end
+            if (1 ≥ tn ≥ 0) 
+                return tn
+            end
         end
     end
     -1
