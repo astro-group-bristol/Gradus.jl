@@ -8,7 +8,7 @@
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
             # last computed 29/04/2022: corrected impact parameter mapping
-            [8966.172562862197, 8966.172929103566, 8977.500037031317, 306.7728244863663],
+            [8966.172562862197, 8966.172929103566, 8977.500037031317, 413.49944125849277],
         )
             img = rendergeodesics(
                 m,
@@ -33,7 +33,7 @@
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
             # last computed 29/04/2022: corrected impact parameter mapping
-            [87197.37406525297, 87069.09711527605, 81500.87198429636, 36314.98372602861],
+            [86114.71461584378, 86233.47133294535, 81500.87198429636, 36043.4795182386],
         )
             img = rendergeodesics(
                 m,
