@@ -65,7 +65,8 @@ export AbstractCoronaModel,
     GoldenSpiralGenerator,
     VoronoiDiscProfile,
     findindex,
-    getareas
+    getareas,
+    bin_transfer_function
 
 # pre-defined metrics
 include("metrics/metrics.jl")
