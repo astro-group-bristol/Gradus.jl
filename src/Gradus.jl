@@ -51,7 +51,7 @@ export rendergeodesics,
 
 # AccretionGeometry
 export AbstractAccretionGeometry,
-    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc, inpolygon, getarea
+    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc, inpolygon, getarea, CircularOrbits
 
 # DiscProfiles
 export AbstractCoronaModel,

@@ -157,6 +157,8 @@ function constrain(
     constrain_time(g_comps, v, μ)
 end
 
+@inline metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ) where {T} = ForwardDiff.vector_mode_jacobian(x -> metric_components(m, x), rθ)
+
 @inbounds function geodesic_eq(
     m::AbstractAutoDiffStaticAxisSymmetricParams{T},
     u,
@@ -167,7 +169,7 @@ end
     # calculate all non-zero components
     g_comps = metric_components(m, rθ)
     # use AD to get derivatives
-    jacs = ForwardDiff.vector_mode_jacobian(x -> metric_components(m, x), rθ)
+    jacs = metric_jacobian(m, rθ)
     # calculate all non-zero inverse matric components
     ginv_comps = inverse_metric_components(g_comps)
     # calculate acceleration
