@@ -2,7 +2,7 @@ module DiscProfiles
 
 using Parameters
 
-import StaticArrays: @SVector
+import StaticArrays: @SVector, SVector
 
 
 import ..GradusBase:
@@ -14,7 +14,8 @@ import ..AccretionGeometry:
     to_cartesian,
     inpolygon,
     getarea,
-    getcycliclines
+    getcycliclines,
+    getpoints
 
 import SciMLBase
 import VoronoiCells

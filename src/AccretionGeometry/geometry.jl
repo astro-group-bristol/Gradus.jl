@@ -16,10 +16,10 @@ end
 Return the position of `gp` in Cartesian coordinates.
 """
 function to_cartesian(gp::GradusBase.AbstractGeodesicPoint{T}) where {T}
-    let r = gp.u[2], ϕ = gp.u[4]
+    @inbounds let r = gp.u[2], ϕ = gp.u[4]
         x = r * cos(ϕ)
         y = r * sin(ϕ)
-        GeometryBasics.Point2{T}(x, y)
+        SVector{2,T}(x, y)
     end
 end
 
@@ -36,39 +36,50 @@ end
 # to undergo major breaking changes, which would refine the package
 # so may wait before using another libraries version of these:
 
-@fastmath function getorientation(line::GeometryBasics.Line{2,T}, p = GeometryBasics.Point2{T}(0.0, 0.0)) where {T}
-    let lp1 = line.points[1], lp2 = line.points[2]
-        o = p - lp1
-        b = lp1 - lp2
+getorientation(line::GeometryBasics.AbstractPolygon, p) = getorientation(line.points, p)
+
+@fastmath function getorientation(line, p)
+    let p1 = line[1], p2 = line[2]
+        o = p - p1
+        b = p1 - p2
         t = (b[2] * o[1]) - (b[1] * o[2])
         # branchless : t < 0 ? 1 : -1
         (t < 0) * 2 - 1
     end
 end
 
-function getcycliclines(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}) where {T,L,V}
+function getcycliclines(
+    poly::GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V},
+) where {T,L,V}
     lines = poly.exterior.points
     vcat(lines, GeometryBasics.Line(lines[end].points[2], lines[1].points[1]))
 end
 
-function getpoints(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}) where {T,L,V}
+function getcycliclines(poly)
+    (i == 1 ? (poly[end], poly[i]) : (poly[i-1], poly[i]) for i = 1:length(poly))
+end
+
+function getpoints(
+    poly::GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V},
+) where {T,L,V}
     lines = poly.exterior.points
     ps = first.(lines)
     push!(ps, lines[end][2])
     ps
 end
 
-function getcyclicpoints(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}) where {T,L,V}
-    points = getpoints(poly)
-    push!(points, points[1])
-    points
+getpoints(poly) = (i for i in poly)
+
+function getcyclicpoints(poly)
+    pts = getpoints(poly)
+    (i for i in Iterators.flatten((pts, (first(pts),))))
 end
 
-function inpolygon(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}, p::GeometryBasics.Point2{T}) where {T,L,V}
+function inpolygon(poly, p)
     lines = getcycliclines(poly)
-    side = getorientation(lines[1], p)
-    for i = 2:length(lines)
-        if getorientation(lines[i], p) != side
+    side = getorientation(first(lines), p)
+    for line in lines
+        if getorientation(line, p) != side
             return false
         end
     end
@@ -76,14 +87,13 @@ function inpolygon(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, 
 end
 
 # shoelace formula
-function getarea(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}) where {T,L,V}
+function getarea(poly)
     a = 0.0
-    ppoints = getcyclicpoints(poly)
-    @inbounds for i = 2:length(ppoints)
-        p1 = ppoints[i-1]
-        p2 = ppoints[i]
+    p1, ppoints = Iterators.peel(getcyclicpoints(poly))
+    @inbounds for p2 in ppoints
         # (x1 * y2) - (x2 * y1)
         a += (p1[1] * p2[2]) - (p2[1] * p1[2])
+        p1 = p2
     end
     abs(a / 2)
 end

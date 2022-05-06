@@ -22,7 +22,7 @@ using ..StaticArrays
     # need to interpolate the refractve index boundary
     # else we don't have a gradient to compute, and we miss it
     # hemorraging energy in the process
-    δr = 2.0 
+    δr = 2.0
     if r ≤ corona_radius
         # ...
     elseif corona_radius ≤ r ≤ corona_radius + δr
@@ -30,12 +30,12 @@ using ..StaticArrays
         # use an arbitrarily steep smooth interpolation
         # this one isn't perfect, but does a good job
         k = atan(1e5t) * 2 / π
-        n = k + n * (1-k) 
-    else 
+        n = k + n * (1 - k)
+    else
         n = 1.0
     end
 
-    @SVector [tt/n^2, rr, θθ, ϕϕ, tϕ/n]
+    @SVector [tt / n^2, rr, θθ, ϕϕ, tϕ / n]
 end
 
 end # module

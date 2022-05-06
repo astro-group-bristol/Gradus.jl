@@ -9,21 +9,22 @@ abstract type AbstractDiscProfile end
 # evaluate(aap::AbstractAccretionProfile, p) =
 #     error("Not implemented for `$(typeof(aap))` yet.")
 
-struct VoronoiDiscProfile{D,T,L,V} <: AbstractDiscProfile
+struct VoronoiDiscProfile{D,V} <: AbstractDiscProfile
     disc::D
-    polys::Vector{GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V}}
-    generators::Vector{GeometryBasics.Point2{T}}
+    polys::Vector{Vector{V}}
+    generators::Vector{V}
+
     function VoronoiDiscProfile(
         d::D,
-        polys::Vector{P},
-        gen::Vector{GeometryBasics.Point2{T}},
-    ) where {P<:GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V},D<:AbstractAccretionDisc{T}} where {T,L,V}
+        polys::Vector{Vector{V}},
+        gen::Vector{V},
+    ) where {V<:AbstractArray{T}} where {D,T}
         if !isapprox(d.inclination, π / 2)
             return error(
                 "Currently only supported for discs in the equitorial plane (θ=π/2).",
             )
         end
-        new{D,T,L,V}(d, polys, gen)
+        new{D,V}(d, polys, gen)
     end
 end
 
@@ -45,13 +46,17 @@ function VoronoiDiscProfile(
 
     generators = to_cartesian.(endpoints)
 
-    tess = VoronoiCells.voronoicells(generators, rect)
+    generators_points = convert.(GeometryBasics.Point2{T}, generators)
+
+    tess = VoronoiCells.voronoicells(generators_points, rect)
     polys = GeometryBasics.Polygon.(tess.Cells)
 
     # cut the polygons down to shape
     cutchart!(polys, m, d)
 
-    VoronoiDiscProfile(d, polys, generators)
+    polys_vecs = unpack_polys(polys)
+
+    VoronoiDiscProfile(d, polys_vecs, generators)
 end
 
 function VoronoiDiscProfile(
@@ -70,18 +75,14 @@ function VoronoiDiscProfile(
     VoronoiDiscProfile(m, d, filter(i -> i.retcode == :Intersected, simsols.u))
 end
 
-@noinline function findindex(
-    vdp::VoronoiDiscProfile{D,T},
-    p::GeometryBasics.Point2{T};
-    radius = 4,
-) where {D,T}
+@noinline function findindex(vdp::VoronoiDiscProfile{D,V}, p; radius = 2) where {D,V}
     for (i, poly) in enumerate(vdp.polys)
-        # # check if we're at all close
-        let p1 = @view(poly.exterior.points[end].points[1][1])
+        # check if we're at all close
+        let p1 = poly[1]
             d = @inbounds (p1[1] - p[1])^2 + (p1[2] - p[2])^2
 
             if (d < radius^2)
-                if inpolygon(poly, p) 
+                if inpolygon(poly, p)
                     return i
                 end
             end
@@ -90,25 +91,34 @@ end
     -1
 end
 
-@inline function findindex(
-    vdp::VoronoiDiscProfile{D,T},
-    gp::GeodesicPoint{T};
-    kwargs...,
-) where {D,T}
+@inline function findindex(vdp::VoronoiDiscProfile{D,V}, gp::GeodesicPoint{T}) where {D,V,T}
     p = to_cartesian(gp)
-    findindex(vdp, p; kwargs...)
+    findindex(vdp, p)
 end
 
 function findindex(
-    vdp::VoronoiDiscProfile{D,T},
+    vdp::VoronoiDiscProfile{D,V},
     gps::AbstractArray{GeodesicPoint{T}};
     kwargs...,
-) where {D,T}
-    cart_ps = to_cartesian.(gps)
-    ThreadsX.map(p -> findindex(vdp, p; kwargs...), cart_ps)
+) where {D,V,T}
+    ret = fill(-1, size(gps))
+    Threads.@threads for i = 1:length(gps)
+        gp = gps[i]
+        ret[i] = findindex(vdp, gp)
+    end
+    ret
 end
 
 getareas(vdp::VoronoiDiscProfile{D,T}) where {D,T} = getarea.(vdp.polys)
+
+function unpack_polys(
+    polys::AbstractVector{GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V}},
+) where {T,L,V}
+    map(polys) do poly
+        map(SVector{2,T}, getpoints(poly))
+    end
+end
+
 
 """
     cutchart!(polys, m::AbstractMetricParams{T}, d::AbstractAccretionDisc{T})
