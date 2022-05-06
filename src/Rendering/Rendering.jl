@@ -11,8 +11,6 @@ import SciMLBase
 using ..GradusBase
 using ..GeodesicTracer
 
-import ..ConstPointFunctions
-
 include("utility.jl")
 include("render-cache.jl")
 include("point-functions.jl")
@@ -23,7 +21,7 @@ function rendergeodesics(
     m::AbstractMetricParams{T},
     init_pos,
     max_time;
-    pf = ConstPointFunctions.shadow,
+    pf = PointFunction((m, gp, mt) -> gp.t[end]),
     image_width = 350,
     image_height = 250,
     fov_factor = 3.0,
@@ -68,7 +66,7 @@ end
 
 
 export rendergeodesics,
-    prerendergeodesics, PointFunction, FilterPointFunction, ConstPointFunctions, apply
+    prerendergeodesics, PointFunction, FilterPointFunction, apply
 
 
 end # module
