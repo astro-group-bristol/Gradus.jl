@@ -8,7 +8,7 @@
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
             # last computed 29/04/2022: corrected impact parameter mapping
-            [8966.172562862197, 8966.172929103566, 8977.500037031317, 413.49944125849277],
+            [8966.172562862197, 8966.172929103566, 8977.500037031317, 306.7728244863663],
         )
             img = rendergeodesics(
                 m,
@@ -17,7 +17,7 @@
                 fov_factor = 1.0,
                 image_width = 100,
                 image_height = 50,
-                verbose = false,
+                verbose = false
             )
             image_fingerprint = sum(filter(!isnan, img))
             # have to be really coarse cus the first order method is so variable???
@@ -33,7 +33,7 @@
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
             # last computed 29/04/2022: corrected impact parameter mapping
-            [86114.71461584387, 86233.47133294544, 81500.87198429636, 36043.47951823861],
+            [87197.37406525297, 87069.09711527605, 81500.87198429636, 36314.98372602861],
         )
             img = rendergeodesics(
                 m,
