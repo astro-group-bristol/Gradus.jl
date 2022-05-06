@@ -9,21 +9,21 @@ abstract type AbstractDiscProfile end
 # evaluate(aap::AbstractAccretionProfile, p) =
 #     error("Not implemented for `$(typeof(aap))` yet.")
 
-struct VoronoiDiscProfile{D,T} <: AbstractDiscProfile
+struct VoronoiDiscProfile{D,T,L,V} <: AbstractDiscProfile
     disc::D
-    polys::Vector{GeometryBasics.Polygon{2,T}}
+    polys::Vector{GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V}}
     generators::Vector{GeometryBasics.Point2{T}}
     function VoronoiDiscProfile(
         d::D,
         polys::Vector{P},
         gen::Vector{GeometryBasics.Point2{T}},
-    ) where {P<:GeometryBasics.AbstractPolygon,D<:AbstractAccretionDisc{T}} where {T}
+    ) where {P<:GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V},D<:AbstractAccretionDisc{T}} where {T,L,V}
         if !isapprox(d.inclination, π / 2)
             return error(
                 "Currently only supported for discs in the equitorial plane (θ=π/2).",
             )
         end
-        new{D,T}(d, polys, gen)
+        new{D,T,L,V}(d, polys, gen)
     end
 end
 
@@ -39,8 +39,8 @@ function VoronoiDiscProfile(
 ) where {T}
     dim = d.outer_radius + padding
     rect = VoronoiCells.Rectangle(
-        GeometryBasics.Point2(-dim, -dim),
-        GeometryBasics.Point2(dim, dim),
+        GeometryBasics.Point2{T}(-dim, -dim),
+        GeometryBasics.Point2{T}(dim, dim),
     )
 
     generators = to_cartesian.(endpoints)
@@ -70,18 +70,24 @@ function VoronoiDiscProfile(
     VoronoiDiscProfile(m, d, filter(i -> i.retcode == :Intersected, simsols.u))
 end
 
-function findindex(
+@noinline function findindex(
     vdp::VoronoiDiscProfile{D,T},
     p::GeometryBasics.Point2{T};
-    radius = 10,
+    radius = 4,
 ) where {D,T}
-    findfirst(vdp.polys) do poly
-        # check if we're at all close
-        p1 = poly.exterior.points[end].points[1]
-        d = sum((p1 .- p) .^ 2)
+    for (i, poly) in enumerate(vdp.polys)
+        # # check if we're at all close
+        let p1 = @view(poly.exterior.points[end].points[1][1])
+            d = @inbounds (p1[1] - p[1])^2 + (p1[2] - p[2])^2
 
-        (d < radius^2) && inpolygon(poly, p)
+            if (d < radius^2)
+                if inpolygon(poly, p) 
+                    return i
+                end
+            end
+        end
     end
+    -1
 end
 
 @inline function findindex(
@@ -98,7 +104,8 @@ function findindex(
     gps::AbstractArray{GeodesicPoint{T}};
     kwargs...,
 ) where {D,T}
-    ThreadsX.map(gp -> findindex(vdp, gp), gps)
+    cart_ps = to_cartesian.(gps)
+    ThreadsX.map(p -> findindex(vdp, p; kwargs...), cart_ps)
 end
 
 getareas(vdp::VoronoiDiscProfile{D,T}) where {D,T} = getarea.(vdp.polys)
@@ -179,7 +186,7 @@ function _circ_path_intersect(
     -1, -1
 end
 
-function _circ_line_intersect(radius, line::GeometryBasics.Line)
+@fastmath function _circ_line_intersect(radius, line::GeometryBasics.Line)
     let A = line.points[1], B = line.points[2]
         d = B .- A
         d2 = sum(d .* d)

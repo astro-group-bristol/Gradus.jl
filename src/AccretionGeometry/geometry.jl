@@ -19,7 +19,7 @@ function to_cartesian(gp::GradusBase.AbstractGeodesicPoint{T}) where {T}
     let r = gp.u[2], ϕ = gp.u[4]
         x = r * cos(ϕ)
         y = r * sin(ϕ)
-        GeometryBasics.Point2(x, y)
+        GeometryBasics.Point2{T}(x, y)
     end
 end
 
@@ -36,7 +36,7 @@ end
 # to undergo major breaking changes, which would refine the package
 # so may wait before using another libraries version of these:
 
-function getorientation(line::GeometryBasics.Line, p = GeometryBasics.Point2(0.0, 0.0))
+@fastmath function getorientation(line::GeometryBasics.Line{2,T}, p = GeometryBasics.Point2{T}(0.0, 0.0)) where {T}
     let lp1 = line.points[1], lp2 = line.points[2]
         o = p - lp1
         b = lp1 - lp2
@@ -46,25 +46,25 @@ function getorientation(line::GeometryBasics.Line, p = GeometryBasics.Point2(0.0
     end
 end
 
-function getcycliclines(poly::GeometryBasics.Polygon)
+function getcycliclines(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}) where {T,L,V}
     lines = poly.exterior.points
     vcat(lines, GeometryBasics.Line(lines[end].points[2], lines[1].points[1]))
 end
 
-function getpoints(poly::GeometryBasics.Polygon)
+function getpoints(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}) where {T,L,V}
     lines = poly.exterior.points
     ps = first.(lines)
     push!(ps, lines[end][2])
     ps
 end
 
-function getcyclicpoints(poly::GeometryBasics.Polygon)
+function getcyclicpoints(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}) where {T,L,V}
     points = getpoints(poly)
     push!(points, points[1])
     points
 end
 
-function inpolygon(poly::GeometryBasics.Polygon, p::GeometryBasics.Point2)
+function inpolygon(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}, p::GeometryBasics.Point2{T}) where {T,L,V}
     lines = getcycliclines(poly)
     side = getorientation(lines[1], p)
     for i = 2:length(lines)
@@ -76,7 +76,7 @@ function inpolygon(poly::GeometryBasics.Polygon, p::GeometryBasics.Point2)
 end
 
 # shoelace formula
-function getarea(poly::GeometryBasics.Polygon)
+function getarea(poly::GeometryBasics.Polygon{2, T, GeometryBasics.Point2{T}, L, V}) where {T,L,V}
     a = 0.0
     ppoints = getcyclicpoints(poly)
     @inbounds for i = 2:length(ppoints)
