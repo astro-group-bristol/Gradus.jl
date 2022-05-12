@@ -85,6 +85,7 @@ export tracegeodesics,
     map_impact_parameters,
     AbstractAutoDiffMetricParams,
     AbstractAutoDiffStaticAxisSymmetricParams,
-    metric_components
+    metric_components,
+    metric_jacobian
 
 end # module
