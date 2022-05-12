@@ -157,7 +157,8 @@ function constrain(
     constrain_time(g_comps, v, μ)
 end
 
-@inline metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ) where {T} = ForwardDiff.vector_mode_jacobian(x -> metric_components(m, x), rθ)
+@inline metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ) where {T} =
+    ForwardDiff.vector_mode_jacobian(x -> metric_components(m, x), rθ)
 
 @inbounds function geodesic_eq(
     m::AbstractAutoDiffStaticAxisSymmetricParams{T},
