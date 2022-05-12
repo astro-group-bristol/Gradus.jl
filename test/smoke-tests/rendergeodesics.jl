@@ -17,7 +17,7 @@
                 fov_factor = 1.0,
                 image_width = 100,
                 image_height = 50,
-                verbose = false
+                verbose = false,
             )
             image_fingerprint = sum(filter(!isnan, img))
             # have to be really coarse cus the first order method is so variable???
