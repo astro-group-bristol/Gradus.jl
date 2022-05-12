@@ -51,7 +51,12 @@ export rendergeodesics,
 
 # AccretionGeometry
 export AbstractAccretionGeometry,
-    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc, inpolygon, getarea, CircularOrbits
+    AbstractAccretionDisc,
+    MeshAccretionGeometry,
+    GeometricThinDisc,
+    inpolygon,
+    getarea,
+    CircularOrbits
 
 # DiscProfiles
 export AbstractCoronaModel,
@@ -79,7 +84,8 @@ include("special-radii.jl")
 include("AccretionFormulae/AccretionFormulae.jl")
 
 using .AccretionFormulae
-export solve_equitorial_circular_orbit, trace_equitorial_circular_orbit
+export solve_equitorial_circular_orbit,
+    trace_equitorial_circular_orbit, interpolate_plunging_velocities, PlungingInterpolation
 
 include("const-point-functions.jl")
 

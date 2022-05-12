@@ -21,7 +21,8 @@ function rendergeodesics(
     m::AbstractMetricParams{T},
     init_pos,
     max_time;
-    pf = PointFunction((m, gp, mt) -> gp.t) ∘ FilterPointFunction((m, gp, max_time; kwargs...) -> gp.t < max_time, NaN),
+    pf = PointFunction((m, gp, mt) -> gp.t) ∘
+         FilterPointFunction((m, gp, max_time; kwargs...) -> gp.t < max_time, NaN),
     image_width = 350,
     image_height = 250,
     fov_factor = 3.0,
