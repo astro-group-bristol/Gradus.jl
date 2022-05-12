@@ -1,6 +1,13 @@
 module AccretionGeometry
 
-import ..GeodesicTracer: tracegeodesics, DiscreteCallback, terminate!, AbstractAutoDiffStaticAxisSymmetricParams, metric_components, metric_jacobian, inverse_metric_components
+import ..GeodesicTracer:
+    tracegeodesics,
+    DiscreteCallback,
+    terminate!,
+    AbstractAutoDiffStaticAxisSymmetricParams,
+    metric_components,
+    metric_jacobian,
+    inverse_metric_components
 
 import ..Rendering: rendergeodesics, prerendergeodesics
 import Base: in
@@ -77,6 +84,11 @@ collision_callback(m::AbstractAccretionGeometry{T}) where {T} =
 
 
 export AbstractAccretionGeometry,
-    AbstractAccretionDisc, MeshAccretionGeometry, GeometricThinDisc, inpolygon, getarea, CircularOrbits
+    AbstractAccretionDisc,
+    MeshAccretionGeometry,
+    GeometricThinDisc,
+    inpolygon,
+    getarea,
+    CircularOrbits
 
 end # module
