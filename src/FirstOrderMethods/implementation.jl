@@ -21,12 +21,12 @@ end
     us, ts, p = unpack_solution(sol)
 
     u_start = SVector{4,T}(us[1][1:4])
-    v_start = SVector{4,T}(us[1][5:8])
-    t_start = SVector{4,T}(ts[1])
+    v_start = SVector{4,T}(four_velocity(u_start, m, p))
+    t_start = ts[1]
 
     u_end = SVector{4,T}(us[end][1:4])
-    v_end = SVector{4,T}(us[end][5:8])
-    t_end = SVector{4,T}(ts[end])
+    v_end = SVector{4,T}(four_velocity(u_end, m, p))
+    t_end = ts[end]
 
     FirstOrderGeodesicPoint(sol.retcode, t_start, t_end, u_start, u_end, v_start, v_end, p)
 end

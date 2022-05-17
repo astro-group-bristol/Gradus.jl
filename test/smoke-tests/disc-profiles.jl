@@ -6,7 +6,7 @@
         m = BoyerLindquistAD(M = 1.0, a = 1.0)
         d = GeometricThinDisc(1.0, 40.0, deg2rad(90.0))
         model = LampPostModel(h = 10.0, θ = deg2rad(0.0001))
-        simsols = @time tracegeodesics(
+        simsols = tracegeodesics(
             m,
             model,
             d,
@@ -16,7 +16,7 @@
         )
 
         intersected_simsols = filter(i -> i.retcode == :Intersected, simsols.u)
-        sd_endpoints = getendpoint(m, intersected_simsols)
+        sd_endpoints = map(sol -> getgeodesicpoint(m, sol), intersected_simsols)
 
         # test ensemble solution constructor
         vdp1 = VoronoiDiscProfile(m, d, simsols)

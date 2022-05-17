@@ -35,9 +35,9 @@ end
 function VoronoiDiscProfile(
     m::AbstractMetricParams{T},
     d::AbstractAccretionDisc{T},
-    endpoints::AbstractVector{GeodesicPoint{T}};
+    endpoints::AbstractVector{GeodesicPoint{T,V}};
     padding = 1,
-) where {T}
+) where {T,V}
     dim = d.outer_radius + padding
     rect = VoronoiCells.Rectangle(
         GeometryBasics.Point2{T}(-dim, -dim),

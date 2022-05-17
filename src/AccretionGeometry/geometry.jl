@@ -13,10 +13,10 @@ end
 """
     to_cartesian(gp::GradusBase.AbstractGeodesicPoint{T})
 
-Return the position of `gp` in Cartesian coordinates.
+Return the end position of `gp` in Cartesian coordinates.
 """
 function to_cartesian(gp::GradusBase.AbstractGeodesicPoint{T}) where {T}
-    @inbounds let r = gp.u[2], ϕ = gp.u[4]
+    @inbounds let r = gp.u2[2], ϕ = gp.u2[4]
         x = r * cos(ϕ)
         y = r * sin(ϕ)
         SVector{2,T}(x, y)
