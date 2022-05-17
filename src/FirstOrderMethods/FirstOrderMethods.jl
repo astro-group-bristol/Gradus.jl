@@ -12,10 +12,9 @@ import ..GradusBase:
     AbstractMetricParams,
     inner_radius,
     AbstractGeodesicPoint,
-    getendpoint,
-    geodesic_point_type,
     unpack_solution,
-    SciMLBase
+    SciMLBase,
+    getgeodesicpoint
 
 import ..GeodesicTracer:
     DiscreteCallback,

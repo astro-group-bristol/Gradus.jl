@@ -6,7 +6,7 @@ import StaticArrays: @SVector, SVector
 
 
 import ..GradusBase:
-    AbstractMetricParams, GeodesicPoint, vector_to_local_sky, getendpoint, inner_radius
+    AbstractMetricParams, GeodesicPoint, vector_to_local_sky, getgeodesicpoint, inner_radius
 import ..GeodesicTracer: tracegeodesics
 import ..AccretionGeometry:
     AbstractAccretionGeometry,

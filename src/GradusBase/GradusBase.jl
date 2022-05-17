@@ -3,6 +3,7 @@ module GradusBase
 import Parameters: @with_kw
 import SciMLBase
 import Base
+import StaticArrays: SVector
 
 include("metric-params.jl")
 include("physical-quantities.jl")
@@ -12,9 +13,7 @@ include("geometry.jl")
 export AbstractMetricParams,
     metric_params,
     metric,
-    getendpoint,
-    getstartpoint,
-    getpoint,
+    getgeodesicpoint
     GeodesicPoint,
     vector_to_local_sky,
     AbstractMetricParams,

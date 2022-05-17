@@ -1,26 +1,34 @@
 
-@with_kw struct FirstOrderGeodesicPoint{T,P} <: AbstractGeodesicPoint{T}
+@with_kw struct FirstOrderGeodesicPoint{T,V,P} <: AbstractGeodesicPoint{T}
     retcode::Symbol
-    t::T
-    u::AbstractVector{T}
-    v::AbstractVector{T}
+    "Start time"
+    t1::T
+    "End time"
+    t2::T
+    "Start position"
+    u1::V
+    "End position"
+    u2::V
+    "Start velocity"
+    v1::V
+    "End velocity"
+    v2::V
+    "First order extra parameter"
     p::P
 end
 
-function geodesic_point_type(m::AbstractFirstOrderMetricParams{T}) where {T}
-    p_type = typeof(make_parameters(T(0), T(0), 1, T))
-    FirstOrderGeodesicPoint{T,p_type}
-end
-
-function getendpoint(
-    m::AbstractFirstOrderMetricParams{T},
-    sol::SciMLBase.AbstractODESolution{T,N,S},
-) where {T,N,S}
+@inbounds function getgeodesicpoint(m::AbstractFirstOrderMetricParams{T}, sol::SciMLBase.AbstractODESolution{T,N,S}) where {T,N,S}
     us, ts, p = unpack_solution(sol)
-    u = us[end]
-    v = four_velocity(u, m, p)
-    t = ts[end]
-    FirstOrderGeodesicPoint(sol.retcode, t, u, convert_velocity_type(u, v), p)
+
+    u_start = SVector{4,T}(us[1][1:4])
+    v_start = SVector{4,T}(us[1][5:8])
+    t_start = SVector{4,T}(ts[1])
+
+    u_end = SVector{4,T}(us[end][1:4])
+    v_end = SVector{4,T}(us[end][5:8])
+    t_end = SVector{4,T}(ts[end])
+
+    FirstOrderGeodesicPoint(sol.retcode, t_start, t_end, u_start, u_end, v_start, v_end, p)
 end
 
 function metric_callback(

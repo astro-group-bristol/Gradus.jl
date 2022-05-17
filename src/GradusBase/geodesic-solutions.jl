@@ -1,18 +1,37 @@
 abstract type AbstractGeodesicPoint{T} end
 
-@with_kw struct GeodesicPoint{T} <: AbstractGeodesicPoint{T}
+@with_kw struct GeodesicPoint{T,V<:AbstractVector} <: AbstractGeodesicPoint{T}
     retcode::Symbol
-    t::T
-    u::AbstractVector{T}
-    v::AbstractVector{T}
+    "Start time"
+    t1::T
+    "End time"
+    t2::T
+    "Start position"
+    u1::V
+    "End position"
+    u2::V
+    "Start velocity"
+    v1::V
+    "End velocity"
+    v2::V
     # we don't store the problem parameters
     # and can create a specialistion for the carter method
     # then provide dispatched accessor methods
     # p::P
 end
 
-function geodesic_point_type(m::AbstractMetricParams{T}) where {T}
-    GeodesicPoint{T}
+@inbounds function getgeodesicpoint(m::AbstractMetricParams{T}, sol::SciMLBase.AbstractODESolution{T,N,S}) where {T,N,S}
+    us, ts, _ = unpack_solution(sol)
+
+    u_start = SVector{4,T}(us[1][1:4])
+    v_start = SVector{4,T}(us[1][5:8])
+    t_start = ts[1]
+
+    u_end = SVector{4,T}(us[end][1:4])
+    v_end = SVector{4,T}(us[end][5:8])
+    t_end = ts[end]
+
+    GeodesicPoint(sol.retcode, t_start, t_end, u_start, u_end, v_start, v_end)
 end
 
 # TODO: GeodesicPath structure for the full geodesic path
@@ -27,39 +46,4 @@ end
 
 function unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution{T,N,V}) where {T,N,V}
     map(unpack_solution, simsol)
-end
-
-function getpoint(
-    m::AbstractMetricParams{T},
-    sol::SciMLBase.AbstractODESolution{T,N,S},
-    i::Int,
-) where {T,N,S}
-    us, ts, _ = unpack_solution(sol)
-    if i == -1
-        u = us[end][1:4]
-        v = us[end][5:8]
-        t = ts[end]
-        GeodesicPoint(sol.retcode, t, u, v)
-    else
-        u = us[i][1:4]
-        v = us[i][5:8]
-        t = ts[i]
-        GeodesicPoint(sol.retcode, t, u, v)
-    end
-end
-
-function getpoint(
-    m::AbstractMetricParams{T},
-    simsol::Union{SciMLBase.AbstractEnsembleSolution{T,N,S},AbstractArray{P}},
-    i,
-) where {T,N,S,P<:SciMLBase.AbstractODESolution}
-    map(sol -> getpoint(m, sol, i), simsol)
-end
-
-function getendpoint(m::AbstractMetricParams{T}, sol_or_simsols) where {T}
-    getpoint(m, sol_or_simsols, -1)
-end
-
-function getstartpoint(m::AbstractMetricParams{T}, sol_or_simsols) where {T}
-    getpoint(m, sol_or_simsols, 1)
 end
