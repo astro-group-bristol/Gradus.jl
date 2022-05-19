@@ -20,7 +20,10 @@ abstract type AbstractGeodesicPoint{T} end
     # p::P
 end
 
-@inbounds function getgeodesicpoint(m::AbstractMetricParams{T}, sol::SciMLBase.AbstractODESolution{T,N,S}) where {T,N,S}
+@inbounds function getgeodesicpoint(
+    m::AbstractMetricParams{T},
+    sol::SciMLBase.AbstractODESolution{T,N,S},
+) where {T,N,S}
     us, ts, _ = unpack_solution(sol)
 
     u_start = SVector{4,T}(us[1][1:4])
