@@ -18,6 +18,9 @@ using StaticArrays
 using Parameters
 using DocStringExtensions
 
+import ForwardDiff
+import Roots
+
 # GradusBase
 export AbstractMetricParams,
     metric_params,
