@@ -24,7 +24,7 @@ end
     kwargs...,
 ) where {M,T,G}
     ThreadsX.map(
-        sol -> pf.f(rc.m, getendpoint(m, sol), rc.max_time; kwargs...),
+        sol -> pf.f(rc.m, getgeodesicpoint(m, sol), rc.max_time; kwargs...),
         rc.geodesics,
     )
 end

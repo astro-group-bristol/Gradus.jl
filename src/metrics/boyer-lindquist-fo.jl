@@ -32,7 +32,7 @@ V_r = T^2 - \\Delta \\left[ (L - a E)^2 + Q \\right]
 From Bardeen et al. (1972) eq. (2.10), for the special case of a null-geodesic ``\\mu = 0``:
 
 ```math
-V_\\theta = 
+V_\\theta =
     Q + \\cos^2 (\\theta) \\left[ a^2 E^2 - \\frac{L^2}{\\sin^2 (\\theta) } \\right].
 ```
 """
@@ -42,7 +42,7 @@ V_\\theta =
 """
     $(TYPEDSIGNATURES)
 
-The ``t`` compontent of the equation of motion for a photon around a black hole, multiplied 
+The ``t`` compontent of the equation of motion for a photon around a black hole, multiplied
 by ``\\Sigma``.
 
 From Bardeen et al. (1972) eq. (2.9d):
@@ -61,7 +61,7 @@ end
 """
     $(TYPEDSIGNATURES)
 
-The ``r`` compontent of the equation of motion for a photon around a black hole, multiplied 
+The ``r`` compontent of the equation of motion for a photon around a black hole, multiplied
 by ``\\Sigma``.
 
 Modified from Bardeen et al. (1972) eq. (2.9a):
@@ -71,7 +71,7 @@ Modified from Bardeen et al. (1972) eq. (2.9a):
 \\pm \\sqrt{\\lvert V_r \\rvert},
 ```
 
-where, for implementation reason, the sign is always positive. Instead, the sign is applied 
+where, for implementation reason, the sign is always positive. Instead, the sign is applied
 in [`δ`](@ref).
 """
 @inline function Σδr_δλ(E, L, M, Q, r, a)
@@ -83,7 +83,7 @@ end
 """
     $(TYPEDSIGNATURES)
 
-The ``\\theta`` compontent of the equation of motion for a photon around a black hole, 
+The ``\\theta`` compontent of the equation of motion for a photon around a black hole,
 multiplied by ``\\Sigma``.
 
 Modified from Bardeen et al. (1972) eq. (2.9b):
@@ -93,7 +93,7 @@ Modified from Bardeen et al. (1972) eq. (2.9b):
 \\pm \\sqrt{\\lvert V_\\theta \\rvert},
 ```
 
-where, for implementation reason, the sign is always positive. Instead, the sign is applied 
+where, for implementation reason, the sign is always positive. Instead, the sign is applied
 in [`δ`](@ref).
 """
 @inline function Σδθ_δλ(E, L, Q, a, θ)
@@ -105,7 +105,7 @@ end
 """
     $(TYPEDSIGNATURES)
 
-The ``\\phi`` compontent of the equation of motion for a photon around a black hole, 
+The ``\\phi`` compontent of the equation of motion for a photon around a black hole,
 multiplied by ``\\Sigma``.
 
 From Bardeen et al. (1972) eq. (2.9c):
@@ -136,7 +136,7 @@ S(θ, α, ω) = 1 + α * ω * sin(θ)
 """
 $(TYPEDSIGNATURES)
 
-Calculates and returns the observer's angles ``\\sin \\Theta`` and ``\\sin \\Phi``, where 
+Calculates and returns the observer's angles ``\\sin \\Theta`` and ``\\sin \\Phi``, where
 the parameters in the function signature correspond to the Bardeen et al. (1972) paper.
 
 From Fanton et al. (1997), eq. (74) and eq. (75):
@@ -144,14 +144,14 @@ From Fanton et al. (1997), eq. (74) and eq. (75):
 ```math
 \\begin{align*}
 \\sin \\Theta &=
-\\frac{\\alpha \\Sigma}{\\sqrt{A}} 
-\\left\\{ 
+\\frac{\\alpha \\Sigma}{\\sqrt{A}}
+\\left\\{
         \\beta^2 + \\left( \\alpha + a \\sin \\theta \\right)^2
         + \\frac{
-            A S^2 - \\left( r^2 + a^2 + a \\alpha \\sin \\theta \\right) 
-        }{\\Delta} 
+            A S^2 - \\left( r^2 + a^2 + a \\alpha \\sin \\theta \\right)
+        }{\\Delta}
 \\right\\}, \\\\
-\\sin \\Phi &= 
+\\sin \\Phi &=
 -\\frac{\\alpha \\Sigma \\sqrt{\\Delta}}{A S \\sin\\Theta}.
 \\end{align*}
 ```
@@ -186,10 +186,10 @@ end
 $(TYPEDSIGNATURES)
 
 Calculates conserved quantities
-- angular momentum ``L`` 
+- angular momentum ``L``
 - Carter parameter ``Q``
 
-for a photon described with position described by `x` in a Kerr spacetime given by 
+for a photon described with position described by `x` in a Kerr spacetime given by
 `p`.
 
 From Fanton et al. (1997), eq. (69):
@@ -213,9 +213,9 @@ taken from eq. (72) and eq. (73).
 From Fanton et al. (1997), eq. (70):
 
 ```math
-Q = 
-\\frac{P^2}{\\Delta} 
-- \\left( \\lambda - a \\right)^2 
+Q =
+\\frac{P^2}{\\Delta}
+- \\left( \\lambda - a \\right)^2
 - \\frac{\\Sigma^2}{A} \\left( \\frac{\\cos \\Phi}{\\Upsilon_2} \\right)^2,
 ```
 
@@ -289,10 +289,10 @@ $(TYPEDSIGNATURES)
 From Bardeen et al. (1972) eq. (2.21):
 
 ```math
-Z_1 = 
-1 + \\sqrt[3]{1 - \\frac{a^2}{M^2}} 
-\\left[ 
-    \\sqrt[3]{1 + \\frac{a}{M}} + \\sqrt[3]{1 - \\frac{a}{M}} 
+Z_1 =
+1 + \\sqrt[3]{1 - \\frac{a^2}{M^2}}
+\\left[
+    \\sqrt[3]{1 + \\frac{a}{M}} + \\sqrt[3]{1 - \\frac{a}{M}}
 \\right].
 ```
 """
@@ -334,7 +334,7 @@ The choice of ``\\pm`` is chosen by the sign of ``a``.
 """
 isco(M, a, ±) = M * (3 + Z₂(M, a) ± √((3 - Z₁(M, a)) * (3 + Z₁(M, a) + 2 * Z₂(M, a))))
 isco(M, a) = a > 0.0 ? isco(M, a, -) : isco(M, a, +)
-end # module 
+end # module
 
 @with_kw struct BoyerLindquistFO{T} <: AbstractFirstOrderMetricParams{T}
     @deftype T
@@ -362,7 +362,7 @@ end
 
 function GeodesicTracer.alpha_beta_to_vel(m::BoyerLindquistFO{T}, u, α, β) where {T}
     sinΦ, sinΨ = __BoyerLindquistFO.sinΦsinΨ(m.M, u[2], m.a, u[3], α, β)
-    (β < 0.0 ? -1.0 : 1.0, sinΦ, sinΨ)
+    (β < 0.0 ? 1.0 : -1.0, sinΦ, sinΨ)
 end
 
 # special radii

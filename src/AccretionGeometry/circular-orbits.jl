@@ -6,11 +6,7 @@ import ..AccretionGeometry:
     metric_jacobian,
     inverse_metric_components
 
-function Ω(
-    m::AbstractAutoDiffStaticAxisSymmetricParams{T},
-    rθ::AbstractVector{T},
-    pos,
-) where {T}
+function Ω(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ, pos) where {T}
     jacs = metric_jacobian(m, rθ)
     ∂rg = jacs[:, 1]
 
@@ -22,18 +18,18 @@ function Ω(
     end
 end
 
-function __energy(g, Ωϕ) where {T}
-    -(g[1] + g[5] * Ωϕ) / √(-g[1] - 2g[5] * Ωϕ - g[4] * Ωϕ^2)
+function __energy(g, Ωϕ)
+    @inbounds -(g[1] + g[5] * Ωϕ) / √(-g[1] - 2g[5] * Ωϕ - g[4] * Ωϕ^2)
 end
 
-energy(m, r; kwargs...) =
+energy(m, r; contra_rotating = false) =
     let rθ = @SVector([r, π / 2])
         Ωϕ = Ω(m, rθ, contra_rotating)
-        __energy(metric_components(m), Ωϕ; kwargs...)
+        __energy(metric_components(m, rθ), Ωϕ)
     end
 
 function __angmom(g, Ωϕ, prograde) where {T}
-    res = (g[5] + g[4] * Ωϕ) / √(-g[1] - 2g[5] * Ωϕ - g[4] * Ωϕ^2)
+    @inbounds res = (g[5] + g[4] * Ωϕ) / √(-g[1] - 2g[5] * Ωϕ - g[4] * Ωϕ^2)
     if prograde
         res
     else
@@ -44,7 +40,7 @@ end
 angmom(m, r; contra_rotating = false, prograde = true) =
     let rθ = @SVector([r, π / 2])
         Ωϕ = Ω(m, rθ, contra_rotating)
-        __angmom(metric_components(m), Ωϕ, prograde)
+        __angmom(metric_components(m, rθ), Ωϕ, prograde)
     end
 
 function g_ginv_energy_angmom(
@@ -79,12 +75,7 @@ function __vt(ginv, E, L)
     -E * ginv[1] + L * ginv[5]
 end
 
-function vt(
-    m::AbstractAutoDiffStaticAxisSymmetricParams{T},
-    r;
-    contra_rotating = false,
-    prograde = true,
-) where {T}
+function vt(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, r; kwargs...) where {T}
     _, ginv, E, L = g_ginv_energy_angmom(m, r; kwargs...)
     __vt(ginv, E, L)
 end

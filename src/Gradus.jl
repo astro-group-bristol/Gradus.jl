@@ -18,13 +18,14 @@ using StaticArrays
 using Parameters
 using DocStringExtensions
 
+import ForwardDiff
+import Roots
+
 # GradusBase
 export AbstractMetricParams,
     metric_params,
     metric,
-    getendpoint,
-    getstartpoint,
-    getpoint,
+    getgeodesicpoint,
     GeodesicPoint,
     vector_to_local_sky,
     AbstractMetricParams,

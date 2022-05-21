@@ -228,8 +228,8 @@ function _redshift_guard(
     gp::FirstOrderGeodesicPoint{T},
     max_time,
 ) where {T}
-    RedshiftFunctions.redshift_function(m, gp.u, gp.p, gp.t)
+    RedshiftFunctions.redshift_function(m, gp.u2, gp.p, gp.t2)
 end
 function _redshift_guard(m::AbstractMetricParams{T}, gp, max_time) where {T}
-    RedshiftFunctions.redshift_function(m, gp.u, gp.v)
+    RedshiftFunctions.redshift_function(m, gp.u2, gp.v2)
 end

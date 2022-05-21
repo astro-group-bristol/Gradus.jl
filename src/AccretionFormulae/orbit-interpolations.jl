@@ -52,7 +52,7 @@ end
 
 function interpolate_plunging_velocities(
     m::AbstractMetricParams{T};
-    max_time = 10_000,
+    max_time = 50_000,
     contra_rotating = false,
     prograde = true,
     reltol = 1e-9,
