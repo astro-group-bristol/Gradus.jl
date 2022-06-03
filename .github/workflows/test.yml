@@ -15,19 +15,18 @@ on:
 jobs:
 
   smoke-test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         julia-version: ['1.7']
-        julia-arch: [x86]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.julia-version }}
-          arch: ${{ matrix.julia-arch }}
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
