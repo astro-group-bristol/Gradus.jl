@@ -17,7 +17,6 @@ AbstractMetricParams,
 geodesic_eq,
 geodesic_eq!,
 constrain,
-onchart,
 inner_radius,
 metric_type
 

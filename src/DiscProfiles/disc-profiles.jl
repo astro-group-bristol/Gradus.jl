@@ -109,6 +109,16 @@ end
 
 getareas(vdp::VoronoiDiscProfile{D,T}) where {D,T} = getarea.(vdp.polys)
 
+function getproperarea(poly, m::AbstractMetricParams{T}) where {T}
+    A = getarea(poly)
+    c = getbarycenter(poly)
+    m_params = metric_components(m, (sqrt(c[1]^2 + c[2]^2), π / 2))
+    sqrt(m_params[2] * m_params[3]) * A
+end
+
+getproperareas(vdp::VoronoiDiscProfile{D,T}, m::AbstractMetricParams{T}) where {D,T} =
+    map(p -> getproperarea(p, m), vdp.polys)
+
 function unpack_polys(
     polys::AbstractVector{GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V}},
 ) where {T,L,V}

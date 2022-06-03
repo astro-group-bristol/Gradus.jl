@@ -9,6 +9,9 @@
 <a href="https://doi.org/10.5281/zenodo.6471796">
     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.6471796.svg" alt="DOI">
 </a> 
+<a href="https://astro-group-bristol.github.io/Gradus.jl/dev/">
+<img alt="Docs" src="https://img.shields.io/badge/docs-dev-blue.svg"/>
+</a>
 
 
 A spacetime generic, relativistic ray tracing toolkit, leveraging AD and CAS, capable of calculating reverberation lags around accreting black holes and observational signatures.
@@ -17,7 +20,7 @@ A spacetime generic, relativistic ray tracing toolkit, leveraging AD and CAS, ca
 
 ## About
 
-A pure Julia geodesic integration system build on [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) using automatic differentiation (AD) and computer algebra systems (CAS) to efficiently compute the geodesic equation. This package requires only a specification of the non-zero metric components in order to solve the 2nd order geodesic system. Alternatively, an implementation of the four velocity components may be specified to integrate a regular 1st order system.
+A pure Julia geodesic integration system built on [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) using automatic differentiation (AD) and computer algebra systems (CAS) to efficiently compute the geodesic equation. This package requires only a specification of the non-zero metric components in order to solve the 2nd order geodesic system. Alternatively, an implementation of the four velocity components may be specified to integrate a regular 1st order system.
 
 The motivation behind this package began with an interest in studying reverberation lags around accreting black holes, however the scope has since expanded to facilitate the exploration of generic metrics through time-like, space-like, and null geodesics. 
 

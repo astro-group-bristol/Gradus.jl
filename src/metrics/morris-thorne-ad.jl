@@ -15,8 +15,16 @@ end
 end # module
 
 # new structure for our spacetime
+"""
+    struct MorrisThorneAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+
+Morris-Thorne wormhole metric.
+
+$(FIELDS)
+"""
 @with_kw struct MorrisThorneAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
+    "Throat size."
     b = 1.0
 end
 

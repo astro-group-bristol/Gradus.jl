@@ -1,7 +1,12 @@
 """
     $(TYPEDSIGNATURES)
 
-Innermost stable circular orbit.
+Innermost stable circular orbit (ISCO), defined by
+```math
+    \\frac{\\text{d}}{\\text{d}r} \\left( \\frac{E}{\\mu} \\right) = 0.
+```
+Uses analytic solutions if known for that metric, else uses a root finder to calculate
+the radius at which the defining condition is met.
 """
 isco(m::AbstractMetricParams{T}) where {T} = error("Not implemented for $(typeof(m)).")
 
@@ -16,6 +21,15 @@ function isco(
     Roots.find_zero((dE, d2E), (lower_bound, upper_bound))
 end
 
+"""
+    $(TYPEDSIGNATURES)
+
+Brute force method for finding the first radius at which ``\\frac{E}{\\mu} > 1``. The method
+calculates ``E`` with [`CircularOrbits.energy`](@ref), where `r` steps from `upper_bound` to
+``r = r_\\text{g}`` in steps of `step`.
+
+Returns `T(0.0)` if no such radius found.
+"""
 function find_lower_isco_bound(
     m::AbstractAutoDiffStaticAxisSymmetricParams{T};
     upper_bound = 100.0,
@@ -28,7 +42,7 @@ function find_lower_isco_bound(
         end
     end
     # for type stability
-    return 0.0
+    return T(0.0)
 end
 
 isco(m::AbstractAutoDiffStaticAxisSymmetricParams{T}) where {T} =
@@ -37,20 +51,27 @@ isco(m::AbstractAutoDiffStaticAxisSymmetricParams{T}) where {T} =
 """
     $(TYPEDSIGNATURES)
 
-Photon orbit.
+Photon orbit radius, defined as the radius for which
+```math
+    \\frac{E}{\\mu} \\rightarrow \\infty .
+```
 """
 r_ph(m::AbstractMetricParams{T}) where {T} = error("Not implemented for $(typeof(m)).")
 
 """
     $(TYPEDSIGNATURES)
 
-Marginally bound orbit.
+Marginally bound orbit
+```math
+    \\frac{E}{\\mu} = 1.
+```
 """
 r_mb(m::AbstractMetricParams{T}) where {T} = error("Not implemented for $(typeof(m)).")
 
 """
     $(TYPEDSIGNATURES)
 
-Event horizon.
+Event horizon radius, often equivalent to [`GradusBase.inner_radius`](@ref), however remains
+distinct, such that the latter may still be an arbitrary chart cutoff.
 """
 r_s(m::AbstractMetricParams{T}) where {T} = error("Not implemented for $(typeof(m)).")

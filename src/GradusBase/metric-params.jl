@@ -24,30 +24,20 @@ geodesic_eq!(m::AbstractMetricParams{T}, u, v) where {T} =
     error("Not implemented for metric parameters $(typeof(m))")
 
 """
-    constrain(m::AbstractMetricParams{T}, u, v; μ::T=0.0f0)
+    constrain(m::AbstractMetricParams{T}, u, v; μ::T=0.0)
 
-Give time component which would constrain a velocity vector `v` at position `x` to be a
-geodesic with mass `μ`.
+Calculate time component ``v^t`` which would constrain a velocity vector `v` at position `x`
+as a geodesic with mass `μ`.
 """
 constrain(m::AbstractMetricParams{T}, u, v; μ::T = 0.0) where {T} =
     error("Not implemented for metric parameters $(typeof(m))")
-
-"""
-    onchart(m::AbstractMetricParams{T}, u)
-
-Check if point `u` is a valid point for the metric described by `m`.
-
-Returns false is `u` is a singularity.
-"""
-onchart(m::AbstractMetricParams{T}, u) where {T} = !(sum(u) ≈ 0)
-
 
 """
     inner_radius(m::AbstractMetricParams{T})
 
 Return the innermost valid coordinate relative to the origin, for use in geodesic tracing.
 
-This usually represents some property of the metric, e.g. event horizon radius in Kerr/Schwarzschild metrics, or 
+This usually represents some property of the metric, e.g. event horizon radius in Kerr/Schwarzschild metrics, or
 throat diameter in worm hole metrics.
 """
 inner_radius(m::AbstractMetricParams{T}) where {T} = convert(T, 0.0)
@@ -62,7 +52,7 @@ metric_type(m::AbstractMetricParams{T}) where {T} =
 
 
 """
-    metric(m::AbstractMetricParams{T}, u) 
+    metric(m::AbstractMetricParams{T}, u)
 
 Numerically evaluate the corresponding metric for [`AbstractMetricParams`](@ref), given parameter values `m`
 and some point `u`.
@@ -73,7 +63,7 @@ metric(m::AbstractMetricParams{T}, u) where {T} =
 # do we actually want to support this?
 # since if it's a symbolic matrix, you can subs other ways better?
 #"""
-#    metric(m::AbstractMetric{T}, u) 
+#    metric(m::AbstractMetric{T}, u)
 #
 #Evaluate the metric at a point `u`.
 #"""

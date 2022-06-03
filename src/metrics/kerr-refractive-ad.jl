@@ -39,11 +39,23 @@ using ..StaticArrays
 end
 
 end # module
+
+"""
+    struct KerrRefractiveAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+
+Kerr metric in Boyer-Lindquist coordintes with a path-length ansatz, equivalent to a refractive
+index `n`, within the coronal radius `corona_radius`.
+$(FIELDS)
+"""
 @with_kw struct KerrRefractiveAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
+    "Black hole mass."
     M = 1.0
+    "Black hole spin."
     a = 0.0
+    "Refractive index within the corona."
     n = 1.0
+    "Radius of the corona."
     corona_radius = 20.0
 end
 

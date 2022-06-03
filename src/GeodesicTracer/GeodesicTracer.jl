@@ -9,7 +9,7 @@ using DocStringExtensions
 using Parameters
 
 import ..GradusBase:
-    AbstractMetricParams, geodesic_eq, constrain, onchart, inner_radius, metric
+    AbstractMetricParams, geodesic_eq, constrain, inner_radius, metric
 
 import ForwardDiff
 
@@ -22,15 +22,15 @@ include("auto-diff.jl")
 
 """
     tracegeodesics(
-        m::AbstractMetricParams{T}, 
-        position, velocity, 
+        m::AbstractMetricParams{T},
+        position, velocity,
         time_domain::Tuple{T,T}
-        ; 
-        μ = 0.0f0, 
+        ;
+        μ = 0.0f0,
         callbacks=Nothing,
         solver=Tsit5(),
         solver_opts...
-    ) 
+    )
 
 Integrate a geodesic for metric parameterised by `m`, for some initial positions and velocities.
 The positions and velocities may be

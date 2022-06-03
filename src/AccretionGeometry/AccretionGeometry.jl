@@ -89,6 +89,7 @@ export AbstractAccretionGeometry,
     GeometricThinDisc,
     inpolygon,
     getarea,
+    getbarycenter,
     CircularOrbits
 
 end # module

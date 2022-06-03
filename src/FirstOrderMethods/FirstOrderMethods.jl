@@ -26,6 +26,22 @@ import ..GeodesicTracer:
     alpha_beta_to_vel,
     ensure_chart_callback
 
+"""
+    AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T}
+
+Abstract type for metrics using the 1st-order integration method. The 1st-order methods
+reuse the velocity vector as a parameter vector, where only element `vel[2]` and `vel[3]`
+are used, and are local observer ratios ``\\sin \\Theta`` and ``\\sin \\Phi`` respectively.
+
+Require implementation of
+- [`GradusBase.inner_radius`](@ref)
+- [`GradusBase.constrain`](@ref)
+- [`FirstOrderMethods.four_velocity`](@ref)
+- [`FirstOrderMethods.calc_lq`](@ref)
+- [`FirstOrderMethods.Vr`](@ref)
+- [`FirstOrderMethods.Vθ`](@ref)
+- [`GeodesicTracer.alpha_beta_to_vel`](@ref)
+"""
 abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 
 include("implementation.jl")

@@ -122,7 +122,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 From Fanton et al. (1997), eq. (76):
 
@@ -134,7 +134,7 @@ S(θ, α, ω) = 1 + α * ω * sin(θ)
 
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 Calculates and returns the observer's angles ``\\sin \\Theta`` and ``\\sin \\Phi``, where
 the parameters in the function signature correspond to the Bardeen et al. (1972) paper.
@@ -183,7 +183,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 Calculates conserved quantities
 - angular momentum ``L``
@@ -248,7 +248,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 From Bardeen et al. (1972) eq. (2.3):
 
@@ -260,7 +260,7 @@ From Bardeen et al. (1972) eq. (2.3):
 
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 From Bardeen et al. (1972) eq. (2.3):
 
@@ -272,7 +272,7 @@ From Bardeen et al. (1972) eq. (2.3):
 
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 From Bardeen et al. (1972) eq. (2.3):
 
@@ -284,7 +284,7 @@ A(M, r, a, θ) = (r^2 + a^2)^2 - a^2 * Δ(M, r, a) * sin(θ)^2
 
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 From Bardeen et al. (1972) eq. (2.21):
 
@@ -300,7 +300,7 @@ Z₁(M, a) = 1 + ∛(1 - (a / M)^2) * (∛(1 + (a / M)) + ∛(1 - (a / M)))
 
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 From Bardeen et al. (1972) eq. (2.21):
 
@@ -324,6 +324,8 @@ function four_velocity(u, E, M, a, p)
 end
 
 """
+    $(TYPEDSIGNATURES)
+
 From Bardeen et al. (1972) eq. (2.21):
 
 ```math
@@ -336,10 +338,17 @@ isco(M, a, ±) = M * (3 + Z₂(M, a) ± √((3 - Z₁(M, a)) * (3 + Z₁(M, a) +
 isco(M, a) = a > 0.0 ? isco(M, a, -) : isco(M, a, +)
 end # module
 
+"""
+A first-order implementation of [`BoyerLindquistAD`](@ref).
+$(FIELDS)
+"""
 @with_kw struct BoyerLindquistFO{T} <: AbstractFirstOrderMetricParams{T}
     @deftype T
+    "Black hole mass."
     M = 1.0
+    "Black hole spin."
     a = 0.0
+    "Geodesic energy (a consant of motion)."
     E = 1.0
 end
 

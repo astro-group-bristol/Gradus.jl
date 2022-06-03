@@ -45,11 +45,21 @@ end
 
 end # module
 
+"""
+    struct DilatonAxionAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+
+Einstein-Maxwell-Dilaton-Axion metric.
+$(FIELDS)
+"""
 @with_kw struct DilatonAxionAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
+    "Singularity mass."
     M = 1.0
+    "Singularity spin."
     a = 0.0
+    "Dilaton coupling strength."
     β = 0.0
+    "Axion coupling strength."
     b = 1.0
 end
 
