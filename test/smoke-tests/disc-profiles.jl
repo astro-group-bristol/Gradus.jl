@@ -44,8 +44,10 @@
             352.20220398142754,
         ]
 
-        @test all(isapprox.(areas1, expected_areas, atol = 1e-8))
-        @test all(isapprox.(areas2, expected_areas, atol = 1e-8))
+        @show expected_areas
+
+        @test all(isapprox.(areas1, expected_areas, atol = 1e-6))
+        @test all(isapprox.(areas2, expected_areas, atol = 1e-6))
 
     end
 end
