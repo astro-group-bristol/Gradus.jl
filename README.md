@@ -17,7 +17,7 @@ A spacetime generic, relativistic ray tracing toolkit, leveraging AD and CAS, ca
 
 ## About
 
-A pure Julia geodesic integration system build on [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) using automatic differentiation (AD) and computer algebra systems (CAS) to efficiently compute the geodesic equation. This package requires only a specification of the non-zero metric components in order to solve the 2nd order geodesic system. Alternatively, an implementation of the four velocity components may be specified to integrate a regular 1st order system.
+A pure Julia geodesic integration system built on [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) using automatic differentiation (AD) and computer algebra systems (CAS) to efficiently compute the geodesic equation. This package requires only a specification of the non-zero metric components in order to solve the 2nd order geodesic system. Alternatively, an implementation of the four velocity components may be specified to integrate a regular 1st order system.
 
 The motivation behind this package began with an interest in studying reverberation lags around accreting black holes, however the scope has since expanded to facilitate the exploration of generic metrics through time-like, space-like, and null geodesics. 
 
