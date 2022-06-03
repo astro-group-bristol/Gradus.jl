@@ -25,10 +25,6 @@ makedocs(
     ]
 )
 
-#=
-TODO: once repo is public, so we can use GitHub pages.
-
 deploydocs(
-    repo=""
+    repo = "github.com/astro-group-bristol/Gradus.jl.git"
 )
-=#
