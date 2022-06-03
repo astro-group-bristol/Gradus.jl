@@ -9,6 +9,9 @@
 <a href="https://doi.org/10.5281/zenodo.6471796">
     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.6471796.svg" alt="DOI">
 </a> 
+<a href="https://astro-group-bristol.github.io/Gradus.jl/dev/">
+<img alt="Docs" src="https://img.shields.io/badge/docs-dev-blue.svg"/>
+</a>
 
 
 A spacetime generic, relativistic ray tracing toolkit, leveraging AD and CAS, capable of calculating reverberation lags around accreting black holes and observational signatures.
