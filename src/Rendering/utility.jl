@@ -1,3 +1,13 @@
+"""
+    $(TYPEDSIGNATURES)
+
+Calculates initial four-velocity vectors from impact parameters ``\\alpha`` and
+``\\beta``, with ``v^t = 0``, i.e. unconstrained, given some ``init_pos`` four-vector.
+
+`α_generator` and `β_generator` should be any iterable of ``\\alpha`` and ``\\beta``
+respectively, whereas ``\\beta`` is a single ``T`` value, such that a variety of geodesics
+in the same plane may be easily traced.
+"""
 function calculate_velocities(
     m::AbstractMetricParams{T},
     init_pos,
@@ -17,7 +27,7 @@ function calculate_velocities(
 end
 
 """
-In-place specialisation
+In-place specialisation, writing the four-velocities into `vs`.
 """
 function calculate_velocities!(
     vs,
@@ -31,6 +41,20 @@ function calculate_velocities!(
     end
 end
 
-# have to use a slight 0.001 offset to avoid integrating α=0.0 geodesics
+
+"""
+    $(TYPEDSIGNATURES)
+
+Utility function for converting some `X` on an image plane into ``\\alpha``, given
+the midpoint `x_mid` and field-of-view multiplier `fov_factor`.
+"""
+# have to use a slight 0.001 offset to avoid integrating α=0.0 geodesics in first order methods
 x_to_α(X, x_mid, fov_factor) = (X + 0.001 - x_mid) / fov_factor
+
+"""
+    $(TYPEDSIGNATURES)
+
+Utility function for converting some `Y` on an image plane into ``\\beta``, given
+the midpoint `y_mid` and field-of-view multiplier `fov_factor`.
+"""
 y_to_β(Y, y_mid, fov_factor) = (Y - y_mid) / fov_factor

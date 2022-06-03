@@ -32,7 +32,7 @@ function line_element(u, integrator)
 end
 
 # most of these functions are utility methods for GeometryBasics
-# which may or may not be included. GeometryBasics seems to be about 
+# which may or may not be included. GeometryBasics seems to be about
 # to undergo major breaking changes, which would refine the package
 # so may wait before using another libraries version of these:
 
@@ -96,4 +96,18 @@ function getarea(poly)
         p1 = p2
     end
     abs(a / 2)
+end
+
+function getbarycenter(poly)
+    pts = getpoints(poly)
+    n_points = length(pts)
+
+    x_sum = 0.0
+    y_sum = 0.0
+    for pt in pts
+        x_sum += pt[1]
+        y_sum += pt[2]
+    end
+
+    @SVector [x_sum / n_points, y_sum / n_points]
 end

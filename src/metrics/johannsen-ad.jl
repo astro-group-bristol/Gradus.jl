@@ -18,7 +18,7 @@ using ..StaticArrays
     Σ₀ = Σ(r, m.a, θ, m.M, m.ϵ3)
     Δ₀ = Δ(r, m.M, m.a)
 
-    # cache common components 
+    # cache common components
     r2a2 = r^2 + m.a^2
     sin_theta2 = sin(θ)^2
 
@@ -35,13 +35,25 @@ end
 
 end # module
 
+"""
+    struct JohannsenAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+
+The Johannsen (20xx) metric.
+$(FIELDS)
+"""
 @with_kw struct JohannsenAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
+    "Black hole mass."
     M = 1.0
+    "Black hole spin."
     a = 0.0
+    "``\\alpha_{13}`` deviation parameter."
     α13 = 0.0
+    "``\\alpha_{22}`` deviation parameter."
     α22 = 0.0
+    "``\\alpha_{52}`` deviation parameter."
     α52 = 0.0
+    "``\\epsilon_{3}`` deviation parameter."
     ϵ3 = 0.0
 end
 

@@ -46,6 +46,12 @@ function metric_callback(
     )
 end
 
+"""
+    $(TYPEDSIGNATURES)
+
+Calculate the four-velocity at a point `u`, given a set of metric parameters and the constants
+of motion in `p`.
+"""
 four_velocity(u, m::AbstractFirstOrderMetricParams{T}, p) where {T} =
     error("Not implmented for $(typeof(m)).")
 
@@ -79,10 +85,26 @@ end
 convert_velocity_type(u::StaticVector{S,T}, v) where {S,T} = convert(SVector{S,T}, v)
 convert_velocity_type(u::AbstractVector{T}, v) where {T} = convert(typeof(u), collect(v))
 
+"""
+    $(TYPEDSIGNATURES)
+
+Effective potential in the radial direction. Used only to track sign changes.
+"""
 Vr(m::AbstractFirstOrderMetricParams{T}, u, p) where {T} =
     error("Not implmented for $(typeof(m)).")
+"""
+    $(TYPEDSIGNATURES)
+
+Effective potential in the angular direction. Used only to track sign changes.
+"""
 Vθ(m::AbstractFirstOrderMetricParams{T}, u, p) where {T} =
     error("Not implmented for $(typeof(m)).")
 
-calc_lq(m::AbstractFirstOrderMetricParams{T}, pos, vel) where {T} =
+"""
+    $(TYPEDSIGNATURES)
+
+Calculate constants of motion ``L`` and ``Q``, given a set of metric parameters,
+the geodesic position, and the `param` vector.
+"""
+calc_lq(m::AbstractFirstOrderMetricParams{T}, pos, param) where {T} =
     error("Not implmented for $(typeof(m)).")

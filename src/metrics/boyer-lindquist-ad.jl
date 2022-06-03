@@ -24,9 +24,38 @@ end
 end # module
 
 # new structure for our spacetime
+"""
+    struct BoyerLindquistAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+
+The Kerr metric in Boyer-Lindquist coordinates, describing a black hole with mass ``M`` and
+angular spin ``a``:
+
+```math
+\\begin{align*}
+    \\text{d}s^2 =
+    &- \\left( 1 - \\frac{2 M r}{\\Sigma} \\right)\\text{d}t^2
+    - \\frac{2M r a \\sin^2(\\theta)}{\\Sigma} \\text{d}t \\text{d}\\phi
+    \\\\
+    &+ \\frac{\\Sigma}{\\Delta} \\text{d}r^2
+    + \\Sigma \\text{d}\\theta^2
+    + \\left(r^2 + a^2 + \\frac{2 M r a^2 \\sin^2(\\theta)}{\\Sigma} \\right) \\sin^2(\\theta) \\text{d}\\phi^2,
+\\end{align*}
+```
+where
+```math
+\\Sigma = r^2 + a^2 \\cos^2 (\\theta),
+\\quad \\text{and} \\quad
+\\Delta = r^2 - 2Mr + a^2.
+```
+
+## Parameters
+$(FIELDS)
+"""
 @with_kw struct BoyerLindquistAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
+    "Black hole mass."
     M = 1.0
+    "Black hole spin."
     a = 0.0
 end
 

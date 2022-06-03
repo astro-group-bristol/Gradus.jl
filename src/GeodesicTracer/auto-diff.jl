@@ -1,10 +1,46 @@
 # for use with static, axis-symmetric metrics
 # create new abstract type for easy re-definition
+"""
+    AbstractAutoDiffMetricParams{T} <: AbstractMetricParams{T}
+
+Abstract type for metrics using the 2nd-order integration method, with the automatic
+differentiation backend.
+"""
 abstract type AbstractAutoDiffMetricParams{T} <: AbstractMetricParams{T} end
+
+"""
+    AbstractAutoDiffStaticAxisSymmetricParams{T} <: AbstractAutoDiffMetricParams{T}
+
+Specialisation for static, axis-symmetric metrics. Here, the metric is of the form
+```math
+    g_{\\mu\\nu} =
+    \\left( \\begin{matrix}
+        g_{tt}     & 0      & 0                  & g_{t\\phi}     \\\\
+        0          & g_{rr} & 0                  & 0              \\\\
+        0          & 0      & g_{\\theta\\theta} & 0              \\\\
+        g_{t\\phi} & 0      & 0                  & g_{\\phi\\phi}
+    \\end{matrix} \\right),
+```
+where the only non-zero off axis elements are ``g_{t\\phi}``.
+
+Required implementations:
+- [`GradusBase.inner_radius`](@ref)
+- [`GeodesicTracer.metric_components`](@ref)
+"""
 abstract type AbstractAutoDiffStaticAxisSymmetricParams{T} <:
               AbstractAutoDiffMetricParams{T} end
 
-# interface
+"""
+    $(TYPEDSIGNATURES)
+
+Interface for [`GeodesicTracer.AbstractAutoDiffStaticAxisSymmetricParams`](@ref). Should return
+a vector or tuple with the elements
+```math
+\\left(
+    g_{tt}, g_{rr}, g_{\\theta \\theta}, g_{\\phi \\phi}, g_{t\\phi}
+\\right).
+```
+"""
 metric_components(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ) where {T} =
     error("Not implemented for $(typeof(m)).")
 
