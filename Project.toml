@@ -26,4 +26,4 @@ VoronoiCells = "e3e34ffb-84e9-5012-9490-92c94d0c60a4"
 
 [compat]
 VoronoiCells = "0.3.0"
-GeometricalPredicates = "0.4.1"
+GeometricalPredicates = "0.4.0"
