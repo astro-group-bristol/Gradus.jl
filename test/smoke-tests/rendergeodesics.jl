@@ -7,8 +7,8 @@
         for (m, expectation) in zip(
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
-            # last computed 29/04/2022: corrected impact parameter mapping
-            [8966.172562862197, 8966.172929103566, 8977.500037031317, 413.49944125849277],
+            # last computed 04/06/2022: tests with --math-mode=ieee
+            [8969.1564582409967, 8969.15634220181, 8977.502920124776, 413.49634341337264],
         )
             img = rendergeodesics(
                 m,
@@ -22,7 +22,7 @@
             image_fingerprint = sum(filter(!isnan, img))
             # have to be really coarse cus the first order method is so variable???
             # the rest are very resolute
-            @test isapprox(expectation, image_fingerprint; atol = 3.0, rtol = 0.0)
+            @test isapprox(expectation, image_fingerprint; atol = 1e-3, rtol = 0.0)
         end
     end
 
@@ -32,8 +32,8 @@
         for (m, expectation) in zip(
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
-            # last computed 29/04/2022: corrected impact parameter mapping
-            [86114.71461584378, 86233.47133294535, 81500.87198429636, 36043.4795182386],
+            # last computed 04/06/2022: tests with --math-mode=ieee
+            [86114.71322445248, 86233.47268379868, 81502.90270571726, 36043.47569730063],
         )
             img = rendergeodesics(
                 m,
@@ -46,7 +46,7 @@
                 verbose = false,
             )
             image_fingerprint = sum(filter(!isnan, img))
-            @test isapprox(expectation, image_fingerprint; atol = 3.0, rtol = 0.0)
+            @test isapprox(expectation, image_fingerprint; atol = 1e-3, rtol = 0.0)
         end
     end
 
