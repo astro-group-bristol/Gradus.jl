@@ -12,11 +12,16 @@ makedocs(
         "Home" => "index.md",
         "Overview" => [
             # "Examples"
-            "Geodesic integration" => "overview/geodesic-integration.md"
-            "Implemented metrics" => "overview/metrics.md"
+            # "Tracing"
+            # "Rendering"
+            "Point Functions" => "overview/point-functions.md",
+            # "Callbacks"
+            "Available metrics" => "overview/metrics.md"
         ],
+        # "Reverberation Lags"
         "Internals" => [
-            "Custom metrics" => "internals/custom-metrics.md"
+            "Geodesic integration" => "overview/geodesic-integration.md",
+            "Implementing new metrics" => "internals/custom-metrics.md",
         ],
         "Module API" => [
             "Gradus" => "api-documentation/Gradus.md",

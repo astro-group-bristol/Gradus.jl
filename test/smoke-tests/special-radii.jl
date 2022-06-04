@@ -12,8 +12,21 @@
     )
 
     @testset "iscos" begin
-        for m in all_metrics
-            @test 100 > Gradus.isco(m) > 0.1
+        # last computed 04/06/2022: tests with --math-mode=ieee
+        for (m, expected) in zip(
+            all_metrics,
+            [
+                1.2369706551751847,
+                8.99437445480357,
+                1.2369706551751847,
+                8.99437445480357,
+                2.8482863127671534,
+                1.1306596884484472,
+                6.880202293032178,
+            ],
+        )
+            isco_r = Gradus.isco(m)
+            @test isapprox(expected, isco_r; atol = 1e-5, rtol = 0.0)
         end
     end
 end

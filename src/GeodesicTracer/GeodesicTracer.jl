@@ -8,8 +8,7 @@ using StaticArrays
 using DocStringExtensions
 using Parameters
 
-import ..GradusBase:
-    AbstractMetricParams, geodesic_eq, constrain, inner_radius, metric
+import ..GradusBase: AbstractMetricParams, geodesic_eq, constrain, inner_radius, metric
 
 import ForwardDiff
 
