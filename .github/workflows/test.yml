@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         julia-version: ['1.7']
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v2
