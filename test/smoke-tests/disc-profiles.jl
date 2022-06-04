@@ -44,7 +44,8 @@
             352.20220398142754,
         ]
 
-        @show expected_areas
+        @show areas1
+        @show areas2
 
         @test all(isapprox.(areas1, expected_areas, atol = 1e-6))
         @test all(isapprox.(areas2, expected_areas, atol = 1e-6))
