@@ -33,7 +33,7 @@ Gradus.jl allows for drastically different relativistic simulations to be comput
 We assume you already have Julia >1.6 installed, in which case you can just add the package from the GitHub URL:
 ```julia
 import Pkg;
-Pkg.add("https://github.com/astro-group-bristol/Gradus.jl")
+Pkg.add(url = "https://github.com/astro-group-bristol/Gradus.jl")
 
 using Gradus
 ```
