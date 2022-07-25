@@ -10,7 +10,7 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Overview" => [
-            # "Examples"
+            "Examples" => "examples/examples.md",
             # "Tracing"
             # "Rendering"
             "Point Functions" => "overview/point-functions.md",
@@ -25,6 +25,7 @@ makedocs(
         "Module API" => [
             "Gradus" => "api-documentation/Gradus.md",
             "GradusBase" => "api-documentation/GradusBase.md",
+            "GeodesicTracer" => "api-documentation/GeodesicTracer.md"
         ],
     ],
 )
