@@ -38,7 +38,7 @@ heatmap(img)
 
 ## Line profile
 
-Using the redshift example, we can bin a line-profile using [StatsBase.jl](https://juliastats.org/StatsBase.jl/stable/empirical/#StatsBase.Histogram). We'll calculate the iron line profile, with a delta-emission at 7 keV.
+Using the redshift example, we can bin a line-profile using [StatsBase.jl](https://juliastats.org/StatsBase.jl/stable/empirical/#StatsBase.Histogram). We'll calculate the iron line profile, with a delta-emission at 6.4 keV.
 
 ```julia
 using StatsBase
@@ -47,9 +47,9 @@ using StatsBase
 redshift_data = filter(!isnan, vec(img))
 
 # transpose to iron-line
-data = redshift_data .* 7.0
+data = redshift_data .* 6.4
 
-x_bins = range(0.0, 14.0, 100) 
+x_bins = range(0.0, 10.0, 100) 
 lineprof = fit(Histogram, data, x_bins)
 
 plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppost)
