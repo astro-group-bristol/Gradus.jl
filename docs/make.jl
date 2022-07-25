@@ -1,22 +1,21 @@
-push!(LOAD_PATH,"src")
+push!(LOAD_PATH, "src")
 
 using Documenter
 using Gradus
 
 makedocs(
-    modules=[Gradus],
-    clean=true,
-    sitename="Gradus.jl Documentation",
-
+    modules = [Gradus],
+    clean = true,
+    sitename = "Gradus.jl Documentation",
     pages = [
         "Home" => "index.md",
         "Overview" => [
-            # "Examples"
+            "Examples" => "examples/examples.md",
             # "Tracing"
             # "Rendering"
             "Point Functions" => "overview/point-functions.md",
             # "Callbacks"
-            "Available metrics" => "overview/metrics.md"
+            "Available metrics" => "overview/metrics.md",
         ],
         # "Reverberation Lags"
         "Internals" => [
@@ -25,11 +24,10 @@ makedocs(
         ],
         "Module API" => [
             "Gradus" => "api-documentation/Gradus.md",
-            "GradusBase" => "api-documentation/GradusBase.md"
-        ]
-    ]
+            "GradusBase" => "api-documentation/GradusBase.md",
+            "GeodesicTracer" => "api-documentation/GeodesicTracer.md"
+        ],
+    ],
 )
 
-deploydocs(
-    repo = "github.com/astro-group-bristol/Gradus.jl.git"
-)
+deploydocs(repo = "github.com/astro-group-bristol/Gradus.jl.git")

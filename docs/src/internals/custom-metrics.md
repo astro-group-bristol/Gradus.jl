@@ -36,8 +36,8 @@ function GeodesicTracer.metric_components(m::EddingtonFinkelsteinAD{T}, rθ) whe
     (r, θ) = rθ
     M = m.M
 
-    tt = 1 - (2M / r)
-    rr = inv(tt)
+    tt = -(1 - (2M / r))
+    rr = -inv(tt)
     θθ = r^2
     ϕϕ = r^2 * sin(θ)^2
 
