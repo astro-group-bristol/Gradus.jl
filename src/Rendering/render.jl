@@ -64,7 +64,7 @@ function __prerendergeodesics(
         kwargs...,
     )
 
-    point_cache = getgeodesicpoint(m, simsols)
+    point_cache = map(sol -> getgeodesicpoint(m, sol), simsols)
 
     EndpointRenderCache(
         m,

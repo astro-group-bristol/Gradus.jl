@@ -89,16 +89,19 @@ end
     -1
 end
 
-@inline function findindex(vdp::VoronoiDiscProfile{D,V}, gp::GeodesicPoint{T}) where {D,V,T}
+@inline function findindex(
+    vdp::VoronoiDiscProfile{D,V},
+    gp::GeodesicPoint{T,P},
+) where {D,V,T,P}
     p = to_cartesian(gp)
     findindex(vdp, p)
 end
 
 function findindex(
     vdp::VoronoiDiscProfile{D,V},
-    gps::AbstractArray{GeodesicPoint{T}};
+    gps::AbstractArray{GeodesicPoint{T,P}};
     kwargs...,
-) where {D,V,T}
+) where {D,V,T,P}
     ret = fill(-1, size(gps))
     Threads.@threads for i = 1:length(gps)
         gp = gps[i]
@@ -109,14 +112,17 @@ end
 
 getareas(vdp::VoronoiDiscProfile{D,T}) where {D,T} = getarea.(vdp.polys)
 
-function getproperarea(poly, m::AbstractMetricParams{T}) where {T}
+function getproperarea(
+    poly::P,
+    m::AbstractMetricParams{T},
+) where {P<:AbstractArray{V}} where {V,T}
     A = getarea(poly)
     c = getbarycenter(poly)
     m_params = metric_components(m, (sqrt(c[1]^2 + c[2]^2), π / 2))
     sqrt(m_params[2] * m_params[3]) * A
 end
 
-getproperareas(vdp::VoronoiDiscProfile{D,T}, m::AbstractMetricParams{T}) where {D,T} =
+getproperarea(vdp::VoronoiDiscProfile{D,K}, m::AbstractMetricParams{T}) where {D,K,T} =
     map(p -> getproperarea(p, m), vdp.polys)
 
 function unpack_polys(
@@ -125,6 +131,25 @@ function unpack_polys(
     map(polys) do poly
         map(SVector{2,T}, getpoints(poly))
     end
+end
+
+"""
+    getbarycenter(poly)
+
+Calculate the barycentric point of `poly`. Given that `poly` is an array of 2D points, this
+method calculates
+
+```math
+\\vec{c} = \\frac{1}{N} \\sum_i^N \\vec{p}_i,
+```
+
+where ``\\vec{p}_i`` are the vectors to point ``i`` of the polygon.
+"""
+function getbarycenter(poly)
+    xs = sum(i -> first(i), poly)
+    ys = sum(i -> last(i), poly)
+    n = length(poly)
+    (xs / n, ys / n)
 end
 
 

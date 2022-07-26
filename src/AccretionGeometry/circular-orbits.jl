@@ -71,6 +71,8 @@ function vϕ(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, r; kwargs...) wher
     __vϕ(ginv, E, L)
 end
 
+# this component doesn't actually seem to correctly constrain the geodesic
+# to being light- / null-like, or timelike. maybe revist? else call constrain before returning
 function __vt(ginv, E, L)
     -E * ginv[1] + L * ginv[5]
 end

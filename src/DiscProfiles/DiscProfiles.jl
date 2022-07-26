@@ -7,7 +7,7 @@ import StaticArrays: @SVector, SVector
 
 import ..GradusBase:
     AbstractMetricParams, GeodesicPoint, vector_to_local_sky, getgeodesicpoint, inner_radius
-import ..GeodesicTracer: tracegeodesics
+import ..GeodesicTracer: tracegeodesics, metric_components
 import ..AccretionGeometry:
     AbstractAccretionGeometry,
     AbstractAccretionDisc,
@@ -83,6 +83,7 @@ export AbstractCoronaModel,
     VoronoiDiscProfile,
     findindex,
     getareas,
+    getproperarea,
     bin_transfer_function
 
 
