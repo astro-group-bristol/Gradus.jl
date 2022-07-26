@@ -13,6 +13,17 @@ metric_params(m::AbstractMetric{T}) where {T} =
     error("Not implemented for metric $(typeof(m))")
 
 """
+    metric_components(m::AbstractMetricParams{T}, x)
+
+Return a tuple with each non-zero metric component for the metric described by `m` at position
+`x`. Note that the position need not be a four-vector, and for specific implementations may
+only be a subset of the total manifold coordinates. See specific implementations for subtypes of
+[`AbstractMetricParams`](@ref) for details.
+"""
+metric_components(m::AbstractMetricParams{T}, x) where {T} =
+    error("Not implemented for metric $(typeof(m))")
+
+"""
     geodesic_eq(m::AbstractMetricParams{T}, u, v)
     geodesic_eq!(m::AbstractMetricParams{T}, u, v)
 
