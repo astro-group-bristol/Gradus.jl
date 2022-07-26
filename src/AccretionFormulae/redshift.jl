@@ -19,7 +19,7 @@ eⱽ(M, r, a, θ) = √(
 
 
 """
-    eᶲ(M, r, a, θ) 
+    eᶲ(M, r, a, θ)
 Modified from Cunningham et al. (1975) eq. (A2b):
 ```math
 e^\\Phi = \\sin \\theta \\sqrt{\\frac{A}{\\Sigma}}.
@@ -41,7 +41,7 @@ From Cunningham et al. (1975) eq. (A2c):
 
 """
     Ωₑ(M, r, a)
-Coordinate angular velocity of an accreting gas. 
+Coordinate angular velocity of an accreting gas.
 Taken from Cunningham et al. (1975) eq. (A7b):
 ```math
 \\Omega_e = \\frac{\\sqrt{M}}{a \\sqrt{M} + r_e^{3/2}}.
@@ -57,7 +57,7 @@ where the sign is dependent on co- or contra-rotation. This function may be exte
 
 
 """
-    Vₑ(M, r, a, θ)  
+    Vₑ(M, r, a, θ)
 Velocity of an accreting gas in a locally non-rotating reference frame (see Bardeen et al. 1973).
 Taken from Cunningham et al. (1975) eq. (A7b):
 ```math
@@ -68,7 +68,7 @@ Vₑ(M, r, a, θ) = (Ωₑ(M, r, a) - ω(M, r, a, θ)) * eᶲ(M, r, a, θ) / e�
 
 
 """
-    Lₑ(M, rms, a) 
+    Lₑ(M, rms, a)
 Angular momentum of an accreting gas within ``r_ms``.
 Taken from Cunningham et al. (1975) eq. (A11b):
 ```math
@@ -88,19 +88,19 @@ Taken from Cunningham et al. (1975) eq. (A12e):
 ```math
 H = \\frac{2 M r_e - a \\lambda_e}{\\Delta},
 ```
-where we distinguing ``r_e`` as the position of the accreting gas. 
+where we distinguing ``r_e`` as the position of the accreting gas.
 """
 H(M, rms, r, a) = (2 * M * r - a * Lₑ(M, rms, a)) / __BoyerLindquistFO.Δ(M, r, a)
 
 
 """
-    γₑ(M, rms) 
+    γₑ(M, rms)
 Taken from Cunningham et al. (1975) eq. (A11c):
 ```math
 \\gamma_e = \\sqrt{1 - \\frac{
         2M
     }{
-        3 r_{\\text{ms}} 
+        3 r_{\\text{ms}}
     }}.
 ```
 """
@@ -114,7 +114,7 @@ Taken from Cunningham et al. (1975) eq. (A12b):
 u^r = - \\sqrt{\\frac{
         2M
     }{
-        3 r_{\\text{ms}} 
+        3 r_{\\text{ms}}
     }} \\left(
         \\frac{ r_{\\text{ms}} }{r_e} - 1
     \\right)^{3/2}.
@@ -127,8 +127,8 @@ uʳ(M, rms, r) = -√((2 * M) / (3 * rms)) * (rms / r - 1)^1.5
     uᶲ(M, rms, r, a)
 Taken from Cunningham et al. (1975) eq. (A12c):
 ```math
-u^\\phi = \\frac{\\gamma_e}{r_e^2} \\left( 
-        L_e + aH 
+u^\\phi = \\frac{\\gamma_e}{r_e^2} \\left(
+        L_e + aH
     \\right).
 ```
 """
@@ -136,7 +136,7 @@ uᶲ(M, rms, r, a) = γₑ(M, rms) / r^2 * (Lₑ(M, rms, a) + a * H(M, rms, r, a
 
 
 """
-    uᵗ(M, rms, r, a) 
+    uᵗ(M, rms, r, a)
 Taken from Cunningham et al. (1975) eq. (A12b):
 ```math
 u^t = \\gamma_e \\left(
@@ -202,7 +202,7 @@ end
         @inbounds regular_pdotu_inv(p.L, m.M, u[2], m.a, u[3])
     else
         # change sign if we're after the sign flip
-        # TODO: this isn't robust to multiple sign changes 
+        # TODO: this isn't robust to multiple sign changes
         # TODO: i feel like there should be a better way than checking this with two conditions
         #       used to have λ > p.changes[1] to make sure we're ahead of the time flip (but when wouldn't we be???)
         #       now p.changes[1] > 0.0 to make sure there was a time flip at all
@@ -233,3 +233,45 @@ end
 function _redshift_guard(m::AbstractMetricParams{T}, gp, max_time) where {T}
     RedshiftFunctions.redshift_function(m, gp.u2, gp.v2)
 end
+
+"""
+    interpolate_redshift(plunging_interpolation, u)
+
+`u` is the observer's position (assumed stationary). Returns a [`PointFunction`](@ref).
+
+# Notes
+
+For a full, annotated derivation of this method, see
+[the following blog post](https://fjebaker.github.io/blog/pages/2022-05-plunging-orbits/).
+"""
+function interpolate_redshift(plunging_interpolation, u)
+    isco = Gradus.isco(plunging_interpolation.m)
+    # metric matrix at observer
+    g_obs = metric(plunging_interpolation.m, u)
+    # fixed stationary observer velocity
+    v_obs = @SVector [1.0, 0.0, 0.0, 0.0]
+    closure =
+        (m, gp, max_time) -> begin
+            let r = gp.u2[2]
+                v_disc = if r < isco
+                    # plunging region
+                    vtemp = plunging_interpolation(r)
+                    # we have to reverse radial velocity due to backwards tracing convention
+                    # see https://github.com/astro-group-bristol/Gradus.jl/issues/3
+                    @SVector [vtemp[1], -vtemp[2], vtemp[3], vtemp[4]]
+                else
+                    # regular circular orbit
+                    CircularOrbits.fourvelocity(plunging_interpolation.m, r)
+                end
+
+                # get metric matrix at position on disc
+                g = metric(plunging_interpolation.m, gp.u2)
+                @tullio E_disc := -g[i, j] * gp.v2[i] * v_disc[j]
+                @tullio E_obs := -g_obs[i, j] * gp.v1[i] * v_obs[j]
+                E_obs / E_disc
+            end
+        end
+    PointFunction(closure)
+end
+# interpolate_redshift(m::AbstractMetricParams, u) =
+#     interpolate_redshift(interpolate_plunging_velocities(m), u)

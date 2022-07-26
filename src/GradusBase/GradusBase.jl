@@ -3,7 +3,8 @@ module GradusBase
 import Parameters: @with_kw
 import SciMLBase
 import Base
-import StaticArrays: SVector
+import StaticArrays: SVector, MMatrix
+import Tullio: @tullio
 
 include("metric-params.jl")
 include("physical-quantities.jl")

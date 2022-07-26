@@ -8,7 +8,8 @@ using StaticArrays
 using DocStringExtensions
 using Parameters
 
-import ..GradusBase: AbstractMetricParams, geodesic_eq, constrain, inner_radius, metric
+import ..GradusBase:
+    AbstractMetricParams, geodesic_eq, constrain, inner_radius, metric, metric_components
 
 import ForwardDiff
 
@@ -22,20 +23,23 @@ include("auto-diff.jl")
 """
     tracegeodesics(
         m::AbstractMetricParams{T},
-        position, velocity,
-        time_domain::Tuple{T,T}
-        ;
-        μ = 0.0f0,
-        callbacks=Nothing,
-        solver=Tsit5(),
-        solver_opts...
+        position,
+        velocity,
+        time_domain::Tuple{T,T};
+        solver = Tsit5(),
+        μ = 0.0,
+        closest_approach = 1.01,
+        effective_infinity = 1200.0,
+        callback = nothing,
+        solver_opts...,
     )
 
 Integrate a geodesic for metric parameterised by `m`, for some initial positions and velocities.
 The positions and velocities may be
 
-  - a single position and velocity in the form of a vector of numbers
-  - a collection of positions and velocities, as either a vector of vectors, or as a matrix
+  - a single position and velocity in the form of a vector of numbers,
+  - a collection of positions and velocities, as either a vector of vectors, or as a matrix,
+  - a single position and a function with signature ``vel_func(i)`` which returns a four-velocity.
 
 The matrix specification reads each corresponding column as the initial position and velocity. When a collection of
 positions and velocities is supplied, this method dispatched `EnsembleProblem`, offering `ensemble` as a `solver_opts`,

@@ -51,7 +51,7 @@ Calculates ``g^{tt}``, ``g^{rr}``, ``g^{\\theta\\theta}``, ``g^{\\phi\\phi}``, `
 axis-symmetric metric from ``g_{tt}``, ``g_{rr}``, ``g_{\\theta\\theta}``, ``g_{\\phi\\phi}``, ``g_{t\\phi}``
 using a symbolically computed inverse matrix method.
 
-## Developer notes
+# Notes
 
 To recreate:
 
@@ -86,13 +86,42 @@ end
 
 
 """
-    calc_symb_geodesic_equation(g1inv, j1, j2, v)
+    $(TYPEDSIGNATURES)
 
-Symbolically pre-computed geodesic equations for a static, axis-symmetric metric.
+Using the inverse metric `ginv`, the Jacobian of the metric for ``r`` and ``\\theta``,
+`j1` and `j2` respectively, and velocity four-vector `v`, calculates the four-acceleration
+via the geodesic equation.
 
-## Developer notes
+Returns the components of ``\\frac{\\text{d}^2 u^\\mu}{\\text{d} \\lambda^2}`` via
 
-To recreate:
+```math
+\\frac{\\text{d}^2 u^\\mu}{\\text{d} \\lambda^2}
+    + \\Gamma^{\\mu}_{\\phantom{\\mu}\\nu\\sigma}
+    \\frac{\\text{d}u^\\nu}{\\text{d} \\lambda}
+    \\frac{\\text{d}u^\\sigma}{\\text{d} \\lambda}
+= 0,
+```
+
+where ``x^\\mu`` is a position four-vector, ``\\Gamma^{\\mu}_{\\phantom{\\mu}\\nu\\sigma}``
+are the Christoffel symbols of the second kind, and ``\\lambda`` the affine parameter
+describing the curve.
+
+The Christoffel symbols ``\\Gamma^{\\mu}_{\\phantom{\\mu}\\nu\\sigma}`` are defined
+
+```math
+\\Gamma^{\\mu}_{\\phantom{\\mu}\\nu\\sigma}
+= \\frac{1}{2} g^{\\mu, \\rho} \\left(
+    \\partial_{\\nu}g_{\\rho \\sigma}
+    + \\partial_{\\sigma}g_{\\rho \\nu}
+    - \\partial_{\\rho}g_{\\sigma \\nu}
+\\right).
+```
+
+Limitations:
+- currenly pre-supposes static, axis-symmetric metric.
+
+# Notes
+This function is symbolically pre-computed using the following code:
 
 ```julia
 using Symbolics, Tullio
@@ -168,6 +197,24 @@ jacobian = (j0, j1_mat, j2_mat, j0)
     end
 end
 
+"""
+    $(FUNCTIONNAME)(g_comp, v, μ = 0.0, positive::Bool = true)
+
+Constrains the time component of the four-velocity `v`, given metric components `g_comp` and
+effective mass `μ`.
+
+```math
+g_{\\sigma\\nu} \\dot{u}^\\sigma \\dot{u}^\\nu = -\\mu^2,
+```
+
+for ``v^t``. The argument `positive` allows the sign of ``\\mu`` to be changed. `true`
+corresponds to time-like geodesics, `false` to space-like.
+
+This function should rarely be directly called, and instead is invoked by [`constrain`](@ref).
+
+Limitations:
+- currenly pre-supposes static, axis-symmetric metric.
+"""
 @fastmath function constrain_time(g_comp, v, μ = 0.0, positive::Bool = true)
     @inbounds begin
         discriminant = (
@@ -193,6 +240,14 @@ function constrain(
     constrain_time(g_comps, v, μ)
 end
 
+"""
+    metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ)
+
+Calculate the Jacobian elements of the metric with respect to ``r`` and ``\\theta``.
+
+Limitations:
+- currenly pre-supposes static, axis-symmetric metric.
+"""
 @inline metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ) where {T} =
     ForwardDiff.vector_mode_jacobian(x -> metric_components(m, x), rθ)
 

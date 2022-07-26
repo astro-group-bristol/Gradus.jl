@@ -71,6 +71,7 @@ export AbstractCoronaModel,
     VoronoiDiscProfile,
     findindex,
     getareas,
+    getproperarea,
     bin_transfer_function
 
 # pre-defined metrics
@@ -86,7 +87,10 @@ include("AccretionFormulae/AccretionFormulae.jl")
 
 using .AccretionFormulae
 export solve_equitorial_circular_orbit,
-    trace_equitorial_circular_orbit, interpolate_plunging_velocities, PlungingInterpolation
+    trace_equitorial_circular_orbit,
+    interpolate_plunging_velocities,
+    PlungingInterpolation,
+    interpolate_redshift
 
 include("const-point-functions.jl")
 
