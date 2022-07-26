@@ -21,12 +21,12 @@ makedocs(
         "Internals" => [
             "Geodesic integration" => "overview/geodesic-integration.md",
             "Implementing new metrics" => "internals/custom-metrics.md",
-            "Special radii" => "internals/special-radii.md"
+            "Special radii" => "internals/special-radii.md",
         ],
         "Module API" => [
             "Gradus" => "api-documentation/Gradus.md",
             "GradusBase" => "api-documentation/GradusBase.md",
-            "GeodesicTracer" => "api-documentation/GeodesicTracer.md"
+            "GeodesicTracer" => "api-documentation/GeodesicTracer.md",
         ],
     ],
 )
