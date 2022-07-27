@@ -47,7 +47,7 @@ export AbstractFirstOrderMetricParams, FirstOrderGeodesicPoint, BoyerLindquistFO
 
 # Rendering
 export rendergeodesics,
-    prerendergeodesics, PointFunction, FilterPointFunction, ConstPointFunctions, apply
+    prerendergeodesics, PointFunction, FilterPointFunction, apply
 
 # AccretionGeometry
 export AbstractAccretionGeometry,
@@ -93,6 +93,7 @@ export solve_equitorial_circular_orbit,
     interpolate_redshift
 
 include("const-point-functions.jl")
+export ConstPointFunctions
 
 
 end # module
