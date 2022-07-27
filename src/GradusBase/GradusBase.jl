@@ -6,6 +6,9 @@ import Base
 import StaticArrays: SVector, MMatrix
 import Tullio: @tullio
 
+# for doc bindings
+import ..Gradus
+
 using DocStringExtensions
 
 include("metric-params.jl")

@@ -13,7 +13,7 @@ $(FIELDS)
 
 Point functions are functions that are used to calculate physical parameters from geodesic
 integrations, and to compose more complex models. A number of default and utility `PointFunction`
-are defined in [`ConstPointFunctions`](@ref).
+are defined in [`Gradus.ConstPointFunctions`](@ref).
 
 Principally, point functions return a single value per geodesic, and are used to fill rendered
 images with values, e.g. colouring redshift.
@@ -27,7 +27,7 @@ end
 pf = PointFunction(func)
 ```
 - The `AbstractMetricParams` argument may be used to dispatch for different metrics.
-- `gp` is an [`AbstractGeodesicPoint`](@ref) corresponding to a given geodesic.
+- `gp` is an [`GradusBase.AbstractGeodesicPoint`](@ref) corresponding to a given geodesic.
 - The `max_time` parameter is the maximum integration time used to integrate the geodesics. This may be useful when trying to determine whether a geodesic terminated early or not.
 
 They may be invoked by invoking the instance
@@ -40,7 +40,7 @@ result = pf(m, gp, max_time)
     when chaining multiple point functions (see below). This is subject to revision and breaking changes
     in future versions.
 
-Multiple [`AbstractPointFunctions`](@ref) may be chained together using the `∘` operator, and
+Multiple [`AbstractPointFunction`](@ref) may be chained together using the `∘` operator, and
 are evaluated from right to left
 ```julia
 pf3 = pf2 ∘ pf1

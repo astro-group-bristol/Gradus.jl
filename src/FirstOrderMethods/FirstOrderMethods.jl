@@ -8,6 +8,9 @@ using StaticArrays
 using SciMLBase
 using DiffEqCallbacks
 
+# for doc bindings
+import ..Gradus
+
 import ..GradusBase:
     AbstractMetricParams,
     inner_radius,

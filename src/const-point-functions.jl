@@ -1,12 +1,14 @@
 """
     module ConstPointFunctions
 
-Module defining a number of `const` [`AbstractPointFunction`](@ref), serving different utility
+Module defining a number of `const` [`Gradus.AbstractPointFunction`](@ref), serving different utility
 or common purposes for analysis.
 """
 module ConstPointFunctions
 import ..Rendering: PointFunction, FilterPointFunction
 import ..AccretionFormulae: _redshift_guard
+# for doc bindings
+import ..Gradus
 
 """
     filter_early_term(m::AbstractMetricParams, gp::AbstractGeodesicPoint, max_time)
@@ -47,8 +49,8 @@ const shadow = affine_time ∘ filter_early_term
 Calculate the analytic redshift at a given geodesic point, assuming equitorial, geometrically
 thin accretion disc. Implementation depends on the metric type. Currently implemented for
 
-- [`BoyerLindquistAD`](@ref)
-- [`BoyerLindquistFO`](@ref)
+- [`Gradus.BoyerLindquistAD`](@ref)
+- [`Gradus.BoyerLindquistFO`](@ref)
 
 # Notes
 

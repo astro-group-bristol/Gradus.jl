@@ -11,6 +11,9 @@ import SciMLBase
 using ..GradusBase
 using ..GeodesicTracer
 
+# for doc bindings
+import ..Gradus
+
 using DocStringExtensions
 
 include("utility.jl")
@@ -68,7 +71,7 @@ function prerendergeodesics(
 end
 
 
-export rendergeodesics, prerendergeodesics, PointFunction, FilterPointFunction, apply
+export rendergeodesics, prerendergeodesics, AbstractPointFunction, PointFunction, FilterPointFunction, apply
 
 
 end # module
