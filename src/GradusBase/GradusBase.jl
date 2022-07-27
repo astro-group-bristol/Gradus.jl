@@ -6,13 +6,18 @@ import Base
 import StaticArrays: SVector, MMatrix
 import Tullio: @tullio
 
+# for doc bindings
+import ..Gradus
+
+using DocStringExtensions
+
 include("metric-params.jl")
 include("physical-quantities.jl")
 include("geodesic-solutions.jl")
 include("geometry.jl")
 
 export AbstractMetricParams, metric_params, metric, getgeodesicpoint
-GeodesicPoint,
+GeodesicPoint, AbstractGeodesicPoint,
 vector_to_local_sky,
 AbstractMetricParams,
 geodesic_eq,

@@ -1,10 +1,16 @@
-# Implemented Metrics
+# Available metrics
 
 ```@meta
 CurrentModule = Gradus
 ```
 
 Gradus.jl implements a library of metrics ready to use for integrations and rendering.
+
+```@index
+Pages = ["metrics.md"]
+Modules = [Gradus]
+Order = [:type]
+```
 
 
 !!! note

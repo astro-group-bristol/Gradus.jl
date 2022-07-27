@@ -24,8 +24,8 @@ Specialisation for static, axis-symmetric metrics. Here, the metric is of the fo
 where the only non-zero off axis elements are ``g_{t\\phi}``.
 
 Required implementations:
-- [`GradusBase.inner_radius`](@ref)
-- [`GeodesicTracer.metric_components`](@ref)
+- [`inner_radius`](@ref)
+- [`metric_components`](@ref)
 """
 abstract type AbstractAutoDiffStaticAxisSymmetricParams{T} <:
               AbstractAutoDiffMetricParams{T} end
@@ -33,7 +33,7 @@ abstract type AbstractAutoDiffStaticAxisSymmetricParams{T} <:
 """
     $(TYPEDSIGNATURES)
 
-Interface for [`GeodesicTracer.AbstractAutoDiffStaticAxisSymmetricParams`](@ref). Should return
+Interface for [`AbstractAutoDiffStaticAxisSymmetricParams`](@ref). Should return
 a vector or tuple with the elements
 ```math
 \\left(

@@ -23,7 +23,7 @@ Lz
 ## Geodesic Points
 
 ```@docs
+AbstractGeodesicPoint
 GeodesicPoint
 getgeodesicpoint
-unpack_solution
 ```

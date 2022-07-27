@@ -1,18 +1,38 @@
+"""
+    abstract type AbstractGeodesicPoint
+
+Supertype for geodesic points, used to store information about specific points along geodesic
+trajectories.
+
+!!! note
+    Currently limited to storing the start and endpoint of any given trajectory. To keep the
+    full geodesic path, it is encouraged to use the `SciMLBase.AbstractODESolution` directly.
+
+Must minimally have the same fields as [`GeodesicPoint`](@ref).
+Examples include [`Gradus.FirstOrderMethods.FirstOrderGeodesicPoint`](@ref).
+"""
 abstract type AbstractGeodesicPoint{T} end
 
+"""
+    struct GeodesicPoint <: AbstractGeodesicPoint
+
+$(FIELDS)
+
+"""
 @with_kw struct GeodesicPoint{T,V<:AbstractVector} <: AbstractGeodesicPoint{T}
+    "Return code of the integrator for this geodesic."
     retcode::Symbol
-    "Start time"
+    "Start affine time"
     t1::T
-    "End time"
+    "End affine time"
     t2::T
-    "Start position"
+    "Start four position"
     u1::V
-    "End position"
+    "End four position"
     u2::V
-    "Start velocity"
+    "Start four velocity"
     v1::V
-    "End velocity"
+    "End four velocity"
     v2::V
     # we don't store the problem parameters
     # and can create a specialistion for the carter method
@@ -20,21 +40,30 @@ abstract type AbstractGeodesicPoint{T} end
     # p::P
 end
 
-@inbounds function getgeodesicpoint(
+"""
+    $(TYPEDSIGNATURES)
+
+Used to get pack a `SciMLBase.AbstractODESolution` into a [`GeodesicPoint`](@ref). Will only store
+information relevant to start and endpoint of the integration. To keep the full geodesic path, it is
+encouraged to use the `SciMLBase.AbstractODESolution` directly.
+"""
+function getgeodesicpoint(
     m::AbstractMetricParams{T},
     sol::SciMLBase.AbstractODESolution{T,N,S},
 ) where {T,N,S}
-    us, ts, _ = unpack_solution(sol)
+    @inbounds begin
+        us, ts, _ = unpack_solution(sol)
 
-    u_start = SVector{4,T}(us[1][1:4])
-    v_start = SVector{4,T}(us[1][5:8])
-    t_start = ts[1]
+        u_start = SVector{4,T}(us[1][1:4])
+        v_start = SVector{4,T}(us[1][5:8])
+        t_start = ts[1]
 
-    u_end = SVector{4,T}(us[end][1:4])
-    v_end = SVector{4,T}(us[end][5:8])
-    t_end = ts[end]
+        u_end = SVector{4,T}(us[end][1:4])
+        v_end = SVector{4,T}(us[end][5:8])
+        t_end = ts[end]
 
-    GeodesicPoint(sol.retcode, t_start, t_end, u_start, u_end, v_start, v_end)
+        GeodesicPoint(sol.retcode, t_start, t_end, u_start, u_end, v_start, v_end)
+    end
 end
 
 # TODO: GeodesicPath structure for the full geodesic path
