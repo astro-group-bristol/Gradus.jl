@@ -1,5 +1,10 @@
 # Examples
 
+```@contents
+Pages = ["examples.md"]
+Depth = 3
+```
+
 ## Redshift image
 
 !!! note
