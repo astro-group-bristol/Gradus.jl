@@ -13,7 +13,7 @@ makedocs(
             "Examples" => "overview/examples.md",
             # "Tracing"
             # "Rendering"
-            "Point Functions" => "overview/point-functions.md",
+            "Point functions" => "overview/point-functions.md",
             # "Callbacks"
             "Available metrics" => "overview/metrics.md",
         ],

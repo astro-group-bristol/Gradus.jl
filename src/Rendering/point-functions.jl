@@ -12,7 +12,7 @@ abstract type AbstractPointFunction end
 $(FIELDS)
 
 Point functions are functions that are used to calculate physical parameters from geodesic
-integrations, and to compose more complex models. A number of default and utility `PointFunctions`
+integrations, and to compose more complex models. A number of default and utility `PointFunction`
 are defined in [`ConstPointFunctions`](@ref).
 
 Principally, point functions return a single value per geodesic, and are used to fill rendered

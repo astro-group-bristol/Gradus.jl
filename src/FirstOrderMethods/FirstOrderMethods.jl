@@ -34,13 +34,13 @@ reuse the velocity vector as a parameter vector, where only element `vel[2]` and
 are used, and are local observer ratios ``\\sin \\Theta`` and ``\\sin \\Phi`` respectively.
 
 Require implementation of
-- [`GradusBase.inner_radius`](@ref)
-- [`GradusBase.constrain`](@ref)
+- [`inner_radius`](@ref)
+- [`constrain`](@ref)
 - [`FirstOrderMethods.four_velocity`](@ref)
 - [`FirstOrderMethods.calc_lq`](@ref)
 - [`FirstOrderMethods.Vr`](@ref)
 - [`FirstOrderMethods.Vθ`](@ref)
-- [`GeodesicTracer.alpha_beta_to_vel`](@ref)
+- [`alpha_beta_to_vel`](@ref)
 """
 abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 

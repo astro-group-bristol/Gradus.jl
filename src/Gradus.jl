@@ -23,6 +23,7 @@ import Roots
 
 # GradusBase
 export AbstractMetricParams,
+    AbstractGeodesicPoint,
     metric_params,
     metric,
     getgeodesicpoint,

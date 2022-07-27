@@ -20,5 +20,3 @@ ConstPointFunctions.affine_time
 ConstPointFunctions.shadow
 ConstPointFunctions.redshift
 ```
-
-## Using geodesic points
