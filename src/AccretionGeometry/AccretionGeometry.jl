@@ -15,6 +15,10 @@ import RecursiveArrayTools: ArrayPartition
 import GeometryBasics
 import LinearAlgebra: ×, ⋅
 
+using DocStringExtensions
+# for doc refs
+import ..Gradus
+
 using ..GradusBase
 using StaticArrays
 

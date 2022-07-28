@@ -1,4 +1,14 @@
 
+"""
+    struct GeometricThinDisc{T} <: AbstractAccretionDisc{T}
+    GeometricThinDisc(inner_radius::T, outer_radius::T, inclination::T)
+
+$(FIELDS)
+
+Simple geometrically thin accretion disc spanning from `inner_radius` to `outer_radius` in
+gravitational units. Inclination of the disc is relative to spin axis, with ``90^\\circ``
+being perpendicular to the spin axis.
+"""
 struct GeometricThinDisc{T} <: AbstractAccretionDisc{T}
     inner_radius::T
     outer_radius::T

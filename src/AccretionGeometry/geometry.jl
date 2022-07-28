@@ -1,4 +1,21 @@
+"""
+    abstract type AbstractAccretionGeometry{T}
+
+Supertype of all accretion geometry. Concrete sub-types must minimally implement
+- [`in_nearby_region`](@ref)
+- [`has_intersect`](@ref)
+
+Alternativey, for more control, either [`intersects_geometry`](@ref) or [`collision_callback`](@ref)
+may be implemented for a given geometry type.
+"""
 abstract type AbstractAccretionGeometry{T} end
+
+"""
+    abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T}
+
+Supertype for accretion spherically symmetric geometry, where certain optimizing assumptions
+may be made.
+"""
 abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T} end
 
 function to_cartesian(vec::AbstractVector{T}) where {T}
