@@ -1,4 +1,8 @@
+"""
+    MeshAccretionGeometry(mesh)
 
+$(FIELDS)
+"""
 struct MeshAccretionGeometry{T} <: AbstractAccretionGeometry{T}
     mesh::Vector{Tuple{SVector{3,T},SVector{3,T},SVector{3,T}}}
     x_extent::Tuple{T,T}
@@ -54,9 +58,9 @@ end
 function has_intersect(m::MeshAccretionGeometry{T}, line_element) where {T}
     for triangle in m.mesh
         dist_sq = sum(@.((triangle[1] - line_element[2])^2))
-        # assume line element and mesh triangle are small; check if we're within a 
+        # assume line element and mesh triangle are small; check if we're within a
         # certain distance before running jsr
-        if dist_sq < 3.0 && jsr_algorithm(triangle..., line_element...)
+        if dist_sq < 3.0 && jsf_algorithm(triangle..., line_element...)
             return true
         end
     end

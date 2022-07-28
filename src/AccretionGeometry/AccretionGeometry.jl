@@ -15,6 +15,10 @@ import RecursiveArrayTools: ArrayPartition
 import GeometryBasics
 import LinearAlgebra: ×, ⋅
 
+using DocStringExtensions
+# for doc refs
+import ..Gradus
+
 using ..GradusBase
 using StaticArrays
 
@@ -79,6 +83,16 @@ function build_collision_callback(geometry::AbstractAccretionGeometry{T}) where 
     DiscreteCallback(collision_callback(geometry), i -> terminate!(i, :Intersected))
 end
 
+"""
+    collision_callback(m::AbstractAccretionGeometry{T})
+
+Generates the callback used for the integration. Returns a `Function`, with the fingerprint
+```julia
+function callback(u, λ, integrator)::Bool
+    # ...
+end
+```
+"""
 collision_callback(m::AbstractAccretionGeometry{T}) where {T} =
     (u, λ, integrator) -> intersects_geometry(m, line_element(u, integrator))
 

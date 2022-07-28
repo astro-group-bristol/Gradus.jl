@@ -16,6 +16,7 @@ makedocs(
             "Point functions" => "overview/point-functions.md",
             # "Callbacks"
             "Available metrics" => "overview/metrics.md",
+            "Accretion geometry" => "overview/accretion-geometry.md"
         ],
         # "Reverberation Lags"
         "Internals" => [
@@ -27,7 +28,8 @@ makedocs(
             "Gradus" => "api-documentation/Gradus.md",
             "GradusBase" => "api-documentation/GradusBase.md",
             "GeodesicTracer" => "api-documentation/GeodesicTracer.md",
-        ],
+            "AccretionGeometry" => "api-documentation/AccretionGeometry.md"
+        ] |> sort,
     ],
 )
 
