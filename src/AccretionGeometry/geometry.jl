@@ -7,6 +7,9 @@ Supertype of all accretion geometry. Concrete sub-types must minimally implement
 
 Alternativey, for more control, either [`intersects_geometry`](@ref) or [`collision_callback`](@ref)
 may be implemented for a given geometry type.
+
+Geometry intersection calculations are performed by strapping discrete callbacks to the integration
+procedure.
 """
 abstract type AbstractAccretionGeometry{T} end
 

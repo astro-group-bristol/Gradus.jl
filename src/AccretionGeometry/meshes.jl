@@ -1,4 +1,8 @@
+"""
+    MeshAccretionGeometry(mesh)
 
+$(FIELDS)
+"""
 struct MeshAccretionGeometry{T} <: AbstractAccretionGeometry{T}
     mesh::Vector{Tuple{SVector{3,T},SVector{3,T},SVector{3,T}}}
     x_extent::Tuple{T,T}

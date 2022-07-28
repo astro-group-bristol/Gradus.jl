@@ -1,4 +1,9 @@
+"""
+    intersects_geometry(m::AbstractAccretionGeometry{T}, line_element)
 
+Utility function. Returns a boolean dependent on whether `line_element` intersects with the geometry (`true`) or not (`false`).
+Uses [`in_nearby_region`](@ref) to optimze and calls [`has_intersect`](@ref) to determine intersection.
+"""
 function intersects_geometry(m::AbstractAccretionGeometry{T}, line_element) where {T}
     if in_nearby_region(m, line_element)
         return has_intersect(m, line_element)
