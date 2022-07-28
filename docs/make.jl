@@ -16,6 +16,7 @@ makedocs(
             "Point functions" => "overview/point-functions.md",
             # "Callbacks"
             "Available metrics" => "overview/metrics.md",
+            "Accretion geometry" => "overview/accretion-geometry.md"
         ],
         # "Reverberation Lags"
         "Internals" => [
