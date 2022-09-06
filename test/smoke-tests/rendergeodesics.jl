@@ -46,7 +46,7 @@
                 verbose = false,
             )
             image_fingerprint = sum(filter(!isnan, img))
-            @test isapprox(expectation, image_fingerprint; atol = 1e-3, rtol = 0.0)
+            @test isapprox(expectation, image_fingerprint; atol = 1e-1, rtol = 0.0)
         end
     end
 
