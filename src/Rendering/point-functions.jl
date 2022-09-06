@@ -119,7 +119,10 @@ end
 
 @inline function Base.:∘(pf1::AbstractPointFunction, pf2::AbstractPointFunction)
     let f1 = pf1.f, f2 = pf2.f
-        PointFunction((m, gp, max_time; kwargs...) -> f1(m, gp, max_time; value = f2(m, gp, max_time; kwargs...)))
+        PointFunction(
+            (m, gp, max_time; kwargs...) ->
+                f1(m, gp, max_time; value = f2(m, gp, max_time; kwargs...)),
+        )
     end
 end
 

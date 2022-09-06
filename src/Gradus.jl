@@ -47,8 +47,7 @@ export tracegeodesics,
 export AbstractFirstOrderMetricParams, FirstOrderGeodesicPoint, BoyerLindquistFO
 
 # Rendering
-export rendergeodesics,
-    prerendergeodesics, PointFunction, FilterPointFunction, apply
+export rendergeodesics, prerendergeodesics, PointFunction, FilterPointFunction, apply
 
 # AccretionGeometry
 export AbstractAccretionGeometry,

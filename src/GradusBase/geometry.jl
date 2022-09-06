@@ -2,7 +2,6 @@ function vector_to_local_sky(m::AbstractMetricParams{T}, u, θ, ϕ) where {T}
     error("Not implemented for $(typeof(m))")
 end
 
-
 mdot(g, v1, v2) = @tullio r := g[i, j] * v1[i] * v2[j]
 mnorm(g, v) = mdot(g, v, v)
 

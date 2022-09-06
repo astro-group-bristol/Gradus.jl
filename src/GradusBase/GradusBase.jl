@@ -17,7 +17,8 @@ include("geodesic-solutions.jl")
 include("geometry.jl")
 
 export AbstractMetricParams, metric_params, metric, getgeodesicpoint
-GeodesicPoint, AbstractGeodesicPoint,
+GeodesicPoint,
+AbstractGeodesicPoint,
 vector_to_local_sky,
 AbstractMetricParams,
 geodesic_eq,

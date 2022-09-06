@@ -1,19 +1,5 @@
 
-const _interp_type = Interpolations.Extrapolation{
-    Float64,
-    1,
-    Interpolations.GriddedInterpolation{
-        Float64,
-        1,
-        Float64,
-        Gridded{Linear{Throw{OnGrid}}},
-        Tuple{Vector{Float64}},
-    },
-    Gridded{Linear{Throw{OnGrid}}},
-    Throw{Nothing},
-}
-
-struct PlungingInterpolation{M}
+struct PlungingInterpolation{M,_interp_type}
     m::M
     t::_interp_type
     r::_interp_type
@@ -29,9 +15,11 @@ struct PlungingInterpolation{M}
         vr = sol[6, :][I]
         vϕ = sol[8, :][I]
 
-        new{M}(
+        rinterp = LinearInterpolation(r, vt)
+
+        new{M,typeof(rinterp)}(
             m,
-            LinearInterpolation(r, vt),
+            rinterp,
             LinearInterpolation(r, vr),
             LinearInterpolation(r, vϕ),
         )

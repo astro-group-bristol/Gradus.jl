@@ -71,7 +71,8 @@ function prerendergeodesics(
 end
 
 
-export rendergeodesics, prerendergeodesics, AbstractPointFunction, PointFunction, FilterPointFunction, apply
+export rendergeodesics,
+    prerendergeodesics, AbstractPointFunction, PointFunction, FilterPointFunction, apply
 
 
 end # module
