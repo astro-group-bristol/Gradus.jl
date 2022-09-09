@@ -109,6 +109,35 @@ heatmap(img)
 
 For more complex disc geometry: TODO
 
+## Circular orbits
+
+Simple equatorial circular orbits are straight forward to calculate with Gradus.jl:
+
+```@example env
+using Gradus
+using Plots
+using StaticArrays
+
+m = BoyerLindquistAD(M=1.0, a=0.8)
+
+p = plot(aspect_ratio=1)
+
+for r in [3.0, 4.0, 5.0, 6.0]
+    v = Gradus.CircularOrbits.fourvelocity(m, r)
+    # trace the circular orbit
+    path = tracegeodesics(m, @SVector([0.0, r, π/2, 0.0]), v, (0.0, 300.0), μ = 1.0)
+    r = [path(t)[2] for t in range(0.0, 100, 200)]
+    ϕ = [path(t)[4] for t in range(0.0, 100, 200)]
+
+    x = @. r * cos(ϕ)
+    y = @. r * sin(ϕ)
+
+    plot!(p, x, y, label = false)
+end
+
+p
+```
+
 ## ISCO
 
 The [Gradus.isco](@ref) may be calculated with a simple convenience function, as may the energy associated with a given stable circular orbit.

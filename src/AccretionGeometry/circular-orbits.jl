@@ -28,7 +28,7 @@ energy(m, r; contra_rotating = false) =
         __energy(metric_components(m, rθ), Ωϕ)
     end
 
-function __angmom(g, Ωϕ, prograde) where {T}
+function __angmom(g, Ωϕ, prograde)
     @inbounds res = (g[5] + g[4] * Ωϕ) / √(-g[1] - 2g[5] * Ωϕ - g[4] * Ωϕ^2)
     if prograde
         res
