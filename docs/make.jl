@@ -34,4 +34,4 @@ makedocs(
     ],
 )
 
-# deploydocs(repo = "github.com/astro-group-bristol/Gradus.jl.git")
+deploydocs(repo = "github.com/astro-group-bristol/Gradus.jl.git")
