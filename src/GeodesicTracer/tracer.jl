@@ -61,9 +61,9 @@ function __tracegeodesics(
 end
 
 function solve_geodesic(solver, prob, ensemble; solver_opts...)
-    solve(prob, solver, ensemble; solver_opts...)
+    solve(prob, solver, ensemble; solver_opts..., kwargshandle = KeywordArgError)
 end
 
 function solve_geodesic(solver, prob; solver_opts...)
-    solve(prob, solver, ; solver_opts...)
+    solve(prob, solver, ; solver_opts..., kwargshandle = KeywordArgError)
 end
