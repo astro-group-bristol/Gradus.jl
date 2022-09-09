@@ -1,6 +1,7 @@
 include("boyer-lindquist-ad.jl")
 include("boyer-lindquist-fo.jl")
 include("johannsen-ad.jl")
+include("johannsen-psaltis-ad.jl")
 include("morris-thorne-ad.jl")
 include("kerr-refractive-ad.jl")
 include("dilaton-axion-ad.jl")
