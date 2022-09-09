@@ -5,12 +5,20 @@ Pages = ["examples.md"]
 Depth = 3
 ```
 
+```@setup env
+using Gradus
+using StaticArrays
+using Plots
+ENV["GKSwstype"]="nul"
+Plots.default(show=false)
+```
+
 ## Redshift image
 
 !!! note
     The [`Gradus.ConstPointFunctions.redshift`](@ref) function is an analytic solution for redshift, which may not be implemented for every type of metric or disc geometry. See [Interpolating redshifts](@ref) for a more flexible numeric alternative.
 
-```julia
+```@example env
 using Gradus
 using StaticArrays
 using Plots
@@ -42,13 +50,11 @@ img = rendergeodesics(
 heatmap(img)
 ```
 
-![redshift](../assets/examples/redshift.png)
-
 ## Line profile
 
 Using the redshift example, we can bin a line-profile using [StatsBase.jl](https://juliastats.org/StatsBase.jl/stable/empirical/#StatsBase.Histogram). We'll calculate the iron line profile, with a delta-emission at 6.4 keV.
 
-```julia
+```@example env
 using StatsBase
 
 # remove nans and flatten the redshift image
@@ -63,13 +69,11 @@ lineprof = fit(Histogram, data, x_bins)
 plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)
 ```
 
-![iron-line-profile](../assets/examples/line-profile.svg)
-
 ## Interpolating redshifts
 
 In cases where no analytic redshift solution is known, we can instead interpolate a numeric approximation. For example, interpolating the plunging region velocities and using the analytic solution for general static, axis symmetric metrics outside of the ISCO can be achieved with:
 
-```julia
+```@example env
 using Gradus
 using StaticArrays
 using Plots
@@ -103,6 +107,94 @@ img = rendergeodesics(
 heatmap(img)
 ```
 
-![redshift](../assets/examples/redshift-interpolated.png)
-
 For more complex disc geometry: TODO
+
+## ISCO
+
+The [Gradus.isco](@ref) may be calculated with a simple convenience function, as may the energy associated with a given stable circular orbit.
+
+```@example env
+using Gradus
+using Plots
+
+# prepare plot
+p = plot(legend=:bottomright, ylabel = "E", xlabel = "r", xscale = :log10)
+
+# choice of spin to plot energy curves for
+for a in [0.0, 0.4, 0.6]
+    m = BoyerLindquistAD(M = 1.0, a = a)
+
+    rs = range(Gradus.isco(m), 100.0, 500)
+    energy = map(rs) do r
+        Gradus.CircularOrbits.energy(m, r)
+    end
+
+    plot!(rs, energy, label = "a=$a")
+end
+
+# calculate the ISCO as a function of spin
+data = map(range(-1.0, 0.8, 100)) do a
+    m = BoyerLindquistAD(M = 1.0, a = a)
+    r = Gradus.isco(m)
+    Gradus.CircularOrbits.energy(m, r), r
+end
+
+# overlay onto plot
+plot!(last.(data), first.(data), color=:black, linestyle=:dash, label="ISCO")
+
+p
+```
+
+## Event horizons and naked singularities
+
+Here is an example of how to use [`Gradus.event_horizon`](@ref) to plot the shape of an event horizon in two dimensions. In the case of a naked singularity, as with the certain parameters combinations in the [`JohannsenPsaltisAD`](@ref) metric, we see a disconnected region in the plot.
+
+```@example env
+using Gradus
+using Plots
+
+function draw_horizon(p, m)
+    rs, θs = Gradus.event_horizon(m, resolution = 200)
+    radius = rs
+
+    x = @. radius * sin(θs)
+    y = @. radius * cos(θs)
+    plot!(p, x, y, label = "a = $(m.a)")
+end
+
+p = plot(aspect_ratio = 1)
+for a in [0.0, 0.5, 0.6, 0.7, 0.8]
+    m = JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = 2.0)
+    draw_horizon(p, m)
+end
+p
+```
+
+We can also calculate parameter combinations that lead to naked singularities, and plot the parameter space domains to show exclusion zones:
+
+```@example env
+function calc_exclusion(as, ϵs)
+    regions = [
+        Gradus.is_naked_singularity(JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = ϵ))
+        for a in as, ϵ in ϵs
+    ]
+
+    map(i -> i ? 1.0 : NaN, regions)
+end
+
+# define ranges (small in this example as a little computationally intense)
+as = range(0, 1.0, 40)
+ϵs = range(-10, 10, 40)
+
+img = calc_exclusion(as, ϵs)
+heatmap(
+    as, 
+    ϵs, 
+    img', 
+    color = :black, 
+    colorbar = false, 
+    xlabel = "a", 
+    ylabel = "ϵ"
+)
+```
+

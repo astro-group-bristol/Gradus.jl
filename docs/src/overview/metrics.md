@@ -25,6 +25,7 @@ BoyerLindquistFO
 ```@docs
 BoyerLindquistAD
 JohannsenAD
+JohannsenPsaltisAD
 KerrRefractiveAD
 DilatonAxionAD
 MorrisThorneAD
