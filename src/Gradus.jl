@@ -78,7 +78,12 @@ export AbstractCoronaModel,
 include("metrics/metrics.jl")
 
 export BoyerLindquistAD,
-    BoyerLindquistFO, JohannsenAD, MorrisThorneAD, KerrRefractiveAD, DilatonAxionAD
+    BoyerLindquistFO,
+    JohannsenAD,
+    JohannsenPsaltisAD,
+    MorrisThorneAD,
+    KerrRefractiveAD,
+    DilatonAxionAD
 
 # downstream modules and work
 include("special-radii.jl")
