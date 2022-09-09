@@ -27,10 +27,19 @@ end
 
 end # module
 
+"""
+    struct JohannsenPsaltisAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+
+Johannsen and Psaltis 2011
+$(FIELDS)
+"""
 @with_kw struct JohannsenPsaltisAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
+    "Black hole mass."
     M = 1.0
+    "Black hole spin."
     a = 0.0
+    "``\\epsilon_{3}`` deviation parameter."
     ϵ3 = 0.0
 end
 
