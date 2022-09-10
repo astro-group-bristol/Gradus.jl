@@ -13,6 +13,47 @@ ENV["GKSwstype"]="nul"
 Plots.default(show=false)
 ```
 
+## Tracing geodesic paths
+
+```@example env
+using Gradus
+using Plots
+using StaticArrays
+
+m = JohannsenPsaltisAD(M=1.0, a=0.6, ϵ3=2.0)
+# observer position
+u = @SVector [0.0, 1000.0, π/2, 0.0]
+
+# set up impact parameter space
+α = collect(range(-10.0, 10.0, 20))
+β = [0.0 for _ in α]
+
+# build initial velocity and position vectors
+vs = map_impact_parameters(m, u, α, β)
+us = [u for _ in vs]
+
+sols = tracegeodesics(
+    m, us, vs, (0.0, 2000.0);
+    abstol = 1e-12, reltol = 1e-12
+)
+
+# only use the subset of the solution we're plotting
+trange = range(990, 1035, 5000)
+
+p = plot(projection = :polar, legend = false, range = (0, 10))
+for s in sols
+    r = [s(t)[2] for t in trange]
+    ϕ = [s(t)[4] for t in trange]
+    plot!(p, ϕ, r)
+end
+
+# plot event horizon 
+r0 = Gradus.GradusBase.inner_radius(m)
+plot!(p, collect(range(0, 2π, 200)), [r0 for _ in 1:200], color = :black, linewidth = 2)
+
+p
+```
+
 ## Redshift image
 
 !!! note
@@ -109,6 +150,35 @@ heatmap(img)
 
 For more complex disc geometry: TODO
 
+## Circular orbits
+
+Simple equatorial circular orbits are straight forward to calculate with Gradus.jl:
+
+```@example env
+using Gradus
+using Plots
+using StaticArrays
+
+m = BoyerLindquistAD(M=1.0, a=0.8)
+
+p = plot(aspect_ratio=1)
+
+for r in [3.0, 4.0, 5.0, 6.0]
+    v = Gradus.CircularOrbits.fourvelocity(m, r)
+    # trace the circular orbit
+    path = tracegeodesics(m, @SVector([0.0, r, π/2, 0.0]), v, (0.0, 300.0), μ = 1.0)
+    r = [path(t)[2] for t in range(0.0, 100, 200)]
+    ϕ = [path(t)[4] for t in range(0.0, 100, 200)]
+
+    x = @. r * cos(ϕ)
+    y = @. r * sin(ϕ)
+
+    plot!(p, x, y, label = false)
+end
+
+p
+```
+
 ## ISCO
 
 The [Gradus.isco](@ref) may be calculated with a simple convenience function, as may the energy associated with a given stable circular orbit.
@@ -145,7 +215,7 @@ plot!(last.(data), first.(data), color=:black, linestyle=:dash, label="ISCO")
 p
 ```
 
-## Event horizons and naked singularities
+## Event horizons and naked singularities
 
 Here is an example of how to use [`Gradus.event_horizon`](@ref) to plot the shape of an event horizon in two dimensions. In the case of a naked singularity, as with the certain parameters combinations in the [`JohannsenPsaltisAD`](@ref) metric, we see a disconnected region in the plot.
 
