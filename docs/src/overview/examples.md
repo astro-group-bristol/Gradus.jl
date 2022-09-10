@@ -13,6 +13,47 @@ ENV["GKSwstype"]="nul"
 Plots.default(show=false)
 ```
 
+## Tracing geodesic paths
+
+```@example env
+using Gradus
+using Plots
+using StaticArrays
+
+m = JohannsenPsaltisAD(M=1.0, a=0.6, ϵ3=2.0)
+# observer position
+u = @SVector [0.0, 1000.0, π/2, 0.0]
+
+# set up impact parameter space
+α = collect(range(-10.0, 10.0, 20))
+β = [0.0 for _ in α]
+
+# build initial velocity and position vectors
+vs = map_impact_parameters(m, u, α, β)
+us = [u for _ in vs]
+
+sols = tracegeodesics(
+    m, us, vs, (0.0, 2000.0);
+    abstol = 1e-12, reltol = 1e-12
+)
+
+# only use the subset of the solution we're plotting
+trange = range(990, 1035, 5000)
+
+p = plot(projection = :polar, legend = false, range = (0, 10))
+for s in sols
+    r = [s(t)[2] for t in trange]
+    ϕ = [s(t)[4] for t in trange]
+    plot!(p, ϕ, r)
+end
+
+# plot event horizon 
+r0 = Gradus.GradusBase.inner_radius(m)
+plot!(p, collect(range(0, 2π, 200)), [r0 for _ in 1:200], color = :black, linewidth = 2)
+
+p
+```
+
 ## Redshift image
 
 !!! note
