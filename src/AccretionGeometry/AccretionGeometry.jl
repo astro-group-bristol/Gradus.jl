@@ -36,7 +36,7 @@ function tracegeodesics(
     accretion_geometry,
     time_domain::Tuple{T,T};
     callback = nothing,
-    gtol = 0.12,
+    gtol = 1e-2,
     kwargs...,
 ) where {T}
     cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
@@ -56,7 +56,7 @@ function rendergeodesics(
     accretion_geometry,
     max_time::T;
     callback = nothing,
-    gtol = 0.12,
+    gtol = 1e-2,
     kwargs...,
 ) where {T}
     cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
@@ -69,7 +69,7 @@ function prerendergeodesics(
     accretion_geometry,
     max_time::T;
     callback = nothing,
-    gtol = 0.12,
+    gtol = 1e-2,
     kwargs...,
 ) where {T}
     cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
