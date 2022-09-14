@@ -32,8 +32,8 @@
         for (m, expectation) in zip(
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
-            # last computed 04/06/2022: tests with --math-mode=ieee
-            [86114.71322445248, 86233.47268379868, 81502.90270571726, 36043.47569730063],
+            # last computed 15/11/2022: continuous callback for disc intersection
+            [86609.85250901626, 86609.85289351508, 81932.1104715763, 35460.69128206902],
         )
             img = rendergeodesics(
                 m,
