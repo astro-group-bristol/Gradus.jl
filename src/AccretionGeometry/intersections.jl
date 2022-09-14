@@ -4,7 +4,11 @@
 Utility function. Returns a boolean dependent on whether `line_element` intersects with the geometry (`true`) or not (`false`).
 Uses [`in_nearby_region`](@ref) to optimze and calls [`has_intersect`](@ref) to determine intersection.
 """
-function intersects_geometry(m::AbstractAccretionGeometry{T}, line_element) where {T}
+function intersects_geometry(
+    m::AbstractAccretionGeometry{T},
+    line_element,
+    integrator,
+) where {T}
     if in_nearby_region(m, line_element)
         return has_intersect(m, line_element)
     end
@@ -60,30 +64,31 @@ function jsf_algorithm(V₁::T, V₂::T, V₃::T, Q₁::V, Q₂::V; ϵ = 1e-8) w
     if w > ϵ
         D = Q₂ .- V₃
         s = D ⋅ W₁
-        s > ϵ && return false
+        s > ϵ && return false, float(0)
         W₂ = A × D
         t = W₂ ⋅ C
-        t < -ϵ && return false
+        t < -ϵ && return false, float(0)
         u = -W₂ ⋅ B
-        u < -ϵ && return false
-        w < s + t + u && return false
+        u < -ϵ && return false, float(0)
+        w < s + t + u && return false, float(0)
     elseif w < -ϵ
-        return false
+        return false, float(0)
     else # w == 0
         D = Q₂ .- V₃
         s = D ⋅ W₁
         if s > ϵ
-            return false
+            return false, float(0)
         elseif s < -ϵ
             W₂ = D × A
             t = W₂ ⋅ C
-            t > ϵ && return false
+            t > ϵ && return false, float(0)
             u = -W₂ ⋅ B
-            u > ϵ && return false
-            -s > t + u && return false
+            u > ϵ && return false, float(0)
+            -s > t + u && return false, float(0)
         else
-            return false
+            return false, float(0)
         end
     end
-    true
+    t = w / (s - w)
+    return true, float(t)
 end

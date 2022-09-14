@@ -30,3 +30,25 @@ function has_intersect(d::GeometricThinDisc{T}, line_element) where {T}
 
     s1 * s2 ≤ 0
 end
+
+function build_collision_callback(g::GeometricThinDisc{T}; gtol) where {T}
+    ContinuousCallback(
+        (u, λ, integrator) -> distance_to_disc(g, u; gtol = gtol),
+        i -> terminate!(i, :Intersected);
+        interp_points = 8,
+        save_positions = (true, false),
+    )
+end
+
+@fastmath function distance_to_disc(m::GeometricThinDisc{T}, u4; gtol) where {T}
+    p = @inbounds let r = u4[2], θ = u4[3], ϕ = u4[4]
+        if r < m.inner_radius || r > m.outer_radius
+            return 1.0
+        end
+        @SVector [r * sin(θ) * cos(ϕ), r * sin(θ) * sin(ϕ), r * cos(θ)]
+    end
+    n = @SVector [T(0.0), cos(m.inclination), sin(m.inclination)]
+    # project u into normal vector n
+    k = p ⋅ n
+    abs(k) - gtol
+end
