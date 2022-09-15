@@ -268,3 +268,40 @@ heatmap(
 )
 ```
 
+## Cunningham transfer functions
+
+Recreating Fig. 1 and 2 from [Bambi et al. (2017)](https://iopscience.iop.org/article/10.3847/1538-4357/aa74c0) for the transfer functions of a Kerr black hole
+
+```@example env
+using Gradus
+using StaticArrays
+using Plots
+
+p = plot(legend = false)
+for angle in [3, 35, 50, 65, 74, 85]
+    @show angle
+    u = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
+    ctf = @time Gradus.cunningham_transfer_function(
+        m, u, d, 4.0, 2000.0; finite_diff_order = 5
+    )
+    mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
+    @views plot!(p, ctf.gstar[mask], ctf.f[mask])
+end
+p
+```
+
+And Fig. 2:
+
+```@example env
+p = plot(legend = false)
+for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
+    @show a
+    m = BoyerLindquistAD(1.0, a)
+    ctf = @time Gradus.cunningham_transfer_function(
+        m, u, d, 7.0, 2000.0; finite_diff_order = 5
+    )
+    mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
+    @views plot!(p, ctf.gstar[mask], ctf.f[mask])
+end
+p
+```
