@@ -60,13 +60,17 @@ function has_intersect(m::MeshAccretionGeometry{T}, line_element) where {T}
         dist_sq = sum(@.((triangle[1] - line_element[2])^2))
         # assume line element and mesh triangle are small; check if we're within a
         # certain distance before running jsr
-        if dist_sq < 3.0 && jsf_algorithm(triangle..., line_element...)
+        if dist_sq < 3.0 && first(jsf_algorithm(triangle..., line_element...))
             return true
         end
     end
     false
 end
 
-function collision_callback(m::MeshAccretionGeometry{T}) where {T}
-    (u, λ, integrator) -> intersects_geometry(m, cartesian_line_element(u, integrator))
+function build_collision_callback(g::MeshAccretionGeometry{T}; gtol) where {T}
+    DiscreteCallback(
+        (u, λ, integrator) ->
+            intersects_geometry(g, cartesian_line_element(u, integrator), integrator),
+        i -> terminate!(i, :Intersected),
+    )
 end

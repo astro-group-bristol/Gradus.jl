@@ -3,6 +3,7 @@ module AccretionGeometry
 import ..GeodesicTracer:
     tracegeodesics,
     DiscreteCallback,
+    ContinuousCallback,
     terminate!,
     AbstractAutoDiffStaticAxisSymmetricParams,
     metric_components,
@@ -13,7 +14,7 @@ import ..Rendering: rendergeodesics, prerendergeodesics
 import Base: in
 import RecursiveArrayTools: ArrayPartition
 import GeometryBasics
-import LinearAlgebra: ×, ⋅
+import LinearAlgebra: ×, ⋅, norm
 
 using DocStringExtensions
 # for doc refs
@@ -35,9 +36,10 @@ function tracegeodesics(
     accretion_geometry,
     time_domain::Tuple{T,T};
     callback = nothing,
+    gtol = 1e-2,
     kwargs...,
 ) where {T}
-    cbs = add_collision_callback(callback, accretion_geometry)
+    cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
     tracegeodesics(
         m,
         init_positions,
@@ -54,9 +56,10 @@ function rendergeodesics(
     accretion_geometry,
     max_time::T;
     callback = nothing,
+    gtol = 1e-2,
     kwargs...,
 ) where {T}
-    cbs = add_collision_callback(callback, accretion_geometry)
+    cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
     rendergeodesics(m, init_pos, max_time; callback = cbs, kwargs...)
 end
 
@@ -66,25 +69,22 @@ function prerendergeodesics(
     accretion_geometry,
     max_time::T;
     callback = nothing,
+    gtol = 1e-2,
     kwargs...,
 ) where {T}
-    cbs = add_collision_callback(callback, accretion_geometry)
+    cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
     prerendergeodesics(m, init_pos, max_time; callback = cbs, kwargs...)
 end
 
-add_collision_callback(::Nothing, accretion_geometry) =
-    build_collision_callback(accretion_geometry)
-add_collision_callback(callback::Base.AbstractVecOrTuple, accretion_geometry) =
-    (callback..., build_collision_callback(accretion_geometry))
-add_collision_callback(callback, accretion_geometry) =
-    (callback, build_collision_callback(accretion_geometry))
-
-function build_collision_callback(geometry::AbstractAccretionGeometry{T}) where {T}
-    DiscreteCallback(collision_callback(geometry), i -> terminate!(i, :Intersected))
-end
+add_collision_callback(::Nothing, accretion_geometry; gtol) =
+    build_collision_callback(accretion_geometry; gtol = gtol)
+add_collision_callback(callback::Base.AbstractVecOrTuple, accretion_geometry; gtol) =
+    (callback..., build_collision_callback(accretion_geometry; gtol = gtol))
+add_collision_callback(callback, accretion_geometry; gtol) =
+    (callback, build_collision_callback(accretion_geometry; gtol = gtol))
 
 """
-    collision_callback(m::AbstractAccretionGeometry{T})
+    build_collision_callback(m::AbstractAccretionGeometry{T})
 
 Generates the callback used for the integration. Returns a `Function`, with the fingerprint
 ```julia
@@ -93,8 +93,13 @@ function callback(u, λ, integrator)::Bool
 end
 ```
 """
-collision_callback(m::AbstractAccretionGeometry{T}) where {T} =
-    (u, λ, integrator) -> intersects_geometry(m, line_element(u, integrator))
+function build_collision_callback(g::AbstractAccretionGeometry{T}; gtol) where {T}
+    DiscreteCallback(
+        (u, λ, integrator) ->
+            intersects_geometry(g, line_element(u, integrator), integrator),
+        i -> terminate!(i, :Intersected),
+    )
+end
 
 
 export AbstractAccretionGeometry,
