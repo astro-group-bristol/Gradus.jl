@@ -95,7 +95,8 @@ export solve_equitorial_circular_orbit,
     trace_equitorial_circular_orbit,
     interpolate_plunging_velocities,
     PlungingInterpolation,
-    interpolate_redshift
+    interpolate_redshift,
+    impact_parameters_for_radius
 
 include("const-point-functions.jl")
 export ConstPointFunctions

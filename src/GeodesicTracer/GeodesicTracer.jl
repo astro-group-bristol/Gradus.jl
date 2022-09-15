@@ -59,7 +59,6 @@ function tracegeodesics(
     callback = nothing,
     solver_opts...,
 ) where {T}
-
     _velocity = if (velocity isa Function) && (eltype(position) === T)
         wrap_constraint(m, position, velocity, μ)
     else
