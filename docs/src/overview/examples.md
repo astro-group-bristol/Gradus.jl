@@ -293,6 +293,9 @@ p
 And Fig. 2:
 
 ```@example env
+# new position vector
+u = @SVector [0.0, 1000.0, deg2rad(30), 0.0]
+
 p = plot(legend = false)
 for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
     @show a
