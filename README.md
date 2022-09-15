@@ -1,3 +1,7 @@
+<p align="center">
+  <img width="50%" alt="BRImage" src="docs/src/assets/logo.png">
+</p>
+
 # Gradus.jl
 
 <a href="https://codecov.io/gh/astro-group-bristol/Gradus.jl">
