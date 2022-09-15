@@ -42,7 +42,7 @@ Pkg.add(url = "https://github.com/astro-group-bristol/Gradus.jl")
 using Gradus
 ```
 
-## Credits
+## See also 
 
 This work would not be possible without the incredible work of:
 
