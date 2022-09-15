@@ -5,12 +5,14 @@ on:
     branches:
       - main
     paths:
-      - '**.jl'
+      - 'src/**.jl'
+      - 'test/**.jl'
   push:
     branches:
       - main
     paths:
-      - '**.jl'
+      - 'src/**.jl'
+      - 'test/**.jl'
 
 jobs:
 
