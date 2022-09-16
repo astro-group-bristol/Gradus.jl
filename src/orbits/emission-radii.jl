@@ -1,4 +1,3 @@
-
 @with_kw struct CunninghamTransferFunction{T}
     rₑ::T
     gs::Vector{T}

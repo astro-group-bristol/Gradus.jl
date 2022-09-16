@@ -1,4 +1,3 @@
-
 """
     struct GeometricThinDisc{T} <: AbstractAccretionDisc{T}
     GeometricThinDisc(inner_radius::T, outer_radius::T, inclination::T)

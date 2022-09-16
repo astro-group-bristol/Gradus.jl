@@ -1,105 +1,71 @@
 module Gradus
 
-include("GradusBase/GradusBase.jl")
-include("GeodesicTracer/GeodesicTracer.jl")
-include("FirstOrderMethods/FirstOrderMethods.jl")
-include("Rendering/Rendering.jl")
-include("AccretionGeometry/AccretionGeometry.jl")
-include("DiscProfiles/DiscProfiles.jl")
+import Base: in
+using Base.Threads: @threads
+using LinearAlgebra: ×, ⋅, norm, det
 
-using .GradusBase
-using .GeodesicTracer
-using .FirstOrderMethods
-using .Rendering
-using .AccretionGeometry
-using .DiscProfiles
-
-using StaticArrays
-using Parameters
 using DocStringExtensions
+using Parameters
 
+using SciMLBase
+using OrdinaryDiffEq
+using DiffEqCallbacks
+using StaticArrays
+
+using Accessors: @set
+using Tullio: @tullio
+
+import ThreadsX
 import ForwardDiff
-import Roots
+import GeometryBasics
 
-# GradusBase
-export AbstractMetricParams,
-    AbstractGeodesicPoint,
-    metric_params,
-    metric,
-    getgeodesicpoint,
-    GeodesicPoint,
-    vector_to_local_sky,
-    AbstractMetricParams,
-    geodesic_eq,
-    geodesic_eq!,
-    constrain,
-    inner_radius,
-    metric_type
+include("GradusBase/GradusBase.jl")
+using .GradusBase
+import .GradusBase: AbstractGeodesicPoint, GeodesicPoint
 
-# GeodesicTracer
-export tracegeodesics,
-    map_impact_parameters,
-    AbstractAutoDiffMetricParams,
-    AbstractAutoDiffStaticAxisSymmetricParams,
-    metric_components
+include("tracing/tracing.jl")
+include("tracing/constraints.jl")
+include("tracing/callbacks.jl")
+include("tracing/utility.jl")
 
-# FirstOrderMethods
-export AbstractFirstOrderMetricParams, FirstOrderGeodesicPoint, BoyerLindquistFO
+include("tracing/method-implementations/auto-diff.jl")
 
-# Rendering
-export rendergeodesics, prerendergeodesics, PointFunction, FilterPointFunction, apply
+include("rendering/cache.jl")
+include("rendering/rendering.jl")
+include("rendering/utility.jl")
 
-# AccretionGeometry
-export AbstractAccretionGeometry,
-    AbstractAccretionDisc,
-    MeshAccretionGeometry,
-    GeometricThinDisc,
-    inpolygon,
-    getarea,
-    CircularOrbits
+include("tracing/method-implementations/first-order.jl")
 
-# DiscProfiles
-export AbstractCoronaModel,
-    LampPostModel,
-    renderprofile,
-    LowerHemisphere,
-    BothHemispheres,
-    EvenSampler,
-    WeierstrassSampler,
-    RandomGenerator,
-    GoldenSpiralGenerator,
-    VoronoiDiscProfile,
-    findindex,
-    getareas,
-    getproperarea,
-    bin_transfer_function
+include("point-functions/point-functions.jl")
 
-# pre-defined metrics
-include("metrics/metrics.jl")
+include("orbits/circular-orbits.jl")
+include("orbits/orbit-discovery.jl")
+include("orbits/orbit-interpolations.jl")
 
-export BoyerLindquistAD,
-    BoyerLindquistFO,
-    JohannsenAD,
-    JohannsenPsaltisAD,
-    MorrisThorneAD,
-    KerrRefractiveAD,
-    DilatonAxionAD
+include("accretion-geometry/geometry.jl")
+include("accretion-geometry/intersections.jl")
+include("accretion-geometry/discs.jl")
+include("accretion-geometry/meshes.jl")
+include("accretion-geometry/bootstrap.jl")
 
-# downstream modules and work
+include("orbits/emission-radii.jl")
+
+include("corona-to-disc/sky-geometry.jl")
+include("corona-to-disc/corona-models.jl")
+include("corona-to-disc/disc-profiles.jl")
+include("corona-to-disc/transfer-functions.jl")
+
+include("metrics/boyer-lindquist-ad.jl")
+include("metrics/boyer-lindquist-fo.jl")
+include("metrics/johannsen-ad.jl")
+include("metrics/johannsen-psaltis-ad.jl")
+include("metrics/morris-thorne-ad.jl")
+include("metrics/kerr-refractive-ad.jl")
+include("metrics/dilaton-axion-ad.jl")
+
 include("special-radii.jl")
+include("redshift.jl")
 
-include("AccretionFormulae/AccretionFormulae.jl")
-
-using .AccretionFormulae
-export solve_equitorial_circular_orbit,
-    trace_equitorial_circular_orbit,
-    interpolate_plunging_velocities,
-    PlungingInterpolation,
-    interpolate_redshift,
-    impact_parameters_for_radius
-
-include("const-point-functions.jl")
-export ConstPointFunctions
-
+include("point-functions/const-point-functions.jl")
 
 end # module

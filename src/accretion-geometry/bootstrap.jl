@@ -1,34 +1,3 @@
-module AccretionGeometry
-
-import ..GeodesicTracer:
-    tracegeodesics,
-    DiscreteCallback,
-    ContinuousCallback,
-    terminate!,
-    AbstractAutoDiffStaticAxisSymmetricParams,
-    metric_components,
-    metric_jacobian,
-    inverse_metric_components
-
-import ..Rendering: rendergeodesics, prerendergeodesics
-import Base: in
-import RecursiveArrayTools: ArrayPartition
-import GeometryBasics
-import LinearAlgebra: ×, ⋅, norm
-
-using DocStringExtensions
-# for doc refs
-import ..Gradus
-
-using ..GradusBase
-using StaticArrays
-
-include("geometry.jl")
-include("meshes.jl")
-include("intersections.jl")
-include("discs.jl")
-include("circular-orbits.jl")
-
 function tracegeodesics(
     m::AbstractMetricParams{T},
     init_positions,
@@ -100,15 +69,3 @@ function build_collision_callback(g::AbstractAccretionGeometry{T}; gtol) where {
         i -> terminate!(i, :Intersected),
     )
 end
-
-
-export AbstractAccretionGeometry,
-    AbstractAccretionDisc,
-    MeshAccretionGeometry,
-    GeometricThinDisc,
-    inpolygon,
-    getarea,
-    getbarycenter,
-    CircularOrbits
-
-end # module

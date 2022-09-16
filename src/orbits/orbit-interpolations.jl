@@ -1,4 +1,3 @@
-
 struct PlungingInterpolation{M,_interp_type}
     m::M
     t::_interp_type

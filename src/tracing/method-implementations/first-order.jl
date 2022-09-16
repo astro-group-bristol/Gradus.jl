@@ -1,3 +1,20 @@
+"""
+    AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T}
+
+Abstract type for metrics using the 1st-order integration method. The 1st-order methods
+reuse the velocity vector as a parameter vector, where only element `vel[2]` and `vel[3]`
+are used, and are local observer ratios ``\\sin \\Theta`` and ``\\sin \\Phi`` respectively.
+
+Require implementation of
+- [`inner_radius`](@ref)
+- [`constrain`](@ref)
+- [`four_velocity`](@ref)
+- [`calc_lq`](@ref)
+- [`Vr`](@ref)
+- [`Vθ`](@ref)
+- [`alpha_beta_to_vel`](@ref)
+"""
+abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 
 @with_kw struct FirstOrderGeodesicPoint{T,V,P} <: AbstractGeodesicPoint{T}
     retcode::Symbol
@@ -108,3 +125,23 @@ the geodesic position, and the `param` vector.
 """
 calc_lq(m::AbstractFirstOrderMetricParams{T}, pos, param) where {T} =
     error("Not implmented for $(typeof(m)).")
+
+function flip_radial_sign!(integrator)
+    p = integrator.p
+    integrator.p = @set p.r = -p.r
+    integrator.sol.prob.p.changes[1] = integrator.t[end]
+end
+
+function flip_angular_sign!(integrator)
+    p = integrator.p
+    integrator.p = @set p.θ = -p.θ
+    integrator.sol.prob.p.changes[2] = integrator.t[end]
+end
+
+function radial_negative_check(m::AbstractFirstOrderMetricParams{T}) where {T}
+    (u, λ, integrator) -> Vr(m, u, integrator.p) < 0
+end
+
+function angular_negative_check(m::AbstractFirstOrderMetricParams{T}) where {T}
+    (u, λ, integrator) -> Vθ(m, u, integrator.p) < 0
+end

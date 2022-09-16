@@ -63,6 +63,6 @@ $(FIELDS)
     b = 1.0
 end
 
-GeodesicTracer.metric_components(m::DilatonAxionAD{T}, rθ) where {T} =
+metric_components(m::DilatonAxionAD{T}, rθ) where {T} =
     __DilatonAxionAD.metric_components(m.M, m.a, m.β, m.b, rθ)
 GradusBase.inner_radius(m::DilatonAxionAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)

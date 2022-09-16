@@ -1,7 +1,6 @@
 module RedshiftFunctions
-import ..AccretionFormulae.Gradus
-import ..AccretionFormulae.Gradus: __BoyerLindquistFO
-import ..AccretionFormulae: AbstractMetricParams, metric
+import ..Gradus
+import ..Gradus: __BoyerLindquistFO, AbstractMetricParams, metric
 using StaticArrays
 using Tullio: @tullio
 

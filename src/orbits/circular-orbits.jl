@@ -1,6 +1,6 @@
 module CircularOrbits
 import ..StaticArrays: @SVector
-import ..AccretionGeometry:
+import ..Gradus:
     AbstractAutoDiffStaticAxisSymmetricParams,
     metric_components,
     metric_jacobian,
