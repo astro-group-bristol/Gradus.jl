@@ -152,4 +152,14 @@ export AbstractPointFunction,
     AbstractDiscProfile,
     AbstractDirectionSampler
 
+# precompilation help
+precompile(
+    tracegeodesics, 
+    (BoyerLindquistAD{Float64}, SVector{4,Float64}, SVector{4,Float64}, Tuple{Float64,Float64})
+)
+precompile(
+    rendergeodesics, 
+    (BoyerLindquistAD{Float64}, SVector{4,Float64}, GeometricThinDisc{Float64}, Float64)
+)
+
 end # module
