@@ -368,10 +368,12 @@ function Vθ(m::BoyerLindquistFO{T}, u, p) where {T}
     __BoyerLindquistFO.Vθ(m.E, L, Q, m.a, u[3])
 end
 
-function alpha_beta_to_vel(m::BoyerLindquistFO{T}, u, α, β) where {T}
+function impact_parameters_to_vel(m::BoyerLindquistFO{T}, u, α, β) where {T}
     sinΦ, sinΨ = __BoyerLindquistFO.sinΦsinΨ(m.M, u[2], m.a, u[3], α, β)
     (β < 0.0 ? 1.0 : -1.0, sinΦ, sinΨ)
 end
 
 # special radii
 isco(m::BoyerLindquistFO{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
+
+export BoyerLindquistFO

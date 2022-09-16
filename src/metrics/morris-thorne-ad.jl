@@ -32,3 +32,5 @@ end
 metric_components(m::MorrisThorneAD{T}, rθ) where {T} =
     __MorrisThorneAD.metric_components(m.b, rθ)
 GradusBase.inner_radius(m::MorrisThorneAD{T}) where {T} = 0.0
+
+export MorrisThorneAD

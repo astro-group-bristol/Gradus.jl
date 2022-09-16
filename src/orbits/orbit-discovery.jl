@@ -33,7 +33,7 @@ function __solve_equitorial_circular_orbit(
         upper_bound,
         optimizer,
     )
-    minimizer(res)
+    Optim.minimizer(res)
 end
 
 function solve_equitorial_circular_orbit(
@@ -94,3 +94,5 @@ function trace_equitorial_circular_orbit(
         trace_single_orbit(m, r, vϕ; kwargs...)
     end
 end
+
+export solve_equitorial_circular_orbit, trace_equitorial_circular_orbit

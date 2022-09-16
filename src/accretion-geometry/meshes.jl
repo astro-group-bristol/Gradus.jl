@@ -74,3 +74,5 @@ function build_collision_callback(g::MeshAccretionGeometry{T}; gtol) where {T}
         i -> terminate!(i, :Intersected),
     )
 end
+
+export MeshAccretionGeometry

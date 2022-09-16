@@ -11,6 +11,12 @@ using SciMLBase
 using OrdinaryDiffEq
 using DiffEqCallbacks
 using StaticArrays
+using Optim
+using Interpolations
+using VoronoiCells
+using FiniteDifferences
+using Roots
+using ProgressMeter
 
 using Accessors: @set
 using Tullio: @tullio
@@ -20,8 +26,76 @@ import ForwardDiff
 import GeometryBasics
 
 include("GradusBase/GradusBase.jl")
-using .GradusBase
-import .GradusBase: AbstractGeodesicPoint, GeodesicPoint
+import .GradusBase: E, Lz, AbstractMetricParams, metric_params, metric, getgeodesicpoint,
+    GeodesicPoint,
+    AbstractGeodesicPoint,
+    vector_to_local_sky,
+    AbstractMetricParams,
+    geodesic_eq,
+    geodesic_eq!,
+    constrain,
+    inner_radius,
+    metric_type,
+    metric_components,
+    inverse_metric_components,
+    unpack_solution
+
+export AbstractMetricParams,
+    getgeodesicpoint,
+    GeodesicPoint,
+    AbstractGeodesicPoint,
+    AbstractMetricParams,
+    constrain,
+    inner_radius,
+    metric_components,
+    inverse_metric_components
+
+"""
+    abstract type AbstractPointFunction
+
+Abstract super type for point functions. Must have `f::Function` field.
+"""
+abstract type AbstractPointFunction end
+
+abstract type AbstractCacheStrategy end
+abstract type AbstractRenderCache{M,T} end
+
+abstract type AbstractSkyDomain end
+abstract type AbstractGenerator end
+
+"""
+    abstract type AbstractAccretionGeometry{T}
+
+Supertype of all accretion geometry. Concrete sub-types must minimally implement
+- [`in_nearby_region`](@ref)
+- [`has_intersect`](@ref)
+
+Alternativey, for more control, either [`intersects_geometry`](@ref) or [`collision_callback`](@ref)
+may be implemented for a given geometry type.
+
+Geometry intersection calculations are performed by strapping discrete callbacks to the integration
+procedure.
+"""
+abstract type AbstractAccretionGeometry{T} end
+
+"""
+    abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T}
+
+Supertype for accretion spherically symmetric geometry, where certain optimizing assumptions
+may be made.
+"""
+abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T} end
+
+"""
+    AbstractDiscProfile
+
+Abstract type for binning structures over discs (e.g., radial bins, voronoi).
+"""
+abstract type AbstractDiscProfile end
+
+abstract type AbstractCoronaModel{T} end
+
+abstract type AbstractDirectionSampler{SkyDomain,Generator} end
 
 include("tracing/tracing.jl")
 include("tracing/constraints.jl")
@@ -36,7 +110,7 @@ include("rendering/utility.jl")
 
 include("tracing/method-implementations/first-order.jl")
 
-include("point-functions/point-functions.jl")
+include("point-functions.jl")
 
 include("orbits/circular-orbits.jl")
 include("orbits/orbit-discovery.jl")
@@ -65,7 +139,17 @@ include("metrics/dilaton-axion-ad.jl")
 
 include("special-radii.jl")
 include("redshift.jl")
+include("const-point-functions.jl")
 
-include("point-functions/const-point-functions.jl")
+
+export AbstractPointFunction,
+    AbstractCacheStrategy,
+    AbstractRenderCache,
+    AbstractSkyDomain,
+    AbstractGenerator,
+    AbstractAccretionGeometry,
+    AbstractAccretionDisc,
+    AbstractDiscProfile,
+    AbstractDirectionSampler
 
 end # module

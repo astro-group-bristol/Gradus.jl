@@ -1,9 +1,5 @@
-abstract type AbstractCacheStrategy end
-
 struct SolutionCache <: AbstractCacheStrategy end
 struct EndpointCache <: AbstractCacheStrategy end
-
-abstract type AbstractRenderCache{M,T} end
 
 struct SolutionRenderCache{M,T,G} <: AbstractRenderCache{M,T}
     # metric
@@ -59,3 +55,5 @@ function Base.show(io::IO, cache::AbstractRenderCache{M}) where {M}
     repr = "$(Base.typename(typeof(cache)).name){$M} (dimensions $(cache.height)x$(cache.width))"
     write(io, repr)
 end
+
+export SolutionCache, EndpointCache, SolutionRenderCache, EndpointRenderCache

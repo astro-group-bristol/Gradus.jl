@@ -46,3 +46,5 @@ end
 metric_components(m::JohannsenPsaltisAD{T}, rθ) where {T} =
     __JohannsenPsaltisAD.metric_components(m.M, m.a, m.ϵ3, rθ)
 GradusBase.inner_radius(m::JohannsenPsaltisAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+
+export JohannsenPsaltisAD

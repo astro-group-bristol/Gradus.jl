@@ -1,26 +1,3 @@
-"""
-    abstract type AbstractAccretionGeometry{T}
-
-Supertype of all accretion geometry. Concrete sub-types must minimally implement
-- [`in_nearby_region`](@ref)
-- [`has_intersect`](@ref)
-
-Alternativey, for more control, either [`intersects_geometry`](@ref) or [`collision_callback`](@ref)
-may be implemented for a given geometry type.
-
-Geometry intersection calculations are performed by strapping discrete callbacks to the integration
-procedure.
-"""
-abstract type AbstractAccretionGeometry{T} end
-
-"""
-    abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T}
-
-Supertype for accretion spherically symmetric geometry, where certain optimizing assumptions
-may be made.
-"""
-abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T} end
-
 function to_cartesian(vec::AbstractVector{T}) where {T}
     SVector{3,T}(to_cartesian(vec[2], vec[3], vec[4]))
 end
@@ -79,9 +56,7 @@ function getcycliclines(poly)
     (i == 1 ? (poly[end], poly[i]) : (poly[i-1], poly[i]) for i = 1:length(poly))
 end
 
-function getpoints(
-    poly::GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V},
-) where {T,L,V}
+function getpoints(poly::GeometryBasics.Polygon)
     lines = poly.exterior.points
     ps = first.(lines)
     push!(ps, lines[end][2])
@@ -118,7 +93,7 @@ function getarea(poly)
     abs(a / 2)
 end
 
-function getbarycenter(poly)
+function getbarycenter(poly::GeometryBasics.Polygon)
     pts = getpoints(poly)
     n_points = length(pts)
 
@@ -131,3 +106,5 @@ function getbarycenter(poly)
 
     @SVector [x_sum / n_points, y_sum / n_points]
 end
+
+export getpoints, getarea

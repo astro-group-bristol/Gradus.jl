@@ -66,3 +66,5 @@ GradusBase.inner_radius(m::KerrRefractiveAD{T}) where {T} = m.M + √(m.M^2 - m.
 
 # special radii
 isco(m::KerrRefractiveAD{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
+
+export KerrRefractiveAD

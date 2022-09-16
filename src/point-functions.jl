@@ -1,11 +1,4 @@
 """
-    abstract type AbstractPointFunction
-
-Abstract super type for point functions. Must have `f::Function` field.
-"""
-abstract type AbstractPointFunction end
-
-"""
     struct PointFunction <: AbstractPointFunction
     PointFunction(func)
 
@@ -140,3 +133,5 @@ end
         )
     end
 end
+
+export apply, PointFunction, FilterPointFunction

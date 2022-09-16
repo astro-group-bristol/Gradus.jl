@@ -1,5 +1,3 @@
-abstract type AbstractCoronaModel{T} end
-
 sample_position(m::AbstractMetricParams{T}, model::AbstractCoronaModel{T}, N) where {T} =
     error("Not implemented for $(typeof(model)).")
 
@@ -30,3 +28,5 @@ function sample_velocity(
         @SVector [T(0.0), r, t, p]
     end
 end
+
+export LampPostModel

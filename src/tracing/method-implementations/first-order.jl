@@ -12,7 +12,7 @@ Require implementation of
 - [`calc_lq`](@ref)
 - [`Vr`](@ref)
 - [`Vθ`](@ref)
-- [`alpha_beta_to_vel`](@ref)
+- [`impact_parameters_to_vel`](@ref)
 """
 abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 
@@ -36,8 +36,8 @@ end
 
 @inbounds function getgeodesicpoint(
     m::AbstractFirstOrderMetricParams{T},
-    sol::SciMLBase.AbstractODESolution{T,N,S},
-) where {T,N,S}
+    sol::SciMLBase.AbstractODESolution{T},
+) where {T}
     us, ts, p = unpack_solution(sol)
 
     u_start = SVector{4,T}(us[1][1:4])
@@ -52,10 +52,10 @@ end
 end
 
 function metric_callback(
-    m::AbstractFirstOrderMetricParams{T},
+    m::AbstractFirstOrderMetricParams,
     closest_approach,
     effective_infinity,
-) where {T}
+)
     (
         ensure_chart_callback(m, closest_approach, effective_infinity),
         DiscreteCallback(radial_negative_check(m), flip_radial_sign!),
@@ -69,7 +69,7 @@ end
 Calculate the four-velocity at a point `u`, given a set of metric parameters and the constants
 of motion in `p`.
 """
-four_velocity(u, m::AbstractFirstOrderMetricParams{T}, p) where {T} =
+four_velocity(u, m::AbstractFirstOrderMetricParams, p) =
     error("Not implmented for $(typeof(m)).")
 
 make_parameters(L, Q, sign_θ, T) =
@@ -145,3 +145,5 @@ end
 function angular_negative_check(m::AbstractFirstOrderMetricParams{T}) where {T}
     (u, λ, integrator) -> Vθ(m, u, integrator.p) < 0
 end
+
+export AbstractFirstOrderMetricParams, FirstOrderGeodesicPoint

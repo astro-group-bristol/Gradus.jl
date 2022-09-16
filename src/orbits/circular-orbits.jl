@@ -111,3 +111,5 @@ function plunging_fourvelocity(
 end
 
 end # module
+
+export CircularOrbits

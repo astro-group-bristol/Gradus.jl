@@ -22,6 +22,8 @@ only be a subset of the total manifold coordinates. See specific implementations
 """
 metric_components(m::AbstractMetricParams{T}, x) where {T} =
     error("Not implemented for metric $(typeof(m))")
+inverse_metric_components(m::AbstractMetricParams{T}, x) where {T} =
+    error("Not implemented for metric $(typeof(m))")
 
 """
     geodesic_eq(m::AbstractMetricParams{T}, u, v)

@@ -1,14 +1,9 @@
-abstract type AbstractSkyDomain end
 
 struct LowerHemisphere <: AbstractSkyDomain end
 struct BothHemispheres <: AbstractSkyDomain end
 
-abstract type AbstractGenerator end
-
 struct RandomGenerator <: AbstractGenerator end
 struct GoldenSpiralGenerator <: AbstractGenerator end
-
-abstract type AbstractDirectionSampler{AbstractSkyDomain,AbstractGenerator} end
 
 struct EvenSampler{D,G} <: AbstractDirectionSampler{D,G}
     EvenSampler(domain::AbstractSkyDomain, generator::AbstractGenerator) =
@@ -58,3 +53,6 @@ sample_elevation(sm::AbstractDirectionSampler{D,G}, i) where {D,G} =
         π - ϕ
     end
 end
+
+export LowerHemisphere,
+    BothHemispheres, RandomGenerator, GoldenSpiralGenerator, EvenSampler, WeierstrassSampler

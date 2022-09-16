@@ -274,3 +274,5 @@ function interpolate_redshift(plunging_interpolation, u)
 end
 # interpolate_redshift(m::AbstractMetricParams, u) =
 #     interpolate_redshift(interpolate_plunging_velocities(m), u)
+
+export RedshiftFunctions, interpolate_redshift

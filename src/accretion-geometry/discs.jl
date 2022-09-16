@@ -51,3 +51,5 @@ end
     k = p ⋅ n
     abs(k) - (gtol * u4[2])
 end
+
+export GeometricThinDisc

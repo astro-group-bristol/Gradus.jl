@@ -18,3 +18,5 @@ function bin_transfer_function(time_delays, energy, flux; N = 300)
 
     time_bins, energy_bins, transfer_function
 end
+
+export bin_transfer_function

@@ -82,3 +82,5 @@ end
 
 # special radii
 isco(m::BoyerLindquistAD{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
+
+export BoyerLindquistAD

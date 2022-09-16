@@ -162,3 +162,5 @@ end
 function solve_geodesic(solver, prob; solver_opts...)
     solve(prob, solver, ; solver_opts..., kwargshandle = KeywordArgError)
 end
+
+export tracegeodesics

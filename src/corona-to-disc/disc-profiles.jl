@@ -38,13 +38,6 @@ function renderprofile(
     __renderprofile(m, model, d, n_samples, (0.0, max_time); kwargs...)
 end
 
-"""
-    AbstractDiscProfile
-
-Abstract type for binning structures over discs (e.g., radial bins, voronoi).
-"""
-abstract type AbstractDiscProfile end
-
 # evaluate(aap::AbstractAccretionProfile, p) =
 #     error("Not implemented for `$(typeof(aap))` yet.")
 
@@ -303,3 +296,5 @@ function __renderprofile(
     # TODO
     error("Not implemented for $(typeof(d)).")
 end
+
+export VoronoiDiscProfile, getareas, getproperarea, findindex

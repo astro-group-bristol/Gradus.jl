@@ -1,8 +1,8 @@
 @inline function ensure_chart_callback(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     closest_approach,
     effective_infinity,
-) where {T}
+)
     min_r = inner_radius(m)
     # terminate integration if we come within some % of the black hole radius
     DiscreteCallback(
@@ -11,20 +11,16 @@
     )
 end
 
-function metric_callback(
-    m::AbstractMetricParams{T},
-    closest_approach,
-    effective_infinity,
-) where {T}
+function metric_callback(m::AbstractMetricParams, closest_approach, effective_infinity)
     ensure_chart_callback(m, closest_approach, effective_infinity)
 end
 
 function create_callback_set(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     cb::C,
     closest_approach,
     effective_infinity,
-) where {T,C<:Union{NTuple{N,SciMLBase.DECallback},SciMLBase.DECallback,Nothing}} where {N}
+) where {C<:Union{<:Tuple{SciMLBase.DECallback},SciMLBase.DECallback,Nothing}}
     mcb = metric_callback(m, closest_approach, effective_infinity)
     if C <: SciMLBase.DECallback
         mcb isa Tuple ? CallbackSet(cb, mcb...) : CallbackSet(cb, mcb)

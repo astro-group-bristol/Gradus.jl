@@ -70,3 +70,5 @@ function interpolate_plunging_velocities(
 
     PlungingInterpolation(m, sol)
 end
+
+export PlungingInterpolation, interpolate_plunging_velocities

@@ -58,3 +58,5 @@ Wraps calls to [`AccretionFormulae._redshift_guard`](@ref) to dispatch different
 const redshift = PointFunction(_redshift_guard)
 
 end # module
+
+export ConstPointFunctions

@@ -178,3 +178,5 @@ function __render_geodesics(
 
     simsols
 end
+
+export rendergeodesics, prerendergeodesics

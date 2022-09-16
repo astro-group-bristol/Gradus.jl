@@ -279,3 +279,5 @@ function metric(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, u) where {T}
         comps[5] 0 0 comps[4]
     ]
 end
+
+export AbstractAutoDiffMetricParams, AbstractAutoDiffStaticAxisSymmetricParams
