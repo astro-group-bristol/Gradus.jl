@@ -5,7 +5,7 @@ CurrentModule = Gradus
 ```
 
 ```@docs
-Rendering.AbstractPointFunction
+AbstractPointFunction
 PointFunction
 FilterPointFunction
 ```

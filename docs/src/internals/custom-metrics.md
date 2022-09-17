@@ -32,7 +32,7 @@ using Gradus
     M = 1.0
 end
 
-function GeodesicTracer.metric_components(m::EddingtonFinkelsteinAD{T}, rθ) where {T}
+function GradusBase.metric_components(m::EddingtonFinkelsteinAD{T}, rθ) where {T}
     (r, θ) = rθ
     M = m.M
 
@@ -48,8 +48,8 @@ GradusBase.inner_radius(m::BoyerLindquistAD{T}) where {T} = 2 * m.M
 ```
 A few notes:
 - We use `@with_kw` from [Parameters.jl](https://github.com/mauro3/Parameters.jl) to define various utility constructors for us.
-- [`GeodesicTracer.metric_components`](@ref) must return five elements for [`AbstractAutoDiffStaticAxisSymmetricParams`](@ref), where the last element is the off-axis ``g_{t \phi}`` matrix element, which in this case is always 0.
-- The [`Gradus.GradusBase.inner_radius`](@ref) function defines the inner-radius of integration chart. This defines where the integration should terminate to avoid running indefinitely, and is, in this case, set to the event-horizon of our metric.
+- [`GradusBase.metric_components`](@ref) must return five elements for [`AbstractAutoDiffStaticAxisSymmetricParams`](@ref), where the last element is the off-axis ``g_{t \phi}`` matrix element, which in this case is always 0.
+- The [`GradusBase.inner_radius`](@ref) function defines the inner-radius of integration chart. This defines where the integration should terminate to avoid running indefinitely, and is, in this case, set to the event-horizon of our metric.
 
 That's all we need! This metric is now ready to be traced in the usual way.
 
@@ -64,17 +64,17 @@ The following types may be implemented to add new metrics. Each type has differe
 ### First-Order
 
 ```@docs
-FirstOrderMethods.AbstractFirstOrderMetricParams
-FirstOrderMethods.four_velocity
-FirstOrderMethods.calc_lq
-FirstOrderMethods.Vr
-FirstOrderMethods.Vθ
+AbstractFirstOrderMetricParams
+Gradus.four_velocity
+Gradus.calc_lq
+Gradus.Vr
+Gradus.Vθ
 ```
 
 ### Second-Order
 
 ```@docs
-GeodesicTracer.AbstractAutoDiffMetricParams
-GeodesicTracer.metric_components
-GeodesicTracer.AbstractAutoDiffStaticAxisSymmetricParams
+AbstractAutoDiffMetricParams
+metric_components
+AbstractAutoDiffStaticAxisSymmetricParams
 ```

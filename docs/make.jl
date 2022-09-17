@@ -24,12 +24,10 @@ makedocs(
             "Implementing new metrics" => "internals/custom-metrics.md",
             "Special radii" => "internals/special-radii.md",
         ],
-        "Module API" =>
+        "API" =>
             [
                 "Gradus" => "api-documentation/Gradus.md",
                 "GradusBase" => "api-documentation/GradusBase.md",
-                "GeodesicTracer" => "api-documentation/GeodesicTracer.md",
-                "AccretionGeometry" => "api-documentation/AccretionGeometry.md",
             ] |> sort,
     ],
 )
