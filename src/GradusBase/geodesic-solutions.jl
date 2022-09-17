@@ -9,7 +9,7 @@ trajectories.
     full geodesic path, it is encouraged to use the `SciMLBase.AbstractODESolution` directly.
 
 Must minimally have the same fields as [`GeodesicPoint`](@ref).
-Examples include [`Gradus.FirstOrderMethods.FirstOrderGeodesicPoint`](@ref).
+Examples include [`Gradus.FirstOrderGeodesicPoint`](@ref).
 """
 abstract type AbstractGeodesicPoint{T} end
 

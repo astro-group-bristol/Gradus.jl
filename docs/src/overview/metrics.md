@@ -16,17 +16,9 @@ Order = [:type]
 !!! note
     To implement your own custom metrics, please see [Implementing a new metric](@ref).
 
-## First-Order
-```@docs
-BoyerLindquistFO
-```
+## Catalogue of spacetimes
 
-## Second-Order
-```@docs
-BoyerLindquistAD
-JohannsenAD
-JohannsenPsaltisAD
-KerrRefractiveAD
-DilatonAxionAD
-MorrisThorneAD
+```@autodocs
+Modules = [Gradus]
+Filter = t -> typeof(t) === UnionAll && t <: Gradus.AbstractMetricParams
 ```

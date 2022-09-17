@@ -60,9 +60,11 @@ $(FIELDS)
 end
 
 # implementation
-GeodesicTracer.metric_components(m::KerrRefractiveAD{T}, rθ) where {T} =
+metric_components(m::KerrRefractiveAD{T}, rθ) where {T} =
     __KerrRefractiveAD.metric_components(m.M, m.a, m.n, m.corona_radius, rθ)
 GradusBase.inner_radius(m::KerrRefractiveAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
 # special radii
 isco(m::KerrRefractiveAD{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
+
+export KerrRefractiveAD

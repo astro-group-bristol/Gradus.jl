@@ -25,6 +25,8 @@ geodesic_eq,
 geodesic_eq!,
 constrain,
 inner_radius,
-metric_type
+metric_type,
+metric_components,
+inverse_metric_components
 
 end # module

@@ -77,7 +77,7 @@ distinct, such that the latter may still be an arbitrary chart cutoff.
 r_s(m::AbstractMetricParams{T}) where {T} = error("Not implemented for $(typeof(m)).")
 
 """
-    event_horizon(m::AbstractMetricParams; select = last, resolution = 100, θε = 1e-7, rmax = 5.0)
+    eventhorizon(m::AbstractMetricParams; select = last, resolution = 100, θε = 1e-7, rmax = 5.0)
 
 Utility function for helping plot an event horizon shape. Returns a tuple containing the `r`
 and `θ` vectors that solve
@@ -92,7 +92,7 @@ that the metric describes a naked singularity.
 Often the equation will have multiple roots, in which case the keyword argument `select` may be
 assigned to select the desired root.
 """
-event_horizon(m::AbstractMetricParams{T}; kwargs...) where {T} =
+eventhorizon(m::AbstractMetricParams{T}; kwargs...) where {T} =
     error("Not implemented for $(typeof(m)).")
 
 function _event_horizon_condition(m, r, θ)
@@ -131,3 +131,5 @@ function is_naked_singularity(
         isempty(r)
     end
 end
+
+export eventhorizon, is_naked_singularity

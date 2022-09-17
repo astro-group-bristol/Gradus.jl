@@ -60,9 +60,9 @@ $(FIELDS)
 end
 
 # implementation
-GeodesicTracer.metric_components(m::BoyerLindquistAD{T}, rθ) where {T} =
+metric_components(m::BoyerLindquistAD{T}, rθ) where {T} =
     __BoyerLindquistAD.metric_components(m.M, m.a, rθ)
-GradusBase.inner_radius(m::BoyerLindquistAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+inner_radius(m::BoyerLindquistAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
 # additional utilities
 function convert_angles(a, r, θ, ϕ, θ_obs, ϕ_obs)
@@ -82,3 +82,5 @@ end
 
 # special radii
 isco(m::BoyerLindquistAD{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
+
+export BoyerLindquistAD

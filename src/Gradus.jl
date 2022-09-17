@@ -1,105 +1,165 @@
 module Gradus
 
-include("GradusBase/GradusBase.jl")
-include("GeodesicTracer/GeodesicTracer.jl")
-include("FirstOrderMethods/FirstOrderMethods.jl")
-include("Rendering/Rendering.jl")
-include("AccretionGeometry/AccretionGeometry.jl")
-include("DiscProfiles/DiscProfiles.jl")
+import Base: in
+using Base.Threads: @threads
+using LinearAlgebra: ×, ⋅, norm, det
 
-using .GradusBase
-using .GeodesicTracer
-using .FirstOrderMethods
-using .Rendering
-using .AccretionGeometry
-using .DiscProfiles
-
-using StaticArrays
-using Parameters
 using DocStringExtensions
+using Parameters
 
+using SciMLBase
+using OrdinaryDiffEq
+using DiffEqCallbacks
+using StaticArrays
+using Optim
+using Interpolations
+using VoronoiCells
+using FiniteDifferences
+using Roots
+using ProgressMeter
+
+using Accessors: @set
+using Tullio: @tullio
+
+import ThreadsX
 import ForwardDiff
-import Roots
+import GeometryBasics
 
-# GradusBase
-export AbstractMetricParams,
-    AbstractGeodesicPoint,
-    metric_params,
-    metric,
-    getgeodesicpoint,
+include("GradusBase/GradusBase.jl")
+import .GradusBase: E, Lz, AbstractMetricParams, metric_params, metric, getgeodesicpoint,
     GeodesicPoint,
+    AbstractGeodesicPoint,
     vector_to_local_sky,
     AbstractMetricParams,
     geodesic_eq,
     geodesic_eq!,
     constrain,
     inner_radius,
-    metric_type
+    metric_type,
+    metric_components,
+    inverse_metric_components,
+    unpack_solution
 
-# GeodesicTracer
-export tracegeodesics,
-    map_impact_parameters,
-    AbstractAutoDiffMetricParams,
-    AbstractAutoDiffStaticAxisSymmetricParams,
-    metric_components
+export AbstractMetricParams,
+    getgeodesicpoint,
+    GeodesicPoint,
+    AbstractGeodesicPoint,
+    AbstractMetricParams,
+    constrain,
+    inner_radius,
+    metric_components,
+    inverse_metric_components
 
-# FirstOrderMethods
-export AbstractFirstOrderMetricParams, FirstOrderGeodesicPoint, BoyerLindquistFO
+"""
+    abstract type AbstractPointFunction
 
-# Rendering
-export rendergeodesics, prerendergeodesics, PointFunction, FilterPointFunction, apply
+Abstract super type for point functions. Must have `f::Function` field.
+"""
+abstract type AbstractPointFunction end
 
-# AccretionGeometry
-export AbstractAccretionGeometry,
-    AbstractAccretionDisc,
-    MeshAccretionGeometry,
-    GeometricThinDisc,
-    inpolygon,
-    getarea,
-    CircularOrbits
+abstract type AbstractCacheStrategy end
+abstract type AbstractRenderCache{M,T} end
 
-# DiscProfiles
-export AbstractCoronaModel,
-    LampPostModel,
-    renderprofile,
-    LowerHemisphere,
-    BothHemispheres,
-    EvenSampler,
-    WeierstrassSampler,
-    RandomGenerator,
-    GoldenSpiralGenerator,
-    VoronoiDiscProfile,
-    findindex,
-    getareas,
-    getproperarea,
-    bin_transfer_function
+abstract type AbstractSkyDomain end
+abstract type AbstractGenerator end
 
-# pre-defined metrics
-include("metrics/metrics.jl")
+"""
+    abstract type AbstractAccretionGeometry{T}
 
-export BoyerLindquistAD,
-    BoyerLindquistFO,
-    JohannsenAD,
-    JohannsenPsaltisAD,
-    MorrisThorneAD,
-    KerrRefractiveAD,
-    DilatonAxionAD
+Supertype of all accretion geometry. Concrete sub-types must minimally implement
+- [`in_nearby_region`](@ref)
+- [`has_intersect`](@ref)
 
-# downstream modules and work
+Alternativey, for more control, either [`intersects_geometry`](@ref) or [`build_collision_callback`](@ref)
+may be implemented for a given geometry type.
+
+Geometry intersection calculations are performed by strapping discrete callbacks to the integration
+procedure.
+"""
+abstract type AbstractAccretionGeometry{T} end
+
+"""
+    abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T}
+
+Supertype for accretion spherically symmetric geometry, where certain optimizing assumptions
+may be made.
+"""
+abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T} end
+
+"""
+    AbstractDiscProfile
+
+Abstract type for binning structures over discs (e.g., radial bins, voronoi).
+"""
+abstract type AbstractDiscProfile end
+
+abstract type AbstractCoronaModel{T} end
+
+abstract type AbstractDirectionSampler{SkyDomain,Generator} end
+
+include("tracing/tracing.jl")
+include("tracing/constraints.jl")
+include("tracing/callbacks.jl")
+include("tracing/utility.jl")
+
+include("tracing/method-implementations/auto-diff.jl")
+
+include("rendering/cache.jl")
+include("rendering/rendering.jl")
+include("rendering/utility.jl")
+
+include("tracing/method-implementations/first-order.jl")
+
+include("point-functions.jl")
+
+include("orbits/circular-orbits.jl")
+include("orbits/orbit-discovery.jl")
+include("orbits/orbit-interpolations.jl")
+
+include("accretion-geometry/geometry.jl")
+include("accretion-geometry/intersections.jl")
+include("accretion-geometry/discs.jl")
+include("accretion-geometry/meshes.jl")
+include("accretion-geometry/bootstrap.jl")
+
+include("orbits/emission-radii.jl")
+
+include("corona-to-disc/sky-geometry.jl")
+include("corona-to-disc/corona-models.jl")
+include("corona-to-disc/disc-profiles.jl")
+include("corona-to-disc/transfer-functions.jl")
+
+include("metrics/boyer-lindquist-ad.jl")
+include("metrics/boyer-lindquist-fo.jl")
+include("metrics/johannsen-ad.jl")
+include("metrics/johannsen-psaltis-ad.jl")
+include("metrics/morris-thorne-ad.jl")
+include("metrics/kerr-refractive-ad.jl")
+include("metrics/dilaton-axion-ad.jl")
+
 include("special-radii.jl")
-
-include("AccretionFormulae/AccretionFormulae.jl")
-
-using .AccretionFormulae
-export solve_equitorial_circular_orbit,
-    trace_equitorial_circular_orbit,
-    interpolate_plunging_velocities,
-    PlungingInterpolation,
-    interpolate_redshift,
-    impact_parameters_for_radius
-
+include("redshift.jl")
 include("const-point-functions.jl")
-export ConstPointFunctions
 
+
+export AbstractPointFunction,
+    AbstractCacheStrategy,
+    AbstractRenderCache,
+    AbstractSkyDomain,
+    AbstractGenerator,
+    AbstractAccretionGeometry,
+    AbstractAccretionDisc,
+    AbstractDiscProfile,
+    AbstractDirectionSampler
+
+# precompilation help
+precompile(
+    tracegeodesics, 
+    (BoyerLindquistAD{Float64}, SVector{4,Float64}, SVector{4,Float64}, Tuple{Float64,Float64})
+)
+precompile(
+    rendergeodesics, 
+    (BoyerLindquistAD{Float64}, SVector{4,Float64}, GeometricThinDisc{Float64}, Float64)
+)
 
 end # module

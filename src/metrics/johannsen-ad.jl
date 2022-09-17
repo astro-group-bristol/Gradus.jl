@@ -57,6 +57,7 @@ $(FIELDS)
     ϵ3 = 0.0
 end
 
-GeodesicTracer.metric_components(m::JohannsenAD{T}, rθ) where {T} =
-    __JohannsenAD.metric_components(m, rθ)
+metric_components(m::JohannsenAD{T}, rθ) where {T} = __JohannsenAD.metric_components(m, rθ)
 GradusBase.inner_radius(m::JohannsenAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+
+export JohannsenAD

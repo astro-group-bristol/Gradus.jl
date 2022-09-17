@@ -5,9 +5,9 @@ CurrentModule = Gradus
 ```
 
 ```@docs
-isco
-r_ph
-r_mb
-r_s
+Gradus.isco
+Gradus.r_ph
+Gradus.r_mb
+Gradus.r_s
 Gradus.event_horizon
 ```

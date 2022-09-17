@@ -9,7 +9,7 @@ CurrentModule = Gradus
 The motivation behind the second-order methods is to permit the computation of geodesics in generic spacetimes, via the geodesic equation:
 
 ```@docs
-GeodesicTracer.compute_geodesic_equation
+Gradus.compute_geodesic_equation
 ```
 
 The above can be solved as a second-order ODE, subject to an initial position and initial velocity
@@ -25,5 +25,5 @@ u^\mu = \left(t, r, \theta, \phi \right),
 where the dot refers to the derivative with respect to ``\lambda``. In general, the spatial components of the initial velocity are known _a priori_, and the time-component is determined via the constraint:
 
 ```@docs
-GeodesicTracer.constrain_time
+Gradus.constrain_time
 ```

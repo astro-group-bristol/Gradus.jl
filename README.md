@@ -10,13 +10,18 @@
 <a href="https://github.com/astro-group-bristol/Gradus.jl/actions/workflows/test.yml">
     <img src="https://github.com/astro-group-bristol/Gradus.jl/actions/workflows/test.yml/badge.svg"/>
 </a>
+<a href="https://github.com/astro-group-bristol/Gradus.jl/actions/workflows/docs.yml">
+    <img alt="Docs" src="https://github.com/astro-group-bristol/Gradus.jl/actions/workflows/docs.yml/badge.svg"/>
+</a>
 <a href="https://doi.org/10.5281/zenodo.6471796">
     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.6471796.svg" alt="DOI">
 </a> 
 <a href="https://astro-group-bristol.github.io/Gradus.jl/dev/">
-<img alt="Docs" src="https://img.shields.io/badge/docs-dev-blue.svg"/>
+    <img alt="Docs" src="https://img.shields.io/badge/docs-dev-blue.svg"/>
 </a>
-
+<a href="https://github.com/JuliaTesting/Aqua.jl">
+    <img alt="Docs" src="https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg"/>
+</a>
 
 A spacetime generic, relativistic ray tracing toolkit, leveraging AD and CAS, capable of calculating reverberation lags around accreting black holes and observational signatures.
 
