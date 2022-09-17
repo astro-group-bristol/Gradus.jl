@@ -70,7 +70,7 @@ Supertype of all accretion geometry. Concrete sub-types must minimally implement
 - [`in_nearby_region`](@ref)
 - [`has_intersect`](@ref)
 
-Alternativey, for more control, either [`intersects_geometry`](@ref) or [`collision_callback`](@ref)
+Alternativey, for more control, either [`intersects_geometry`](@ref) or [`build_collision_callback`](@ref)
 may be implemented for a given geometry type.
 
 Geometry intersection calculations are performed by strapping discrete callbacks to the integration

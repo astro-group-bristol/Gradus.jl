@@ -53,7 +53,7 @@ thin accretion disc. Implementation depends on the metric type. Currently implem
 
 # Notes
 
-Wraps calls to [`AccretionFormulae._redshift_guard`](@ref) to dispatch different implementations.
+Wraps calls to [`Gradus._redshift_guard`](@ref) to dispatch different implementations.
 """
 const redshift = PointFunction(_redshift_guard)
 
