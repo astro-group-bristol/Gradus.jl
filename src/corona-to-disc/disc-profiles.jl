@@ -150,8 +150,10 @@ function getproperarea(
 ) where {P<:AbstractArray{V}} where {V,T}
     A = getarea(poly)
     c = getbarycenter(poly)
+    # get value of metric at the radius of the polygon's barycenter, and in the equitorial plane
     m_params = metric_components(m, (sqrt(c[1]^2 + c[2]^2), π / 2))
-    sqrt(m_params[2] * m_params[3]) * A
+    # need radial and azimuthal components of the metric
+    sqrt(m_params[2] * m_params[4]) * A
 end
 
 getproperarea(vdp::VoronoiDiscProfile{D,K}, m::AbstractMetricParams{T}) where {D,K,T} =
@@ -165,6 +167,40 @@ function unpack_polys(
     end
 end
 
+struct SurrogateDiscProfile{D,S}
+    disc::D
+    surrogate::S
+end
+
+function SurrogateDiscProfile(
+    disc::D,
+    x::AbstractArray{SVector{N,T}},
+    y;
+    S = Surrogates.RadialBasis,
+) where {D,N,T}
+    bounds = map(1:N) do i
+        extrema(el -> el[i], x)
+    end
+    lower_bounds = first.(bounds)
+    upper_bounds = last.(bounds)
+    surrogate = S(x, y, lower_bounds, upper_bounds)
+    SurrogateDiscProfile{D,typeof(surrogate)}(disc, surrogate)
+end
+
+function evaluate(sdp::SurrogateDiscProfile, x::AbstractArray{<:AbstractArray})
+    map(i -> evaluate(sdp, i), x)
+end
+
+function evaluate(sdp::SurrogateDiscProfile, x)
+    sdp.surrogate(x)
+end
+
+function Base.show(io::IO, ::MIME"text/plain", sdp::SurrogateDiscProfile{D,S}) where {D,S}
+    print(
+        io,
+        "SurrogateDiscProfile\n - disc      : $D\n - surrogate : $(Base.typename(S).name) ($(length(sdp.surrogate.x)) points)",
+    )
+end
 """
     getbarycenter(poly)
 
@@ -181,7 +217,7 @@ function getbarycenter(poly)
     xs = sum(i -> first(i), poly)
     ys = sum(i -> last(i), poly)
     n = length(poly)
-    (xs / n, ys / n)
+    SVector{2}(xs / n, ys / n)
 end
 
 
@@ -247,7 +283,6 @@ function _circ_cut(radius, clines, i1, t1, i2, t2; outer = true)
     end
 end
 
-
 function _circ_path_intersect(
     radius,
     lines::AbstractArray{L},
@@ -284,7 +319,6 @@ end
     -1
 end
 
-
 function __renderprofile(
     m::AbstractMetricParams{T},
     model::AbstractCoronaModel{T},
@@ -297,4 +331,5 @@ function __renderprofile(
     error("Not implemented for $(typeof(d)).")
 end
 
-export VoronoiDiscProfile, getareas, getproperarea, findindex
+export VoronoiDiscProfile,
+    getareas, getproperarea, getbarycenter, findindex, SurrogateDiscProfile, evaluate
