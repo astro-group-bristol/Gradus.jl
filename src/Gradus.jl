@@ -24,9 +24,16 @@ using Tullio: @tullio
 import ThreadsX
 import ForwardDiff
 import GeometryBasics
+import Surrogates
 
 include("GradusBase/GradusBase.jl")
-import .GradusBase: E, Lz, AbstractMetricParams, metric_params, metric, getgeodesicpoint,
+import .GradusBase:
+    E,
+    Lz,
+    AbstractMetricParams,
+    metric_params,
+    metric,
+    getgeodesicpoint,
     GeodesicPoint,
     AbstractGeodesicPoint,
     vector_to_local_sky,
@@ -141,7 +148,6 @@ include("special-radii.jl")
 include("redshift.jl")
 include("const-point-functions.jl")
 
-
 export AbstractPointFunction,
     AbstractCacheStrategy,
     AbstractRenderCache,
@@ -154,12 +160,17 @@ export AbstractPointFunction,
 
 # precompilation help
 precompile(
-    tracegeodesics, 
-    (BoyerLindquistAD{Float64}, SVector{4,Float64}, SVector{4,Float64}, Tuple{Float64,Float64})
+    tracegeodesics,
+    (
+        BoyerLindquistAD{Float64},
+        SVector{4,Float64},
+        SVector{4,Float64},
+        Tuple{Float64,Float64},
+    ),
 )
 precompile(
-    rendergeodesics, 
-    (BoyerLindquistAD{Float64}, SVector{4,Float64}, GeometricThinDisc{Float64}, Float64)
+    rendergeodesics,
+    (BoyerLindquistAD{Float64}, SVector{4,Float64}, GeometricThinDisc{Float64}, Float64),
 )
 
 end # module
