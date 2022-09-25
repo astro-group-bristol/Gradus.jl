@@ -34,6 +34,7 @@ import .GradusBase:
     metric_params,
     metric,
     getgeodesicpoint,
+    getgeodesicpoints,
     GeodesicPoint,
     AbstractGeodesicPoint,
     vector_to_local_sky,
@@ -49,6 +50,7 @@ import .GradusBase:
 
 export AbstractMetricParams,
     getgeodesicpoint,
+    getgeodesicpoints,
     GeodesicPoint,
     AbstractGeodesicPoint,
     AbstractMetricParams,

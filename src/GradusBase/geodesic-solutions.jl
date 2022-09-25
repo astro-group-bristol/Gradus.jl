@@ -48,10 +48,10 @@ information relevant to start and endpoint of the integration. To keep the full 
 encouraged to use the `SciMLBase.AbstractODESolution` directly.
 """
 function getgeodesicpoint(
-    m::AbstractMetricParams{T},
+    _::AbstractMetricParams{T},
     sol::SciMLBase.AbstractODESolution{T,N,S},
 ) where {T,N,S}
-    @inbounds begin
+    @inbounds @views begin
         us, ts, _ = unpack_solution(sol)
 
         u_start = SVector{4,T}(us[1][1:4])
@@ -63,6 +63,30 @@ function getgeodesicpoint(
         t_end = ts[end]
 
         GeodesicPoint(sol.retcode, t_start, t_end, u_start, u_end, v_start, v_end)
+    end
+end
+
+"""
+    $(TYPEDSIGNATURES)
+
+Unpacks each point in the solution, similar to [`getgeodesicpoint`](@ref) but returns an 
+array of [`GeodesicPoint`](@ref).
+"""
+function getgeodesicpoints(
+    _::AbstractMetricParams{T},
+    sol::SciMLBase.AbstractODESolution{T,N,S},
+) where {T,N,S}
+    us, ts, _ = unpack_solution(sol)
+    @inbounds @views begin
+        u_start = SVector{4,T}(us[1][1:4])
+        v_start = SVector{4,T}(us[1][5:8])
+        t_start = ts[1]
+        map(eachindex(us)) do i
+            ui = SVector{4,T}(us[i][1:4])
+            vi = SVector{4,T}(us[i][5:8])
+            ti = ts[i]
+            GeodesicPoint(sol.retcode, t_start, ti, u_start, ui, v_start, vi)
+        end
     end
 end
 

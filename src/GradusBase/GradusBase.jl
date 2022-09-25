@@ -12,11 +12,11 @@ import ..Gradus
 using DocStringExtensions
 
 include("metric-params.jl")
-include("physical-quantities.jl")
 include("geodesic-solutions.jl")
 include("geometry.jl")
+include("physical-quantities.jl")
 
-export AbstractMetricParams, metric_params, metric, getgeodesicpoint
+export AbstractMetricParams, metric_params, metric, getgeodesicpoint, getgeodesicpoints
 GeodesicPoint,
 AbstractGeodesicPoint,
 vector_to_local_sky,
