@@ -217,14 +217,14 @@ p
 
 ## Event horizons and naked singularities
 
-Here is an example of how to use [`Gradus.event_horizon`](@ref) to plot the shape of an event horizon in two dimensions. In the case of a naked singularity, as with the certain parameters combinations in the [`JohannsenPsaltisAD`](@ref) metric, we see a disconnected region in the plot.
+Here is an example of how to use [`eventhorizon`](@ref) to plot the shape of an event horizon in two dimensions. In the case of a naked singularity, as with the certain parameters combinations in the [`JohannsenPsaltisAD`](@ref) metric, we see a disconnected region in the plot.
 
 ```@example env
 using Gradus
 using Plots
 
 function draw_horizon(p, m)
-    rs, θs = Gradus.event_horizon(m, resolution = 200)
+    rs, θs = eventhorizon(m, resolution = 200)
     radius = rs
 
     x = @. radius * sin(θs)
@@ -304,5 +304,38 @@ for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
     mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
     @views plot!(p, ctf.gstar[mask], ctf.f[mask])
 end
+p
+```
+
+## Concentric rings
+
+Recreating Figure 2 from Johannsen and Psaltis (2012, II):
+
+```@example env
+using Gradus
+using StaticArrays
+using Plots
+
+# their papers has a=-a
+m = BoyerLindquistAD(M=1.0, a=-0.4)
+u = @SVector [0.0, 1000, acos(0.25), 0.0]
+d = GeometricThinDisc(0.0, 100.0, π / 2)
+
+radii = 2.6:1.0:7.6
+
+p = plot(
+    aspect_ratio = 1,
+    legend = false,
+)
+
+# crosshair on origin
+hline!(p, [0.0], color = :black, linestyle=:dash)
+vline!(p, [0.0], color = :black, linestyle=:dash)
+
+for r in radii
+    α, β = impact_parameters_for_radius(m, u, d, r, N=100)
+    plot!(p, α, β)
+end
+
 p
 ```
