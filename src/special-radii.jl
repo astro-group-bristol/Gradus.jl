@@ -100,7 +100,7 @@ function _event_horizon_condition(m, r, θ)
     g[5]^2 - g[1] * g[4]
 end
 
-function event_horizon(
+function eventhorizon(
     m::AbstractAutoDiffStaticAxisSymmetricParams{T};
     select = maximum,
     resolution::Int = 100,

@@ -26,12 +26,13 @@ function integrate_single_geodesic(
     d::AbstractAccretionDisc,
     rₒ,
     θₒ;
+    max_time = 2e3,
     kwargs...,
 )
     α = rₒ * cos(θₒ)
     β = rₒ * sin(θₒ)
     v = map_impact_parameters(m, u, α, β)
-    sol = tracegeodesics(m, u, v, d, (0.0, 2000.0); save_on = false, kwargs...)
+    sol = tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
     getgeodesicpoint(m, sol)
 end
 
