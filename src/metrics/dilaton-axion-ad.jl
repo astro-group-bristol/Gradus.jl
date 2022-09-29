@@ -5,7 +5,7 @@ García et al. (1995).
 module __DilatonAxionAD
 using ..StaticArrays
 
-@fastmath Σ(r, a, θ) = r^3 + a^2 * cos(θ)^2
+@fastmath Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
 @fastmath Δ(r, a, rg) = r^2 - 2rg * r + a^2
 @fastmath A(r, a, Δ, θ) = (r^2 + a^2)^2 - a^2 * Δ * sin(θ)^2
 

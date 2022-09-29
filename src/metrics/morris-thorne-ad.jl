@@ -1,5 +1,6 @@
 module __MorrisThorneAD
 using ..StaticArrays
+
 @fastmath function metric_components(b, lθ)
     (l, θ) = lθ
 
