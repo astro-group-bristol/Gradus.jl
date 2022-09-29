@@ -1,6 +1,14 @@
-function bin_transfer_function(time_delays, energy, flux; N = 300)
-    energy_bins = range(extrema(energy)..., N)
-    time_bins = range(extrema(time_delays)..., N)
+function bin_transfer_function(
+    time_delays,
+    energy,
+    flux;
+    N_E = 300,
+    N_t = 300,
+    energy_lims = extrema(energy),
+    time_lims = extrema(time_delays),
+)
+    energy_bins = range(energy_lims..., N_E)
+    time_bins = range(time_lims..., N_t)
 
     de = step(energy_bins)
     dt = step(time_bins)
