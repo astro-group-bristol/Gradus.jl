@@ -7,7 +7,7 @@ import ..Gradus:
     inverse_metric_components
 
 function Ω(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ, pos) where {T}
-    jacs = metric_jacobian(m, rθ)
+    _, jacs = metric_jacobian(m, rθ)
     ∂rg = jacs[:, 1]
 
     Δ = √(∂rg[5]^2 - ∂rg[1] * ∂rg[4])

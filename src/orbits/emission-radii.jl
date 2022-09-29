@@ -78,6 +78,7 @@ function redshift_ratio(
     max_time,
     αs,
     βs;
+    redshift_pf = Gradus.ConstPointFunctions.redshift,
     kwargs...,
 )
     velfunc(i) = map_impact_parameters(m, u, αs[i], βs[i])
@@ -93,11 +94,22 @@ function redshift_ratio(
     )
     map(simsols) do sol
         gp = getgeodesicpoint(m, sol)
-        Gradus.ConstPointFunctions.redshift(m, gp, max_time)
+        redshift_pf(m, gp, max_time)
     end
 end
 
-function jacobian_∂αβ_∂gr(m, u, d, max_time, gs, αs, βs; order = 3, kwargs...)
+function jacobian_∂αβ_∂gr(
+    m,
+    u,
+    d,
+    max_time,
+    gs,
+    αs,
+    βs;
+    order = 3,
+    redshift_pf = Gradus.ConstPointFunctions.redshift,
+    kwargs...,
+)
     gmin, gmax = extrema(gs)
     gstar(g) = (g - gmin) / (gmax - gmin)
 
@@ -105,7 +117,7 @@ function jacobian_∂αβ_∂gr(m, u, d, max_time, gs, αs, βs; order = 3, kwar
         v = map_impact_parameters(m, u, α, β)
         sol = tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
         gp = getgeodesicpoint(m, sol)
-        g = Gradus.ConstPointFunctions.redshift(m, gp, 2000.0)
+        g = redshift_pf(m, gp, 2000.0)
         @SVector [gp.u2[2], gstar(g)]
     end
 
@@ -141,12 +153,22 @@ function cunningham_transfer_function(
     max_time;
     num_points = 1000,
     finite_diff_order = 3,
+    redshift_pf::PointFunction = Gradus.ConstPointFunctions.redshift,
     tracer_kwargs...,
 )
     αs, βs =
         Gradus.impact_parameters_for_radius(m, u, d, rₑ; N = num_points, tracer_kwargs...)
 
-    gs = redshift_ratio(m, u, d, max_time, αs, βs; tracer_kwargs...)
+    gs = redshift_ratio(
+        m,
+        u,
+        d,
+        max_time,
+        αs,
+        βs;
+        redshift_pf = redshift_pf,
+        tracer_kwargs...,
+    )
     gstars = gstar(gs)
 
     js = jacobian_∂αβ_∂gr(
@@ -158,6 +180,7 @@ function cunningham_transfer_function(
         αs,
         βs;
         order = finite_diff_order,
+        redshift_pf = redshift_pf,
         tracer_kwargs...,
     )
 

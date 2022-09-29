@@ -1,6 +1,6 @@
 module RedshiftFunctions
 import ..Gradus
-import ..Gradus: __BoyerLindquistFO, AbstractMetricParams, metric
+import ..Gradus: __BoyerLindquistFO, AbstractMetricParams, BoyerLindquistAD, metric
 using StaticArrays
 using Tullio: @tullio
 
@@ -153,11 +153,8 @@ function regular_pdotu_inv(L, M, r, a, θ)
     (eⱽ(M, r, a, θ) * √(1 - Vₑ(M, r, a, θ)^2)) / (1 - L * Ωₑ(M, r, a))
 end
 
-@inline function regular_pdotu_inv(m::AbstractMetricParams{T}, u, v) where {T}
+@inline function regular_pdotu_inv(m::BoyerLindquistAD{T}, u, v) where {T}
     metric_matrix = metric(m, u)
-    # reverse signs of the velocity vector
-    # since we're integrating backwards
-    p = @inbounds @SVector [-v[1], 0, 0, -v[4]]
 
     # TODO: this only works for Kerr
     disc_norm = (eⱽ(m.M, u[2], m.a, u[3]) * √(1 - Vₑ(m.M, u[2], m.a, u[3])^2))
@@ -165,7 +162,7 @@ end
     u_disc = @SVector [1 / disc_norm, 0, 0, Ωₑ(m.M, u[2], m.a) / disc_norm]
 
     # use Tullio to do the einsum
-    @tullio g := metric_matrix[i, j] * (u_disc[i]) * p[j]
+    @tullio g := metric_matrix[i, j] * u_disc[i] * (-v[j])
     1 / g
 end
 

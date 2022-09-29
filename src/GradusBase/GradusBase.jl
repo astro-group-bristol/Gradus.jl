@@ -3,7 +3,7 @@ module GradusBase
 import Parameters: @with_kw
 import SciMLBase
 import Base
-import StaticArrays: SVector, MMatrix
+import StaticArrays: SVector, MMatrix, SMatrix, @SVector
 import Tullio: @tullio
 
 # for doc bindings

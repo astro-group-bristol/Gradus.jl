@@ -44,7 +44,8 @@ end
         if r < m.inner_radius || r > m.outer_radius
             return 1.0
         end
-        @SVector [r * sin(θ) * cos(ϕ), r * sin(θ) * sin(ϕ), r * cos(θ)]
+        sinθ = sin(θ)
+        @SVector [r * sinθ * cos(ϕ), r * sinθ * sin(ϕ), r * cos(θ)]
     end
     n = @SVector [T(0.0), cos(m.inclination), sin(m.inclination)]
     # project u into normal vector n
