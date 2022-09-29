@@ -14,7 +14,7 @@ function MeshAccretionGeometry(mesh)
     static_mesh = map(mesh) do triangle
         Tuple(SVector(p[1], p[2], p[3]) for p in triangle)
     end
-    MeshAccretionGeometry(static_mesh, bounding_box(mesh)...)
+    MeshAccretionGeometry(static_mesh, bounding_box(static_mesh)...)
 end
 
 # naive implementation
