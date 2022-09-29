@@ -243,13 +243,27 @@ end
 """
     metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ)
 
-Calculate the Jacobian elements of the metric with respect to ``r`` and ``\\theta``.
+Calculate the value and Jacobian elements of the metric with respect to ``r`` and ``\\theta``.
 
 Limitations:
 - currenly pre-supposes static, axis-symmetric metric.
+    
+## Notes
+
+Function body is equivalent to
+```julia
+f = x -> metric_components(m, x)
+J = ForwardDiff.vector_mode_jacobian(f, rθ)
+f(rθ), J
+```
+but non-allocating.
 """
-@inline metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ) where {T} =
-    ForwardDiff.vector_mode_jacobian(x -> metric_components(m, x), rθ)
+function metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ)
+    f = x -> metric_components(m, x)
+    T = typeof(ForwardDiff.Tag(f, eltype(rθ)))
+    ydual = ForwardDiff.static_dual_eval(T, f, rθ)
+    ForwardDiff.value.(T,ydual), ForwardDiff.extract_jacobian(T, ydual, rθ)
+end
 
 @inbounds function geodesic_eq(
     m::AbstractAutoDiffStaticAxisSymmetricParams{T},
@@ -257,11 +271,9 @@ Limitations:
     v,
 ) where {T}
     # get the only position components we need for this metric type
-    rθ = @SVector [u[2], u[3]]
-    # calculate all non-zero components
-    g_comps = metric_components(m, rθ)
-    # use AD to get derivatives
-    jacs = metric_jacobian(m, rθ)
+    rθ = SVector{2,Float64}(u[2], u[3])
+    # calculate all non-zero components, and use AD to get derivatives
+    g_comps, jacs = metric_jacobian(m, rθ)
     # calculate all non-zero inverse matric components
     ginv_comps = inverse_metric_components(g_comps)
     # calculate acceleration
