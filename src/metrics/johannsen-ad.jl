@@ -1,13 +1,13 @@
 module __JohannsenAD
 using ..StaticArrays
 
-@inline f(M, r, ϵ3) = ϵ3 * M^3 / r
-@inline Σ(r, a, θ, M, ϵ3) = r^2 + a^2 * cos(θ)^2 + f(M, r, ϵ3)
-@inline Δ(r, M, a) = r^2 - 2M * r + a^2
+@fastmath f(M, r, ϵ3) = ϵ3 * M^3 / r
+@fastmath Σ(r, a, θ, M, ϵ3) = r^2 + a^2 * cos(θ)^2 + f(M, r, ϵ3)
+@fastmath Δ(r, M, a) = r^2 - 2M * r + a^2
 
-@inline A₁(M, r, α13) = 1 + α13 * (M / r)^3
-@inline A₂(M, r, α22) = 1 + α22 * (M / r)^2
-@inline A₅(M, r, α52) = 1 + α52 * (M / r)^2
+@fastmath A₁(M, r, α13) = 1 + α13 * (M / r)^3
+@fastmath A₂(M, r, α22) = 1 + α22 * (M / r)^2
+@fastmath A₅(M, r, α52) = 1 + α52 * (M / r)^2
 
 @fastmath function metric_components(m, rθ)
     (r, θ) = rθ

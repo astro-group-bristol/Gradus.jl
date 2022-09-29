@@ -5,15 +5,15 @@ García et al. (1995).
 module __DilatonAxionAD
 using ..StaticArrays
 
-Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
-Δ(r, a, rg) = r^2 - 2rg * r + a^2
-A(r, a, Δ, θ) = (r^2 + a^2)^2 - a^2 * Δ * sin(θ)^2
+@fastmath Σ(r, a, θ) = r^3 + a^2 * cos(θ)^2
+@fastmath Δ(r, a, rg) = r^2 - 2rg * r + a^2
+@fastmath A(r, a, Δ, θ) = (r^2 + a^2)^2 - a^2 * Δ * sin(θ)^2
 
-W(βab, θ, βa) = 1 + (βab * (2 * cos(θ) - βab) + βa^2) * csc(θ)^2
-Σ̂(Σ, β, b, r, βb, a, θ, rg) = Σ - (β^2 + 2b * r) + rg^2 * βb * (βb - 2 * (a / rg) * cos(θ))
-Δ̂(Δ, β, b, r, βb, rg) = Δ - (β^2 + 2b * r) - rg * (rg + 2b) * βb^2
-Â(δ, a, Δ̂, W, θ) = δ^2 - a^2 * Δ̂ * W^2 * sin(θ)^2
-δ(r, b, a) = r^2 - 2b * r + a^2
+@fastmath W(βab, θ, βa) = 1 + (βab * (2 * cos(θ) - βab) + βa^2) * csc(θ)^2
+@fastmath Σ̂(Σ, β, b, r, βb, a, θ, rg) = Σ - (β^2 + 2b * r) + rg^2 * βb * (βb - 2 * (a / rg) * cos(θ))
+@fastmath Δ̂(Δ, β, b, r, βb, rg) = Δ - (β^2 + 2b * r) - rg * (rg + 2b) * βb^2
+@fastmath Â(δ, a, Δ̂, W, θ) = δ^2 - a^2 * Δ̂ * W^2 * sin(θ)^2
+@fastmath δ(r, b, a) = r^2 - 2b * r + a^2
 
 @fastmath function metric_components(M, a, β, b, rθ)
     (r, θ) = rθ

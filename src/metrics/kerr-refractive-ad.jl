@@ -1,8 +1,8 @@
 module __KerrRefractiveAD
 using ..StaticArrays
 
-@inline Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
-@inline Δ(r, R, a) = r^2 - R * r + a^2
+@fastmath Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
+@fastmath Δ(r, R, a) = r^2 - R * r + a^2
 
 @fastmath function metric_components(M, a, n, corona_radius, rθ)
     (r, θ) = rθ

@@ -1,9 +1,9 @@
 module __JohannsenPsaltisAD
 using ..StaticArrays
 
-@inline h(r, M, ϵ3, Σ) = ϵ3 * M^3 * r / Σ^2
-@inline Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
-@inline Δ(r, M, a) = r^2 - 2M * r + a^2
+@fastmath h(r, M, ϵ3, Σ) = ϵ3 * M^3 * r / Σ^2
+@fastmath Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
+@fastmath Δ(r, M, a) = r^2 - 2M * r + a^2
 
 @fastmath function metric_components(M, a, ϵ3, rθ)
     (r, θ) = rθ
