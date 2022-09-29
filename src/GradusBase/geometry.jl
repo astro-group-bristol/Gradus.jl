@@ -5,54 +5,44 @@ end
 mdot(g, v1, v2) = @tullio r := g[i, j] * v1[i] * v2[j]
 mnorm(g, v) = mdot(g, v, v)
 
-# fallback methods
-mdot(::AbstractMetricParams{T}, g, v1, v2) where {T} = mdot(g, v1, v2)
-mnorm(m::AbstractMetricParams{T}, g, v) where {T} = mdot(m, g, v, v)
-
 """
     mproject(g, v, u)
-    mproject(m::AbstractMetricParams{T}, g, v, u)
 
 Project vector `v` onto `u` with metric `g`. Optional first argument may be
 [`AbstractMetricParams`](@ref) for more optimized methods, which fallback to an einsum.
 """
-mproject(m::AbstractMetricParams{T}, g, v, u) where {T} = mdot(m, g, v, u) / mnorm(m, g, u)
 mproject(g, v, u) = mdot(g, v, u) / mnorm(g, u)
 
-function projectbasis(m::AbstractMetricParams{T}, g, basis, v::AbstractArray{T}) where {T}
+function projectbasis(g, basis, v)
     s = zero(SVector{4,Float64})
     for e in basis
-        s += mproject(m, g, v, e) .* e
+        s += mproject(g, v, e) .* e
     end
     s
 end
 
-function grammschmidt(m::AbstractMetricParams{T}, g, basis; tol = eps(T)) where {T}
-    v = ones(SVector{4,Float64})
-    p = projectbasis(m, g, basis, v)
+function grammschmidt(v, basis, g; tol = 4eps(Float64))
+    p = projectbasis(g, basis, v)
 
-    while sum(p) > 4 * tol
+    while sum(p) > tol
         v = v .- p
-        p = projectbasis(m, g, basis, v)
+        p = projectbasis(g, basis, v)
     end
 
     v = v .- p
-    v ./ √mnorm(m, g, v)
+    vnorm = √mnorm(g, v)
+    v / vnorm
 end
 
 function tetradframe(m::AbstractMetricParams{T}, u, v) where {T}
     g = metric(m, u)
-    M = zero(MMatrix{4,4,T})
-    known_frame_vectors = minimalframe(m, g, u, v)
-    for (i, e) in enumerate(known_frame_vectors)
-        M[:, i] .= e
-    end
-    for i = length(known_frame_vectors)+1:4
-        M[:, i] .= grammschmidt(m, g, eachcol(M[:, 1:i-1]))
-    end
-    M
-end
 
-function minimalframe(m::AbstractMetricParams{T}, g, u, v) where {T}
-    (v,)
+    # start procedure with ϕ, which has zero for r and θ
+    vϕ = grammschmidt(@SVector[1.0, 0.0, 0.0, 1.0], (v,), g)
+    # then do r, which has zero for θ
+    vr = grammschmidt(@SVector[1.0, 1.0, 0.0, 1.0], (v, vϕ), g)
+    # then finally θ
+    vθ = grammschmidt(@SVector[1.0, 1.0, 1.0, 1.0], (v, vϕ, vr), g)
+
+    (v, vr, vθ, vϕ)
 end
