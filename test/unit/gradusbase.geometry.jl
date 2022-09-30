@@ -13,10 +13,10 @@
     radii = 5.0:0.8:10.0
     angles = 0.1:0.5:2π
     minkowski = @SMatrix [
-       -1.0 0.0 0.0 0.0 ;
-        0.0 1.0 0.0 0.0 ;
-        0.0 0.0 1.0 0.0 ;
-        0.0 0.0 0.0 1.0 
+        -1.0 0.0 0.0 0.0
+        0.0 1.0 0.0 0.0
+        0.0 0.0 1.0 0.0
+        0.0 0.0 0.0 1.0
     ]
     for m in all_metrics, r in radii, θ in angles
         u = @SVector([0.0, r, θ, 0.0])
@@ -28,6 +28,6 @@
         m_mat = Gradus.metric(m, u)
         @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
         # ensure it gives minkowski
-        @test isapprox(res, minkowski, atol=1e-13)
+        @test isapprox(res, minkowski, atol = 1e-13)
     end
 end
