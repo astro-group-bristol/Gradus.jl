@@ -4,7 +4,7 @@
         position,
         velocity,
         time_domain::Tuple{T,T};
-        solver = Tsit5(),
+        solver = TsitPap8(),
         μ = 0.0,
         closest_approach = 1.01,
         effective_infinity = 1200.0,
@@ -30,7 +30,7 @@ function tracegeodesics(
     position,
     velocity,
     time_domain::Tuple{T,T};
-    solver = Tsit5(),
+    solver = TsitPap8(),
     μ = 0.0,
     closest_approach = 1.01,
     effective_infinity = 1200.0,
@@ -68,13 +68,16 @@ function integrator_problem(
     time_domain,
 ) where {S,T}
     u_init = vcat(pos, vel)
-    ODEProblem{false}(u_init, time_domain) do u, p, λ
-        @inbounds let x = SVector{4}(@view(u[1:4])), v = SVector{4}(@view(u[5:8]))
-            dv = SVector{4}(geodesic_eq(m, x, v))
+
+    function f(u::SVector{8,T}, p, λ) where {T}
+        @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
+            dv = SVector{4,T}(geodesic_eq(m, x, v))
             # SVector{8}(v[1], v[2], v[3], v[4], dv[1], dv[2], dv[3], dv[4])
             vcat(v, dv)
         end
     end
+
+    ODEProblem{false}(f, u_init, time_domain)
 end
 
 function integrator_problem(
@@ -84,14 +87,17 @@ function integrator_problem(
     time_domain,
 ) where {T}
     u_init = vcat(pos, vel)
-    ODEProblem{true}(u_init, time_domain) do du, u, p, λ
-        @inbounds let x = @view(u[1:4]), v = @view(u[5:8])
-            dv = SVector{4}(geodesic_eq(m, x, v))
 
-            du[1:4] = v
-            du[5:8] = dv
+    function f!(du, u::AbstractVector{T}, p, λ) where {T}
+        @inbounds let x = @view(u[1:4]), v = @view(u[5:8])
+            dv = SVector{4,T}(geodesic_eq(m, x, v))
+
+            du[1:4] .= v
+            du[5:8] .= dv
         end
     end
+
+    ODEProblem{true}(f!, u_init, time_domain)
 end
 
 # single position and single velocity
