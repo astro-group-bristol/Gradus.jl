@@ -50,22 +50,22 @@ tetradframe(m::AbstractMetricParams, u, v) = _tetradframe(metric(m, u), v)
 
 # TODO: this presupposes static and axis symmetric
 # tetrad with indices down: frame
-function lnrframe(m::AbstractMetricParams, u)
-    g = metric(m, u)
+function lnrframe(g)
     ω = -g[1, 4] / g[4, 4]
     v = @SVector [1.0, 0.0, 0.0, ω]
     _tetradframe(g, v)
 end
+lnrframe(m::AbstractMetricParams, u) = lnrframe(metric(m, u))
 
 # tetrad with indices up: basis
-function lnrbasis(m::AbstractMetricParams, u)
-    g = metric(m, u)
+function lnrbasis(g)
     ω = -g[1, 4] / g[4, 4]
     v = @SVector [-ω, 0.0, 0.0, 1.0]
     (vϕ, vr, vθ, vt) = _tetradframe(inv(g), v)
     # rearrange
     (vt, vr, vθ, vϕ)
 end
+lnrbasis(m::AbstractMetricParams, u) = lnrbasis(metric(m, u))
 
 lowerindices(g, v) = g * v
 lowerindices(m::AbstractMetricParams, u, v) = lowerindices(metric(m, u), v)
