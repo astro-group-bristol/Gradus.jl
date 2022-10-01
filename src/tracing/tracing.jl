@@ -4,7 +4,7 @@
         position,
         velocity,
         time_domain::Tuple{T,T};
-        solver = TsitPap8(),
+        solver = Tsit5(),
         μ = 0.0,
         closest_approach = 1.01,
         effective_infinity = 1200.0,
@@ -30,7 +30,7 @@ function tracegeodesics(
     position,
     velocity,
     time_domain::Tuple{T,T};
-    solver = TsitPap8(),
+    solver = Tsit5(),
     μ = 0.0,
     closest_approach = 1.01,
     effective_infinity = 1200.0,
