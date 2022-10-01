@@ -49,15 +49,16 @@
         # theory of the Kerr metric
 
         function kerr_lnrframe(m, u)
-            rθ = @SVector [u[2], u[3]]
-            gcomp = metric_components(m, rθ)
-            ginv = inverse_metric_components(gcomp)
-            w = -gcomp[5] / gcomp[4]
+            A = Gradus.__BoyerLindquistFO.A(m.M, u[2], m.a, u[3])
+            Σ = Gradus.__BoyerLindquistFO.Σ(u[2], m.a, u[3])
+            Δ = Gradus.__BoyerLindquistFO.Δ(m.M, u[2], m.a)
+            ω = 2* m.M *m.a * u[2] / A
         
-            et = √(-ginv[1]) * @SVector [1.0, 0.0, 0.0, w]
-            er = √ginv[2] * @SVector [0.0, 1.0, 0.0, 0.0]
-            eθ = √ginv[3] * @SVector [0.0, 0.0, 1.0, 0.0]
-            eϕ = √(ginv[4] - w^2 * ginv[1]) * @SVector [0.0, 0.0, 0.0, 1.0]
+            et = √(A / (Σ * Δ)) * @SVector [1.0, 0.0, 0.0, ω]
+            er = √(Δ / Σ) * @SVector [0.0, 1.0, 0.0, 0.0]
+            eθ = √(1 / Σ) * @SVector [0.0, 0.0, 1.0, 0.0]
+            # unsure why this is negative
+            eϕ = √(Σ / A) * (1/sin(u[3])) * @SVector [0.0, 0.0, 0.0, 1.0]
             vecs = (et, er, eθ, eϕ)
         
             reduce(hcat, vecs)
