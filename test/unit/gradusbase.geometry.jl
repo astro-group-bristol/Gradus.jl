@@ -10,7 +10,7 @@
         # DilatonAxionAD(M = 1.0, a = 0.998, β = 0.2, b = 1.0),
     )
     radii = 5.0:0.8:10.0
-    angles = 0.1:0.5:2π
+    angles = 0.1:0.5:π
     minkowski = @SMatrix [
         -1.0 0.0 0.0 0.0
         0.0 1.0 0.0 0.0
@@ -30,7 +30,6 @@
         @test isapprox(res, minkowski, atol = 1e-13)
     end
 
-
     @testset "lnrf" begin
         for m in all_metrics, r in radii, θ in angles
             u = @SVector([0.0, r, θ, 0.0])
@@ -42,6 +41,77 @@
             @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
             # ensure it gives minkowski
             @test isapprox(res, minkowski, atol = 1e-13)
+        end
+    end
+
+    @testset "kerr-lnrf" begin
+        # these test explicity check the LNRF calculations for the known
+        # theory of the Kerr metric
+
+        function kerr_lnrframe(m, u)
+            rθ = @SVector [u[2], u[3]]
+            gcomp = metric_components(m, rθ)
+            ginv = inverse_metric_components(gcomp)
+            w = -gcomp[5] / gcomp[4]
+        
+            et = √(-ginv[1]) * @SVector [1.0, 0.0, 0.0, w]
+            er = √ginv[2] * @SVector [0.0, 1.0, 0.0, 0.0]
+            eθ = √ginv[3] * @SVector [0.0, 0.0, 1.0, 0.0]
+            eϕ = √(ginv[4] - w^2 * ginv[1]) * @SVector [0.0, 0.0, 0.0, 1.0]
+            vecs = (et, er, eθ, eϕ)
+        
+            reduce(hcat, vecs)
+        end
+        
+        function numerical_lnrframe(m, u)
+            vecs = Gradus.GradusBase.lnrframe(m, u)
+            reduce(hcat, vecs)
+        end
+
+        for M in 0.2:0.8:2.0, a in -M:0.5:M
+            m = BoyerLindquistAD(M, a)
+            r = inner_radius(m) + 4.2
+            for θ in angles
+                u = @SVector [0.0, r, θ, 0.0] 
+                expected = kerr_lnrframe(m, u)
+                calculated = numerical_lnrframe(m, u)
+
+                @test isapprox(calculated, expected, atol=1e-13)
+            end
+        end
+    end
+
+    @testset "kerr-lnrf-basis" begin
+        function kerr_lnrbasis(m, u)
+            A = Gradus.__BoyerLindquistFO.A(m.M, u[2], m.a, u[3])
+            Σ = Gradus.__BoyerLindquistFO.Σ(u[2], m.a, u[3])
+            Δ = Gradus.__BoyerLindquistFO.Δ(m.M, u[2], m.a)
+            ω = 2* m.M *m.a * u[2] / A
+        
+            et = √(Σ * Δ / A) * @SVector [1.0, 0.0, 0.0, 0.0]
+            er = √(Σ / Δ) * @SVector [0.0, 1.0, 0.0, 0.0]
+            eθ = √Σ * @SVector [0.0, 0.0, 1.0, 0.0]
+            eϕ = √(A / Σ) * sin(u[3]) * @SVector [-ω, 0.0, 0.0, 1.0]
+            vecs = (et, er, eθ, eϕ)
+        
+            reduce(hcat, vecs)
+        end
+        
+        function numerical_lnrbasis(m, u)
+            vecs = Gradus.GradusBase.lnrbasis(m, u)
+            reduce(hcat, vecs)
+        end
+
+        for M in 0.2:0.8:2.0, a in -M:0.5:M
+            m = BoyerLindquistAD(M, a)
+            r = inner_radius(m) + 0.3
+            for θ in angles
+                u = @SVector [0.0, r, θ, 0.1] 
+                expected = kerr_lnrbasis(m, u)
+                calculated = numerical_lnrbasis(m, u)
+
+                @test isapprox(calculated, expected, atol=1e-10) 
+            end
         end
     end
 end
