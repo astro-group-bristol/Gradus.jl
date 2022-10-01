@@ -266,12 +266,12 @@ function metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ)
 end
 
 @inbounds function geodesic_eq(
-    m::AbstractAutoDiffStaticAxisSymmetricParams{T},
-    u,
-    v,
+    m::AbstractAutoDiffStaticAxisSymmetricParams,
+    u::AbstractArray{T},
+    v::AbstractArray{T},
 ) where {T}
     # get the only position components we need for this metric type
-    rθ = SVector{2,Float64}(u[2], u[3])
+    rθ = SVector{2,T}(u[2], u[3])
     # calculate all non-zero components, and use AD to get derivatives
     g_comps, jacs = metric_jacobian(m, rθ)
     # calculate all non-zero inverse matric components
