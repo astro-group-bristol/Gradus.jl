@@ -18,7 +18,7 @@ function bin_transfer_function(
         e_mask = @. (e ≤ energy) & (energy < (e + de))
         sub_flux = @views(flux[t_mask.&e_mask])
         if length(sub_flux) > 0
-            sum(sub_flux)
+            sum(sub_flux) / (dt * de)
         else
             NaN
         end
