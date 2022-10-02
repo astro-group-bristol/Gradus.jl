@@ -18,13 +18,15 @@ function lorentz_factor(g::AbstractMatrix, isco_r, u, v)
     end
 end
 
-flux_source_to_disc(
+function flux_source_to_disc(
     m::AbstractMetricParams,
     model::AbstractCoronaModel,
     vdp::AbstractDiscProfile,
-) = error(
-    "Not implemented for metric $(typeof(m)) with model $(typeof(model)) and disc profile $(typeof(vdp)).",
 )
+    error(
+        "Not implemented for metric $(typeof(m)) with model $(typeof(model)) and disc profile $(typeof(vdp)).",
+    )
+end
 
 function flux_source_to_disc(
     m::AbstractMetricParams,
