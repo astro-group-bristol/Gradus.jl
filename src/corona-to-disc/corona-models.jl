@@ -29,4 +29,15 @@ function sample_velocity(
     end
 end
 
+function source_velocity(m::AbstractMetricParams, model::AbstractCoronaModel)
+    error("Not implemented for $(typeof(model)).")
+end
+
+function source_velocity(m::AbstractMetricParams, model::LampPostModel)
+    # stationary source
+    rθ = @SVector[model.h, model.θ]
+    gcomp = metric_components(m, rθ)
+    inv(√(-gcomp[1])) * @SVector[1.0, 0.0, 0.0, 0.0]
+end
+
 export LampPostModel
