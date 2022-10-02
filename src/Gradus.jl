@@ -46,7 +46,14 @@ import .GradusBase:
     metric_type,
     metric_components,
     inverse_metric_components,
-    unpack_solution
+    unpack_solution,
+    dotproduct,
+    propernorm,
+    tetradframe,
+    lnrbasis,
+    lnrframe,
+    lowerindices,
+    raiseindices
 
 export AbstractMetricParams,
     getgeodesicpoint,
@@ -57,7 +64,14 @@ export AbstractMetricParams,
     constrain,
     inner_radius,
     metric_components,
-    inverse_metric_components
+    inverse_metric_components,
+    dotproduct,
+    propernorm,
+    tetradframe,
+    lnrbasis,
+    lnrframe,
+    lowerindices,
+    raiseindices
 
 """
     abstract type AbstractPointFunction
@@ -137,6 +151,7 @@ include("corona-to-disc/sky-geometry.jl")
 include("corona-to-disc/corona-models.jl")
 include("corona-to-disc/disc-profiles.jl")
 include("corona-to-disc/transfer-functions.jl")
+include("corona-to-disc/flux-calculations.jl")
 
 include("metrics/boyer-lindquist-ad.jl")
 include("metrics/boyer-lindquist-fo.jl")

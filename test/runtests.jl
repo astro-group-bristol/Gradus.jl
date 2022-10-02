@@ -1,6 +1,8 @@
-using Gradus, StaticArrays
 using Test
+using Gradus
+using StaticArrays
 using Aqua
+using Tullio
 
 include("smoke-tests/rendergeodesics.jl")
 include("smoke-tests/tracegeodesics.jl")
@@ -9,6 +11,8 @@ include("smoke-tests/circular-orbits.jl")
 include("smoke-tests/disc-profiles.jl")
 include("smoke-tests/special-radii.jl")
 include("smoke-tests/cunningham-transfer-functions.jl")
+
+include("unit/gradusbase.geometry.jl")
 
 # little bit of aqua
 Aqua.test_undefined_exports(Gradus)

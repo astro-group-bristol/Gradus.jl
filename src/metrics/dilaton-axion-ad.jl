@@ -10,7 +10,8 @@ using ..StaticArrays
 @fastmath A(r, a, Δ, θ) = (r^2 + a^2)^2 - a^2 * Δ * sin(θ)^2
 
 @fastmath W(βab, θ, βa) = 1 + (βab * (2 * cos(θ) - βab) + βa^2) * csc(θ)^2
-@fastmath Σ̂(Σ, β, b, r, βb, a, θ, rg) = Σ - (β^2 + 2b * r) + rg^2 * βb * (βb - 2 * (a / rg) * cos(θ))
+@fastmath Σ̂(Σ, β, b, r, βb, a, θ, rg) =
+    Σ - (β^2 + 2b * r) + rg^2 * βb * (βb - 2 * (a / rg) * cos(θ))
 @fastmath Δ̂(Δ, β, b, r, βb, rg) = Δ - (β^2 + 2b * r) - rg * (rg + 2b) * βb^2
 @fastmath Â(δ, a, Δ̂, W, θ) = δ^2 - a^2 * Δ̂ * W^2 * sin(θ)^2
 @fastmath δ(r, b, a) = r^2 - 2b * r + a^2

@@ -41,22 +41,24 @@ end
 # evaluate(aap::AbstractAccretionProfile, p) =
 #     error("Not implemented for `$(typeof(aap))` yet.")
 
-struct VoronoiDiscProfile{D,V} <: AbstractDiscProfile
+struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
     disc::D
     polys::Vector{Vector{V}}
     generators::Vector{V}
+    geodesic_points::Vector{G}
 
     function VoronoiDiscProfile(
         d::D,
         polys::Vector{Vector{V}},
         gen::Vector{V},
-    ) where {V<:AbstractArray{T}} where {D,T}
+        gps::Vector{G},
+    ) where {D<:AbstractAccretionDisc,V<:AbstractArray,G}
         if !isapprox(d.inclination, π / 2)
             return error(
                 "Currently only supported for discs in the equitorial plane (θ=π/2).",
             )
         end
-        new{D,V}(d, polys, gen)
+        new{D,V,G}(d, polys, gen, gps)
     end
 end
 
@@ -67,9 +69,9 @@ end
 function VoronoiDiscProfile(
     m::AbstractMetricParams{T},
     d::AbstractAccretionDisc{T},
-    endpoints::AbstractVector{GeodesicPoint{T,V}};
+    endpoints::AbstractVector{<:GeodesicPoint{T}};
     padding = 1,
-) where {T,V}
+) where {T}
     dim = d.outer_radius + padding
     rect = VoronoiCells.Rectangle(
         GeometryBasics.Point2{T}(-dim, -dim),
@@ -88,7 +90,7 @@ function VoronoiDiscProfile(
 
     polys_vecs = unpack_polys(polys)
 
-    VoronoiDiscProfile(d, polys_vecs, generators)
+    VoronoiDiscProfile(d, polys_vecs, generators, endpoints)
 end
 
 function VoronoiDiscProfile(

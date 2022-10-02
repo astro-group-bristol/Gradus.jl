@@ -1,10 +1,12 @@
 module GradusBase
 
-import Parameters: @with_kw
-import SciMLBase
 import Base
-import StaticArrays: SVector, MMatrix, SMatrix, @SVector
-import Tullio: @tullio
+import SciMLBase
+
+using Parameters: @with_kw
+using StaticArrays: SVector, MMatrix, SMatrix, @SVector
+using Tullio: @tullio
+using LinearAlgebra: norm, inv
 
 # for doc bindings
 import ..Gradus
@@ -27,6 +29,13 @@ constrain,
 inner_radius,
 metric_type,
 metric_components,
-inverse_metric_components
+inverse_metric_components,
+dotproduct,
+propernorm,
+tetradframe,
+lnrbasis,
+lnrframe,
+lowerindices,
+raiseindices
 
 end # module
