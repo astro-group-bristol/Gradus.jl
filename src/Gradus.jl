@@ -46,7 +46,14 @@ import .GradusBase:
     metric_type,
     metric_components,
     inverse_metric_components,
-    unpack_solution
+    unpack_solution,
+    dotproduct,
+    propernorm,
+    tetradframe,
+    lnrbasis,
+    lnrframe,
+    lowerindices,
+    raiseindices
 
 export AbstractMetricParams,
     getgeodesicpoint,
@@ -57,7 +64,14 @@ export AbstractMetricParams,
     constrain,
     inner_radius,
     metric_components,
-    inverse_metric_components
+    inverse_metric_components,
+    dotproduct,
+    propernorm,
+    tetradframe,
+    lnrbasis,
+    lnrframe,
+    lowerindices,
+    raiseindices
 
 """
     abstract type AbstractPointFunction

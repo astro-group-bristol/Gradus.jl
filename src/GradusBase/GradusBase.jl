@@ -29,6 +29,13 @@ constrain,
 inner_radius,
 metric_type,
 metric_components,
-inverse_metric_components
+inverse_metric_components,
+dotproduct,
+propernorm,
+tetradframe,
+lnrbasis,
+lnrframe,
+lowerindices,
+raiseindices
 
 end # module
