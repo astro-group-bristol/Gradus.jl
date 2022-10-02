@@ -6,11 +6,7 @@ import ..Gradus:
     metric_jacobian,
     inverse_metric_components
 
-function Ω(
-    m::AbstractAutoDiffStaticAxisSymmetricParams,
-    rθ;
-    contra_rotating = false,
-)
+function Ω(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; contra_rotating = false)
     _, jacs = metric_jacobian(m, rθ)
     ∂rg = jacs[:, 1]
 
@@ -89,11 +85,7 @@ end
 vt(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
     vt(m, @SVector([r, π / 2]); kwargs...)
 
-function fourvelocity(
-    m::AbstractAutoDiffStaticAxisSymmetricParams,
-    rθ;
-    kwargs...,
-)
+function fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; kwargs...)
     _, ginv, E, L = g_ginv_energy_angmom(m, rθ; kwargs...)
 
     vt = __vt(ginv, E, L)
@@ -104,11 +96,7 @@ end
 fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
     fourvelocity(m, @SVector([r, π / 2]); kwargs...)
 
-function plunging_fourvelocity(
-    m::AbstractAutoDiffStaticAxisSymmetricParams,
-    rθ;
-    kwargs...,
-)
+function plunging_fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; kwargs...)
     g, ginv, E, L = g_ginv_energy_angmom(m, rθ; kwargs...)
     vt = __vt(ginv, E, L)
     vϕ = __vϕ(ginv, E, L)
