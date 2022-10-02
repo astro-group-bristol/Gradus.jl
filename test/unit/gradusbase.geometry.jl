@@ -22,7 +22,7 @@
         v = Gradus.constrain_all(m, u, CircularOrbits.fourvelocity(m, r), 1.0)
 
         # function that we are testing
-        M = GradusBase.tetradframe(m, u, v)
+        M = Gradus.GradusBase.tetradframe(m, u, v)
 
         m_mat = Gradus.metric(m, u)
         @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
@@ -35,7 +35,7 @@
             u = @SVector([0.0, r, θ, 0.0])
     
             # function that we are testing
-            M = GradusBase.lnrframe(m, u)
+            M = Gradus.GradusBase.lnrframe(m, u)
     
             m_mat = Gradus.metric(m, u)
             @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
@@ -57,10 +57,9 @@
             et = √(A / (Σ * Δ)) * @SVector [1.0, 0.0, 0.0, ω]
             er = √(Δ / Σ) * @SVector [0.0, 1.0, 0.0, 0.0]
             eθ = √(1 / Σ) * @SVector [0.0, 0.0, 1.0, 0.0]
-            # unsure why this is negative
             eϕ = √(Σ / A) * (1/sin(u[3])) * @SVector [0.0, 0.0, 0.0, 1.0]
+
             vecs = (et, er, eθ, eϕ)
-        
             reduce(hcat, vecs)
         end
         
@@ -93,8 +92,8 @@
             er = √(Σ / Δ) * @SVector [0.0, 1.0, 0.0, 0.0]
             eθ = √Σ * @SVector [0.0, 0.0, 1.0, 0.0]
             eϕ = √(A / Σ) * sin(u[3]) * @SVector [-ω, 0.0, 0.0, 1.0]
+
             vecs = (et, er, eθ, eϕ)
-        
             reduce(hcat, vecs)
         end
         
