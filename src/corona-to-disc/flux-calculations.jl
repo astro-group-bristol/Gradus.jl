@@ -6,7 +6,7 @@ Calculate Lorentz factor in LNRF of `u`.
 function lorentz_factor(g::AbstractMatrix, isco_r, u, v)
     frame = Gradus.GradusBase.lnrbasis(g)
     B = reduce(hcat, frame)
-    denom = B[:, 1] ⋅ u_disc
+    denom = B[:, 1] ⋅ v 
 
     𝒱ϕ = (B[:, 4] ⋅ v) / denom
 
@@ -73,5 +73,7 @@ function flux_source_to_disc(
         # total reflected flux 
         g_sd^(1 + α) * E_d^(-α) * dA * f_sd / γ
     end
-    map(flux, enumerate(sd_points))
+    map(flux, enumerate(vdp.geodesic_points))
 end
+
+export flux_source_to_disc
