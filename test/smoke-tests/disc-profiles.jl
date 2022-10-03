@@ -31,17 +31,17 @@
         areas2 = getareas(vdp2)
 
         # values computed under visual inspection
-        # last computed 15/11/2022: continuous callback for disc intersection
+        # last computed 03/10/22: updated sampling method
         expected_areas = [
-            89.79326183804586,
-            117.69063502043767,
-            141.71137385746914,
-            233.49741646976452,
-            683.6491180876137,
-            736.059111143716,
-            675.7846796957201,
-            490.44994928380703,
-            372.2875995001252,
+            75.64302307389167,
+            114.78829414215679,
+            166.581361553731,
+            263.3161757085493,
+            700.3526293678786,
+            739.2923798563061,
+            645.4220326474972,
+            477.8144794927597,
+            359.1850275798407,
         ]
         @test all(isapprox.(areas1, expected_areas, atol = 1e-3))
         @test all(isapprox.(areas2, expected_areas, atol = 1e-3))

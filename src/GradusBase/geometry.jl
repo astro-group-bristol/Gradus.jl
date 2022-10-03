@@ -4,6 +4,7 @@ end
 
 dotproduct(g::AbstractMatrix, v1, v2) = @tullio r := g[i, j] * v1[i] * v2[j]
 propernorm(g::AbstractMatrix, v) = dotproduct(g, v, v)
+propernorm(m::AbstractMetricParams, u, v) = propernorm(metric(m, u), v)
 
 """
     mproject(g, v, u)
@@ -49,7 +50,7 @@ end
 tetradframe(m::AbstractMetricParams, u, v) = tetradframe(metric(m, u), v)
 
 # TODO: this presupposes static and axis symmetric
-# tetrad with indices down: frame
+# tetrad with latin indices down: frame
 function lnrframe(g::AbstractMatrix)
     ω = -g[1, 4] / g[4, 4]
     v = @SVector [1.0, 0.0, 0.0, ω]
@@ -57,7 +58,7 @@ function lnrframe(g::AbstractMatrix)
 end
 lnrframe(m::AbstractMetricParams, u) = lnrframe(metric(m, u))
 
-# tetrad with indices up: basis
+# tetrad with latin indices up: basis
 function lnrbasis(g::AbstractMatrix)
     ω = -g[1, 4] / g[4, 4]
     v = @SVector [-ω, 0.0, 0.0, 1.0]
