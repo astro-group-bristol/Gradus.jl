@@ -118,6 +118,7 @@ function jacobian_∂αβ_∂gr(
         sol = tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
         gp = getgeodesicpoint(m, sol)
         g = redshift_pf(m, gp, 2000.0)
+        # return r and g*
         @SVector [gp.u2[2], gstar(g)]
     end
 
@@ -152,7 +153,7 @@ function cunningham_transfer_function(
     rₑ,
     max_time;
     num_points = 1000,
-    finite_diff_order = 3,
+    finite_diff_order = 5,
     redshift_pf::PointFunction = Gradus.ConstPointFunctions.redshift,
     tracer_kwargs...,
 )

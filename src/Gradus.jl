@@ -17,6 +17,7 @@ using VoronoiCells
 using FiniteDifferences
 using Roots
 using ProgressMeter
+using Buckets
 
 using Accessors: @set
 using Tullio: @tullio
