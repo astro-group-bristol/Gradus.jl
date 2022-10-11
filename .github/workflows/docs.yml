@@ -21,7 +21,7 @@ jobs:
           julia --project=docs -e '
             using Pkg
             # add Buckets.jl
-            Pkg.add("https://github.com/fjebaker/Buckets.jl")
+            Pkg.add(url="https://github.com/fjebaker/Buckets.jl")
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - run: julia --project=docs docs/make.jl
