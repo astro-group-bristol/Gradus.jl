@@ -283,7 +283,7 @@ p = plot(legend = false)
 for angle in [3, 35, 50, 65, 74, 85]
     u = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
     ctf = cunningham_transfer_function(
-        m, u, d, 4.0, 2000.0; finite_diff_order = 5, num_points = 400
+        m, u, d, 4.0, 2000.0
     )
     mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
     @views plot!(p, ctf.gstar[mask], ctf.f[mask])
@@ -302,7 +302,7 @@ p = plot(legend = false)
 for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
     m = BoyerLindquistAD(1.0, a)
     ctf = cunningham_transfer_function(
-        m, u, d, 7.0, 2000.0; finite_diff_order = 5, num_points = 400
+        m, u, d, 7.0, 2000.0
     )
     mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
     @views plot!(p, ctf.gstar[mask], ctf.f[mask])
