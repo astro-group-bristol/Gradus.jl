@@ -1,3 +1,44 @@
+
+"""
+    distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...)
+
+Calculate distance to the closest element of the disc. The distance need not be metric or Pythagorean, but rather should be positive
+when the four vector `u` is distant, zero when `u` is on the surface, and negative when `u` is within the disc geometry.
+
+Must return a floating point number.
+"""
+distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...) = error("Not implemented for $(typeof(d)).")
+
+"""
+    cross_section(d::AbstractThickAccretionDisc, u)
+
+Return the height cross-section of a thick accretion disc at the (projected) coordinates of `u`. This function also incorporates bounds checking, and should
+return a negative value if the disc is not defined at `u`.
+
+## Example
+
+For a top hat disc profile with constant height between two radii
+
+```julia
+struct TopHatDisc{T} <: AbstractThickAccretionDisc{T}
+    inner_r::T
+    outer_r::T
+end
+
+function cross_section(d::TopHatDisc, u)
+    # project u into equitorial plane
+    r = u[2] * sin(u[3])
+    if (r < d.inner_r) || (r > d.outer_r)
+        return -1.0
+    else
+        return 1.0
+    end
+end
+```
+"""
+cross_section(d::AbstractThickAccretionDisc, u) =
+    error("Not implemented for $(typeof(d)).")
+
 function build_collision_callback(
     g::AbstractAccretionDisc{T};
     gtol,
@@ -41,20 +82,47 @@ end
     abs(k) - (gtol * u4[2])
 end
 
-abstract type AbstractThickAccretionDisc{T} <: AbstractAccretionDisc{T} end
-cross_section(d::AbstractThickAccretionDisc, u4) =
-    error("Not implemented for $(typeof(d)).")
+"""
+    ThickDisc{T,F,P} <: AbstractThickAccretionDisc{T}
+    ThickDisc(f, params=nothing; T = Float64)
 
+A standard wrapper for creating custom disc profiles from height cross-section function `f`. This function
+is given the disc parameters as unpacked arguments:
+
+```julia
+d.f(u, d.params...)
+```
+
+If no parameters are specified, none will be passed to `f`.
+
+## Example
+
+Specifying a toroidal disc centered on `r=10` with radius 1:
+
+```julia
+d = ThickDisc() do u
+    r = u[2]
+    if r < 9.0 || r > 11.0
+        return -1.0
+    else
+        x = r - 10.0
+        sqrt(1-x^2)
+    end
+end
+```
+
+"""
 @with_kw struct ThickDisc{T,F,P} <: AbstractThickAccretionDisc{T}
     f::F
     params::P
 end
 
-function ThickDisc(cross_section::F, parameters::P; T = Float64) where {F,P}
+function ThickDisc(cross_section::F, parameters::P=nothing; T = Float64) where {F,P}
     ThickDisc{T,F,P}(cross_section, parameters)
 end
 
 cross_section(d::ThickDisc, u4) = d.f(u4, d.params...)
+cross_section(d::ThickDisc{T,F,Nothing}, u4) where {T,F} = d.f(u4)
 
 function distance_to_disc(d::AbstractThickAccretionDisc, u4; gtol)
     height = cross_section(d, u4)
@@ -67,6 +135,27 @@ end
 
 # common thick disc models
 
+"""
+    ShakuraSunyaev{T} <: AbstractThickAccretionDisc{T}
+    ShakuraSunyaev(
+        m::AbstractMetricParams;
+        eddington_ratio = 0.3,
+        η = nothing,
+        contra_rotating = false,
+    ) 
+
+The classic Shakura & Sunyaev (1973) accretion disc model, with height given by ``2H``, where
+
+```math
+H = \\frac{3}{2} \\frac{1}{\\eta} \\left( \\frac{\\dot{M}}{\\dot{M}_\\text{Edd}} \\right) \\left( 1 - \\sqrt{\\frac{r_\\{isco}}{\\rho}} \\right).
+```
+
+Here ``\\eta`` is the radiative efficiency, which, if unspecified, is determined by the circular orbit energy at the ISCO:
+
+```math
+\\eta = 1 - E_\\text{isco}
+```
+"""
 struct ShakuraSunyaev{T} <: AbstractThickAccretionDisc{T}
     Ṁ::T
     Ṁedd::T
@@ -92,7 +181,7 @@ function ShakuraSunyaev(
     contra_rotating = false,
 ) where {T}
     r_isco = isco(m)
-    radiative_efficieny = if isnothing(η)
+    radiative_efficiency = if isnothing(η)
         1 - CircularOrbits.energy(
             m,
             SVector{2}(r_isco, π / 2);
@@ -101,7 +190,7 @@ function ShakuraSunyaev(
     else
         η
     end
-    ShakuraSunyaev(T(eddington_ratio), 1.0, radiative_efficieny, r_isco)
+    ShakuraSunyaev(T(eddington_ratio), 1.0, radiative_efficiency, r_isco)
 end
 
-export AbstractThickAccretionDisc, ThickDisc, ShakuraSunyaev, GeometricThinDisc
+export AbstractThickAccretionDisc, ThickDisc, ShakuraSunyaev, GeometricThinDisc, cross_section

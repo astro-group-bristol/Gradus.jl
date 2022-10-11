@@ -105,10 +105,18 @@ abstract type AbstractAccretionGeometry{T} end
 """
     abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T}
 
-Supertype for accretion spherically symmetric geometry, where certain optimizing assumptions
-may be made.
+Supertype for axis-symmetric geometry, where certain optimizing assumptions
+may be made. Concrete subtypes must implement [`distance_to_disc`](@ref).
 """
 abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T} end
+
+"""
+    abstract type AbstractThickAccretionDisc{T} <: AbstractAccretionDisc{T}
+
+Supertype for axis-symmetric geometry that are specified by a height cross-section function. Subtypes are
+required to implement [`cross_section`](@ref).
+"""
+abstract type AbstractThickAccretionDisc{T} <: AbstractAccretionDisc{T} end
 
 """
     AbstractDiscProfile
