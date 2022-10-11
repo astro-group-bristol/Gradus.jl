@@ -112,13 +112,19 @@ end
 ```
 
 """
-@with_kw struct ThickDisc{T,F,P} <: AbstractThickAccretionDisc{T}
+struct ThickDisc{T,F,P} <: AbstractThickAccretionDisc{T}
     f::F
     params::P
 end
 
-function ThickDisc(cross_section::F, parameters::P=nothing; T = Float64) where {F,P}
-    ThickDisc{T,F,P}(cross_section, parameters)
+function ThickDisc(cross_section::F) where {F}
+    # todo: float bit generic???
+    ThickDisc{Float64,F,Nothing}(cross_section, nothing)
+end
+
+function ThickDisc(cross_section::F, parameters::P) where {F,P}
+    # todo: float bit generic???
+    ThickDisc{Float64,F,P}(cross_section, parameters)
 end
 
 cross_section(d::ThickDisc, u4) = d.f(u4, d.params...)
