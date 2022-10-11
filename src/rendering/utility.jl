@@ -49,7 +49,7 @@ Utility function for converting some `X` on an image plane into ``\\alpha``, giv
 the midpoint `x_mid` and field-of-view multiplier `fov_factor`.
 """
 # have to use a slight 0.001 offset to avoid integrating α=0.0 geodesics in first order methods
-x_to_α(X, x_mid, fov_factor) = (X + 0.001 - x_mid) / fov_factor
+x_to_α(X, x_mid, fov_factor) = (X + 1e-3 - x_mid) / fov_factor
 
 """
     $(TYPEDSIGNATURES)

@@ -13,18 +13,30 @@ function bin_transfer_function(
     de = step(energy_bins)
     dt = step(time_bins)
 
-    transfer_function = ThreadsX.map(Iterators.product(time_bins, energy_bins)) do (t, e)
-        t_mask = @. (t ≤ time_delays) & (time_delays < (t + dt))
-        e_mask = @. (e ≤ energy) & (energy < (e + de))
-        sub_flux = @views(flux[t_mask.&e_mask])
-        if length(sub_flux) > 0
-            sum(sub_flux) / (dt * de)
-        else
-            NaN
-        end
-    end
+    transfer_function =
+        bincontiguous(energy, delays, flux, energy_bins, time_bins; reduction = sum)
+
+    @. transfer_function = transfer_function / (de * dt)
+    transfer_function[transfer_function.==0.0] = NaN
 
     time_bins, energy_bins, transfer_function
+end
+
+function bin_and_interpolate(
+    X,
+    y::AbstractArray{T};
+    log_bins = false,
+    nbins = 1000,
+    reduction = mean,
+) where {T}
+    bins = if log_bins
+        10 .^ range(log10(minimum(X)), log10(maximum(X)), nbins)
+    else
+        range(minimum(X), maximum(X), nbins)
+    end
+
+    y_binned = bincontiguous(X, y, bins; reduction = mean)
+    linear_interpolation(bins, y_binned, extrapolation_bc = Line())
 end
 
 export bin_transfer_function

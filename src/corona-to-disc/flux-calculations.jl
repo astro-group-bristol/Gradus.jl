@@ -36,8 +36,8 @@ function flux_source_to_disc(
 )
     v_source = source_velocity(m, model)
 
-    intensity = inv.(getareas(vdp))
-    total_intensity = sum(intensity)
+    areas = getareas(vdp)
+    total_area = sum(areas)
 
     isco_r = isco(m)
     intp = interpolate_plunging_velocities(m)
@@ -69,7 +69,7 @@ function flux_source_to_disc(
         dA = inv(√(g_2[2, 2] * g_2[4, 4]))
 
         γ = lorentz_factor(g_2, isco_r, gp.u2, v_disc)
-        f_sd = intensity[i] / total_intensity
+        f_sd = inv(areas[i] / total_area)
         # total reflected flux 
         g_sd^(1 + α) * E_d^(-α) * dA * f_sd / γ
     end
