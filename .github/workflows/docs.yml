@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - fergus/doc-debug
     paths:
       - docs/**.md
       - docs/**.jl
@@ -21,8 +22,8 @@ jobs:
           julia --project=docs -e '
             using Pkg
             # add Buckets.jl
+            Pkg.develop(PackageSpec(path=pwd()), preserve=PRESERVE_NONE)
             Pkg.add(url="https://github.com/fjebaker/Buckets.jl")
-            Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - run: julia --project=docs docs/make.jl
         env:
