@@ -51,7 +51,7 @@ function find_offset_for_radius(
         r = if gp.retcode == :Intersected
             gp.u2[2] * sin(gp.u2[3])
         else
-            inner_radius(m)
+            0.0
         end
         radius - r
     end
@@ -118,7 +118,7 @@ function jacobian_∂αβ_∂gr(
     gs,
     αs,
     βs;
-    order = 3,
+    order = 5,
     redshift_pf = Gradus.ConstPointFunctions.redshift,
     kwargs...,
 )

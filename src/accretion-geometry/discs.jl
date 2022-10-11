@@ -25,7 +25,7 @@ struct TopHatDisc{T} <: AbstractThickAccretionDisc{T}
     outer_r::T
 end
 
-function cross_section(d::TopHatDisc, u)
+function Gradus.cross_section(d::TopHatDisc, u)
     # project u into equitorial plane
     r = u[2] * sin(u[3])
     if (r < d.inner_r) || (r > d.outer_r)
@@ -147,7 +147,7 @@ end
 The classic Shakura & Sunyaev (1973) accretion disc model, with height given by ``2H``, where
 
 ```math
-H = \\frac{3}{2} \\frac{1}{\\eta} \\left( \\frac{\\dot{M}}{\\dot{M}_\\text{Edd}} \\right) \\left( 1 - \\sqrt{\\frac{r_\\{isco}}{\\rho}} \\right).
+H = \\frac{3}{2} \\frac{1}{\\eta} \\left( \\frac{\\dot{M}}{\\dot{M}_\\text{Edd}} \\right) \\left( 1 - \\sqrt{\\frac{r_\\text{isco}}{\\rho}} \\right)
 ```
 
 Here ``\\eta`` is the radiative efficiency, which, if unspecified, is determined by the circular orbit energy at the ISCO:
