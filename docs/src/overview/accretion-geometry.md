@@ -19,11 +19,21 @@ Gradus.has_intersect
 
 ```@docs
 AbstractAccretionDisc
+distance_to_disc
+AbstractThickAccretionDisc
+cross_section
+```
+
+### Pre-defined discs
+
+```@docs
 GeometricThinDisc
+ThickDisc
+ShakuraSunyaev
 ```
 
 ## Meshes
 
 ```@docs
-
+MeshAccretionGeometry
 ```
