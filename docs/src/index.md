@@ -16,13 +16,17 @@ Gradus.jl allows for drastically different relativistic simulations to be comput
 
 ## Setup
 
-Requires Julia >v1.6. First, install [Buckets.jl](https://github.com/fjebaker/Buckets.jl) and then add Gradus.jl:
+Requires Julia >v1.6. 
+
+First, add [Buckets.jl](https://github.com/fjebaker/Buckets.jl) and then add Gradus.jl:
+
 
 ```
 import Pkg
 Pkg.add(url="https://github.com/fjebaker/Buckets.jl")
 Plg.add(url="https://github.com/astro-group-bristol/Gradus.jl")
 ```
+
 
 ## About
 

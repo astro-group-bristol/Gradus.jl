@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - fergus/doc-debug
     paths:
       - docs/**.md
       - docs/**.jl
