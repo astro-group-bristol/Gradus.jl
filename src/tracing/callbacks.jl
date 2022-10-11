@@ -20,14 +20,22 @@ function create_callback_set(
     cb::C,
     closest_approach,
     effective_infinity,
-) where {C<:Union{<:Tuple{SciMLBase.DECallback},SciMLBase.DECallback,Nothing}}
+) where {C}
     mcb = metric_callback(m, closest_approach, effective_infinity)
     if C <: SciMLBase.DECallback
         mcb isa Tuple ? CallbackSet(cb, mcb...) : CallbackSet(cb, mcb)
-    elseif eltype(C) <: SciMLBase.DECallback
+    elseif C <: Union{Tuple,AbstractVector}
         mcb isa Tuple ? CallbackSet(cb..., mcb...) : CallbackSet(cb..., mcb)
     else
         # else C is Nothing
         mcb isa Tuple ? CallbackSet(mcb...) : mcb
     end
 end
+
+
+# predefined callbacks
+function domain_upper_hemisphere(δ = 1e-3)
+    DiscreteCallback((u, t, integrator) -> u[2] * cos(u[3]) < δ, terminate!)
+end
+
+export domain_upper_hemisphere

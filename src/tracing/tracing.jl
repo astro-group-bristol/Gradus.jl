@@ -41,13 +41,14 @@ function tracegeodesics(
         wrap_constraint(m, position, velocity, μ)
     else
         if eltype(position) !== eltype(velocity)
-            error("Position and velocity must have the same element type.")
+            error(
+                "Position and velocity must have the same element type.\n(u: $(typeof(position)), v: $(typeof(velocity)))",
+            )
         end
         constrain_all(m, position, velocity, μ)
     end
 
     cbs = create_callback_set(m, callback, closest_approach, effective_infinity)
-
     __tracegeodesics(
         m,
         position,
