@@ -10,7 +10,7 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Overview" => [
-            "Examples" => "overview/examples.md",
+            "Examples" => "examples/examples.md",
             # "Tracing"
             # "Rendering"
             "Point functions" => "overview/point-functions.md",
