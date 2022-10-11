@@ -146,7 +146,7 @@ include("accretion-geometry/discs.jl")
 include("accretion-geometry/meshes.jl")
 include("accretion-geometry/bootstrap.jl")
 
-include("orbits/emission-radii.jl")
+include("cunningham-transfer.jl")
 
 include("corona-to-disc/sky-geometry.jl")
 include("corona-to-disc/corona-models.jl")

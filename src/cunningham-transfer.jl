@@ -48,27 +48,39 @@ function find_offset_for_radius(
 )
     f(r) = begin
         gp = integrate_single_geodesic(m, u, d, r, θₒ; kwargs...)
-        gp.u2[2] - radius
+        r = if gp.retcode == :Intersected
+            gp.u2[2] * sin(gp.u2[3])
+        else
+            inner_radius(m)
+        end
+        radius - r
     end
 
-    Roots.find_zero(f, (0.0, offset_max); atol = zero_atol)
+    r = Roots.find_zero(f, (0.0, offset_max); atol = zero_atol)
+    if !isapprox(f(r), 0.0, atol = 10 * zero_atol)
+        return NaN
+    end
+    r
 end
 
 function impact_parameters_for_radius(
     m::AbstractMetricParams,
-    u,
+    u::AbstractVector{T},
     d::AbstractAccretionDisc,
     radius;
     N = 500,
     kwargs...,
-)
+) where {T}
+    α = zeros(T, N)
+    β = zeros(T, N)
+
     θs = range(0, 2π, N)
-    rs = ThreadsX.map(θs) do θ
-        find_offset_for_radius(m, u, d, radius, θ; kwargs...)
+    ThreadsX.foreach(enumerate(θs)) do (i, θ)
+        r = find_offset_for_radius(m, u, d, radius, θ; kwargs...)
+        α[i] = r * cos(θ)
+        β[i] = r * sin(θ)
     end
-    α = @. rs * cos(θs)
-    β = @. rs * sin(θs)
-    (α, β)
+    (filter(!isnan, α), filter(!isnan, β))
 end
 
 function redshift_ratio(
