@@ -146,6 +146,51 @@ heatmap(img)
 
 ![](./example-interpolated.png)
 
+## Disc geometries
+
+Gradus makes it easy to define new height cross sections for thick discs:
+
+```julia
+using Gradus
+using StaticArrays
+using Plots
+
+m = BoyerLindquistAD(1.0, 0.0)
+u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
+
+# define the disc shape -- return a negative number 
+# where the disc should not be intersected, else the cross 
+# sectional height
+d = ThickDisc() do u
+    r = u[2]
+    if r < 9.0 || r > 11.0
+        return -1.0
+    else
+        x = r - 10.0
+        sqrt(1 - x^2)
+    end
+end
+
+# and then render as usual
+img = rendergeodesics(
+    m,
+    u,
+    d,
+    2000.0,
+    fov_factor = 18.0,
+    image_width = 700,
+    image_height = 350,
+    verbose = true,
+    pf = pf
+)
+
+heatmap(img, aspect_ratio=1)
+```
+
+![](./example-thick-disc-doughnut.png)
+
+For more disc on disc geometry, see [`AbstractAccretionDisc`](@ref) and associated sections.
+
 ## Circular orbits
 
 Simple equatorial circular orbits are straight forward to calculate with Gradus.jl:

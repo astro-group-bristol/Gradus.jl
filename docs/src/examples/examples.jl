@@ -274,6 +274,39 @@ function ex_concentric_rings()
     savefig(p, "example-concentric.svg")
 end
 
+function ex_doughnut()
+    m = BoyerLindquistAD(1.0, 0.0)
+    u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
+
+    # define the disc shape -- return a negative number 
+    # where the disc should not be intersected, else the cross 
+    # sectional height
+    d = ThickDisc() do u
+        r = u[2]
+        if r < 9.0 || r > 11.0
+            return -1.0
+        else
+            x = r - 10.0
+            sqrt(1 - x^2)
+        end
+    end
+
+    # and then render as usual
+    img = rendergeodesics(
+        m,
+        u,
+        d,
+        2000.0,
+        fov_factor = 18.0,
+        image_width = 700,
+        image_height = 350,
+        verbose = true,
+    )
+
+    p = heatmap(img, aspect_ratio=1)
+    savefig(p, "example-thick-disc-doughtnut.png") 
+end
+
 ex_tracing()
 ex_redshift()
 ex_interpolating()
@@ -282,3 +315,4 @@ ex_isco()
 ex_horizon()
 ex_transfer_functions()
 ex_concentric_rings()
+ex_doughnut()
