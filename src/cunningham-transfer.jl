@@ -167,10 +167,12 @@ function cunningham_transfer_function(
     num_points = 1000,
     finite_diff_order = 5,
     redshift_pf::PointFunction = Gradus.ConstPointFunctions.redshift,
+    offset_max = 20.0,
+    zero_atol = 1e-7,
     tracer_kwargs...,
 )
     αs, βs =
-        Gradus.impact_parameters_for_radius(m, u, d, rₑ; N = num_points, tracer_kwargs...)
+        Gradus.impact_parameters_for_radius(m, u, d, rₑ; N = num_points, offset_max = offset_max, zero_atol = zero_atol, tracer_kwargs...)
 
     gs = redshift_ratio(
         m,

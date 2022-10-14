@@ -14,7 +14,7 @@ function bin_transfer_function(
     dt = step(time_bins)
 
     transfer_function =
-        bincontiguous(energy, delays, flux, energy_bins, time_bins; reduction = sum)
+        bucket(energy, delays, flux, energy_bins, time_bins; reduction = sum)
 
     @. transfer_function = transfer_function / (de * dt)
     transfer_function[transfer_function.==0.0] = NaN
@@ -35,7 +35,7 @@ function bin_and_interpolate(
         range(minimum(X), maximum(X), nbins)
     end
 
-    y_binned = bincontiguous(X, y, bins; reduction = mean)
+    y_binned = bucket(X, y, bins; reduction = reduction)
     linear_interpolation(bins, y_binned, extrapolation_bc = Line())
 end
 
