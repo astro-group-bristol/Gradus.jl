@@ -46,7 +46,7 @@ function find_offset_for_radius(
     offset_max = 20.0,
     kwargs...,
 )
-    f(r) = begin
+    f = r -> begin
         gp = integrate_single_geodesic(m, u, d, r, θₒ; kwargs...)
         r = if gp.retcode == :Intersected
             gp.u2[2] * sin(gp.u2[3])
