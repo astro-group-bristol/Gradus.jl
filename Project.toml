@@ -26,4 +26,4 @@ Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 VoronoiCells = "e3e34ffb-84e9-5012-9490-92c94d0c60a4"
 
 [compat]
-SciMLBase = "1.62.0"
+SciMLBase = "=1.62.0"
