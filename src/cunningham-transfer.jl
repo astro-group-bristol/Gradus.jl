@@ -125,7 +125,7 @@ function jacobian_∂αβ_∂gr(
     gmin, gmax = extrema(gs)
     gstar(g) = (g - gmin) / (gmax - gmin)
 
-    f((α, β)) = begin
+    f = ((α, β),) -> begin
         v = map_impact_parameters(m, u, α, β)
         sol = tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
         gp = getgeodesicpoint(m, sol)
