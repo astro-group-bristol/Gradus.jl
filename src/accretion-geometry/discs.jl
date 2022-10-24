@@ -7,7 +7,8 @@ when the four vector `u` is distant, zero when `u` is on the surface, and negati
 
 Must return a floating point number.
 """
-distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...) = error("Not implemented for $(typeof(d)).")
+distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...) =
+    error("Not implemented for $(typeof(d)).")
 
 """
     cross_section(d::AbstractThickAccretionDisc, u)
@@ -36,8 +37,7 @@ function Gradus.cross_section(d::TopHatDisc, u)
 end
 ```
 """
-cross_section(d::AbstractThickAccretionDisc, u) =
-    error("Not implemented for $(typeof(d)).")
+cross_section(d::AbstractThickAccretionDisc, u) = error("Not implemented for $(typeof(d)).")
 
 function build_collision_callback(
     g::AbstractAccretionDisc{T};
@@ -199,4 +199,5 @@ function ShakuraSunyaev(
     ShakuraSunyaev(T(eddington_ratio), 1.0, radiative_efficiency, r_isco)
 end
 
-export AbstractThickAccretionDisc, ThickDisc, ShakuraSunyaev, GeometricThinDisc, cross_section
+export AbstractThickAccretionDisc,
+    ThickDisc, ShakuraSunyaev, GeometricThinDisc, cross_section
