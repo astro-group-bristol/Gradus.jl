@@ -174,6 +174,8 @@ include("special-radii.jl")
 include("redshift.jl")
 include("const-point-functions.jl")
 
+include("line-profiles.jl")
+
 export AbstractPointFunction,
     AbstractCacheStrategy,
     AbstractRenderCache,

@@ -125,14 +125,16 @@ function jacobian_∂αβ_∂gr(
     gmin, gmax = extrema(gs)
     gstar(g) = (g - gmin) / (gmax - gmin)
 
-    f = ((α, β),) -> begin
-        v = map_impact_parameters(m, u, α, β)
-        sol = tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
-        gp = getgeodesicpoint(m, sol)
-        g = redshift_pf(m, gp, 2000.0)
-        # return r and g*
-        @SVector [gp.u2[2], gstar(g)]
-    end
+    f =
+        ((α, β),) -> begin
+            v = map_impact_parameters(m, u, α, β)
+            sol =
+                tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
+            gp = getgeodesicpoint(m, sol)
+            g = redshift_pf(m, gp, 2000.0)
+            # return r and g*
+            @SVector [gp.u2[2], gstar(g)]
+        end
 
     # choice between FiniteDifferences and FiniteDiff is tricky
     # since FiniteDiff is so much faster, but seems to yield really bad jacobians
@@ -171,8 +173,16 @@ function cunningham_transfer_function(
     zero_atol = 1e-7,
     tracer_kwargs...,
 )
-    αs, βs =
-        Gradus.impact_parameters_for_radius(m, u, d, rₑ; N = num_points, offset_max = offset_max, zero_atol = zero_atol, tracer_kwargs...)
+    αs, βs = Gradus.impact_parameters_for_radius(
+        m,
+        u,
+        d,
+        rₑ;
+        N = num_points,
+        offset_max = offset_max,
+        zero_atol = zero_atol,
+        tracer_kwargs...,
+    )
 
     gs = redshift_ratio(
         m,
@@ -206,9 +216,87 @@ function cunningham_transfer_function(
     CunninghamTransferFunction(rₑ, gs, gstars, f)
 end
 
+function _split_branches(gstars::AbstractArray{T}, f::AbstractArray{T}) where {T}
+    decreasing = true
+    gprev = 1.0
+    upper = Tuple{T,T}[]
+    lower = Tuple{T,T}[]
+    for (i, g) in enumerate(gstars)
+        if gprev > g
+            decreasing = true
+        else
+            decreasing = false
+        end
+        gprev = g
+        if decreasing
+            push!(lower, (g, f[i]))
+        else
+            push!(upper, (g, f[i]))
+        end
+    end
+    upper, lower
+end
+
+struct InterpolatedCunninghamTransferBranches{T,I}
+    lower::I
+    upper::I
+    g_extrema::Tuple{T,T}
+    radius::T
+end
+
+function _make_sorted_interpolation(g, f)
+    I = sortperm(g)
+    g = @inbounds g[I]
+    f = @inbounds f[I]
+    linear_interpolation(g, f, extrapolation_bc = Line())
+end
+
+function _interpolate_branches(ctf::CunninghamTransferFunction)
+    # avoid extrema
+    mask = @. (ctf.gstar > 1e-4) & (ctf.gstar < 1 - 1e-4)
+
+    gstars = @inbounds @views ctf.gstar[mask]
+    f = @inbounds @views ctf.f[mask]
+
+    lower, upper = _split_branches(gstars, f)
+
+    # interpolate
+    f1 = _make_sorted_interpolation(first.(lower), last.(lower))
+    f2 = _make_sorted_interpolation(first.(upper), last.(upper))
+
+    InterpolatedCunninghamTransferBranches(f1, f2, extrema(ctf.gs), ctf.rₑ)
+end
+
+function _integrate_tranfer_function_branches(
+    ictb::InterpolatedCunninghamTransferBranches,
+    g,
+    intensity,
+)
+    gmin, gmax = ictb.g_extrema
+    if (g > gmax - 1e-4) || (g < gmin + 1e-4)
+        return 0.0
+    end
+    gs = (g - gmin) / (gmax - gmin)
+
+    f_lower = ictb.lower(gs)
+    f_upper = ictb.upper(gs)
+
+    (f_lower + f_upper) * g^2 * π * ictb.radius * intensity(g, ictb.radius) /
+    √(gs * (1 - gs))
+end
+
+function _integrate_tranfer_function_branches(
+    ictbs::AbstractVector{<:InterpolatedCunninghamTransferBranches},
+    g,
+    intensity,
+)
+    sum(i -> _integrate_tranfer_function_branches(i, g, intensity), ictbs)
+end
+
 export impact_parameters_for_radius,
     redshift_ratio,
     jacobian_∂αβ_∂gr,
     gstar,
     cunningham_transfer_function,
-    CunninghamTransferFunction
+    CunninghamTransferFunction,
+    InterpolatedCunninghamTransferBranches
