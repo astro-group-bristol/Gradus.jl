@@ -2,7 +2,7 @@ module Gradus
 
 import Base: in
 using Base.Threads: @threads
-using LinearAlgebra: ×, ⋅, norm, det
+using LinearAlgebra: ×, ⋅, norm, det, dot
 
 using DocStringExtensions
 using Parameters
@@ -18,6 +18,7 @@ using FiniteDifferences
 using Roots
 using ProgressMeter
 using Buckets
+using FastGaussQuadrature
 
 using Accessors: @set
 using Tullio: @tullio

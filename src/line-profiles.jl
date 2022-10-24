@@ -3,14 +3,20 @@ struct CunninghamLineProfile <: AbstractLineProfileAlgorithm end
 struct BinnedLineProfile <: AbstractLineProfileAlgorithm end
 
 @inline function lineprofile(
-    intensity_func::Function,
+    ε::Function,
     m::AbstractMetricParams,
     u,
     d::AbstractAccretionGeometry;
     algorithm::AbstractLineProfileAlgorithm = CunninghamLineProfile(),
     kwargs...,
 )
-    lineprofile(algorithm, m, u, d, intensity_func; kwargs...)
+    lineprofile(algorithm, m, u, d, ε; kwargs...)
+end
+
+function _change_interval(f, a, b)
+    α = (b - a) / 2
+    β = (a + b) / 2
+    (α, x -> f(α * x + β))
 end
 
 function lineprofile(
@@ -18,27 +24,35 @@ function lineprofile(
     m::AbstractMetricParams,
     u,
     d::AbstractAccretionGeometry,
-    intensity;
+    ε;
     num_points = 100,
-    radii = range(isco(m), 30.0, 100),
+    min_re = isco(m),
+    max_re = 20,
+    num_re = 100,
     bins = range(0.0, 1.5, 100),
     kwargs...,
 )
-    ictbs = map(radii) do re
+    radii, w = gausslegendre(num_re)
+    f = rₑ -> begin
         ctf = cunningham_transfer_function(
             m,
             u,
             d,
-            re,
+            rₑ,
             2000.0;
             num_points = num_points,
-            offset_max = 1.5 * re + 1.0,
+            offset_max = rₑ + 20.0,
             kwargs...,
         )
-        _interpolate_branches(ctf)
+        Gradus._interpolate_branches(ctf)
     end
+
+    α, 𝔉 = Gradus._change_interval(f, min_re, max_re)
+    ictbs = map(𝔉, radii)
+    emissivities = map(i -> ε(i.radius), ictbs)
+
     y = map(bins) do i
-        _integrate_tranfer_function_branches(ictbs, i, intensity)
+        α * dot(w, emissivities .* Gradus._integrate_tranfer_function_branches(ictbs, i))
     end
 
     (bins, y)

@@ -167,7 +167,7 @@ function cunningham_transfer_function(
     rₑ,
     max_time;
     num_points = 1000,
-    finite_diff_order = 5,
+    finite_diff_order = 6,
     redshift_pf::PointFunction = Gradus.ConstPointFunctions.redshift,
     offset_max = 20.0,
     zero_atol = 1e-7,
@@ -248,6 +248,7 @@ function _make_sorted_interpolation(g, f)
     I = sortperm(g)
     g = @inbounds g[I]
     f = @inbounds f[I]
+    Interpolations.deduplicate_knots!(g)
     linear_interpolation(g, f, extrapolation_bc = Line())
 end
 
@@ -270,7 +271,6 @@ end
 function _integrate_tranfer_function_branches(
     ictb::InterpolatedCunninghamTransferBranches,
     g,
-    intensity,
 )
     gmin, gmax = ictb.g_extrema
     if (g > gmax - 1e-4) || (g < gmin + 1e-4)
@@ -281,16 +281,14 @@ function _integrate_tranfer_function_branches(
     f_lower = ictb.lower(gs)
     f_upper = ictb.upper(gs)
 
-    (f_lower + f_upper) * g^2 * π * ictb.radius * intensity(g, ictb.radius) /
-    √(gs * (1 - gs))
+    (f_lower + f_upper) * g^3 * π * ictb.radius / (√(gs * (1 - gs)) * (gmax - gmin))
 end
 
 function _integrate_tranfer_function_branches(
     ictbs::AbstractVector{<:InterpolatedCunninghamTransferBranches},
     g,
-    intensity,
 )
-    sum(i -> _integrate_tranfer_function_branches(i, g, intensity), ictbs)
+    map(i -> _integrate_tranfer_function_branches(i, g), ictbs)
 end
 
 export impact_parameters_for_radius,
