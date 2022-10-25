@@ -1,15 +1,15 @@
 using Gradus
 using StaticArrays
 using Plots
-ENV["GKSwstype"]="nul"
-Plots.default(show=false)
+ENV["GKSwstype"] = "nul"
+Plots.default(show = false)
 
 using StatsBase
 
 function ex_tracing()
-    m = JohannsenPsaltisAD(M=1.0, a=0.6, ϵ3=2.0)
+    m = JohannsenPsaltisAD(M = 1.0, a = 0.6, ϵ3 = 2.0)
     # observer position
-    u = @SVector [0.0, 1000.0, π/2, 0.0]
+    u = @SVector [0.0, 1000.0, π / 2, 0.0]
 
     # set up impact parameter space
     α = collect(range(-10.0, 10.0, 20))
@@ -19,10 +19,7 @@ function ex_tracing()
     vs = map_impact_parameters(m, u, α, β)
     us = [u for _ in vs]
 
-    sols = tracegeodesics(
-        m, us, vs, (0.0, 2000.0);
-        abstol = 1e-12, reltol = 1e-12
-    )
+    sols = tracegeodesics(m, us, vs, (0.0, 2000.0); abstol = 1e-12, reltol = 1e-12)
 
     # only use the subset of the solution we're plotting
     trange = range(990, 1035, 5000)
@@ -36,14 +33,14 @@ function ex_tracing()
 
     # plot event horizon 
     r0 = inner_radius(m)
-    plot!(p, collect(range(0, 2π, 200)), [r0 for _ in 1:200], color = :black, linewidth = 2)
+    plot!(p, collect(range(0, 2π, 200)), [r0 for _ = 1:200], color = :black, linewidth = 2)
 
     savefig(p, "example-tracing.svg")
 end
 
 function ex_redshift()
     # metric and metric parameters
-    m = BoyerLindquistAD(M=1.0, a=1.0)
+    m = BoyerLindquistAD(M = 1.0, a = 1.0)
     # observer position
     u = @SVector [0.0, 1000.0, deg2rad(60), 0.0]
     # accretion disc
@@ -63,7 +60,7 @@ function ex_redshift()
         image_width = 700,
         image_height = 240,
         verbose = true,
-        pf = pf
+        pf = pf,
     )
 
     p = heatmap(img)
@@ -76,7 +73,7 @@ function ex_redshift()
     # transpose to iron-line
     data = redshift_data .* 6.4
 
-    x_bins = range(0.0, 10.0, 100) 
+    x_bins = range(0.0, 10.0, 100)
     lineprof = fit(Histogram, data, x_bins)
 
     p = plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)
@@ -85,7 +82,7 @@ end
 
 function ex_interpolating()
     # metric and metric parameters
-    m = BoyerLindquistAD(M=1.0, a=0.4)
+    m = BoyerLindquistAD(M = 1.0, a = 0.4)
     # observer's initial position
     u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
     # accretion disc
@@ -107,7 +104,7 @@ function ex_interpolating()
         image_width = 700,
         image_height = 240,
         verbose = true,
-        pf = pf
+        pf = pf,
     )
 
     p = heatmap(img)
@@ -115,14 +112,14 @@ function ex_interpolating()
 end
 
 function ex_circular_orbits()
-    m = BoyerLindquistAD(M=1.0, a=0.8)
+    m = BoyerLindquistAD(M = 1.0, a = 0.8)
 
-    p = plot(aspect_ratio=1)
+    p = plot(aspect_ratio = 1)
 
     for r in [3.0, 4.0, 5.0, 6.0]
         v = CircularOrbits.fourvelocity(m, r)
         # trace the circular orbit
-        path = tracegeodesics(m, @SVector([0.0, r, π/2, 0.0]), v, (0.0, 300.0), μ = 1.0)
+        path = tracegeodesics(m, @SVector([0.0, r, π / 2, 0.0]), v, (0.0, 300.0), μ = 1.0)
         r = [path(t)[2] for t in range(0.0, 100, 200)]
         ϕ = [path(t)[4] for t in range(0.0, 100, 200)]
 
@@ -139,7 +136,7 @@ end
 
 function ex_isco()
     # prepare plot
-    p = plot(legend=:bottomright, ylabel = "E", xlabel = "r", xscale = :log10)
+    p = plot(legend = :bottomright, ylabel = "E", xlabel = "r", xscale = :log10)
 
     # choice of spin to plot energy curves for
     for a in [0.0, 0.4, 0.6]
@@ -161,7 +158,7 @@ function ex_isco()
     end
 
     # overlay onto plot
-    plot!(last.(data), first.(data), color=:black, linestyle=:dash, label="ISCO")
+    plot!(last.(data), first.(data), color = :black, linestyle = :dash, label = "ISCO")
 
     savefig(p, "example-isco.svg")
 end
@@ -182,47 +179,37 @@ function ex_horizon()
         draw_horizon(p, m)
     end
     p
-    
+
     savefig(p, "example-horizon.svg")
 
 
     function calc_exclusion(as, ϵs)
         regions = [
-            is_naked_singularity(JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = ϵ))
-            for a in as, ϵ in ϵs
+            is_naked_singularity(JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = ϵ)) for
+            a in as, ϵ in ϵs
         ]
-    
+
         map(i -> i ? 1.0 : NaN, regions)
     end
-    
+
     # define ranges (small in this example as a little computationally intense)
     as = range(0, 1.0, 40)
     ϵs = range(-10, 10, 40)
-    
+
     img = calc_exclusion(as, ϵs)
-    p = heatmap(
-        as, 
-        ϵs, 
-        img', 
-        color = :black, 
-        colorbar = false, 
-        xlabel = "a", 
-        ylabel = "ϵ"
-    )
+    p = heatmap(as, ϵs, img', color = :black, colorbar = false, xlabel = "a", ylabel = "ϵ")
 
     savefig(p, "example-exclusion.png")
 end
 
 function ex_transfer_functions()
-    m = BoyerLindquistAD(M=1.0, a=0.998)
-    d = GeometricThinDisc(0.0, 200.0, π/2)
+    m = BoyerLindquistAD(M = 1.0, a = 0.998)
+    d = GeometricThinDisc(0.0, 200.0, π / 2)
 
     p = plot(legend = false)
     for angle in [3, 35, 50, 65, 74, 85]
         u = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
-        ctf = cunningham_transfer_function(
-            m, u, d, 4.0, 2000.0
-        )
+        ctf = cunningham_transfer_function(m, u, d, 4.0, 2000.0)
         mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
         @views plot!(p, ctf.gstar[mask], ctf.f[mask])
     end
@@ -236,9 +223,7 @@ function ex_transfer_functions()
     p = plot(legend = false)
     for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
         m = BoyerLindquistAD(1.0, a)
-        ctf = cunningham_transfer_function(
-            m, u, d, 7.0, 2000.0
-        )
+        ctf = cunningham_transfer_function(m, u, d, 7.0, 2000.0)
         mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
         @views plot!(p, ctf.gstar[mask], ctf.f[mask])
     end
@@ -249,20 +234,17 @@ end
 
 function ex_concentric_rings()
     # their papers has a=-a
-    m = BoyerLindquistAD(M=1.0, a=-0.4)
+    m = BoyerLindquistAD(M = 1.0, a = -0.4)
     u = @SVector [0.0, 1000, acos(0.25), 0.0]
     d = GeometricThinDisc(0.0, 100.0, π / 2)
 
     radii = 2.6:1.0:7.6
 
-    p = plot(
-        aspect_ratio = 1,
-        legend = false,
-    )
+    p = plot(aspect_ratio = 1, legend = false)
 
     # crosshair on origin
-    hline!(p, [0.0], color = :black, linestyle=:dash)
-    vline!(p, [0.0], color = :black, linestyle=:dash)
+    hline!(p, [0.0], color = :black, linestyle = :dash)
+    vline!(p, [0.0], color = :black, linestyle = :dash)
 
     for r in radii
         α, β = impact_parameters_for_radius(m, u, d, r)
@@ -303,8 +285,8 @@ function ex_doughnut()
         verbose = true,
     )
 
-    p = heatmap(img, aspect_ratio=1)
-    savefig(p, "example-thick-disc-doughtnut.png") 
+    p = heatmap(img, aspect_ratio = 1)
+    savefig(p, "example-thick-disc-doughtnut.png")
 end
 
 ex_tracing()
