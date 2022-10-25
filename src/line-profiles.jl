@@ -32,7 +32,7 @@ function lineprofile(
     bins = range(0.0, 1.5, 100),
     kwargs...,
 )
-    radii, w = gausslegendre(num_re)
+    radii, w = gausslobatto(num_re)
     f = rₑ -> begin
         ctf = cunningham_transfer_function(
             m,
@@ -48,11 +48,16 @@ function lineprofile(
     end
 
     α, 𝔉 = Gradus._change_interval(f, min_re, max_re)
-    ictbs = map(𝔉, radii)
-    emissivities = map(i -> ε(i.radius), ictbs)
 
+    bin_extrema = extrema(bins)
     y = map(bins) do i
-        α * dot(w, emissivities .* Gradus._integrate_tranfer_function_branches(ictbs, i))
+        α * sum(
+            (i, r) -> begin
+                ictb = 𝔉(r)
+                w[i] * ε(ictb.radius) * _integrate_tranfer_function_branches(ictb, i, bin_extrema...)
+            end,
+            enumerate(radii)
+        )
     end
 
     (bins, y)

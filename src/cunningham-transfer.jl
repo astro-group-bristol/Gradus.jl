@@ -147,8 +147,9 @@ function jacobian_∂αβ_∂gr(
     end
 end
 
-function gstar(g::AbstractArray)
-    gmin, gmax = extrema(g)
+gstar(g::AbstractArray) =
+    gstar(g, extrema(g)...)
+function gstar(g, gmin, gmax)
     Δg = gmax - gmin
     @. (g - gmin) / Δg
 end
@@ -252,9 +253,9 @@ function _make_sorted_interpolation(g, f)
     linear_interpolation(g, f, extrapolation_bc = Line())
 end
 
-function _interpolate_branches(ctf::CunninghamTransferFunction)
+function _interpolate_branches(ctf::CunninghamTransferFunction; offset=1e-4)
     # avoid extrema
-    mask = @. (ctf.gstar > 1e-4) & (ctf.gstar < 1 - 1e-4)
+    mask = @. (ctf.gstar > offset) & (ctf.gstar < 1 - offset)
 
     gstars = @inbounds @views ctf.gstar[mask]
     f = @inbounds @views ctf.f[mask]
@@ -268,27 +269,41 @@ function _interpolate_branches(ctf::CunninghamTransferFunction)
     InterpolatedCunninghamTransferBranches(f1, f2, extrema(ctf.gs), ctf.rₑ)
 end
 
+ _cunning_integrand(f, g, rₑ, gs, gmin, gmax) =
+    f * g^3 * π * rₑ / (√(gs * (1 - gs)) * (gmax - gmin))
+
 function _integrate_tranfer_function_branches(
     ictb::InterpolatedCunninghamTransferBranches,
-    g,
+    g, a, b; offset = 1e-4
 )
     gmin, gmax = ictb.g_extrema
-    if (g > gmax - 1e-4) || (g < gmin + 1e-4)
-        return 0.0
-    end
-    gs = (g - gmin) / (gmax - gmin)
 
+    # limiting approximations
+    if (g > gmax) || (g < gmin)
+        return 0.0
+    elseif (g > gmax - offset) || (g < gmin + offset)
+        g_edge = g < gmax ? gmin + offset : gmax - offset
+
+        gs_edge = gstar(g_edge, gmin, gmax)
+        f1_edge = ictb.lower(gs_edge)
+        f2_edge = ictb.upper(gs_edge)
+        norm = _cunning_integrand(f1_edge + f2_edge, g_edge, ictb.radius, gs_edge, gmin, gmax)
+
+        return 2 * norm * √offset * (√b - √a) * (gmax - gmin)
+    end
+
+    gs = gstar(g, gmin, gmax)
     f_lower = ictb.lower(gs)
     f_upper = ictb.upper(gs)
 
-    (f_lower + f_upper) * g^3 * π * ictb.radius / (√(gs * (1 - gs)) * (gmax - gmin))
+    _cunning_integrand(f_lower + f_upper, g, ictb.radius, gs, gmin, gmax)
 end
 
 function _integrate_tranfer_function_branches(
     ictbs::AbstractVector{<:InterpolatedCunninghamTransferBranches},
-    g,
+    g, a, b
 )
-    map(i -> _integrate_tranfer_function_branches(i, g), ictbs)
+    map(i -> _integrate_tranfer_function_branches(i, g, a, b), ictbs)
 end
 
 export impact_parameters_for_radius,
