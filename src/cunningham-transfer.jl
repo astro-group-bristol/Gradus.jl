@@ -221,60 +221,87 @@ cunningham_transfer_function(
     js::AbstractArray,
 ) = @. (1 / (π * rₑ)) * gs * √(gstars * (1 - gstars)) * js
 
-function cunningham_transfer_function(
+function cunningham_transfer_function!(
+    αs,
+    βs,
+    Js::AbstractVector{T},
     m::AbstractMetricParams,
     u,
     d::AbstractAccretionGeometry,
     rₑ,
     max_time;
-    num_points = 1000,
     finite_diff_order = 6,
-    redshift_pf::PointFunction = Gradus.ConstPointFunctions.redshift,
+    redshift_pf::PointFunction = ConstPointFunctions.redshift,
     offset_max = 20.0,
     zero_atol = 1e-7,
     tracer_kwargs...,
-)
-    αs, βs = Gradus.impact_parameters_for_radius(
+) where {T}
+    impact_parameters_for_radius!(
+        αs,
+        βs,
         m,
         u,
         d,
         rₑ;
-        N = num_points,
         offset_max = offset_max,
         zero_atol = zero_atol,
         tracer_kwargs...,
     )
+    # filter and trim arrays
+    mask = @. !(isnan(αs) | isnan(βs))
+    _αs = @views αs[mask]
+    _βs = @views βs[mask]
 
-    gs = redshift_ratio(
+    N = length(_αs)
+    _Js = @views Js[1:N]
+
+    gs = zeros(T, N)
+    redshift_ratio!(
+        gs,
         m,
         u,
         d,
         max_time,
-        αs,
-        βs;
+        _αs,
+        _βs;
         redshift_pf = redshift_pf,
         tracer_kwargs...,
     )
-    gstars = gstar(gs)
 
-    js = jacobian_∂αβ_∂gr(
+    jacobian_∂αβ_∂gr!(
+        _Js,
         m,
         u,
         d,
         max_time,
         gs,
-        αs,
-        βs;
+        _αs,
+        _βs;
         order = finite_diff_order,
         redshift_pf = redshift_pf,
         tracer_kwargs...,
     )
 
-    f = cunningham_transfer_function(rₑ, gs, gstars, js)
+    gstars = gstar(gs)
+    f = cunningham_transfer_function(rₑ, gs, gstars, _Js)
 
     # package and return
-    # todo: maybe already interpolate here?
     CunninghamTransferFunction(rₑ, gs, gstars, f)
+end
+
+function cunningham_transfer_function(
+    m::AbstractMetricParams{T},
+    u,
+    d::AbstractAccretionGeometry,
+    rₑ,
+    max_time;
+    num_points = 1000,
+    kwargs...,
+) where {T}
+    α = zeros(T, num_points)
+    β = zeros(T, num_points)
+    Js = zeros(T, num_points)
+    cunningham_transfer_function!(α, β, Js, m, u, d, rₑ, max_time; kwargs...)
 end
 
 function _split_branches(gstars::AbstractArray{T}, f::AbstractArray{T}) where {T}

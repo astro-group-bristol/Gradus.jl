@@ -21,7 +21,7 @@ end
 
 function lineprofile(
     ::CunninghamLineProfile,
-    m::AbstractMetricParams,
+    m::AbstractMetricParams{T},
     u,
     d::AbstractAccretionGeometry,
     ε;
@@ -31,36 +31,46 @@ function lineprofile(
     num_re = 100,
     bins = range(0.0, 1.5, 100),
     kwargs...,
-)
+) where {T}
+    # Gauss-Lobatto to include [-1, 1]
     radii, w = gausslobatto(num_re)
-    f = rₑ -> begin
-        # ugh this feels like such a bad practice
-        # calling GC on young objects to clear the temporarily allocated memory
-        GC.gc(false)
-        @show rₑ
-        ctf = cunningham_transfer_function(
-            m,
-            u,
-            d,
-            rₑ,
-            2000.0;
-            num_points = num_points,
-            offset_max = rₑ + 20.0,
-            kwargs...,
-        )
-        Gradus._interpolate_branches(ctf)
-    end
 
-    α, 𝔉 = Gradus._change_interval(f, min_re, max_re)
-    ictbs = 𝔉.(radii)
+    αs = zeros(T, num_points)
+    βs = zeros(T, num_points)
+    Js = zeros(T, num_points)
+    f =
+        rₑ -> begin
+            # this feels like such a bad practice
+            # calling GC on young objects to clear the temporarily allocated memory
+            # but we get a significant speedup
+            GC.gc(false)
+            ctf = cunningham_transfer_function!(
+                αs,
+                βs,
+                Js,
+                m,
+                u,
+                d,
+                rₑ,
+                2000.0;
+                offset_max = rₑ + 20.0,
+                kwargs...,
+            )
+            Gradus._interpolate_branches(ctf)
+        end
+
+    α, 𝔉 = _change_interval(f, min_re, max_re)
+    ictbs = map(𝔉, radii)
 
     bin_extrema = extrema(bins)
     y = map(bins) do g
         α * sum(
             ((i, ictb),) -> begin
-                w[i] * ε(ictb.radius) * _integrate_tranfer_function_branches(ictb, g, bin_extrema...)
+                w[i] *
+                ε(ictb.radius) *
+                _integrate_tranfer_function_branches(ictb, g, bin_extrema...)
             end,
-            enumerate(ictbs)
+            enumerate(ictbs),
         )
     end
 
