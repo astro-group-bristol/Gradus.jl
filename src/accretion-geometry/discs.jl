@@ -148,7 +148,7 @@ end
         eddington_ratio = 0.3,
         η = nothing,
         contra_rotating = false,
-    ) 
+    )
 
 The classic Shakura & Sunyaev (1973) accretion disc model, with height given by ``2H``, where
 

@@ -19,6 +19,7 @@ using Roots
 using ProgressMeter
 using Buckets
 using FastGaussQuadrature
+using MuladdMacro
 
 using Accessors: @set
 using Tullio: @tullio

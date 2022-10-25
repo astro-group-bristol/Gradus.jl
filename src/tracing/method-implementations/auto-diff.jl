@@ -67,7 +67,7 @@ metric = [
 inv(metric)
 ```
 """
-@fastmath function inverse_metric_components(g_comp)
+@muladd @fastmath function inverse_metric_components(g_comp)
     @inbounds let g1 = g_comp[1],
         g2 = g_comp[2],
         g3 = g_comp[3],
@@ -155,7 +155,7 @@ jacobian = (j0, j1_mat, j2_mat, j0)
 @tullio δxδλ[i] := -v[j] * Γ[i, j, k] * v[k]
 ```
 """
-@fastmath function compute_geodesic_equation(ginv, j1, j2, v)
+@muladd @fastmath function compute_geodesic_equation(ginv, j1, j2, v)
     @inbounds let gi1 = ginv[1],
         gi2 = ginv[2],
         gi3 = ginv[3],
@@ -215,7 +215,7 @@ This function should rarely be directly called, and instead is invoked by [`cons
 Limitations:
 - currenly pre-supposes static, axis-symmetric metric.
 """
-@fastmath function constrain_time(g_comp, v, μ = 0.0, positive::Bool = true)
+@muladd @fastmath function constrain_time(g_comp, v, μ = 0.0, positive::Bool = true)
     @inbounds begin
         discriminant = (
             -g_comp[1] * g_comp[2] * v[2]^2 - g_comp[1] * g_comp[3] * v[3]^2 -
@@ -247,7 +247,7 @@ Calculate the value and Jacobian elements of the metric with respect to ``r`` an
 
 Limitations:
 - currenly pre-supposes static, axis-symmetric metric.
-    
+
 ## Notes
 
 Function body is equivalent to

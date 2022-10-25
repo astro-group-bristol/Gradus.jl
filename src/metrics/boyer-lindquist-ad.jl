@@ -1,24 +1,30 @@
 module __BoyerLindquistAD
 using ..StaticArrays
+using ..MuladdMacro
 
-@fastmath Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
-@fastmath Δ(r, R, a) = r^2 - R * r + a^2
+@muladd @fastmath begin
+    Σ(r, a, θ) = begin
+        cosθ = cos(θ)
+        r*r + a*a * cosθ*cosθ
+    end
+    Δ(r, R, a) = r*r - R * r + a*a
 
-# the way this function must be defined is a little complex
-# but helps with type-stability
-@fastmath function metric_components(M, a, rθ)
-    (r, θ) = rθ
-    R = 2M
-    Σ₀ = Σ(r, a, θ)
-    sinθ2 = sin(θ)^2
+    # the way this function must be defined is a little complex
+    # but helps with type-stability
+    function metric_components(M, a, rθ)
+        (r, θ) = rθ
+        R = 2M
+        Σ₀ = Σ(r, a, θ)
+        sinθ2 = sin(θ)^2
 
-    tt = -(1 - (R * r) / Σ₀)
-    rr = Σ₀ / Δ(r, R, a)
-    θθ = Σ₀
-    ϕϕ = sinθ2 * (r^2 + a^2 + (sinθ2 * R * r * a^2) / Σ₀)
+        tt = -(1 - (R * r) / Σ₀)
+        rr = Σ₀ / Δ(r, R, a)
+        θθ = Σ₀
+        ϕϕ = sinθ2 * (r * r + a * a + (sinθ2 * R * r * a * a) / Σ₀)
 
-    tϕ = (-R * r * a * sinθ2) / Σ₀
-    @SVector [tt, rr, θθ, ϕϕ, tϕ]
+        tϕ = (-R * r * a * sinθ2) / Σ₀
+        @SVector [tt, rr, θθ, ϕϕ, tϕ]
+    end
 end
 
 end # module
