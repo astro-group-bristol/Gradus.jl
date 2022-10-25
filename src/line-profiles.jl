@@ -34,6 +34,10 @@ function lineprofile(
 )
     radii, w = gausslobatto(num_re)
     f = rₑ -> begin
+        # ugh this feels like such a bad practice
+        # calling GC on young objects to clear the temporarily allocated memory
+        GC.gc(false)
+        @show rₑ
         ctf = cunningham_transfer_function(
             m,
             u,
@@ -48,15 +52,15 @@ function lineprofile(
     end
 
     α, 𝔉 = Gradus._change_interval(f, min_re, max_re)
+    ictbs = 𝔉.(radii)
 
     bin_extrema = extrema(bins)
-    y = map(bins) do i
+    y = map(bins) do g
         α * sum(
-            (i, r) -> begin
-                ictb = 𝔉(r)
-                w[i] * ε(ictb.radius) * _integrate_tranfer_function_branches(ictb, i, bin_extrema...)
+            ((i, ictb),) -> begin
+                w[i] * ε(ictb.radius) * _integrate_tranfer_function_branches(ictb, g, bin_extrema...)
             end,
-            enumerate(radii)
+            enumerate(ictbs)
         )
     end
 
