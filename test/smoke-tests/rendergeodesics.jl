@@ -43,7 +43,7 @@ end
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
             # last computed 15/11/2022: continuous callback for disc intersection
-            [90629.67068537966, 90491.90944311548, 86277.8210033628, 39094.80412600604],
+            [90629.67068537966, 90558.28684240118, 86277.8210033628, 39094.80412600604],
         )
             img = rendergeodesics(
                 m,
