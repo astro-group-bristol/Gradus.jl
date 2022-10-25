@@ -11,6 +11,7 @@ include("smoke-tests/circular-orbits.jl")
 include("smoke-tests/disc-profiles.jl")
 include("smoke-tests/special-radii.jl")
 include("smoke-tests/cunningham-transfer-functions.jl")
+include("smoke-tests/line-profiles.jl")
 
 include("unit/gradusbase.geometry.jl")
 
