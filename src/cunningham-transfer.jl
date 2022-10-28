@@ -484,7 +484,7 @@ end
 end
 
 function _calculate_interpolated_transfer_branches(
-    m,
+    m::AbstractMetricParams{T},
     u,
     d,
     radii;
@@ -492,7 +492,7 @@ function _calculate_interpolated_transfer_branches(
     verbose = false,
     offset = 1e-7,
     kwargs...,
-)
+) where {T}
     # pre-allocate arrays
     αs = zeros(T, num_points)
     βs = zeros(T, num_points)
