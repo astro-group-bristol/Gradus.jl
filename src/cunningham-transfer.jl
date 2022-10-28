@@ -55,12 +55,64 @@ function find_offset_for_radius(
         end
         radius - r
     end
-
     r = Roots.find_zero(f, (0.0, offset_max); atol = zero_atol)
     if !isapprox(f(r), 0.0, atol = 10 * zero_atol)
         return NaN
     end
     r
+end
+
+function _find_extremal_redshift_with_guess(
+    m,
+    u,
+    d,
+    rₑ,
+    g_guess,
+    θ_guess;
+    redshift_pf = Gradus.ConstPointFunctions.redshift,
+    δθ = 1e-1,
+    minimal = true,
+    zero_atol = 1e-7,
+    offset_max = 20.0,
+    kwargs...,
+)
+    f =
+        θ -> begin
+            r_offset = find_offset_for_radius(
+                m,
+                u,
+                d,
+                rₑ,
+                θ;
+                zero_atol = zero_atol,
+                offset_max = offset_max,
+                kwargs...,
+            )
+            if !isnan(r_offset)
+                gp = integrate_single_geodesic(m, u, d, r_offset, θ; kwargs...)
+                g = redshift_pf(m, gp, gp.t2)
+                minimal ? g : -g
+            else
+                NaN
+                # minimal ? g_guess : -g_guess
+            end
+        end
+
+    res = optimize(f, θ_guess - δθ, θ_guess + δθ)
+    θopt = Optim.minimizer(res)
+    (
+        res,
+        find_offset_for_radius(
+            m,
+            u,
+            d,
+            rₑ,
+            θopt;
+            zero_atol = zero_atol,
+            offset_max = offset_max,
+            kwargs...,
+        ),
+    )
 end
 
 function impact_parameters_for_radius!(
@@ -155,6 +207,8 @@ function jacobian_∂αβ_∂gr!(
     d,
     max_time,
     gs,
+    gmin,
+    gmax,
     αs,
     βs;
     order = 5,
@@ -167,9 +221,6 @@ function jacobian_∂αβ_∂gr!(
         )
     end
 
-    gmin, gmax = extrema(gs)
-    gstar(g) = (g - gmin) / (gmax - gmin)
-
     f =
         ((α, β),) -> begin
             v = map_impact_parameters(m, u, α, β)
@@ -178,7 +229,7 @@ function jacobian_∂αβ_∂gr!(
             gp = getgeodesicpoint(m, sol)
             g = redshift_pf(m, gp, 2000.0)
             # return r and g*
-            @SVector [gp.u2[2], gstar(g)]
+            @SVector [gp.u2[2], gstar(g, gmin, gmax)]
         end
 
     # choice between FiniteDifferences and FiniteDiff is tricky
@@ -199,12 +250,14 @@ function jacobian_∂αβ_∂gr(
     d,
     max_time,
     gs::AbstractArray{T},
+    gmin,
+    gmax,
     αs::AbstractArray{T},
     βs;
     kwargs...,
 ) where {T}
     Js = zeros(T, size(αs))
-    jacobian_∂αβ_∂gr!(Js, m, u, d, max_time, gs, αs, βs; kwargs...)
+    jacobian_∂αβ_∂gr!(Js, m, u, d, max_time, gs, gmin, gmax, αs, βs; kwargs...)
     Js
 end
 
@@ -214,7 +267,13 @@ function gstar(g, gmin, gmax)
     @. (g - gmin) / Δg
 end
 
-cunningham_transfer_function(
+g_to_gstar(args...) = gstar(args...)
+function gstar_to_g(gs, gmin, gmax)
+    Δg = gmax - gmin
+    @. gs * Δg + gmin
+end
+
+@muladd cunningham_transfer_function(
     rₑ::Number,
     gs::AbstractArray,
     gstars::AbstractArray,
@@ -268,6 +327,7 @@ function cunningham_transfer_function!(
         tracer_kwargs...,
     )
 
+    gmin, gmax = extrema(gs)
     jacobian_∂αβ_∂gr!(
         _Js,
         m,
@@ -275,6 +335,8 @@ function cunningham_transfer_function!(
         d,
         max_time,
         gs,
+        gmin,
+        gmax,
         _αs,
         _βs;
         order = finite_diff_order,
@@ -282,7 +344,7 @@ function cunningham_transfer_function!(
         tracer_kwargs...,
     )
 
-    gstars = gstar(gs)
+    gstars = gstar(gs, gmin, gmax)
     f = cunningham_transfer_function(rₑ, gs, gstars, _Js)
 
     # package and return
@@ -315,29 +377,33 @@ function _split_branches(gstars::AbstractArray{T}, f::AbstractArray{T}) where {T
         else
             decreasing = false
         end
-        gprev = g
         if decreasing
-            push!(lower, (g, f[i]))
-        else
             push!(upper, (g, f[i]))
+        else
+            push!(lower, (g, f[i]))
         end
+        gprev = g
     end
-    upper, lower
+    lower, upper
 end
 
 struct InterpolatedCunninghamTransferBranches{T,I}
     lower::I
     upper::I
-    g_extrema::Tuple{T,T}
     radius::T
+    g_extrema::Tuple{T,T}
+    g_limits::Tuple{T,T}
 end
+
+_gs_in_limits(ictb, gs) = ictb.g_limits[2] > gs > ictb.g_limits[1]
 
 function _make_sorted_interpolation(g, f)
     I = sortperm(g)
-    g = @inbounds g[I]
-    f = @inbounds f[I]
-    Interpolations.deduplicate_knots!(g)
-    linear_interpolation(g, f, extrapolation_bc = Line())
+    _g = @inbounds g[I]
+    _f = @inbounds f[I]
+    # Interpolations.deduplicate_knots!(_g)
+    # linear_interpolation(_g, _f, extrapolation_bc = NaN)
+    DataInterpolations.LinearInterpolation(_f, _g)
 end
 
 function _interpolate_branches(ctf::CunninghamTransferFunction; offset = 1e-4)
@@ -349,60 +415,149 @@ function _interpolate_branches(ctf::CunninghamTransferFunction; offset = 1e-4)
 
     lower, upper = _split_branches(gstars, f)
 
-    # interpolate
-    f1 = _make_sorted_interpolation(first.(lower), last.(lower))
-    f2 = _make_sorted_interpolation(first.(upper), last.(upper))
+    gs_lower = first.(lower)
+    gs_upper = first.(upper)
+    # valid interval
+    gs_min_limit = max(minimum(gs_lower), minimum(gs_upper))
+    gs_max_limit = min(maximum(gs_lower), maximum(gs_upper))
 
-    InterpolatedCunninghamTransferBranches(f1, f2, extrema(ctf.gs), ctf.rₑ)
+    # interpolate
+    f1 = _make_sorted_interpolation(gs_lower, last.(lower))
+    f2 = _make_sorted_interpolation(gs_upper, last.(upper))
+
+    InterpolatedCunninghamTransferBranches(
+        f1,
+        f2,
+        ctf.rₑ,
+        extrema(ctf.gs),
+        (gs_min_limit, gs_max_limit),
+    )
 end
 
-_cunning_integrand(f, g, rₑ, gs, gmin, gmax) =
+@muladd _cunning_integrand(f, g, rₑ, gs, gmin, gmax) =
     f * g^3 * π * rₑ / (√(gs * (1 - gs)) * (gmax - gmin))
 
-function _integrate_tranfer_function_branches(
-    ictb::InterpolatedCunninghamTransferBranches,
-    g,
-    a,
-    b;
-    offset = 1e-4,
-)
-    gmin, gmax = ictb.g_extrema
+function integrate_transfer_function(
+    ε,
+    ictbs::Vector{<:InterpolatedCunninghamTransferBranches{T1}},
+    bins,
+) where {T1}
+    # global min and max
+    ggmin = maximum(i -> first(i.g_limits), ictbs)
+    ggmax = minimum(i -> last(i.g_limits), ictbs)
 
-    # limiting approximations
-    if (g > gmax) || (g < gmin)
-        return 0.0
-    elseif (g > gmax - offset) || (g < gmin + offset)
-        g_edge = g < gmax ? gmin + offset : gmax - offset
+    radii = map(i -> i.radius, ictbs)
 
-        gs_edge = gstar(g_edge, gmin, gmax)
-        f1_edge = ictb.lower(gs_edge)
-        f2_edge = ictb.upper(gs_edge)
-        norm =
-            _cunning_integrand(f1_edge + f2_edge, g_edge, ictb.radius, gs_edge, gmin, gmax)
+    r_low, r_high = extrema(radii)
 
-        return 2 * norm * √offset * (√b - √a) * (gmax - gmin)
+    segbuf = QuadGK.alloc_segbuf(T1, eltype(bins))
+    y = map(eachindex(@view(bins[1:end-1]))) do index
+        # bin edges
+        bin_low = bins[index]
+        bin_high = bins[index+1]
+        # calculate area under bin
+        integrated_bin_for_radii =
+            _areas_under_transfer_functions(ε, ictbs, bin_low, bin_high, ggmin, ggmax)
+
+        # interpolate across different radii
+        intp = DataInterpolations.LinearInterpolation(integrated_bin_for_radii, radii)
+        # use (smooth) interpolation to integrate fully
+        res::T1, _ = quadgk(intp, r_low, r_high; segbuf = segbuf, order = 4)
+        res
     end
 
-    gs = gstar(g, gmin, gmax)
-    f_lower = ictb.lower(gs)
-    f_upper = ictb.upper(gs)
-
-    _cunning_integrand(f_lower + f_upper, g, ictb.radius, gs, gmin, gmax)
+    (bins, y)
 end
 
-function _integrate_tranfer_function_branches(
-    ictbs::AbstractVector{<:InterpolatedCunninghamTransferBranches},
-    g,
-    a,
-    b,
+@muladd function _cunningham_line_profile_integrand(ictb)
+    gs -> begin
+        if !Gradus._gs_in_limits(ictb, gs)
+            0.0
+        else
+            gmin, gmax = ictb.g_extrema
+            g = gstar_to_g(gs, gmin, gmax)
+            w = g^3 / √(gs * (1 - gs))
+            f = ictb.lower(gs) + ictb.upper(gs)
+            w * f / (gmax - gmin)
+        end
+    end
+end
+
+function _calculate_interpolated_transfer_branches(
+    m,
+    u,
+    d,
+    radii;
+    num_points = 100,
+    verbose = false,
+    offset = 1e-7,
+    kwargs...,
 )
-    map(i -> _integrate_tranfer_function_branches(i, g, a, b), ictbs)
+    # pre-allocate arrays
+    αs = zeros(T, num_points)
+    βs = zeros(T, num_points)
+    Js = zeros(T, num_points)
+
+    progress_bar = init_progress_bar("Transfer functions:", length(radii), verbose)
+
+    # IILF for calculating the interpolated branches
+    𝔉 =
+        rₑ -> begin
+            # this feels like such a bad practice
+            # calling GC on young objects to clear the temporarily allocated memory
+            # but we get a significant speedup
+            GC.gc(false)
+            ctf = cunningham_transfer_function!(
+                αs,
+                βs,
+                Js,
+                m,
+                u,
+                d,
+                rₑ,
+                2000.0;
+                offset_max = 2rₑ + 20.0,
+                kwargs...,
+            )
+            ProgressMeter.next!(progress_bar)
+            _interpolate_branches(ctf; offset = offset)
+        end
+
+    # calculate interpolated transfer functions for each emission radius
+    map(𝔉, radii)
+end
+
+function _areas_under_transfer_functions(
+    ε,
+    ictbs::Vector{<:InterpolatedCunninghamTransferBranches{T1}},
+    bin_low::T2,
+    bin_high::T2,
+    ggmin,
+    ggmax,
+) where {T1,T2}
+    segbuf = QuadGK.alloc_segbuf(T1, T2)
+    map(ictbs) do ictb
+        𝒮 = _cunningham_line_profile_integrand(ictb)
+        Sg = g -> begin
+            gs = gstar(g, ictb.g_extrema...)
+            if ggmin < gs < ggmax
+                𝒮(gs)
+            else
+                0.0
+            end
+        end
+        res, _ = quadgk(Sg, bin_low, bin_high; order = 2, segbuf = segbuf)
+        r = ictb.radius
+        res * r * ε(r)
+    end
 end
 
 export impact_parameters_for_radius,
     redshift_ratio,
     jacobian_∂αβ_∂gr,
     gstar,
+    g_to_gstar,
+    gstar_to_g,
     cunningham_transfer_function,
     CunninghamTransferFunction,
     InterpolatedCunninghamTransferBranches
