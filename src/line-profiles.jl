@@ -116,49 +116,45 @@ end
 
 function integrate_line_profile(
     ε,
-    ictbs::Vector{<:InterpolatedCunninghamTransferBranches},
+    ictbs::Vector{<:InterpolatedCunninghamTransferBranches{T}},
     bins,
-)
+) where {T}
     # global min and max
     ggmin = maximum(i -> first(i.g_limits), ictbs)
     ggmax = minimum(i -> last(i.g_limits), ictbs)
 
-    # radii = map(i -> i.radius, ictbs)
-    # y = map(eachindex(@view(bins[1:end-1]))) do index
-    #     interpolant = map()
-    # end
-
-    # integrate for each energy bin
-    ℐ =
-        index -> @inbounds begin
-            bin_low = bins[index]
-            bin_high = bins[index+1]
-
-            𝒮 = ictb -> begin
-                S = _cunningham_line_profile_integrand(ictb)
-                Sg = g -> begin
-                    gs = gstar(g, ictb.g_extrema...)
-                    if ggmin < gs < ggmax
-                        S(gs)
-                    else
-                        0.0
-                    end
-                end
-                res, _ = quadgk(Sg, bin_low, bin_high)
-                res * ictb.radius * ε(ictb.radius)
-            end
-
-            DataInterpolations.LinearInterpolation(map(𝒮, ictbs), radii)
-        end
-
-    interpolants = map(ℐ, eachindex(@view(bins[1:end-1])))
+    radii = map(i -> i.radius, ictbs)
 
     r_low, r_high = extrema(radii)
-    y = map(interpolants) do f
-        res, _ = quadgk(r -> f(r), r_low, r_high)
+
+    y = map(eachindex(@view(bins[1:end-1]))) do index
+        bin_low = bins[index]
+        bin_high = bins[index+1]
+        integrated_bin_for_radii =
+            _areas_under_transfer_functions(ε, ictbs, bin_low, bin_high, ggmin, ggmax)
+        intp = DataInterpolations.LinearInterpolation(integrated_bin_for_radii, radii)
+        res, _ = quadgk(intp, r_low, r_high)
         res
     end
+
     (bins, y)
+end
+
+function _areas_under_transfer_functions(ε, ictbs, bin_low, bin_high, ggmin, ggmax)
+    map(ictbs) do ictb
+        𝒮 = _cunningham_line_profile_integrand(ictb)
+        Sg = g -> begin
+            gs = gstar(g, ictb.g_extrema...)
+            if ggmin < gs < ggmax
+                𝒮(gs)
+            else
+                0.0
+            end
+        end
+        res, _ = quadgk(Sg, bin_low, bin_high)
+        r = ictb.radius
+        res * r * ε(r)
+    end
 end
 
 export AbstractLineProfileAlgorithm, BinnedLineProfile, CunninghamLineProfile, lineprofile
