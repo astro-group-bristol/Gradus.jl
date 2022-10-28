@@ -14,13 +14,13 @@ struct PlungingInterpolation{M,_interp_type}
         vr = sol[6, :][I]
         vϕ = sol[8, :][I]
 
-        rinterp = LinearInterpolation(r, vt; extrapolation_bc = Line())
+        rinterp = DataInterpolations.LinearInterpolation(vt,r)
 
         new{M,typeof(rinterp)}(
             m,
             rinterp,
-            LinearInterpolation(r, vr; extrapolation_bc = Line()),
-            LinearInterpolation(r, vϕ; extrapolation_bc = Line()),
+            DataInterpolations.LinearInterpolation(vr, r),
+            DataInterpolations.LinearInterpolation(vϕ, r)
         )
     end
 end

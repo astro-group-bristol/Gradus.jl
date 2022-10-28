@@ -36,7 +36,7 @@ function bin_and_interpolate(
     end
 
     y_binned = bucket(X, y, bins; reduction = reduction)
-    linear_interpolation(bins, y_binned, extrapolation_bc = Line())
+    DataInterpolations.LinearInterpolation(y_binned, bins)
 end
 
 export bin_transfer_function
