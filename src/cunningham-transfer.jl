@@ -312,6 +312,7 @@ function cunningham_transfer_function!(
     _βs = @views βs[mask]
 
     N = length(_αs)
+    @assert N > 0 "No valid impact parameters found (all are NaN)."
     _Js = @views Js[1:N]
 
     gs = zeros(T, N)
@@ -437,7 +438,7 @@ end
 @muladd _cunning_integrand(f, g, rₑ, gs, gmin, gmax) =
     f * g^3 * π * rₑ / (√(gs * (1 - gs)) * (gmax - gmin))
 
-function integrate_transfer_function(
+function integrate_transfer_functions(
     ε,
     ictbs::Vector{<:InterpolatedCunninghamTransferBranches{T1}},
     bins,

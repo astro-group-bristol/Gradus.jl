@@ -40,7 +40,7 @@ function lineprofile(
     radii = exp.(range(log(1), log(1000), num_re))
     _max_radii = maximum(radii)
     # rescale inplace
-    @. radii = (radii / _max_radii) * (max_re - min_re) * min_re
+    @. radii = (radii / _max_radii) * (max_re - min_re) + min_re
 
     ictbs = _calculate_interpolated_transfer_branches(
         m,
@@ -53,7 +53,7 @@ function lineprofile(
         kwargs...,
     )
 
-    integrate_transfer_function(ε, ictbs, bins)
+    integrate_transfer_functions(ε, ictbs, bins)
 end
 
 
