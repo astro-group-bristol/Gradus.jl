@@ -11,12 +11,12 @@
             m,
             u,
             d;
-            num_points = 30,
+            num_points = 40,
             bins = x,
-            num_re = 35,
+            num_re = 40,
             max_re = 50,
-            finite_diff_order = 7,
+            finite_diff_order = 5,
         )
-        @test isapprox(15.685722, sum(lp), atol = 1e-4)
+        @test isapprox(0.20282590591902194, sum(lp), atol = 1e-4)
     end
 end
