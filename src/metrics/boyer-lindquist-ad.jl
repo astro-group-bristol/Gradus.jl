@@ -5,9 +5,9 @@ using ..MuladdMacro
 @muladd @fastmath begin
     Σ(r, a, θ) = begin
         cosθ = cos(θ)
-        r*r + a*a * cosθ*cosθ
+        r * r + a * a * cosθ * cosθ
     end
-    Δ(r, R, a) = r*r - R * r + a*a
+    Δ(r, R, a) = r * r - R * r + a * a
 
     # the way this function must be defined is a little complex
     # but helps with type-stability

@@ -26,55 +26,35 @@ function lineprofile(
     d::AbstractAccretionGeometry,
     ε;
     num_points = 100,
-    min_re = isco(m),
+    min_re = isco(m) + 1e-2, # delta to avoid numerical instabilities
     max_re = 20,
     num_re = 100,
     bins = range(0.0, 1.5, 100),
+    verbose = false,
+    offset = 1e-7,
     kwargs...,
 ) where {T}
-    # Gauss-Lobatto to include [-1, 1]
-    radii, w = gausslobatto(num_re)
+    # this is just a placeholder: desire a distribution that favours
+    # small radii over large radii, and this one does that quite well
+    # radii here are emission radii rₑ
+    radii = exp.(range(log(1), log(1000), num_re))
+    _max_radii = maximum(radii)
+    # rescale inplace
+    @. radii = (radii / _max_radii) * (max_re - min_re) + min_re
 
-    αs = zeros(T, num_points)
-    βs = zeros(T, num_points)
-    Js = zeros(T, num_points)
-    f =
-        rₑ -> begin
-            # this feels like such a bad practice
-            # calling GC on young objects to clear the temporarily allocated memory
-            # but we get a significant speedup
-            GC.gc(false)
-            ctf = cunningham_transfer_function!(
-                αs,
-                βs,
-                Js,
-                m,
-                u,
-                d,
-                rₑ,
-                2000.0;
-                offset_max = rₑ + 20.0,
-                kwargs...,
-            )
-            Gradus._interpolate_branches(ctf)
-        end
+    ictbs = _calculate_interpolated_transfer_branches(
+        m,
+        u,
+        d,
+        radii;
+        num_points = num_points,
+        verbose = verbose,
+        offset = offset,
+        kwargs...,
+    )
 
-    α, 𝔉 = _change_interval(f, min_re, max_re)
-    ictbs = map(𝔉, radii)
-
-    bin_extrema = extrema(bins)
-    y = map(bins) do g
-        α * sum(
-            ((i, ictb),) -> begin
-                w[i] *
-                ε(ictb.radius) *
-                _integrate_tranfer_function_branches(ictb, g, bin_extrema...)
-            end,
-            enumerate(ictbs),
-        )
-    end
-
-    (bins, y)
+    integrate_transfer_functions(ε, ictbs, bins)
 end
+
 
 export AbstractLineProfileAlgorithm, BinnedLineProfile, CunninghamLineProfile, lineprofile

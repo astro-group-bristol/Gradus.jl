@@ -55,7 +55,14 @@ Implemented from Jiménez, Segura, Feito. Computation Geometry 43 (2010) 474-492
 See [this blog post](https://fjebaker.github.io/blog/pages/2022-01-ray-tracing-a-cow/#jim%C3%A9nez_segura_and_feito_2010)
 for a discussion.
 """
-@muladd @fastmath function jsf_algorithm(V₁::T, V₂::T, V₃::T, Q₁::V, Q₂::V; ϵ = 1e-8) where {T,V}
+@muladd @fastmath function jsf_algorithm(
+    V₁::T,
+    V₂::T,
+    V₃::T,
+    Q₁::V,
+    Q₂::V;
+    ϵ = 1e-8,
+) where {T,V}
     A = Q₁ .- V₃
     B = V₁ .- V₃
     C = V₂ .- V₃

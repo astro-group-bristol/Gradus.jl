@@ -142,15 +142,7 @@ function __render_geodesics(
         println("+ Starting trace...")
     end
 
-    progress_bar = ProgressMeter.Progress(
-        trajectories;
-        desc = "Rendering:",
-        dt = 0.5,
-        barglyphs = BarGlyphs("[=> ]"),
-        barlen = 40,
-        color = :none,
-        enabled = verbose,
-    )
+    progress_bar = init_progress_bar("Rendering:", trajectories, verbose)
 
     function velfunc(i)
         Y = i % image_height

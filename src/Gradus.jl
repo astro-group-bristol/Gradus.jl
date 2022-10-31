@@ -12,13 +12,13 @@ using OrdinaryDiffEq
 using DiffEqCallbacks
 using StaticArrays
 using Optim
-using Interpolations
+using DataInterpolations
 using VoronoiCells
 using FiniteDifferences
 using Roots
 using ProgressMeter
 using Buckets
-using FastGaussQuadrature
+using QuadGK
 using MuladdMacro
 
 using Accessors: @set

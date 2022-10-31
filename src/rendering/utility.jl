@@ -58,3 +58,16 @@ Utility function for converting some `Y` on an image plane into ``\\beta``, give
 the midpoint `y_mid` and field-of-view multiplier `fov_factor`.
 """
 y_to_β(Y, y_mid, fov_factor) = (Y - y_mid) / fov_factor
+
+
+function init_progress_bar(text, N, enabled)
+    ProgressMeter.Progress(
+        N;
+        desc = text,
+        dt = 0.5,
+        barglyphs = BarGlyphs("[=> ]"),
+        barlen = 40,
+        color = :none,
+        enabled = enabled,
+    )
+end
