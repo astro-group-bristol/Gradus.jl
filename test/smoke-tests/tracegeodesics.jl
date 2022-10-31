@@ -4,7 +4,7 @@
     # tests if a single geodesic can be integrated
     function test_single(m, u, v)
         sol = tracegeodesics(m, u, v, (0.0, 200.0))
-        @test sol.retcode == :Terminated
+        @test sol.retcode == Gradus.SciMLBase.ReturnCode.Terminated
         sol
     end
 
@@ -13,7 +13,7 @@
         us = [u, u, u]
         vs = [v, v, v]
         simsols = tracegeodesics(m, us, vs, (0.0, 200.0))
-        @test all(i -> simsols[i].retcode == :Terminated, 1:3)
+        @test all(i -> simsols[i].retcode == Gradus.SciMLBase.ReturnCode.Terminated, 1:3)
         simsols
     end
 

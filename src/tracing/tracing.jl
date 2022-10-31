@@ -78,7 +78,7 @@ function integrator_problem(
         end
     end
 
-    ODEProblem{false}(f, u_init, time_domain)
+    ODEProblem{false}(f, u_init, time_domain, IntegrationParameters(StatusCodes.NoStatus))
 end
 
 function integrator_problem(
@@ -98,7 +98,7 @@ function integrator_problem(
         end
     end
 
-    ODEProblem{true}(f!, u_init, time_domain)
+    ODEProblem{true}(f!, u_init, time_domain, IntegrationParameters(StatusCodes.NoStatus))
 end
 
 # single position and single velocity

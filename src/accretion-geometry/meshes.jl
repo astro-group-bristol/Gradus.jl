@@ -71,7 +71,7 @@ function build_collision_callback(g::MeshAccretionGeometry{T}; gtol) where {T}
     DiscreteCallback(
         (u, λ, integrator) ->
             intersects_geometry(g, cartesian_line_element(u, integrator), integrator),
-        i -> terminate!(i, :Intersected),
+        terminate_with_status!(StatusCodes.IntersectedWithGeometry),
     )
 end
 
