@@ -1,3 +1,9 @@
+abstract type AbstractIntegrationParameters end
+
+mutable struct IntegrationParameters <: AbstractIntegrationParameters
+    status::StatusCodes.T
+end
+
 """
     abstract type AbstractGeodesicPoint
 
@@ -21,7 +27,7 @@ $(FIELDS)
 """
 @with_kw struct GeodesicPoint{T,V<:AbstractVector} <: AbstractGeodesicPoint{T}
     "Return code of the integrator for this geodesic."
-    retcode::Symbol
+    status::StatusCodes.T
     "Start affine time"
     t1::T
     "End affine time"
@@ -62,14 +68,14 @@ function getgeodesicpoint(
         v_end = SVector{4,T}(us[end][5:8])
         t_end = ts[end]
 
-        GeodesicPoint(sol.retcode, t_start, t_end, u_start, u_end, v_start, v_end)
+        GeodesicPoint(sol.prob.p.status, t_start, t_end, u_start, u_end, v_start, v_end)
     end
 end
 
 """
     $(TYPEDSIGNATURES)
 
-Unpacks each point in the solution, similar to [`getgeodesicpoint`](@ref) but returns an 
+Unpacks each point in the solution, similar to [`getgeodesicpoint`](@ref) but returns an
 array of [`GeodesicPoint`](@ref).
 """
 function getgeodesicpoints(
@@ -85,7 +91,7 @@ function getgeodesicpoints(
             ui = SVector{4,T}(us[i][1:4])
             vi = SVector{4,T}(us[i][5:8])
             ti = ts[i]
-            GeodesicPoint(sol.retcode, t_start, ti, u_start, ui, v_start, vi)
+            GeodesicPoint(sol.prob.p.status, t_start, ti, u_start, ui, v_start, vi)
         end
     end
 end

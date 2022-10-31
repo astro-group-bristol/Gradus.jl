@@ -7,11 +7,18 @@ using Parameters: @with_kw
 using StaticArrays: SVector, MMatrix, SMatrix, @SVector
 using Tullio: @tullio
 using LinearAlgebra: norm, inv
+using EnumX
 
 # for doc bindings
 import ..Gradus
 
 using DocStringExtensions
+
+@enumx StatusCodes begin
+    OutOfDomain
+    IntersectedWithGeometry
+    NoStatus
+end
 
 include("metric-params.jl")
 include("geodesic-solutions.jl")
@@ -36,6 +43,8 @@ tetradframe,
 lnrbasis,
 lnrframe,
 lowerindices,
-raiseindices
+raiseindices,
+StatusCodes,
+IntegrationParameters
 
 end # module
