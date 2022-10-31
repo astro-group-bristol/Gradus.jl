@@ -25,7 +25,7 @@ A [`FilterPointFunction`](@ref) that filters geodesics which intersected with th
 disc. Default: `NaN`.
 """
 const filter_intersected =
-    FilterPointFunction((m, gp, max_time; kwargs...) -> gp.retcode == :Intersected, NaN)
+    FilterPointFunction((m, gp, max_time; kwargs...) -> gp.status == StatusCodes.IntersectedWithGeometry, NaN)
 
 """
     affine_time(m::AbstractMetricParams, gp::AbstractGeodesicPoint, max_time)

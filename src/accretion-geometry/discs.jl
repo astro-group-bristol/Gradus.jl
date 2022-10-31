@@ -46,7 +46,7 @@ function build_collision_callback(
 ) where {T}
     ContinuousCallback(
         (u, λ, integrator) -> distance_to_disc(g, u; gtol = gtol),
-        i -> terminate!(i, :Intersected);
+        terminate_with_status!(StatusCodes.IntersectedWithGeometry),
         interp_points = interp_points,
         save_positions = (true, false),
     )

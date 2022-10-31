@@ -17,7 +17,7 @@ Require implementation of
 abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 
 @with_kw struct FirstOrderGeodesicPoint{T,V,P} <: AbstractGeodesicPoint{T}
-    retcode::Symbol
+    status::StatusCodes.T
     "Start time"
     t1::T
     "End time"
@@ -48,7 +48,7 @@ end
     v_end = SVector{4,T}(four_velocity(u_end, m, p))
     t_end = ts[end]
 
-    FirstOrderGeodesicPoint(sol.retcode, t_start, t_end, u_start, u_end, v_start, v_end, p)
+    FirstOrderGeodesicPoint(p.status, t_start, t_end, u_start, u_end, v_start, v_end, p)
 end
 
 function metric_callback(
@@ -72,8 +72,18 @@ of motion in `p`.
 four_velocity(u, m::AbstractFirstOrderMetricParams, p) =
     error("Not implmented for $(typeof(m)).")
 
-make_parameters(L, Q, sign_θ, T) =
-    (L = L, Q = Q, r = -1, θ = convert(Int, sign_θ), changes = T[0.0, 0.0])
+mutable struct FirstOrderIntegrationParameters{T} <: AbstractIntegrationParameters
+    L::T
+    Q::T
+    r::Int
+    θ::Int
+    changes::Vector{T}
+    status::StatusCodes.T
+end
+
+make_parameters(L, Q, sign_θ, ::Type{T}) where {T} = FirstOrderIntegrationParameters{T}(
+    L, Q, -1, sign_θ, [0.0, 0.0], StatusCodes.NoStatus
+)
 
 function integrator_problem(
     m::AbstractFirstOrderMetricParams{T},
@@ -127,15 +137,13 @@ calc_lq(m::AbstractFirstOrderMetricParams{T}, pos, param) where {T} =
     error("Not implmented for $(typeof(m)).")
 
 function flip_radial_sign!(integrator)
-    p = integrator.p
-    integrator.p = @set p.r = -p.r
-    integrator.sol.prob.p.changes[1] = integrator.t[end]
+    integrator.p.r = -integrator.p.r
+    integrator.p.changes[1] = integrator.t[end]
 end
 
 function flip_angular_sign!(integrator)
-    p = integrator.p
-    integrator.p = @set p.θ = -p.θ
-    integrator.sol.prob.p.changes[2] = integrator.t[end]
+    integrator.p.θ = -integrator.p.θ
+    integrator.p.changes[2] = integrator.t[end]
 end
 
 function radial_negative_check(m::AbstractFirstOrderMetricParams{T}) where {T}

@@ -360,11 +360,13 @@ calc_lq(m::BoyerLindquistFO{T}, pos, vel) where {T} =
     __BoyerLindquistFO.LQ(m.M, pos[2], m.a, pos[3], vel[3], vel[4])
 
 function Vr(m::BoyerLindquistFO{T}, u, p) where {T}
-    L, Q, _, _ = p
+    L = p.L
+    Q = p.Q
     __BoyerLindquistFO.Vr(m.E, L, m.M, Q, u[2], m.a)
 end
 function Vθ(m::BoyerLindquistFO{T}, u, p) where {T}
-    L, Q, _, _ = p
+    L = p.L
+    Q = p.Q
     __BoyerLindquistFO.Vθ(m.E, L, Q, m.a, u[3])
 end
 

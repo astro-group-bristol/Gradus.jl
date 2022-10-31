@@ -48,7 +48,7 @@ function find_offset_for_radius(
 )
     f = r -> begin
         gp = integrate_single_geodesic(m, u, d, r, θₒ; kwargs...)
-        r = if gp.retcode == :Intersected
+        r = if gp.status == StatusCodes.IntersectedWithGeometry
             gp.u2[2] * sin(gp.u2[3])
         else
             0.0

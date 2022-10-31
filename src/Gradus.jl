@@ -56,7 +56,10 @@ import .GradusBase:
     lnrbasis,
     lnrframe,
     lowerindices,
-    raiseindices
+    raiseindices,
+    StatusCodes,
+    AbstractIntegrationParameters,
+    IntegrationParameters
 
 export AbstractMetricParams,
     getgeodesicpoint,
@@ -74,7 +77,10 @@ export AbstractMetricParams,
     lnrbasis,
     lnrframe,
     lowerindices,
-    raiseindices
+    raiseindices,
+    StatusCodes,
+    AbstractIntegrationParameters,
+    IntegrationParameters
 
 """
     abstract type AbstractPointFunction

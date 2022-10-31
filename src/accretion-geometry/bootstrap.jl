@@ -66,6 +66,6 @@ function build_collision_callback(g::AbstractAccretionGeometry{T}; gtol) where {
     DiscreteCallback(
         (u, λ, integrator) ->
             intersects_geometry(g, line_element(u, integrator), integrator),
-        i -> terminate!(i, :Intersected),
+        terminate_with_status!(StatusCodes.IntersectedWithGeometry),
     )
 end
