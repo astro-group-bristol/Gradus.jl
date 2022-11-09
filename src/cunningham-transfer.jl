@@ -70,7 +70,7 @@ function _find_extremal_redshift_with_guess(
     g_guess,
     θ_guess;
     redshift_pf = Gradus.ConstPointFunctions.redshift,
-    δθ = 1e-1,
+    δθ = π,
     minimal = true,
     zero_atol = 1e-7,
     offset_max = 20.0,
@@ -93,12 +93,12 @@ function _find_extremal_redshift_with_guess(
                 g = redshift_pf(m, gp, gp.t2)
                 minimal ? g : -g
             else
-                NaN
+                minimal ? 100.0 : -100.0 
                 # minimal ? g_guess : -g_guess
             end
         end
 
-    res = optimize(f, θ_guess - δθ, θ_guess + δθ)
+    res = optimize(f, θ_guess - δθ, θ_guess + δθ, Optim.GoldenSection())
     θopt = Optim.minimizer(res)
     (
         res,
@@ -289,7 +289,7 @@ function cunningham_transfer_function!(
     d::AbstractAccretionGeometry,
     rₑ,
     max_time;
-    finite_diff_order = 6,
+    finite_diff_order = 4,
     redshift_pf::PointFunction = ConstPointFunctions.redshift,
     offset_max = 20.0,
     zero_atol = 1e-7,
@@ -304,6 +304,7 @@ function cunningham_transfer_function!(
         rₑ;
         offset_max = offset_max,
         zero_atol = zero_atol,
+        max_time = max_time,
         tracer_kwargs...,
     )
     # filter and trim arrays
@@ -407,7 +408,7 @@ function _make_sorted_interpolation(g, f)
     DataInterpolations.LinearInterpolation(_f, _g)
 end
 
-function _interpolate_branches(ctf::CunninghamTransferFunction; offset = 1e-4)
+function _interpolate_branches(ctf::CunninghamTransferFunction; offset = 1e-7)
     # avoid extrema
     mask = @. (ctf.gstar > offset) & (ctf.gstar < 1 - offset)
 
@@ -492,6 +493,7 @@ function _calculate_interpolated_transfer_branches(
     num_points = 100,
     verbose = false,
     offset = 1e-7,
+    max_time = 2000.0,
     kwargs...,
 ) where {T}
     # pre-allocate arrays
@@ -516,7 +518,7 @@ function _calculate_interpolated_transfer_branches(
                 u,
                 d,
                 rₑ,
-                2000.0;
+                max_time;
                 offset_max = 2rₑ + 20.0,
                 kwargs...,
             )
