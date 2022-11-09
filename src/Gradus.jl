@@ -163,6 +163,7 @@ include("accretion-geometry/meshes.jl")
 include("accretion-geometry/bootstrap.jl")
 
 # include("cunningham-transfer.jl")
+include("transfer-functions/integration.jl")
 include("transfer-functions/precision-solvers.jl")
 include("transfer-functions/cunningham-transfer-functions.jl")
 

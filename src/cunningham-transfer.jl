@@ -289,7 +289,7 @@ function cunningham_transfer_function!(
     d::AbstractAccretionGeometry,
     rₑ,
     max_time;
-    finite_diff_order = 4,
+    finite_diff_order = 5,
     redshift_pf::PointFunction = ConstPointFunctions.redshift,
     offset_max = 20.0,
     zero_atol = 1e-7,

@@ -9,7 +9,22 @@
     rₑ::T
 end
 
-function splitbranches(ctf::CunninghamTransferFunction)
+@with_kw struct InterpolatedCunninghamTransferFunction{T,U,L}
+    upper_f::U
+    lower_f::L
+    gmin::T
+    gmax::T
+    rₑ::T
+end
+
+function _make_sorted_interpolation(g, f)
+    I = sortperm(g)
+    _g = @inbounds g[I]
+    _f = @inbounds f[I]
+    DataInterpolations.LinearInterpolation(_f, _g)
+end
+
+function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
     upper_f = T[]
     lower_f = T[]
     upper_g✶ = T[]
@@ -21,7 +36,7 @@ function splitbranches(ctf::CunninghamTransferFunction)
     sizehint!(lower_g✶, N)
 
     decreasing = true
-    g✶previous = 1.0
+    g✶previous = 0.0
     for (i, g✶) in enumerate(ctf.g✶)
         if g✶previous > g✶
             decreasing = true
@@ -29,22 +44,25 @@ function splitbranches(ctf::CunninghamTransferFunction)
             decreasing = false
         end
         if decreasing
-            push!(upper_f, ctf.f[i])
-            push!(upper_g✶, g✶)
-        else
             push!(lower_f, ctf.f[i])
             push!(lower_g✶, g✶)
+        else
+            push!(upper_f, ctf.f[i])
+            push!(upper_g✶, g✶)
         end
         g✶previous = g✶
     end
-    lower_branch = CunninghamTransferFunction(
-        lower_g✶, lower_f, ctf.gmin, ctf.gmax, ctf.rₑ
-    )
-    upper_branch = CunninghamTransferFunction(
-        lower_g✶, lower_f, ctf.gmin, ctf.gmax, ctf.rₑ
-    )
 
-    (lower_branch, upper_branch)
+    (lower_g✶, lower_f, upper_g✶, upper_f)
+end
+
+function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where {T}
+    (lower_g✶, lower_f, upper_g✶, upper_f) = splitbranches(ctf)
+    lower_branch = _make_sorted_interpolation(lower_g✶, lower_f)
+    upper_branch = _make_sorted_interpolation(upper_g✶, upper_f)
+    InterpolatedCunninghamTransferFunction( 
+        upper_branch, lower_branch, ctf.gmin, ctf.gmax, ctf.rₑ
+    )
 end
 
 @muladd function _calculate_transfer_function(rₑ, g, g✶, J)
@@ -71,9 +89,10 @@ function cunningham_transfer_function(
     end
 
     gmin, gmax = infer_extremal(gs, θs, π, 2π)
+    # convert from ∂g to ∂g✶
     @. Js = (gmax - gmin) * Js
     @inbounds for i in eachindex(Js)
-        g✶ = (gs[i] - gmin) / (gmax - gmin)
+        g✶ = g_to_g✶(gs[i], gmin, gmax)
         # Js is now storing f
         Js[i] = _calculate_transfer_function(rₑ, gs[i], g✶, Js[i])
         # gs is now storing g✶
@@ -100,4 +119,31 @@ function interpolate_extremal(y, x, x0)
     ∂(f) = x -> ForwardDiff.derivative(f, x)
     x̄ = find_zero(∂(interp), x0)
     x̄, interp(x̄)
+end
+
+function interpolated_transfer_branches(
+    m::AbstractMetricParams{T},
+    u,
+    d,
+    radii;
+    verbose = false,
+    kwargs...,
+) where {T}
+    # IILF for calculating the interpolated branches
+    𝔉 =
+        rₑ -> begin
+            ctf = cunningham_transfer_function(
+                m,
+                u,
+                d,
+                rₑ,
+                ;
+                offset_max = 2rₑ + 20.0,
+                kwargs...,
+            )
+            interpolate_transfer_function(ctf)
+        end
+
+    # calculate interpolated transfer functions for each emission radius
+    ThreadsX.map(𝔉, radii)
 end
