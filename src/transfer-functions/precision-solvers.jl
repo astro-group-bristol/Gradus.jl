@@ -82,7 +82,7 @@ function find_offset_for_radius(
     if !isapprox(measure(gp0), 0.0, atol = 10 * zero_atol)
         return NaN, gp0
     end
-    r, gp0
+    r0, gp0
 end
 
 """
@@ -170,7 +170,7 @@ function jacobian_∂αβ_∂gr(
     # choice between FiniteDifferences and FiniteDiff is tricky
     # since FiniteDiff is so much faster, but seems to yield really bad jacobians
     # for this specific problem, so instead stenciling with a given order
-    cfdm = FiniteDifferences.central_fdm(order, 1)
-    j = FiniteDifferences(cfdm, f, @SVector([α, β])) |> first
+    cfdm = FiniteDifferences.central_fdm(diff_order, 1)
+    j = FiniteDifferences.jacobian(cfdm, f, @SVector([α, β])) |> first
     abs(inv(det(j)))
 end
