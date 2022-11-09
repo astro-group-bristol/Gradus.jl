@@ -23,9 +23,9 @@ function lineprofile(
     ε;
     minrₑ = isco(m) + 1e-2, # delta to avoid numerical instabilities
     maxrₑ = 50,
-    numrₑ = 50,
+    numrₑ = 100,
     verbose = false,
-    Ng✶ = 10,
+    Ng✶ = 500,
     h = 2e-8,
     kwargs...,
 ) where {T}

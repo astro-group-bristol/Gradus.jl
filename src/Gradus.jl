@@ -162,9 +162,9 @@ include("accretion-geometry/discs.jl")
 include("accretion-geometry/meshes.jl")
 include("accretion-geometry/bootstrap.jl")
 
+include("transfer-functions/cunningham-transfer-functions.jl")
 include("transfer-functions/integration.jl")
 include("transfer-functions/precision-solvers.jl")
-include("transfer-functions/cunningham-transfer-functions.jl")
 
 include("corona-to-disc/sky-geometry.jl")
 include("corona-to-disc/corona-models.jl")
