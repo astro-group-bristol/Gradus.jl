@@ -167,7 +167,7 @@ include("cunningham-transfer.jl")
 include("corona-to-disc/sky-geometry.jl")
 include("corona-to-disc/corona-models.jl")
 include("corona-to-disc/disc-profiles.jl")
-include("corona-to-disc/transfer-functions.jl")
+include("transfer-functions/transfer-functions-2d.jl")
 include("corona-to-disc/flux-calculations.jl")
 
 include("metrics/boyer-lindquist-ad.jl")
