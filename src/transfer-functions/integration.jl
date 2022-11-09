@@ -17,12 +17,8 @@ function interpolate_over_radii(itfs, g✶_grid)
         DataInterpolations.LinearInterpolation(f, radii)
     end
 
-    gmin_interp = DataInterpolations.LinearInterpolation(
-        map(itf -> itf.gmin, itfs), radii
-    )
-    gmax_interp = DataInterpolations.LinearInterpolation(
-        map(itf -> itf.gmax, itfs), radii
-    )
+    gmin_interp = DataInterpolations.LinearInterpolation(map(itf -> itf.gmin, itfs), radii)
+    gmax_interp = DataInterpolations.LinearInterpolation(map(itf -> itf.gmax, itfs), radii)
     fr_interp, gmin_interp, gmax_interp
 end
 
@@ -31,14 +27,14 @@ function integrate_edge(S, h, lim, gmin, gmax, low::Bool)
         gh = g✶_to_g(h, gmin, gmax)
         a = √gh - √lim
     else
-        gh = g✶_to_g(1-h, gmin, gmax)
+        gh = g✶_to_g(1 - h, gmin, gmax)
         a = √lim - √gh
     end
     2 * S(gh) * √h * a * (gmax - gmin)
 end
 
 function _cunningham_integrand(f, g, gs, gmin, gmax)
-    f * π * (g)^3 / (√(gs * (1-gs)) * (gmax - gmin))
+    f * π * (g)^3 / (√(gs * (1 - gs)) * (gmax - gmin))
 end
 
 function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8)
@@ -62,10 +58,10 @@ function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8)
         end
     end
 
-    if g✶hi > 1-h
-        if g✶lo < 1-h
+    if g✶hi > 1 - h
+        if g✶lo < 1 - h
             lum += integrate_edge(S, h, ghi, gmin, gmax, false)
-            ghi = g✶_to_g(1-h, gmin, gmax)
+            ghi = g✶_to_g(1 - h, gmin, gmax)
         else
             return lum # integrate_edge(S, h, glo, ghi, gmin, gmax)
         end
@@ -77,10 +73,10 @@ function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8)
 end
 
 function _wrap_cunningham_interpolations(fr_interp, gmin, gmax, r, g✶_grid)
-    f = map(fr_interp) do interp interp(r) end
-    S = DataInterpolations.LinearInterpolation(
-        f, g✶_grid
-    )
+    f = map(fr_interp) do interp
+        interp(r)
+    end
+    S = DataInterpolations.LinearInterpolation(f, g✶_grid)
     g -> begin
         g✶ = g_to_g✶(g, gmin, gmax)
         _cunningham_integrand(S(g✶), g, g✶, gmin, gmax)
@@ -88,18 +84,25 @@ function _wrap_cunningham_interpolations(fr_interp, gmin, gmax, r, g✶_grid)
 end
 
 function weighted_rₑ_grid(min, max, N)
-    Iterators.reverse(inv(r) for r in range(1/max, 1/min, N))
+    Iterators.reverse(inv(r) for r in range(1 / max, 1 / min, N))
 end
 
 function _build_g✶_grid(Ng✶, h)
     g✶low = h
     g✶high = 1 - h
     map(1:Ng✶) do i
-       g✶low + (g✶high - g✶low)/(Ng✶ - 1)*(i - 1)
+        g✶low + (g✶high - g✶low) / (Ng✶ - 1) * (i - 1)
     end
 end
 
-function integrate_drdg✶(ε, itfs::Vector{<:InterpolatedCunninghamTransferFunction{T}}, radii, g_grid; Ng✶ = 10, h=1e-8) where {T}
+function integrate_drdg✶(
+    ε,
+    itfs::Vector{<:InterpolatedCunninghamTransferFunction{T}},
+    radii,
+    g_grid;
+    Ng✶ = 10,
+    h = 1e-8,
+) where {T}
     # pre-allocate output
     flux = zeros(T, length(g_grid))
 
@@ -111,7 +114,7 @@ function integrate_drdg✶(ε, itfs::Vector{<:InterpolatedCunninghamTransferFunc
 
     # build fine radial grid for trapezoidal integration
     fine_rₑ_grid = weighted_rₑ_grid(minrₑ, maxrₑ, 1000) |> collect
-    @inbounds for (i, rₑ) in enumerate(fine_rₑ_grid) 
+    @inbounds for (i, rₑ) in enumerate(fine_rₑ_grid)
         gmin = gmin_interp(rₑ)
         gmax = gmax_interp(rₑ)
         S = _wrap_cunningham_interpolations(fr_interp, gmin, gmax, rₑ, g✶_grid)
@@ -130,7 +133,7 @@ function integrate_drdg✶(ε, itfs::Vector{<:InterpolatedCunninghamTransferFunc
         for j in eachindex(g_grid_view)
             glo = g_grid[j]
             ghi = g_grid[j+1]
-            flux[j] += integrate_bin(S, gmin, gmax, glo, ghi; h=h) * weight
+            flux[j] += integrate_bin(S, gmin, gmax, glo, ghi; h = h) * weight
         end
     end
 

@@ -31,7 +31,7 @@ function lineprofile(
 ) where {T}
     radii = weighted_rₑ_grid(minrₑ, maxrₑ, numrₑ)
     itfs = interpolated_transfer_branches(m, u, d, radii; verbose = verbose, kwargs...)
-    flux = integrate_drdg✶(ε, itfs, radii, bins; h = h, Ng✶=Ng✶)
+    flux = integrate_drdg✶(ε, itfs, radii, bins; h = h, Ng✶ = Ng✶)
     bins, flux
 end
 

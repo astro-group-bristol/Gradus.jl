@@ -81,9 +81,8 @@ mutable struct FirstOrderIntegrationParameters{T} <: AbstractIntegrationParamete
     status::StatusCodes.T
 end
 
-make_parameters(L, Q, sign_θ, ::Type{T}) where {T} = FirstOrderIntegrationParameters{T}(
-    L, Q, -1, sign_θ, [0.0, 0.0], StatusCodes.NoStatus
-)
+make_parameters(L, Q, sign_θ, ::Type{T}) where {T} =
+    FirstOrderIntegrationParameters{T}(L, Q, -1, sign_θ, [0.0, 0.0], StatusCodes.NoStatus)
 
 function integrator_problem(
     m::AbstractFirstOrderMetricParams{T},

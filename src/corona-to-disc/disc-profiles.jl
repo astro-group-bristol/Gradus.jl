@@ -106,7 +106,11 @@ function VoronoiDiscProfile(
     d::AbstractAccretionDisc{T},
     simsols::SciMLBase.EnsembleSolution{T},
 ) where {T}
-    VoronoiDiscProfile(m, d, filter(i -> i.prob.p.status == StatusCodes.IntersectedWithGeometry, simsols.u))
+    VoronoiDiscProfile(
+        m,
+        d,
+        filter(i -> i.prob.p.status == StatusCodes.IntersectedWithGeometry, simsols.u),
+    )
 end
 
 @noinline function findindex(vdp::VoronoiDiscProfile{D,V}, p) where {D,V}

@@ -93,7 +93,7 @@ function _find_extremal_redshift_with_guess(
                 g = redshift_pf(m, gp, gp.t2)
                 minimal ? g : -g
             else
-                minimal ? 100.0 : -100.0 
+                minimal ? 100.0 : -100.0
                 # minimal ? g_guess : -g_guess
             end
         end

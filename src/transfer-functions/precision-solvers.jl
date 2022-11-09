@@ -77,7 +77,7 @@ function find_offset_for_radius(
     end
 
     r0 = Roots.find_zero(f, (0.0, offset_max); atol = zero_atol)
-    
+
     gp0 = integrate_single_geodesic(m, u, d, r0, θₒ; kwargs...)
     if !isapprox(measure(gp0), 0.0, atol = 10 * zero_atol)
         return NaN, gp0
@@ -154,7 +154,16 @@ function impact_parameters_for_radius(
 end
 
 function jacobian_∂αβ_∂gr(
-    m, u, d, α, β, max_time; diff_order=5, redshift_pf = ConstPointFunctions.redshift, kwargs...) 
+    m,
+    u,
+    d,
+    α,
+    β,
+    max_time;
+    diff_order = 5,
+    redshift_pf = ConstPointFunctions.redshift,
+    kwargs...,
+)
     # map impact parameters to r, g
     f =
         ((α, β),) -> begin

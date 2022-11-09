@@ -30,9 +30,9 @@ function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
     upper_g✶ = T[]
     lower_g✶ = T[]
     N = (length(ctf.f) ÷ 2) + 1
-    sizehint!(upper_f, N) 
+    sizehint!(upper_f, N)
     sizehint!(lower_f, N)
-    sizehint!(upper_g✶, N) 
+    sizehint!(upper_g✶, N)
     sizehint!(lower_g✶, N)
 
     decreasing = true
@@ -60,8 +60,12 @@ function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where
     (lower_g✶, lower_f, upper_g✶, upper_f) = splitbranches(ctf)
     lower_branch = _make_sorted_interpolation(lower_g✶, lower_f)
     upper_branch = _make_sorted_interpolation(upper_g✶, upper_f)
-    InterpolatedCunninghamTransferFunction( 
-        upper_branch, lower_branch, ctf.gmin, ctf.gmax, ctf.rₑ
+    InterpolatedCunninghamTransferFunction(
+        upper_branch,
+        lower_branch,
+        ctf.gmin,
+        ctf.gmax,
+        ctf.rₑ,
     )
 end
 
@@ -70,22 +74,50 @@ end
 end
 
 function cunningham_transfer_function(
-    m::AbstractMetricParams{T}, u, d, rₑ; max_time = 2e3, diff_order = 4,
-    redshift_pf = ConstPointFunctions.redshift, offset_max = 20.0,
-    zero_atol=1e-7, N=100, tracer_kwargs...
+    m::AbstractMetricParams{T},
+    u,
+    d,
+    rₑ;
+    max_time = 2e3,
+    diff_order = 4,
+    redshift_pf = ConstPointFunctions.redshift,
+    offset_max = 20.0,
+    zero_atol = 1e-7,
+    N = 100,
+    tracer_kwargs...,
 ) where {T}
     Js = zeros(T, N)
     gs = zeros(T, N)
 
-    θs = range(π/2, 2π + π/2, N) 
+    θs = range(π / 2, 2π + π / 2, N)
     @inbounds for i in eachindex(θs)
         θ = θs[i]
-        r, gp = find_offset_for_radius(m, u, d, rₑ, θ; zero_atol = zero_atol, offset_max = offset_max, max_time = max_time, tracer_kwargs...)
+        r, gp = find_offset_for_radius(
+            m,
+            u,
+            d,
+            rₑ,
+            θ;
+            zero_atol = zero_atol,
+            offset_max = offset_max,
+            max_time = max_time,
+            tracer_kwargs...,
+        )
         α = r * cos(θ)
         β = r * sin(θ)
         g = redshift_pf(m, gp, max_time)
         gs[i] = g
-        Js[i] = jacobian_∂αβ_∂gr(m, u, d, α, β, max_time; diff_order = diff_order, redshift_pf = redshift_pf, tracer_kwargs...)
+        Js[i] = jacobian_∂αβ_∂gr(
+            m,
+            u,
+            d,
+            α,
+            β,
+            max_time;
+            diff_order = diff_order,
+            redshift_pf = redshift_pf,
+            tracer_kwargs...,
+        )
     end
 
     gmin, gmax = infer_extremal(gs, θs, π, 2π)
@@ -99,9 +131,7 @@ function cunningham_transfer_function(
         gs[i] = g✶
     end
 
-    CunninghamTransferFunction(
-       gs, Js, gmin, gmax, rₑ 
-    )
+    CunninghamTransferFunction(gs, Js, gmin, gmax, rₑ)
 end
 
 function infer_extremal(y, x, x0, x1)

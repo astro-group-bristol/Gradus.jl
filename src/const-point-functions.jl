@@ -24,8 +24,10 @@ const filter_early_term =
 A [`FilterPointFunction`](@ref) that filters geodesics which intersected with the accretion
 disc. Default: `NaN`.
 """
-const filter_intersected =
-    FilterPointFunction((m, gp, max_time; kwargs...) -> gp.status == StatusCodes.IntersectedWithGeometry, NaN)
+const filter_intersected = FilterPointFunction(
+    (m, gp, max_time; kwargs...) -> gp.status == StatusCodes.IntersectedWithGeometry,
+    NaN,
+)
 
 """
     affine_time(m::AbstractMetricParams, gp::AbstractGeodesicPoint, max_time)

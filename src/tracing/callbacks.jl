@@ -41,7 +41,10 @@ end
 
 # predefined callbacks
 function domain_upper_hemisphere(δ = 1e-3)
-    DiscreteCallback((u, t, integrator) -> u[2] * cos(u[3]) < δ, terminate_with_status!(StatusCodes.OutOfDomain))
+    DiscreteCallback(
+        (u, t, integrator) -> u[2] * cos(u[3]) < δ,
+        terminate_with_status!(StatusCodes.OutOfDomain),
+    )
 end
 
 export domain_upper_hemisphere
