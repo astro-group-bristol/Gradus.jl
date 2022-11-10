@@ -177,3 +177,9 @@ function interpolated_transfer_branches(
     # calculate interpolated transfer functions for each emission radius
     ThreadsX.map(𝔉, radii)
 end
+
+export CunninghamTransferFunction,
+InterpolatedCunninghamTransferFunction,
+splitbranches,
+interpolate_transfer_function,
+cunningham_transfer_function

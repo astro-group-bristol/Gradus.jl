@@ -15,7 +15,8 @@
             sampler = EvenSampler(domain = LowerHemisphere()),
         )
 
-        intersected_simsols = filter(i -> i.prob.p.status == StatusCodes.IntersectedWithGeometry, simsols.u)
+        intersected_simsols =
+            filter(i -> i.prob.p.status == StatusCodes.IntersectedWithGeometry, simsols.u)
         sd_endpoints = map(sol -> getgeodesicpoint(m, sol), intersected_simsols)
 
         # test ensemble solution constructor
