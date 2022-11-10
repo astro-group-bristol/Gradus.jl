@@ -17,7 +17,7 @@
             4.0,
         )
         s = sum(ctf.f)
-        @test isapprox(s, expected, atol = 1e-2, rtol = 0.0)
+        @test isapprox(s, expected, atol = 1e-1, rtol = 0.0)
     end
 
     # different radii
