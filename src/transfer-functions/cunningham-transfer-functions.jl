@@ -165,6 +165,10 @@ function interpolated_transfer_branches(
     # IILF for calculating the interpolated branches
     𝔉 =
         rₑ -> begin
+            # want to scale the initial position with radius
+            # since redshift / jacobian values calculated at large impact parameters
+            # seem to be inaccurate? either that or the root finder is up to something
+            # but the problems seem to disappear by just keeping everything at low impact
             u_prob = SVector{4}(u[1], 1000 + 100rₑ, u[3], u[4])
             ctf = cunningham_transfer_function(
                 m,
