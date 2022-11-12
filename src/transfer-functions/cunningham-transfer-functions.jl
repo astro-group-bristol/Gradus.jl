@@ -79,11 +79,11 @@ function cunningham_transfer_function(
     d,
     rₑ;
     max_time = 2e3,
-    diff_order = 5,
+    diff_order = 4,
     redshift_pf = ConstPointFunctions.redshift,
     offset_max = 20.0,
     zero_atol = 1e-7,
-    N = 100,
+    N = 80,
     tracer_kwargs...,
 ) where {T}
     Js = zeros(T, N)
@@ -103,6 +103,9 @@ function cunningham_transfer_function(
             max_time = max_time,
             tracer_kwargs...,
         )
+        if isnan(r)
+            error("Transfer function integration failed (rₑ=$rₑ, θ=$θ).")
+        end
         α = r * cos(θ)
         β = r * sin(θ)
         g = redshift_pf(m, gp, max_time)
@@ -144,9 +147,9 @@ function infer_extremal(y, x, x0, x1)
     end
 end
 
+∂(f) = x -> ForwardDiff.derivative(f, x)
 function interpolate_extremal(y, x, x0)
     interp = DataInterpolations.CubicSpline(y, x)
-    ∂(f) = x -> ForwardDiff.derivative(f, x)
     x̄ = find_zero(∂(interp), x0)
     x̄, interp(x̄)
 end
@@ -162,13 +165,20 @@ function interpolated_transfer_branches(
     # IILF for calculating the interpolated branches
     𝔉 =
         rₑ -> begin
+            # want to scale the initial position with radius
+            # since redshift / jacobian values calculated at large impact parameters
+            # seem to be inaccurate? either that or the root finder is up to something
+            # but the problems seem to disappear by just keeping everything at low impact
+            u_prob = SVector{4}(u[1], 1000 + 100rₑ, u[3], u[4])
             ctf = cunningham_transfer_function(
                 m,
-                u,
+                u_prob,
                 d,
                 rₑ,
                 ;
-                offset_max = 2rₑ + 20.0,
+                offset_max = 3rₑ + 20.0,
+                effective_infinity = 10 * u_prob[2],
+                max_time = 10 * u_prob[2],
                 kwargs...,
             )
             interpolate_transfer_function(ctf)
@@ -179,7 +189,7 @@ function interpolated_transfer_branches(
 end
 
 export CunninghamTransferFunction,
-InterpolatedCunninghamTransferFunction,
-splitbranches,
-interpolate_transfer_function,
-cunningham_transfer_function
+    InterpolatedCunninghamTransferFunction,
+    splitbranches,
+    interpolate_transfer_function,
+    cunningham_transfer_function

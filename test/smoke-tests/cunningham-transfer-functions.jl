@@ -6,34 +6,24 @@
     # test for different angles
     for (angle, expected) in zip(
         [3, 35, 74, 85],
-        # values last updated: 10/11/2022 - reimplemented algorithm
-        [24.953515365137005, 22.91076063485734, 13.795031677382394, 11.086660268049126],
+        # values last updated: 12/11/2022 - use means
+        [0.2495227986998514, 0.22911943722172406, 0.13792349421541406, 0.10360637290617522],
     )
         u = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
-        ctf = cunningham_transfer_function(
-            m,
-            u,
-            d,
-            4.0,
-        )
-        s = sum(ctf.f)
-        @test isapprox(s, expected, atol = 1e-1, rtol = 0.0)
+        ctf = cunningham_transfer_function(m, u, d, 4.0)
+        s = sum(ctf.f) / length(ctf.f)
+        @test isapprox(s, expected, atol = 1e-3, rtol = 0.0)
     end
 
     # different radii
     for (r, expected) in zip(
         [4.0, 7.0, 10.0, 15.0],
-        # values last updated: 10/11/2022 - reimplemented algorithm
-        [23.491668065237214, 25.997534896876644, 26.73859117429336, 27.186165046726007],
+        # values last updated: 12/11/2022 - use means
+        [0.23492490558931373, 0.2599801835844643, 0.26738568957410025, 0.2718492609857089],
     )
         u = @SVector [0.0, 1000.0, deg2rad(30), 0.0]
-        ctf = cunningham_transfer_function(
-            m,
-            u,
-            d,
-            r,
-        )
-        s = sum(ctf.f)
+        ctf = cunningham_transfer_function(m, u, d, r)
+        s = sum(ctf.f) / length(ctf.f)
         @test isapprox(s, expected, atol = 1e-2, rtol = 0.0)
     end
 end

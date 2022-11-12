@@ -76,7 +76,8 @@ function find_offset_for_radius(
         measure(gp)
     end
 
-    r0 = Roots.find_zero(f, (0.0, offset_max); atol = zero_atol)
+    # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
+    r0 = Roots.find_zero(f, offset_max / 2; atol = zero_atol)
 
     gp0 = integrate_single_geodesic(m, u, d, r0, θₒ; kwargs...)
     if !isapprox(measure(gp0), 0.0, atol = 10 * zero_atol)
@@ -113,17 +114,17 @@ function impact_parameters_for_radius!(
     rₑ;
     kwargs...,
 ) where {T}
-    if size(α) != size(β)
+    if size(αs) != size(βs)
         throw(DimensionMismatch("α, β must have the same dimensions and size."))
     end
-    θs = range(0, 2π, length(α))
+    θs = range(0, 2π, length(αs))
     @inbounds @threads for i in eachindex(θs)
         θ = θs[i]
         r, _ = find_offset_for_radius(m, u, d, rₑ, θ; kwargs...)
-        α[i] = r * cos(θ)
-        β[i] = r * sin(θ)
+        αs[i] = r * cos(θ)
+        βs[i] = r * sin(θ)
     end
-    (α, β)
+    (αs, βs)
 end
 
 """
@@ -183,3 +184,5 @@ function jacobian_∂αβ_∂gr(
     j = FiniteDifferences.jacobian(cfdm, f, @SVector([α, β])) |> first
     abs(inv(det(j)))
 end
+
+export find_offset_for_radius, impact_parameters_for_radius, impact_parameters_for_radius!
