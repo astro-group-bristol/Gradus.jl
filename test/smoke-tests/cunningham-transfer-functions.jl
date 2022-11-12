@@ -10,12 +10,7 @@
         [24.953515365137005, 22.91076063485734, 13.795031677382394, 11.086660268049126],
     )
         u = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
-        ctf = cunningham_transfer_function(
-            m,
-            u,
-            d,
-            4.0,
-        )
+        ctf = cunningham_transfer_function(m, u, d, 4.0)
         s = sum(ctf.f)
         @test isapprox(s, expected, atol = 1e-1, rtol = 0.0)
     end
@@ -27,12 +22,7 @@
         [23.491668065237214, 25.997534896876644, 26.73859117429336, 27.186165046726007],
     )
         u = @SVector [0.0, 1000.0, deg2rad(30), 0.0]
-        ctf = cunningham_transfer_function(
-            m,
-            u,
-            d,
-            r,
-        )
+        ctf = cunningham_transfer_function(m, u, d, r)
         s = sum(ctf.f)
         @test isapprox(s, expected, atol = 1e-2, rtol = 0.0)
     end

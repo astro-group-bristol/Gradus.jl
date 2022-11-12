@@ -149,4 +149,4 @@ function integrate_drdg✶(
     flux
 end
 
-export integrate_drdg✶
+export integrate_drdg✶, g✶_to_g, g_to_g✶
