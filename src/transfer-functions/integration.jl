@@ -22,15 +22,11 @@ function interpolate_over_radii(itfs, g✶_grid)
     fr_interp, gmin_interp, gmax_interp
 end
 
-function integrate_edge(S, h, lim, gmin, gmax, low::Bool)
-    if low
-        gh = g✶_to_g(h, gmin, gmax)
-        a = √gh - √lim
-    else
-        gh = g✶_to_g(1 - h, gmin, gmax)
-        a = √lim - √gh
-    end
-    2 * S(gh) * √h * a * (gmax - gmin)
+function integrate_edge(S, lim, lim_g✶, gmin, gmax)
+    gh = g✶_to_g(lim_g✶, gmin, gmax)
+    a = abs(√gh - √lim)
+
+    2 * S(gh) * a
 end
 
 function _cunningham_integrand(f, g, gs, gmin, gmax)
@@ -51,19 +47,19 @@ function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8)
 
     if g✶lo < h
         if g✶hi > h
-            lum += integrate_edge(S, h, glo, gmin, gmax, true)
+            lum += integrate_edge(S, glo, h, gmin, gmax)
             glo = g✶_to_g(h, gmin, gmax)
         else
-            return lum # integrate_edge(S, h, glo, ghi, gmin, gmax, true)
+            return integrate_edge(S, glo, g✶hi, gmin, gmax)
         end
     end
 
     if g✶hi > 1 - h
         if g✶lo < 1 - h
-            lum += integrate_edge(S, h, ghi, gmin, gmax, false)
+            lum += integrate_edge(S, ghi, 1-h, gmin, gmax)
             ghi = g✶_to_g(1 - h, gmin, gmax)
         else
-            return lum # integrate_edge(S, h, glo, ghi, gmin, gmax)
+            return integrate_edge(S, ghi, g✶lo, gmin, gmax)
         end
     end
 

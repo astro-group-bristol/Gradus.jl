@@ -25,7 +25,7 @@ function lineprofile(
     maxrₑ = 50,
     numrₑ = 100,
     verbose = false,
-    Ng✶ = 500,
+    Ng✶ = 57,
     h = 2e-8,
     kwargs...,
 ) where {T}

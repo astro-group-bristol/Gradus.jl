@@ -34,6 +34,7 @@ Gradus.jl is a suite of tools related to tracing geodesics, requiring only a spe
 Currently, Gradus.jl can be used for any static, axis-symmetric spacetime to calculate:
 
 - geodesic orbits and special radii (event horizon shapes, ISCO radii)
+- black hole shadows
 - redshift images
 - Cunningham transfer functions
 - line profiles and spectra
@@ -42,9 +43,9 @@ Currently, Gradus.jl can be used for any static, axis-symmetric spacetime to cal
 
 See [Examples](https://astro-group-bristol.github.io/Gradus.jl/dev/examples/examples/).
 
-All of the above work for different accretion disc geometries, including geometrically thin and thick discs, with radiative transport for optically thin material planned. Gradus.jl can also use mesh files to specify non-symmetric geometry.
+All of the above may be calculated for different accretion disc geometries, including geometrically thin and thick discs, with radiative transport for optically thin material planned. Gradus.jl can also use mesh files to specify non-symmetric geometry.
 
-Gradus.jl uses [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) and [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) as the backend for integrating and solving the geodesic equation for arbitrary metrics, and vendors the DifferentialEquations.jl solver and callback system, making Gradus.jl easy to extend for new problems. Gradus.jl currently supports, multi-CPU integration and analysis, with GPU support on the horizon.
+Gradus.jl uses [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) and [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) as the backend for integrating and solving the geodesic equation for arbitrary metrics, and vendors the DifferentialEquations.jl solver and callback system, making Gradus.jl easy to extend for new problems. Gradus.jl currently supports multi-CPU integration and analysis, with GPU support on the horizon.
 
 
 ## Usage
@@ -67,13 +68,13 @@ julia> using Gradus
 
 - Alternate:
 
-Gradus.jl depends on [Buckets.jl](https://github.com/fjebaker/Buckets.jl), which can either be installed directly from GitHub:
+Gradus.jl depends on [Buckets.jl](https://github.com/fjebaker/Buckets.jl), which can be installed directly from GitHub:
 
 ```julia
 import Pkg;
 Pkg.add(url = "https://github.com/fjebaker/Buckets.jl")
 ```
-After this, Gradus.jl can be installed:
+After this, Gradus.jl can be installed, also directly from GitHub:
 ```julia
 Pkg.add(url = "https://github.com/astro-group-bristol/Gradus.jl")
 
