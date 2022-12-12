@@ -26,7 +26,7 @@ function lineprofile(
     numrₑ = 100,
     verbose = false,
     Ng✶ = 57,
-    h = 2e-8,
+    h = 2e-9,
     kwargs...,
 ) where {T}
     radii = weighted_rₑ_grid(minrₑ, maxrₑ, numrₑ)

@@ -5,7 +5,7 @@ Module defining a number of `const` [`Gradus.AbstractPointFunction`](@ref), serv
 or common purposes for analysis.
 """
 module ConstPointFunctions
-using ..Gradus: PointFunction, FilterPointFunction, _redshift_guard
+using ..Gradus: PointFunction, FilterPointFunction, _redshift_guard, StatusCodes
 # for doc bindings
 import ..Gradus
 

@@ -38,11 +38,7 @@ function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
     decreasing = true
     g✶previous = 0.0
     for (i, g✶) in enumerate(ctf.g✶)
-        if g✶previous > g✶
-            decreasing = true
-        else
-            decreasing = false
-        end
+        decreasing = g✶previous > g✶
         if decreasing
             push!(lower_f, ctf.f[i])
             push!(lower_g✶, g✶)
