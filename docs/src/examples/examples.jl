@@ -289,6 +289,28 @@ function ex_doughnut()
     savefig(p, "example-thick-disc-doughtnut.png")
 end
 
+function ex_lineprofile()
+    d = GeometricThinDisc(0.0, 400.0, π / 2)
+    u = @SVector [0.0, 1000.0, deg2rad(40), 0.0]
+    m = BoyerLindquistAD(1.0, 0.998)
+
+    # maximal integration radius
+    maxrₑ = 50.0
+
+    # emissivity function
+    ε(r) = r^(-3)
+
+    # g grid to do flux integration over
+    gs = range(0.0, 1.2, 500)
+    _, flux = lineprofile(gs, ε, m, u, d, maxrₑ = maxrₑ)
+
+    # transform to observed energy
+    energy = gs .* 6.4
+
+    p = plot(energy, flux, legend=false)
+    savefig(p, "example-line-profile.svg")
+end
+
 ex_tracing()
 ex_redshift()
 ex_interpolating()
@@ -298,3 +320,4 @@ ex_horizon()
 ex_transfer_functions()
 ex_concentric_rings()
 ex_doughnut()
+ex_lineprofile()

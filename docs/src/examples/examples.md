@@ -106,6 +106,36 @@ plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)
 
 ![](./example-redshift-histogram.svg)
 
+## Line profiles
+
+Line profiles may be calculated using two different methods -- using image-plane binning and integrating Cunningham transfer functions -- both of which are implemented in Gradus.jl. By default, the Cunningham transfer function method is used, however passing either `BinnedLineProfile()` or `CunninghamLineProfile()` as the first argument to `lineprofile` allows for explicit specification of the algorithm.
+
+For a simple maximally-spinning Kerr black hole, the iron line profile (with a delta emission line at 6.4 keV) may be calculated with:
+
+```julia
+d = GeometricThinDisc(0.0, 400.0, π / 2)
+u = @SVector [0.0, 1000.0, deg2rad(40), 0.0]
+m = BoyerLindquistAD(1.0, 0.998)
+
+# maximal integration radius
+maxrₑ = 50.0
+
+# emissivity function
+ε(r) = r^(-3)
+
+# g grid to do flux integration over
+gs = range(0.0, 1.2, 500)
+_, flux = lineprofile(gs, ε, m, u, d, maxrₑ = maxrₑ)
+
+# transform to observed energy
+energy = gs .* 6.4
+
+# plot flux as a function of energy
+plot(energy, flux, legend=false)
+```
+
+![](./example-line-profile.svg)
+
 ## Interpolating redshifts
 
 In cases where no analytic redshift solution is known, we can instead interpolate a numeric approximation. For example, interpolating the plunging region velocities and using the analytic solution for general static, axis symmetric metrics outside of the ISCO can be achieved with:
