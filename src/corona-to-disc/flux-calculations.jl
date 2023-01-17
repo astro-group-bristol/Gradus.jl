@@ -21,7 +21,8 @@ end
 function flux_source_to_disc(
     m::AbstractMetricParams,
     model::AbstractCoronaModel,
-    vdp::AbstractDiscProfile,
+    vdp::AbstractDiscProfile;
+    kwargs...,
 )
     error(
         "Not implemented for metric $(typeof(m)) with model $(typeof(model)) and disc profile $(typeof(vdp)).",
@@ -31,12 +32,12 @@ end
 function flux_source_to_disc(
     m::AbstractMetricParams,
     model::AbstractCoronaModel,
-    vdp::VoronoiDiscProfile;
+    points,
+    areas::AbstractVector{T};
     α = 1.0,
-)
+) where {T}
     v_source = source_velocity(m, model)
 
-    areas = getareas(vdp)
     total_area = sum(areas)
 
     isco_r = isco(m)
@@ -74,7 +75,17 @@ function flux_source_to_disc(
         g_sd^(1 + α) * E_d^(-α) * dA * f_sd / γ
     end
 
-    map(flux, enumerate(vdp.geodesic_points))
+    map(flux, points)
+end
+
+function flux_source_to_disc(
+    m::AbstractMetricParams,
+    model::AbstractCoronaModel,
+    vdp::VoronoiDiscProfile;
+    kwargs...,
+)
+    areas = getareas(vdp)
+    flux_source_to_disc(m, model, vdp.geodesic_points, areas; kwargs...)
 end
 
 export flux_source_to_disc
