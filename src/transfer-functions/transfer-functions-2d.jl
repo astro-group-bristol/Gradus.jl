@@ -18,7 +18,6 @@ function bin_transfer_function(
 
     @. transfer_function = transfer_function / (de * dt)
     transfer_function[transfer_function.==0.0] .= NaN
-
     time_bins, energy_bins, transfer_function
 end
 
@@ -34,7 +33,7 @@ function radial_sampler(m::AbstractMetricParams, u, Nr::Int, Nφ::Int; rmax = 40
         β = βs[i]
         map_impact_parameters(m, u, α, β)
     end
-    αs, βs, f
+    rs, φs, f
 end
 
 function bin_and_interpolate(
