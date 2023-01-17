@@ -14,12 +14,27 @@ function bin_transfer_function(
     dt = step(time_bins)
 
     transfer_function =
-        bucket(energy, delays, flux, energy_bins, time_bins; reduction = sum)
+        bucket(energy, time_delays, flux, energy_bins, time_bins; reduction = sum)
 
     @. transfer_function = transfer_function / (de * dt)
-    transfer_function[transfer_function.==0.0] = NaN
+    transfer_function[transfer_function.==0.0] .= NaN
 
     time_bins, energy_bins, transfer_function
+end
+
+function radial_sampler(m::AbstractMetricParams, u, Nr::Int, Nφ::Int; rmax = 400, φmax = 2π)
+    rs = Grids.geometric_grid(1.0, rmax, Nr)
+    φs = range(0.0, φmax, Nφ)
+
+    αs = vec([r * cos(φ) for r in rs, φ in φs])
+    βs = vec([r * sin(φ) * sin(u[3]) for r in rs, φ in φs])
+
+    f = (i) -> begin
+        α = αs[i]
+        β = βs[i]
+        map_impact_parameters(m, u, α, β)
+    end
+    αs, βs, f
 end
 
 function bin_and_interpolate(
