@@ -56,7 +56,7 @@ function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8)
 
     if g✶hi > 1 - h
         if g✶lo < 1 - h
-            lum += integrate_edge(S, ghi, 1-h, gmin, gmax)
+            lum += integrate_edge(S, ghi, 1 - h, gmin, gmax)
             ghi = g✶_to_g(1 - h, gmin, gmax)
         else
             return integrate_edge(S, ghi, g✶lo, gmin, gmax)
@@ -77,10 +77,6 @@ function _wrap_cunningham_interpolations(fr_interp, gmin, gmax, r, g✶_grid)
         g✶ = g_to_g✶(g, gmin, gmax)
         _cunningham_integrand(S(g✶), g, g✶, gmin, gmax)
     end
-end
-
-function weighted_rₑ_grid(min, max, N)
-    Iterators.reverse(inv(r) for r in range(1 / max, 1 / min, N))
 end
 
 function _build_g✶_grid(Ng✶, h)
@@ -109,7 +105,7 @@ function integrate_drdg✶(
     g_grid_view = @views g_grid[1:end-1]
 
     # build fine radial grid for trapezoidal integration
-    fine_rₑ_grid = weighted_rₑ_grid(minrₑ, maxrₑ, 1000) |> collect
+    fine_rₑ_grid = Grids.inverse_grid(minrₑ, maxrₑ, 1000) |> collect
     @inbounds for (i, rₑ) in enumerate(fine_rₑ_grid)
         gmin = gmin_interp(rₑ)
         gmax = gmax_interp(rₑ)
