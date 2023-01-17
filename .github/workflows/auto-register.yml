@@ -1,0 +1,66 @@
+name: Auto-register
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+
+  autoregister:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        julia-version: ['1.8']
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: ${{ matrix.julia-version }}
+      - uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
+      - run: |
+          git config --global user.email "bot@astro-group-bristol"
+          git config --global user.name "astro-group-bristol[bot]"
+          julia -e '
+          import Pkg
+          Pkg.add(url="https://github.com/GunnarFarneback/LocalRegistry.jl")
+          using LocalRegistry
+          Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/astro-group-bristol/AstroRegistry/"))
+          register(pwd(), registry="AstroRegistry", push=false)
+          '
+      - name: Create new branch
+        run: |
+          cd ~/.julia/registries/AstroRegistry
+          git checkout -b "bot/gradus"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.SECRET_PR_TOKEN }}
+          repository: "astro-group-bristol/AstroRegistry"
+          directory: "/home/runner/.julia/registries/AstroRegistry"
+          branch: "bot/gradus"
+      - name: Create pull request
+        run: |
+          cd ~/.julia/registries/AstroRegistry
+          gh pr create -B main \
+            --title "New Version: Gradus" \
+            --body "Automated pull request." \
+            -H "bot/gradus"
+        env:
+            GITHUB_TOKEN: ${{ secrets.SECRET_PR_TOKEN }}
