@@ -20,6 +20,7 @@ end
 
 @testset "image-planes" verbose = true begin
     include("image-planes/test-polar-grids.jl")
+    include("image-planes/test-cartesian-grids.jl")
 end
 
 # little bit of aqua
