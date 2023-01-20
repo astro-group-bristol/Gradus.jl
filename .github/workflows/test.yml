@@ -29,7 +29,6 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.julia-version }}
-      - run: julia --project=. -e 'import Pkg; Pkg.add(url="https://github.com/fjebaker/Buckets.jl")'
       - uses: julia-actions/cache@v1
       # - uses: actions/cache@v1
       #   env:
@@ -41,6 +40,7 @@ jobs:
       #       ${{ runner.os }}-test-${{ env.cache-name }}-
       #       ${{ runner.os }}-test-
       #       ${{ runner.os }}-
+      - run: julia -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/astro-group-bristol/AstroRegistry/"))'
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
