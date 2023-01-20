@@ -89,7 +89,7 @@ end
         end
     end
 
-    @time @testset "thick-disc" begin
+    @testset "thick-disc" begin
         u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
         d = ThickDisc(_thick_disc)
         for (m, expectation) in zip(
