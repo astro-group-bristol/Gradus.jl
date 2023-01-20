@@ -29,7 +29,7 @@ function lineprofile(
     h = 2e-8,
     kwargs...,
 ) where {T}
-    radii = Grids.inverse_grid(minrₑ, maxrₑ, numrₑ)
+    radii = Grids._inverse_grid(minrₑ, maxrₑ, numrₑ)
     itfs = interpolated_transfer_branches(m, u, d, radii; verbose = verbose, kwargs...)
     flux = integrate_drdg✶(ε, itfs, radii, bins; h = h, Ng✶ = Ng✶)
     bins, flux
