@@ -29,25 +29,20 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.julia-version }}
-      - uses: actions/cache@v1
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-test-
-            ${{ runner.os }}-
       - run: julia --project=. -e 'import Pkg; Pkg.add(url="https://github.com/fjebaker/Buckets.jl")'
+      - uses: julia-actions/cache@v1
+      # - uses: actions/cache@v1
+      #   env:
+      #     cache-name: cache-artifacts
+      #   with:
+      #     path: ~/.julia/artifacts
+      #     key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-test-${{ env.cache-name }}-
+      #       ${{ runner.os }}-test-
+      #       ${{ runner.os }}-
       - uses: julia-actions/julia-buildpkg@v1
-      - run: cat Manifest.toml
-      #- uses: julia-actions/julia-runtest@v1
-      - run: |
-          julia --color=yes --math-mode=ieee --check-bounds=yes -tauto --project=. -e '
-            import Pkg
-            Pkg.test(; coverage=true, force_latest_compatible_version=true)
-          '
+      - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
         with:
           directories: src
