@@ -1,3 +1,7 @@
+using Test
+using Gradus
+using StaticArrays
+
 # Tests to make sure the basic `tracegeodesics` function works for (ideally) all metrics.
 
 @testset "tracegeodesics" begin

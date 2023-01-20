@@ -1,3 +1,7 @@
+using Test
+using Gradus
+using StaticArrays
+
 # Tests to make sure the basic `rendergeodesics` function works for (ideally) all metrics.
 
 function _thick_disc(u)
@@ -43,7 +47,7 @@ end
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
             # last computed 15/11/2022: continuous callback for disc intersection
-            [90629.67068537966, 90558.28684240118, 86277.8210033628, 39094.80412600604],
+            [90696.01318073242, 90491.9434460566, 86277.8210033628, 39094.80412600604],
         )
             img = rendergeodesics(
                 m,

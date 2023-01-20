@@ -1,3 +1,7 @@
+using Test
+using Gradus
+using StaticArrays
+
 # Tests to make sure the basic different special radii functions work.
 
 @testset "special-radii" begin

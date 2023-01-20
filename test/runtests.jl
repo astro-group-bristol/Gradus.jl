@@ -1,19 +1,26 @@
 using Test
 using Gradus
-using StaticArrays
+
 using Aqua
-using Tullio
 
-include("smoke-tests/rendergeodesics.jl")
-include("smoke-tests/tracegeodesics.jl")
-include("smoke-tests/pointfunctions.jl")
-include("smoke-tests/circular-orbits.jl")
-include("smoke-tests/disc-profiles.jl")
-include("smoke-tests/special-radii.jl")
-include("smoke-tests/cunningham-transfer-functions.jl")
-include("smoke-tests/line-profiles.jl")
+@testset "smoke-tests" verbose=true begin
+    include("smoke-tests/rendergeodesics.jl")
+    include("smoke-tests/tracegeodesics.jl")
+    include("smoke-tests/pointfunctions.jl")
+    include("smoke-tests/circular-orbits.jl")
+    include("smoke-tests/disc-profiles.jl")
+    include("smoke-tests/special-radii.jl")
+    include("smoke-tests/cunningham-transfer-functions.jl")
+    include("smoke-tests/line-profiles.jl")
+end
 
-include("unit/gradusbase.geometry.jl")
+@testset "metric-geometry" verbose = true begin
+    include("unit/gradusbase.geometry.jl")
+end
+
+@testset "image-planes" verbose=true begin
+    include("image-planes/test-polar-grids.jl")
+end
 
 # little bit of aqua
 Aqua.test_undefined_exports(Gradus)
