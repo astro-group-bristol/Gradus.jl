@@ -1,3 +1,6 @@
+using Test
+using Gradus
+using StaticArrays
 
 @testset "cunningham-transfer-functions" begin
     m = BoyerLindquistAD(1.0, 0.998)

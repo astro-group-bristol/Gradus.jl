@@ -1,3 +1,7 @@
+using Test
+using Gradus
+using StaticArrays
+
 # smoke test to make sure circular orbits work
 
 @testset "circular-orbits" begin

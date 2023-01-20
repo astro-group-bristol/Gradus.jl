@@ -36,5 +36,4 @@ function impact_parameters_to_vel(m::AbstractMetricParams{T}, u, α, β) where {
     -1.0, -β / mcomp[3], -α / √(mcomp[3] * mcomp[4])
 end
 
-
 export map_impact_parameters, impact_parameters_to_vel

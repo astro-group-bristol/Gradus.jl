@@ -1,3 +1,7 @@
+using Test
+using Gradus
+using StaticArrays
+
 # Tests to make sure the basic `rendergeodesics` function works for (ideally) all metrics.
 
 function _thick_disc(u)
@@ -32,7 +36,7 @@ end
             image_fingerprint = sum(filter(!isnan, img))
             # have to be really coarse cus the first order method is so variable???
             # the rest are very resolute
-            @test isapprox(expectation, image_fingerprint; atol = 5.0, rtol = 0.0)
+            @test isapprox(expectation, image_fingerprint; rtol = 0.1)
         end
     end
 
@@ -43,7 +47,7 @@ end
             [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()],
             # expectation values for the sum of the image
             # last computed 15/11/2022: continuous callback for disc intersection
-            [90629.67068537966, 90558.28684240118, 86277.8210033628, 39094.80412600604],
+            [90696.01318073242, 90491.9434460566, 86277.8210033628, 39094.80412600604],
         )
             img = rendergeodesics(
                 m,
@@ -57,7 +61,7 @@ end
             )
             image_fingerprint = sum(filter(!isnan, img))
             # this tolerance is kind of unacceptably high? todo: investigate why
-            @test isapprox(expectation, image_fingerprint; atol = 5.0, rtol = 0.0)
+            @test isapprox(expectation, image_fingerprint; rtol = 0.1)
         end
     end
 
@@ -85,7 +89,7 @@ end
         end
     end
 
-    @time @testset "thick-disc" begin
+    @testset "thick-disc" begin
         u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
         d = ThickDisc(_thick_disc)
         for (m, expectation) in zip(

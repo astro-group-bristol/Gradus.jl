@@ -1,3 +1,8 @@
+using Test
+using Gradus
+using StaticArrays
+using Tullio
+
 @testset "tetradframe" begin
     all_metrics = (
         # can't do first order yet since no four velocity

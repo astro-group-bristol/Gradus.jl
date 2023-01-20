@@ -10,11 +10,17 @@ end
     closest_approach,
     effective_infinity,
 )
-    min_r = inner_radius(m)
+    min_r = inner_radius(m) * closest_approach
     # terminate integration if we come within some % of the black hole radius
     DiscreteCallback(
-        (u, λ, integrator) -> u[2] ≤ min_r * closest_approach || u[2] > effective_infinity,
-        terminate_with_status!(StatusCodes.OutOfDomain),
+        (u, λ, integrator) -> u[2] ≤ min_r || u[2] > effective_infinity,
+        integrator -> if integrator.u[2] ≤ min_r
+            integrator.p.status = StatusCodes.WithinInnerBoundary
+            terminate!(integrator)
+        else
+            integrator.p.status = StatusCodes.OutOfDomain
+            terminate!(integrator)
+        end,
     )
 end
 

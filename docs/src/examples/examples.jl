@@ -307,7 +307,7 @@ function ex_lineprofile()
     # transform to observed energy
     energy = gs .* 6.4
 
-    p = plot(energy, flux, legend=false)
+    p = plot(energy, flux, legend = false)
     savefig(p, "example-line-profile.svg")
 end
 

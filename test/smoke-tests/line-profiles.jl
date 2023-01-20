@@ -1,3 +1,6 @@
+using Test
+using Gradus
+using StaticArrays
 
 @testset "line-profiles" begin
     d = GeometricThinDisc(0.0, 300.0, π / 2)

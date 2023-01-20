@@ -144,6 +144,9 @@ include("tracing/utility.jl")
 
 include("tracing/method-implementations/auto-diff.jl")
 
+include("image-planes/grids.jl")
+include("image-planes/planes.jl")
+
 include("rendering/cache.jl")
 include("rendering/rendering.jl")
 include("rendering/utility.jl")
@@ -162,7 +165,6 @@ include("accretion-geometry/discs.jl")
 include("accretion-geometry/meshes.jl")
 include("accretion-geometry/bootstrap.jl")
 
-include("transfer-functions/grids.jl")
 include("transfer-functions/cunningham-transfer-functions.jl")
 include("transfer-functions/integration.jl")
 include("transfer-functions/precision-solvers.jl")
