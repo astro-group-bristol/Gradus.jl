@@ -12,6 +12,10 @@ abstract type AbstractMetric{T} <: AbstractMatrix{T} end
 metric_params(m::AbstractMetric{T}) where {T} =
     error("Not implemented for metric $(typeof(m))")
 
+Base.length(::AbstractMetricParams) = 1
+Base.iterate(m::AbstractMetricParams) = (m, nothing)
+Base.iterate(::AbstractMetricParams, ::Nothing) = nothing
+
 """
     metric_components(m::AbstractMetricParams{T}, x)
 
@@ -53,7 +57,7 @@ Return the innermost valid coordinate relative to the origin, for use in geodesi
 This usually represents some property of the metric, e.g. event horizon radius in Kerr/Schwarzschild metrics, or
 throat diameter in worm hole metrics.
 """
-inner_radius(m::AbstractMetricParams{T}) where {T} = convert(T, 0.0)
+inner_radius(::AbstractMetricParams{T}) where {T} = convert(T, 0.0)
 
 """
     metric_type(m::AbstractMetricParams{T})
