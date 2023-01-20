@@ -3,7 +3,7 @@ using Gradus
 
 using Aqua
 
-@testset "smoke-tests" verbose=true begin
+@testset "smoke-tests" verbose = true begin
     include("smoke-tests/rendergeodesics.jl")
     include("smoke-tests/tracegeodesics.jl")
     include("smoke-tests/pointfunctions.jl")
@@ -18,7 +18,7 @@ end
     include("unit/gradusbase.geometry.jl")
 end
 
-@testset "image-planes" verbose=true begin
+@testset "image-planes" verbose = true begin
     include("image-planes/test-polar-grids.jl")
 end
 
