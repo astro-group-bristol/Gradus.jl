@@ -16,6 +16,7 @@ using DocStringExtensions
 
 @enumx StatusCodes begin
     OutOfDomain
+    WithinInnerBoundary
     IntersectedWithGeometry
     NoStatus
 end
