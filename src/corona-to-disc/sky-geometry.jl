@@ -4,6 +4,7 @@ struct BothHemispheres <: AbstractSkyDomain end
 
 struct RandomGenerator <: AbstractGenerator end
 struct GoldenSpiralGenerator <: AbstractGenerator end
+struct EvenGenerator <: AbstractGenerator end
 
 struct EvenSampler{D,G} <: AbstractDirectionSampler{D,G}
     EvenSampler(domain::AbstractSkyDomain, generator::AbstractGenerator) =
@@ -24,19 +25,20 @@ struct WeierstrassSampler{D,G} <: AbstractDirectionSampler{D,G}
     ) = WeierstrassSampler(res, domain, generator)
 end
 
+@inline geti(::AbstractDirectionSampler{D,EvenGenerator}, i, N) where {D} = i
+@inline geti(::AbstractDirectionSampler{D,GoldenSpiralGenerator}, i, N) where {D} = i
 @inline geti(::AbstractDirectionSampler{D,RandomGenerator}, i, N) where {D} =
     rand(Float64) * N
-@inline geti(::AbstractDirectionSampler{D,G}, i, N) where {D,G} = i
 
-@inline sample_azimuth(::AbstractDirectionSampler{D,GoldenSpiralGenerator}, i) where {D} =
+@inline getangle(::AbstractDirectionSampler{D,EvenGenerator}, i) where {D} = 2π * i
+@inline getangle(::AbstractDirectionSampler{D,GoldenSpiralGenerator}, i) where {D} =
     π * (1 + √5) * i
-@inline sample_azimuth(::AbstractDirectionSampler{D,G}, i) where {D,G} = 2π * i
-
+@inline getangle(::AbstractDirectionSampler{D,RandomGenerator}, i) where {D} = 2π * i
 
 sample_angles(sm::AbstractDirectionSampler{D,G}, i, N) where {D,G} =
-    (sample_elevation(sm, i / N), mod2pi(sample_azimuth(sm, i)))
+    (sample_elevation(sm, i / N), mod2pi(getangle(sm, i)))
 @inline sample_angles(sm::WeierstrassSampler{D}, i, N) where {D} =
-    (sample_elevation(sm, i), mod2pi(sample_azimuth(sm, i)))
+    (sample_elevation(sm, i), mod2pi(getangle(sm, i)))
 
 
 sample_elevation(sm::AbstractDirectionSampler{D,G}, i) where {D,G} =
