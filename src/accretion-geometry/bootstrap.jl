@@ -2,7 +2,7 @@ function tracegeodesics(
     m::AbstractMetricParams{T},
     init_positions,
     init_velocities,
-    accretion_geometry,
+    accretion_geometry::AbstractAccretionGeometry,
     time_domain::Tuple{T,T};
     callback = nothing,
     gtol = 1e-2,
@@ -22,7 +22,7 @@ end
 function rendergeodesics(
     m::AbstractMetricParams{T},
     init_pos,
-    accretion_geometry,
+    accretion_geometry::AbstractAccretionGeometry,
     max_time::T;
     callback = nothing,
     gtol = 1e-2,
@@ -35,7 +35,7 @@ end
 function prerendergeodesics(
     m::AbstractMetricParams{T},
     init_pos,
-    accretion_geometry,
+    accretion_geometry::AbstractAccretionGeometry,
     max_time::T;
     callback = nothing,
     gtol = 1e-2,
