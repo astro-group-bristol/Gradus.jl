@@ -61,7 +61,7 @@ end
 
 function apply_to_image!(m::AbstractMetricParams, image, sols, pf, max_time)
     @inbounds @threads for i = 1:length(sols)
-        image[i] = pf(m, getgeodesicpoint(m, sols[i]), max_time)
+        image[i] = pf(m, process_solution(m, sols[i]), max_time)
     end
 end
 
@@ -112,7 +112,7 @@ function __prerendergeodesics(
         kwargs...,
     )
 
-    point_cache = map(sol -> getgeodesicpoint(m, sol), simsols)
+    point_cache = map(sol -> process_solution(m, sol), simsols)
 
     EndpointRenderCache(
         m,

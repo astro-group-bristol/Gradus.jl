@@ -25,7 +25,7 @@ function integrate_single_geodesic(
     β = rₒ * sin(θₒ)
     v = map_impact_parameters(m, u, α, β)
     sol = tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
-    getgeodesicpoint(m, sol)
+    process_solution(m, sol)
 end
 
 """
@@ -171,7 +171,7 @@ function jacobian_∂αβ_∂gr(
             v = map_impact_parameters(m, u, α, β)
             sol =
                 tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
-            gp = getgeodesicpoint(m, sol)
+            gp = process_solution(m, sol)
             g = redshift_pf(m, gp, 2000.0)
             # return r and g*
             @SVector [gp.u2[2], g]

@@ -34,7 +34,7 @@ abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
     p::P
 end
 
-@inbounds function getgeodesicpoint(
+@inbounds function process_solution(
     m::AbstractFirstOrderMetricParams{T},
     sol::SciMLBase.AbstractODESolution{T},
 ) where {T}

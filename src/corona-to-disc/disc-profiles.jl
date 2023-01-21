@@ -83,7 +83,7 @@ function VoronoiDiscProfile(
     d::AbstractAccretionDisc,
     sols::AbstractArray{S},
 ) where {S<:SciMLBase.AbstractODESolution}
-    VoronoiDiscProfile(m, d, map(sol -> getgeodesicpoint(m, sol), sols))
+    VoronoiDiscProfile(m, d, map(sol -> process_solution(m, sol), sols))
 end
 
 function VoronoiDiscProfile(

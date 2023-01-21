@@ -93,7 +93,7 @@ end
 
 @inline function apply(pf::AbstractPointFunction, rc::SolutionRenderCache; kwargs...)
     ThreadsX.map(
-        sol -> pf.f(rc.m, getgeodesicpoint(m, sol), rc.max_time; kwargs...),
+        sol -> pf.f(rc.m, process_solution(m, sol), rc.max_time; kwargs...),
         rc.geodesics,
     )
 end

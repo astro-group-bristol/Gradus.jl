@@ -36,8 +36,8 @@ import .GradusBase:
     AbstractMetricParams,
     metric_params,
     metric,
-    getgeodesicpoint,
-    getgeodesicpoints,
+    process_solution,
+    process_solution_full,
     GeodesicPoint,
     AbstractGeodesicPoint,
     vector_to_local_sky,
@@ -62,8 +62,8 @@ import .GradusBase:
     IntegrationParameters
 
 export AbstractMetricParams,
-    getgeodesicpoint,
-    getgeodesicpoints,
+    process_solution,
+    process_solution_full,
     GeodesicPoint,
     AbstractGeodesicPoint,
     AbstractMetricParams,
