@@ -16,6 +16,7 @@ end
 
 @testset "metric-geometry" verbose = true begin
     include("unit/gradusbase.geometry.jl")
+    include("test-special-radii.jl")
 end
 
 @testset "image-planes" verbose = true begin
