@@ -7,7 +7,7 @@ using StaticArrays
 @testset "disc-profiles" begin
 
     @testset "voronoi-tesselation" begin
-        m = BoyerLindquistAD(M = 1.0, a = 1.0)
+        m = KerrMetric(M = 1.0, a = 1.0)
         d = GeometricThinDisc(1.0, 40.0, deg2rad(90.0))
         model = LampPostModel(h = 10.0, θ = deg2rad(0.0001))
         simsols = tracegeodesics(
@@ -21,7 +21,7 @@ using StaticArrays
 
         intersected_simsols =
             filter(i -> i.prob.p.status == StatusCodes.IntersectedWithGeometry, simsols.u)
-        sd_endpoints = map(sol -> getgeodesicpoint(m, sol), intersected_simsols)
+        sd_endpoints = map(sol -> process_solution(m, sol), intersected_simsols)
 
         # test ensemble solution constructor
         vdp1 = VoronoiDiscProfile(m, d, simsols)

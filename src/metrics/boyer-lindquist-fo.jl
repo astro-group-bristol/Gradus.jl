@@ -338,10 +338,10 @@ isco(M, a) = a > 0.0 ? isco(M, a, -) : isco(M, a, +)
 end # module
 
 """
-A first-order implementation of [`BoyerLindquistAD`](@ref).
+A first-order implementation of [`KerrMetric`](@ref).
 $(FIELDS)
 """
-@with_kw struct BoyerLindquistFO{T} <: AbstractFirstOrderMetricParams{T}
+@with_kw struct KerrSpacetimeFirstOrder{T} <: AbstractFirstOrderMetricParams{T}
     @deftype T
     "Black hole mass."
     M = 1.0
@@ -351,31 +351,31 @@ $(FIELDS)
     E = 1.0
 end
 
-GradusBase.inner_radius(m::BoyerLindquistFO{T}) where {T} = m.M + √(m.M^2 - m.a^2)
-GradusBase.constrain(::BoyerLindquistFO{T}, u, v; μ = 0.0) where {T} = v[1]
+GradusBase.inner_radius(m::KerrSpacetimeFirstOrder{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+GradusBase.constrain(::KerrSpacetimeFirstOrder{T}, u, v; μ = 0.0) where {T} = v[1]
 
-four_velocity(u, m::BoyerLindquistFO{T}, p) where {T} =
+four_velocity(u, m::KerrSpacetimeFirstOrder{T}, p) where {T} =
     __BoyerLindquistFO.four_velocity(u, m.E, m.M, m.a, p)
-calc_lq(m::BoyerLindquistFO{T}, pos, vel) where {T} =
+calc_lq(m::KerrSpacetimeFirstOrder{T}, pos, vel) where {T} =
     __BoyerLindquistFO.LQ(m.M, pos[2], m.a, pos[3], vel[3], vel[4])
 
-function Vr(m::BoyerLindquistFO{T}, u, p) where {T}
+function Vr(m::KerrSpacetimeFirstOrder{T}, u, p) where {T}
     L = p.L
     Q = p.Q
     __BoyerLindquistFO.Vr(m.E, L, m.M, Q, u[2], m.a)
 end
-function Vθ(m::BoyerLindquistFO{T}, u, p) where {T}
+function Vθ(m::KerrSpacetimeFirstOrder{T}, u, p) where {T}
     L = p.L
     Q = p.Q
     __BoyerLindquistFO.Vθ(m.E, L, Q, m.a, u[3])
 end
 
-function impact_parameters_to_vel(m::BoyerLindquistFO{T}, u, α, β) where {T}
+function impact_parameters_to_vel(m::KerrSpacetimeFirstOrder{T}, u, α, β) where {T}
     sinΦ, sinΨ = __BoyerLindquistFO.sinΦsinΨ(m.M, u[2], m.a, u[3], α, β)
     (β < 0.0 ? 1.0 : -1.0, sinΦ, sinΨ)
 end
 
 # special radii
-isco(m::BoyerLindquistFO{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
+isco(m::KerrSpacetimeFirstOrder{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
 
-export BoyerLindquistFO
+export KerrSpacetimeFirstOrder

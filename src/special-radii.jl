@@ -6,20 +6,19 @@ Innermost stable circular orbit (ISCO), defined by
     \\frac{\\text{d}}{\\text{d}r} \\left( \\frac{E}{\\mu} \\right) = 0.
 ```
 Uses analytic solutions if known for that metric, else uses a root finder to calculate
-the radius at which the defining condition is met.
+the radius at which the above condition is met.
 """
-isco(m::AbstractMetricParams{T}) where {T} = error("Not implemented for $(typeof(m)).")
+isco(m::AbstractMetricParams) = error("Not implemented for $(typeof(m)).")
 
-function isco(
-    m::AbstractAutoDiffStaticAxisSymmetricParams{T},
-    lower_bound,
-    upper_bound,
-) where {T}
+function isco(m::AbstractAutoDiffStaticAxisSymmetricParams, lower_bound, upper_bound)
     dE(r) = ForwardDiff.derivative(x -> CircularOrbits.energy(m, x), r)
     d2E(r) = ForwardDiff.derivative(dE, r)
 
     Roots.find_zero((dE, d2E), (lower_bound, upper_bound))
 end
+
+isco(m::AbstractAutoDiffStaticAxisSymmetricParams) =
+    isco(m, find_lower_isco_bound(m), 100.0)
 
 """
     $(TYPEDSIGNATURES)
@@ -45,9 +44,6 @@ function find_lower_isco_bound(
     return T(0.0)
 end
 
-isco(m::AbstractAutoDiffStaticAxisSymmetricParams{T}) where {T} =
-    isco(m, find_lower_isco_bound(m), 100.0)
-
 """
     $(TYPEDSIGNATURES)
 
@@ -56,7 +52,7 @@ Photon orbit radius, defined as the radius for which
     \\frac{E}{\\mu} \\rightarrow \\infty .
 ```
 """
-r_ph(m::AbstractMetricParams{T}) where {T} = error("Not implemented for $(typeof(m)).")
+photon_orbit(m::AbstractMetricParams) = error("Not implemented for $(typeof(m)).")
 
 """
     $(TYPEDSIGNATURES)
@@ -66,18 +62,13 @@ Marginally bound orbit
     \\frac{E}{\\mu} = 1.
 ```
 """
-r_mb(m::AbstractMetricParams{T}) where {T} = error("Not implemented for $(typeof(m)).")
+marginally_bound_orbit(m::AbstractMetricParams) = error("Not implemented for $(typeof(m)).")
 
 """
-    $(TYPEDSIGNATURES)
+    event_horizon(m::AbstractMetricParams; select = last, resolution = 100, θε = 1e-7, rmax = 5.0)
 
 Event horizon radius, often equivalent to [`GradusBase.inner_radius`](@ref), however remains
 distinct, such that the latter may still be an arbitrary chart cutoff.
-"""
-r_s(m::AbstractMetricParams{T}) where {T} = error("Not implemented for $(typeof(m)).")
-
-"""
-    eventhorizon(m::AbstractMetricParams; select = last, resolution = 100, θε = 1e-7, rmax = 5.0)
 
 Utility function for helping plot an event horizon shape. Returns a tuple containing the `r`
 and `θ` vectors that solve
@@ -92,7 +83,7 @@ that the metric describes a naked singularity.
 Often the equation will have multiple roots, in which case the keyword argument `select` may be
 assigned to select the desired root.
 """
-eventhorizon(m::AbstractMetricParams{T}; kwargs...) where {T} =
+event_horizon(m::AbstractMetricParams; kwargs...) =
     error("Not implemented for $(typeof(m)).")
 
 function _event_horizon_condition(m, r, θ)
@@ -100,7 +91,7 @@ function _event_horizon_condition(m, r, θ)
     g[5]^2 - g[1] * g[4]
 end
 
-function eventhorizon(
+function event_horizon(
     m::AbstractAutoDiffStaticAxisSymmetricParams{T};
     select = maximum,
     resolution::Int = 100,
@@ -132,4 +123,4 @@ function is_naked_singularity(
     end
 end
 
-export eventhorizon, is_naked_singularity
+export event_horizon, is_naked_singularity

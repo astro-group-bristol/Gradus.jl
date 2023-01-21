@@ -41,13 +41,13 @@ end
 end # module
 
 """
-    struct KerrRefractiveAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct KerrRefractive{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
 
 Kerr metric in Boyer-Lindquist coordintes with a path-length ansatz, equivalent to a refractive
 index `n`, within the coronal radius `corona_radius`.
 $(FIELDS)
 """
-@with_kw struct KerrRefractiveAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct KerrRefractive{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
     "Black hole mass."
     M = 1.0
@@ -60,11 +60,11 @@ $(FIELDS)
 end
 
 # implementation
-metric_components(m::KerrRefractiveAD{T}, rθ) where {T} =
+metric_components(m::KerrRefractive{T}, rθ) where {T} =
     __KerrRefractiveAD.metric_components(m.M, m.a, m.n, m.corona_radius, rθ)
-GradusBase.inner_radius(m::KerrRefractiveAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+GradusBase.inner_radius(m::KerrRefractive{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
 # special radii
-isco(m::KerrRefractiveAD{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
+isco(m::KerrRefractive{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
 
-export KerrRefractiveAD
+export KerrRefractive

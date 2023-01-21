@@ -36,8 +36,8 @@ import .GradusBase:
     AbstractMetricParams,
     metric_params,
     metric,
-    getgeodesicpoint,
-    getgeodesicpoints,
+    process_solution,
+    process_solution_full,
     GeodesicPoint,
     AbstractGeodesicPoint,
     vector_to_local_sky,
@@ -62,8 +62,8 @@ import .GradusBase:
     IntegrationParameters
 
 export AbstractMetricParams,
-    getgeodesicpoint,
-    getgeodesicpoints,
+    process_solution,
+    process_solution_full,
     GeodesicPoint,
     AbstractGeodesicPoint,
     AbstractMetricParams,
@@ -203,7 +203,7 @@ export AbstractPointFunction,
 precompile(
     tracegeodesics,
     (
-        BoyerLindquistAD{Float64},
+        KerrMetric{Float64},
         SVector{4,Float64},
         SVector{4,Float64},
         Tuple{Float64,Float64},
@@ -211,7 +211,7 @@ precompile(
 )
 precompile(
     rendergeodesics,
-    (BoyerLindquistAD{Float64}, SVector{4,Float64}, GeometricThinDisc{Float64}, Float64),
+    (KerrMetric{Float64}, SVector{4,Float64}, GeometricThinDisc{Float64}, Float64),
 )
 
 end # module

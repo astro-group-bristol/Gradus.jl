@@ -53,7 +53,7 @@ Used to get pack a `SciMLBase.AbstractODESolution` into a [`GeodesicPoint`](@ref
 information relevant to start and endpoint of the integration. To keep the full geodesic path, it is
 encouraged to use the `SciMLBase.AbstractODESolution` directly.
 """
-function getgeodesicpoint(
+function process_solution(
     _::AbstractMetricParams{T},
     sol::SciMLBase.AbstractODESolution{T,N,S},
 ) where {T,N,S}
@@ -75,10 +75,10 @@ end
 """
     $(TYPEDSIGNATURES)
 
-Unpacks each point in the solution, similar to [`getgeodesicpoint`](@ref) but returns an
+Unpacks each point in the solution, similar to [`process_solution`](@ref) but returns an
 array of [`GeodesicPoint`](@ref).
 """
-function getgeodesicpoints(
+function process_solution_full(
     _::AbstractMetricParams{T},
     sol::SciMLBase.AbstractODESolution{T,N,S},
 ) where {T,N,S}
@@ -99,13 +99,11 @@ end
 # TODO: GeodesicPath structure for the full geodesic path
 # do we want to support this?
 
-function unpack_solution(sol::SciMLBase.AbstractODESolution{T,N,S}) where {T,N,S}
+function unpack_solution(sol::SciMLBase.AbstractODESolution)
     u = sol.u
     p = sol.prob.p
     t = sol.t
     (u, t, p)
 end
 
-function unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution{T,N,V}) where {T,N,V}
-    map(unpack_solution, simsol)
-end
+unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution) = map(unpack_solution, simsol.u)

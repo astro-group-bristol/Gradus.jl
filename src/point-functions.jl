@@ -72,7 +72,7 @@ A filter for geodesics within a certain radius, used to only calculate redshift 
 10 ``\\r_\\text{g}``
 ```julia
 func(m, gp, max_time) = gp.u[2] < 10.0
-pf = ConstPointFunctions.redshift ∘ FilterPointFunction(func, NaN64)
+pf = ConstPointFunctions.redshift(m, u) ∘ FilterPointFunction(func, NaN64)
 ```
 """
 struct FilterPointFunction{F,T} <: AbstractPointFunction
@@ -91,22 +91,14 @@ end
     convert(T, pf.f(m, gp, max_time; kwargs...))
 end
 
-@inline function apply(
-    pf::AbstractPointFunction,
-    rc::SolutionRenderCache{M,T,G};
-    kwargs...,
-) where {M,T,G}
+@inline function apply(pf::AbstractPointFunction, rc::SolutionRenderCache; kwargs...)
     ThreadsX.map(
-        sol -> pf.f(rc.m, getgeodesicpoint(m, sol), rc.max_time; kwargs...),
+        sol -> pf.f(rc.m, process_solution(m, sol), rc.max_time; kwargs...),
         rc.geodesics,
     )
 end
 
-@inline function apply(
-    pf::AbstractPointFunction,
-    rc::EndpointRenderCache{M,T,P};
-    kwargs...,
-) where {M,T,P}
+@inline function apply(pf::AbstractPointFunction, rc::EndpointRenderCache; kwargs...)
     ThreadsX.map(gp -> pf.f(rc.m, gp, rc.max_time; kwargs...), rc.points)
 end
 
@@ -119,7 +111,7 @@ end
     end
 end
 
-@inline function Base.:∘(pf1::AbstractPointFunction, pf2::FilterPointFunction{F}) where {F}
+@inline function Base.:∘(pf1::AbstractPointFunction, pf2::FilterPointFunction)
     let f1 = pf1.f, f2 = pf2.f
         PointFunction(
             (m, gp, max_time; kwargs...) -> begin

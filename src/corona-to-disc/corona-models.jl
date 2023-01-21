@@ -3,11 +3,7 @@ function source_velocity(::AbstractMetricParams, model::AbstractCoronaModel)
     error("Not implemented for $(typeof(model)).")
 end
 
-function sample_position(
-    ::AbstractMetricParams{T},
-    model::AbstractCoronaModel{T},
-    N,
-) where {T}
+function sample_position(::AbstractMetricParams, model::AbstractCoronaModel, N)
     error("Not implemented for $(typeof(model)).")
 end
 

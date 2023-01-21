@@ -76,7 +76,7 @@ function cunningham_transfer_function(
     rₑ;
     max_time = 2e3,
     diff_order = 4,
-    redshift_pf = ConstPointFunctions.redshift,
+    redshift_pf = ConstPointFunctions.redshift(m, u),
     offset_max = 20.0,
     zero_atol = 1e-7,
     N = 80,

@@ -5,7 +5,15 @@ Module defining a number of `const` [`Gradus.AbstractPointFunction`](@ref), serv
 or common purposes for analysis.
 """
 module ConstPointFunctions
-using ..Gradus: PointFunction, FilterPointFunction, _redshift_guard, StatusCodes
+using ..Gradus:
+    PointFunction,
+    FilterPointFunction,
+    _redshift_guard,
+    StatusCodes,
+    KerrMetric,
+    KerrSpacetimeFirstOrder,
+    AbstractMetricParams,
+    interpolate_redshift
 # for doc bindings
 import ..Gradus
 
@@ -45,19 +53,23 @@ Equivalent to `ConstPointFunctions.affine_time ∘ ConstPointFunctions.filter_ea
 const shadow = affine_time ∘ filter_early_term
 
 """
-    redshift(m::AbstractMetricParams, gp::AbstractGeodesicPoint, max_time)
+    redshift(m::AbstractMetricParams)
+
+Returns a [`PointFunction`](@ref).
 
 Calculate the analytic redshift at a given geodesic point, assuming equitorial, geometrically
 thin accretion disc. Implementation depends on the metric type. Currently implemented for
 
-- [`Gradus.BoyerLindquistAD`](@ref)
-- [`Gradus.BoyerLindquistFO`](@ref)
+- [`Gradus.KerrMetric`](@ref)
+- [`Gradus.KerrSpacetimeFirstOrder`](@ref)
 
 # Notes
 
 Wraps calls to [`Gradus._redshift_guard`](@ref) to dispatch different implementations.
 """
-const redshift = PointFunction(_redshift_guard)
+redshift(::KerrMetric, _) = PointFunction(_redshift_guard)
+redshift(::KerrSpacetimeFirstOrder, _) = PointFunction(_redshift_guard)
+redshift(m::AbstractMetricParams, u; kwargs...) = interpolate_redshift(m, u; kwargs...)
 
 end # module
 

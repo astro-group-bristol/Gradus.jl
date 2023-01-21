@@ -13,20 +13,20 @@ function trace_single_orbit(m, r, vϕ; max_time = 300.0, μ = 1.0, tracer_args..
     Gradus.tracegeodesics(m, u, v, (0.0, max_time); μ = μ, tracer_args...)
 end
 
-function measure_stability(m::AbstractMetricParams{T}, r, vϕ; tracer_args...) where {T}
+function measure_stability(m::AbstractMetricParams, r, vϕ; tracer_args...)
     sol = trace_single_orbit(m, r, vϕ; tracer_args...)
     rs = selectdim(sol, 1, 2)
     Qs(rs)
 end
 
 function __solve_equitorial_circular_orbit(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     r,
     optimizer,
     lower_bound,
     upper_bound;
     tracer_args...,
-) where {T}
+)
     res = optimize(
         vϕ -> measure_stability(m, r, vϕ; tracer_args...),
         lower_bound,
@@ -37,13 +37,13 @@ function __solve_equitorial_circular_orbit(
 end
 
 function solve_equitorial_circular_orbit(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     r::Number;
     lower_bound = 0.0,
     upper_bound = 1.0,
     optimizer = GoldenSection(),
     tracer_args...,
-) where {T}
+)
     __solve_equitorial_circular_orbit(m, r, optimizer, lower_bound, upper_bound)
 end
 
@@ -56,16 +56,15 @@ function sliding_window(func, N, lower_bound, upper_bound, lower_rate, upper_rat
     end
 end
 
-
 function solve_equitorial_circular_orbit(
-    m::AbstractMetricParams{T},
-    r_range::Union{AbstractRange,AbstractArray};
+    m::AbstractMetricParams,
+    r_range::Union{<:AbstractRange,<:AbstractArray};
     lower_bound = 0.0,
     upper_bound = 1.0,
     lower_rate = 0.98,
     upper_rate = 1.5,
     kwargs...,
-) where {T}
+)
     r_range_reverse = sort(r_range) |> reverse
     candidate_vϕ = sliding_window(
         length(r_range_reverse),
@@ -85,11 +84,7 @@ function solve_equitorial_circular_orbit(
     reverse!(candidate_vϕ)
 end
 
-function trace_equitorial_circular_orbit(
-    m::AbstractMetricParams{T},
-    rs;
-    kwargs...,
-) where {T}
+function trace_equitorial_circular_orbit(m::AbstractMetricParams, rs; kwargs...)
     map(zip(rs, solve_equitorial_circular_orbit(m, rs; kwargs...))) do (r, vϕ)
         trace_single_orbit(m, r, vϕ; kwargs...)
     end

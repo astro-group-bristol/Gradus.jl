@@ -29,7 +29,7 @@ function Base.show(io::IO, ::PlungingInterpolation{M}) where {M}
     write(io, "PlungingInterpolation for $M")
 end
 
-function (pintrp::PlungingInterpolation{M})(r) where {M}
+function (pintrp::PlungingInterpolation)(r)
     vt = pintrp.t(r)
     vr = pintrp.r(r)
     vϕ = pintrp.ϕ(r)

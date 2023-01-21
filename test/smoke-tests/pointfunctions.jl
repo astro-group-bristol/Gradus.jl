@@ -5,9 +5,9 @@ using StaticArrays
 # Tests to make sure the basic pointfunctions work
 
 @testset "pointfunctions" begin
+    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
 
     function run_pointfunction(m, pf)
-        u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
         d = GeometricThinDisc(10.0, 40.0, deg2rad(90.0))
         img = rendergeodesics(
             m,
@@ -20,12 +20,13 @@ using StaticArrays
             pf = pf,
             verbose = false,
         )
+        img
     end
 
     @testset "redshift" begin
         # only implemented for the BoyerLindquist metrics at the moment
-        for m in [BoyerLindquistAD(), BoyerLindquistFO()]
-            run_pointfunction(m, Gradus.ConstPointFunctions.redshift)
+        for m in [KerrMetric(), KerrSpacetimeFirstOrder()]
+            run_pointfunction(m, Gradus.ConstPointFunctions.redshift(m, u))
         end
         # smoke test passed
         @test true

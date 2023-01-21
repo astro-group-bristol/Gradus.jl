@@ -1,45 +1,30 @@
 function tracegeodesics(
-    m::AbstractMetricParams{T},
-    model::AbstractCoronaModel{T},
-    time_domain::Tuple{T,T};
+    m::AbstractMetricParams,
+    model::AbstractCoronaModel,
+    time_domain::NTuple{2},
     n_samples = 1024,
     sampler = WeierstrassSampler(res = 100.0),
     kwargs...,
-) where {T}
+)
     us = sample_position(m, model, n_samples)
     vs = sample_velocity(m, model, sampler, us, n_samples)
     tracegeodesics(m, us, vs, time_domain; kwargs...)
 end
 
 function tracegeodesics(
-    m::AbstractMetricParams{T},
-    model::AbstractCoronaModel{T},
-    d::AbstractAccretionGeometry{T},
-    time_domain::Tuple{T,T},
+    m::AbstractMetricParams,
+    model::AbstractCoronaModel,
+    d::AbstractAccretionGeometry,
+    time_domain::NTuple{2},
     ;
     n_samples = 1024,
     sampler = WeierstrassSampler(res = 100.0),
     kwargs...,
-) where {T}
+)
     us = sample_position(m, model, n_samples)
     vs = sample_velocity(m, model, sampler, us, n_samples)
     tracegeodesics(m, us, vs, d, time_domain; kwargs...)
 end
-
-function renderprofile(
-    m::AbstractMetricParams{T},
-    model::AbstractCoronaModel{T},
-    d::AbstractAccretionGeometry{T},
-    max_time::T;
-    n_samples = 1024,
-    sampler = WeierstrassSampler(res = 100.0),
-    kwargs...,
-) where {T}
-    __renderprofile(m, model, d, n_samples, (0.0, max_time); kwargs...)
-end
-
-# evaluate(aap::AbstractAccretionProfile, p) =
-#     error("Not implemented for `$(typeof(aap))` yet.")
 
 struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
     disc::D
@@ -62,7 +47,7 @@ struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
     end
 end
 
-function Base.show(io::IO, vdp::VoronoiDiscProfile{D,T}) where {D,T}
+function Base.show(io::IO, vdp::VoronoiDiscProfile{D}) where {D}
     write(io, "VoronoiDiscProfile for $D with $(length(vdp.generators)) generators")
 end
 
@@ -94,18 +79,18 @@ function VoronoiDiscProfile(
 end
 
 function VoronoiDiscProfile(
-    m::AbstractMetricParams{T},
-    d::AbstractAccretionDisc{T},
+    m::AbstractMetricParams,
+    d::AbstractAccretionDisc,
     sols::AbstractArray{S},
-) where {T,S<:SciMLBase.AbstractODESolution}
-    VoronoiDiscProfile(m, d, map(sol -> getgeodesicpoint(m, sol), sols))
+) where {S<:SciMLBase.AbstractODESolution}
+    VoronoiDiscProfile(m, d, map(sol -> process_solution(m, sol), sols))
 end
 
 function VoronoiDiscProfile(
-    m::AbstractMetricParams{T},
-    d::AbstractAccretionDisc{T},
-    simsols::SciMLBase.EnsembleSolution{T},
-) where {T}
+    m::AbstractMetricParams,
+    d::AbstractAccretionDisc,
+    simsols::SciMLBase.EnsembleSolution,
+)
     VoronoiDiscProfile(
         m,
         d,
@@ -113,10 +98,11 @@ function VoronoiDiscProfile(
     )
 end
 
-@noinline function findindex(vdp::VoronoiDiscProfile{D,V}, p) where {D,V}
+@noinline function findindex(vdp::VoronoiDiscProfile, p)
     for (i, poly) in enumerate(vdp.polys)
         # check if we're at all close
         let p1 = poly[1]
+            # todo: what's going on here?
             d = @inbounds (p1[1] - p[1])^2 + (p1[2] - p[2])^2
 
             if inpolygon(poly, p)
@@ -127,19 +113,12 @@ end
     -1
 end
 
-@inline function findindex(
-    vdp::VoronoiDiscProfile{D,V},
-    gp::GeodesicPoint{T,P},
-) where {D,V,T,P}
+@inline function findindex(vdp::VoronoiDiscProfile, gp::GeodesicPoint)
     p = to_cartesian(gp)
     findindex(vdp, p)
 end
 
-function findindex(
-    vdp::VoronoiDiscProfile{D,V},
-    gps::AbstractArray{GeodesicPoint{T,P}};
-    kwargs...,
-) where {D,V,T,P}
+function findindex(vdp::VoronoiDiscProfile, gps::AbstractArray{<:GeodesicPoint}; kwargs...)
     ret = fill(-1, size(gps))
     Threads.@threads for i = 1:length(gps)
         gp = gps[i]
@@ -148,12 +127,9 @@ function findindex(
     ret
 end
 
-getareas(vdp::VoronoiDiscProfile{D,T}) where {D,T} = getarea.(vdp.polys)
+getareas(vdp::VoronoiDiscProfile) = getarea.(vdp.polys)
 
-function getproperarea(
-    poly::P,
-    m::AbstractMetricParams{T},
-) where {P<:AbstractArray{V}} where {V,T}
+function getproperarea(poly::AbstractArray, m::AbstractMetricParams)
     A = getarea(poly)
     c = getbarycenter(poly)
     # get value of metric at the radius of the polygon's barycenter, and in the equitorial plane
@@ -162,7 +138,7 @@ function getproperarea(
     sqrt(m_params[2] * m_params[4]) * A
 end
 
-getproperarea(vdp::VoronoiDiscProfile{D,K}, m::AbstractMetricParams{T}) where {D,K,T} =
+getproperarea(vdp::VoronoiDiscProfile, m::AbstractMetricParams) =
     map(p -> getproperarea(p, m), vdp.polys)
 
 function unpack_polys(
@@ -180,10 +156,10 @@ end
 
 function SurrogateDiscProfile(
     disc::D,
-    x::AbstractArray{SVector{N,T}},
+    x::AbstractArray{<:SVector{N}},
     y;
     S = Surrogates.RadialBasis,
-) where {D,N,T}
+) where {D,N}
     bounds = map(1:N) do i
         extrema(el -> el[i], x)
     end
@@ -207,6 +183,7 @@ function Base.show(io::IO, ::MIME"text/plain", sdp::SurrogateDiscProfile{D,S}) w
         "SurrogateDiscProfile\n - disc      : $D\n - surrogate : $(Base.typename(S).name) ($(length(sdp.surrogate.x)) points)",
     )
 end
+
 """
     getbarycenter(poly)
 
@@ -225,7 +202,6 @@ function getbarycenter(poly)
     n = length(poly)
     SVector{2}(xs / n, ys / n)
 end
-
 
 """
     cutchart!(polys, m::AbstractMetricParams{T}, d::AbstractAccretionDisc{T})
@@ -289,10 +265,7 @@ function _circ_cut(radius, clines, i1, t1, i2, t2; outer = true)
     end
 end
 
-function _circ_path_intersect(
-    radius,
-    lines::AbstractArray{L},
-) where {L<:GeometryBasics.Line}
+function _circ_path_intersect(radius, lines::AbstractArray{<:GeometryBasics.Line})
     for (i, line) in enumerate(lines)
         t = _circ_line_intersect(radius, line)
         if t > 0
@@ -323,18 +296,6 @@ end
         end
     end
     -1
-end
-
-function __renderprofile(
-    m::AbstractMetricParams{T},
-    model::AbstractCoronaModel{T},
-    d::AbstractAccretionGeometry{T},
-    time_domain;
-    sampler,
-    kwargs...,
-) where {T}
-    # TODO
-    error("Not implemented for $(typeof(d)).")
 end
 
 export VoronoiDiscProfile,

@@ -37,11 +37,12 @@ function create_callback_set(
     mcb = metric_callback(m, closest_approach, effective_infinity)
     if C <: SciMLBase.DECallback
         mcb isa Tuple ? CallbackSet(cb, mcb...) : CallbackSet(cb, mcb)
-    elseif C <: Union{Tuple,AbstractVector}
+    elseif C <: Tuple
         mcb isa Tuple ? CallbackSet(cb..., mcb...) : CallbackSet(cb..., mcb)
-    else
-        # else C is Nothing
+    elseif C <: Nothing
         mcb isa Tuple ? CallbackSet(mcb...) : mcb
+    else
+        error("Unknown callback type $C")
     end
 end
 

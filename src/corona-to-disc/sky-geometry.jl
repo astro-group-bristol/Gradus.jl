@@ -41,7 +41,7 @@ sample_angles(sm::AbstractDirectionSampler{D,G}, i, N) where {D,G} =
     (sample_elevation(sm, i), mod2pi(getangle(sm, i)))
 
 
-sample_elevation(sm::AbstractDirectionSampler{D,G}, i) where {D,G} =
+sample_elevation(sm::AbstractDirectionSampler, i) =
     error("Not implemented for $(typeof(sm)).")
 @inline sample_elevation(::EvenSampler{LowerHemisphere}, i) = acos(1 - i)
 @inline sample_elevation(::EvenSampler{BothHemispheres}, i) = acos(1 - 2i)

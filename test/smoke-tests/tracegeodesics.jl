@@ -25,7 +25,7 @@ using StaticArrays
         u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
         # arbitrary single velocity vector
         v = @SVector [0.0, -1.0, -0.0, -3.5e-6]
-        for m in [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()]
+        for m in [KerrMetric(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole()]
             test_single(m, u, v)
             test_many(m, u, v)
             # smoke test passed
@@ -37,7 +37,7 @@ using StaticArrays
         u = Float64[0.0, 100.0, deg2rad(85), 0.0]
         # arbitrary single velocity vector
         v = Float64[0.0, -1.0, -0.0, -3.5e-6]
-        for m in [BoyerLindquistAD(), JohannsenAD(), BoyerLindquistFO(), MorrisThorneAD()]
+        for m in [KerrMetric(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole()]
             test_single(m, u, v)
             test_many(m, u, v)
             @test true
@@ -45,9 +45,9 @@ using StaticArrays
     end
 
     @testset "corona-models" begin
-        # only implemented for BoyerLindquistAD at the moment
+        # only implemented for KerrMetric at the moment
         # because of the vector to local sky methods
-        m = BoyerLindquistAD(M = 1.0, a = 0.0)
+        m = KerrMetric(M = 1.0, a = 0.0)
         d = GeometricThinDisc(Gradus.isco(m), 50.0, deg2rad(90.0))
         model = LampPostModel(h = 10.0, θ = deg2rad(0.001))
 

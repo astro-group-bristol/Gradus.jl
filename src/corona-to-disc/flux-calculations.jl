@@ -33,9 +33,9 @@ function flux_source_to_disc(
     m::AbstractMetricParams,
     model::AbstractCoronaModel,
     points,
-    areas::AbstractVector{T};
+    areas::AbstractVector;
     α = 1.0,
-) where {T}
+)
     v_source = source_velocity(m, model)
 
     total_area = sum(areas)

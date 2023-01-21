@@ -19,8 +19,8 @@ the mass ``\\mu`` needs to be known to compute ``\\mu v^\\nu = p^\\nu``.
 function E(metric::AbstractMatrix{T}, v) where {T}
     T(@inbounds -(metric[1, 1] * v[1] + metric[1, 4] * v[4]))
 end
-E(m::AbstractMetricParams{T}, u, v) where {T} = E(metric(m, u), v)
-E(m::AbstractMetricParams{T}, gp::AbstractGeodesicPoint) where {T} = E(m, gp.u2, gp.v2)
+E(m::AbstractMetricParams, u, v) = E(metric(m, u), v)
+E(m::AbstractMetricParams, gp::AbstractGeodesicPoint) = E(m, gp.u2, gp.v2)
 
 
 """
@@ -35,5 +35,5 @@ L_z = p_\\phi = - g_{\\phi\\nu} p^\\nu.
 function Lz(metric::AbstractMatrix{T}, v) where {T}
     T(@inbounds metric[4, 4] * v[4] + metric[1, 4] * v[1])
 end
-Lz(m::AbstractMetricParams{T}, u, v) where {T} = Lz(metric(m, u), v)
-Lz(m::AbstractMetricParams{T}, gp::AbstractGeodesicPoint) where {T} = Lz(m, gp.u2, gp.v2)
+Lz(m::AbstractMetricParams, u, v) = Lz(metric(m, u), v)
+Lz(m::AbstractMetricParams, gp::AbstractGeodesicPoint) = Lz(m, gp.u2, gp.v2)

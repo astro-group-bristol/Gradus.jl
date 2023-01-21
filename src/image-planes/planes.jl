@@ -1,6 +1,7 @@
 abstract type AbstractImagePlane{G} end
 image_plane(plane::AbstractImagePlane, u) = error("Not implemented for $plane")
 trajectory_count(plane::AbstractImagePlane) = error("Not implemented for $plane")
+unnormalized_areas(plane::AbstractImagePlane) = error("Not implemented for $plane")
 
 function impact_parameters(plane::AbstractImagePlane, u)
     αs, βs = image_plane(plane, u)
@@ -42,6 +43,15 @@ function image_plane(plane::PolarPlane, u)
     βs = [r * sin(θ) * sin(u[3]) for r in rs, θ in θs]
 
     αs, βs
+end
+
+function unnormalized_areas(plane::PolarPlane)
+    rs = collect(plane.grid(plane.r_min, plane.r_max, plane.Nr))
+    # todo: do we need dr here?
+    # dr = diff(rs) 
+    # push!(dr, 0.0)
+    A = @. rs^2 # * abs(dr)
+    repeat(A, inner = (1, plane.Nθ))
 end
 
 struct CartesianPlane{G,T} <: AbstractImagePlane{G}
@@ -89,12 +99,12 @@ function image_plane(plane::CartesianPlane, u)
 end
 
 function tracegeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     observer_position,
     plane::AbstractImagePlane,
-    time_domain::Tuple{T,T};
+    time_domain::NTuple{2};
     kwargs...,
-) where {T}
+)
     αs, βs = impact_parameters(plane, observer_position)
     velfunc(i) = map_impact_parameters(m, observer_position, αs[i], βs[i])
     tracegeodesics(

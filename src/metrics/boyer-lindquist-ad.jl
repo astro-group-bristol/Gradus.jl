@@ -31,7 +31,7 @@ end # module
 
 # new structure for our spacetime
 """
-    struct BoyerLindquistAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct KerrMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
 
 The Kerr metric in Boyer-Lindquist coordinates, describing a black hole with mass ``M`` and
 angular spin ``a``:
@@ -57,7 +57,7 @@ where
 ## Parameters
 $(FIELDS)
 """
-@with_kw struct BoyerLindquistAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct KerrMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
     "Black hole mass."
     M = 1.0
@@ -66,9 +66,9 @@ $(FIELDS)
 end
 
 # implementation
-metric_components(m::BoyerLindquistAD{T}, rθ) where {T} =
+metric_components(m::KerrMetric{T}, rθ) where {T} =
     __BoyerLindquistAD.metric_components(m.M, m.a, rθ)
-inner_radius(m::BoyerLindquistAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+inner_radius(m::KerrMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
 # additional utilities
 function convert_angles(a, r, θ, ϕ, θ_obs, ϕ_obs)
@@ -82,11 +82,11 @@ function convert_angles(a, r, θ, ϕ, θ_obs, ϕ_obs)
 end
 
 # for disc profile models
-function GradusBase.vector_to_local_sky(m::BoyerLindquistAD{T}, u, θ, ϕ) where {T}
+function GradusBase.vector_to_local_sky(m::KerrMetric{T}, u, θ, ϕ) where {T}
     convert_angles(m.a, u[2], u[3], u[4], θ, ϕ)
 end
 
 # special radii
-isco(m::BoyerLindquistAD{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
+isco(m::KerrMetric{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
 
-export BoyerLindquistAD
+export KerrMetric

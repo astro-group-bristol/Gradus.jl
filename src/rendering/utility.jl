@@ -8,21 +8,11 @@ Calculates initial four-velocity vectors from impact parameters ``\\alpha`` and
 respectively, whereas ``\\beta`` is a single ``T`` value, such that a variety of geodesics
 in the same plane may be easily traced.
 """
-function calculate_velocities(
-    m::AbstractMetricParams{T},
-    init_pos,
-    α_generator,
-    β::T,
-) where {T}
+function calculate_velocities(m::AbstractMetricParams, init_pos, α_generator, β::Number)
     [map_impact_parameters(m, init_pos, α, β) for α in α_generator]
 end
 
-function calculate_velocities(
-    m::AbstractMetricParams{T},
-    init_pos,
-    α_genetator,
-    β_generator,
-) where {T}
+function calculate_velocities(m::AbstractMetricParams, init_pos, α_genetator, β_generator)
     [map_impact_parameters(m, init_pos, α, β) for α in α_genetator, β in β_generator]
 end
 
@@ -31,11 +21,11 @@ In-place specialisation, writing the four-velocities into `vs`.
 """
 function calculate_velocities!(
     vs,
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     init_pos,
     α_generator,
-    β::T,
-) where {T}
+    β::Number,
+)
     for (i, α) in enumerate(α_generator)
         vs[i] = map_impact_parameters(m, init_pos, α, β)
     end
@@ -58,7 +48,6 @@ Utility function for converting some `Y` on an image plane into ``\\beta``, give
 the midpoint `y_mid` and field-of-view multiplier `fov_factor`.
 """
 y_to_β(Y, y_mid, fov_factor) = (Y - y_mid) / fov_factor
-
 
 function init_progress_bar(text, N, enabled)
     ProgressMeter.Progress(

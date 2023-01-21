@@ -36,12 +36,12 @@ end
 end # module
 
 """
-    struct JohannsenAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct JohannsenMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
 
 The Johannsen (20xx) metric.
 $(FIELDS)
 """
-@with_kw struct JohannsenAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct JohannsenMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
     "Black hole mass."
     M = 1.0
@@ -57,7 +57,7 @@ $(FIELDS)
     ϵ3 = 0.0
 end
 
-metric_components(m::JohannsenAD{T}, rθ) where {T} = __JohannsenAD.metric_components(m, rθ)
-GradusBase.inner_radius(m::JohannsenAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+metric_components(m::JohannsenMetric{T}, rθ) where {T} = __JohannsenAD.metric_components(m, rθ)
+GradusBase.inner_radius(m::JohannsenMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
-export JohannsenAD
+export JohannsenMetric
