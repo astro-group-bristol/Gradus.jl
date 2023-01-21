@@ -162,7 +162,7 @@ function jacobian_∂αβ_∂gr(
     β,
     max_time;
     diff_order = 5,
-    redshift_pf = ConstPointFunctions.redshift,
+    redshift_pf = ConstPointFunctions.redshift(m, u),
     kwargs...,
 )
     # map impact parameters to r, g

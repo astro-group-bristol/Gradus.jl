@@ -3,7 +3,7 @@
         m::AbstractMetricParams{T},
         position,
         velocity,
-        time_domain::Tuple{T,T};
+        time_domain::NTuple{2};
         solver = Tsit5(),
         μ = 0.0,
         closest_approach = 1.01,
@@ -29,7 +29,7 @@ function tracegeodesics(
     m::AbstractMetricParams{T},
     position,
     velocity,
-    time_domain::Tuple{T,T};
+    time_domain::NTuple{2};
     solver = Tsit5(),
     μ = 0.0,
     closest_approach = 1.01,
@@ -106,7 +106,7 @@ function __tracegeodesics(
     m::AbstractMetricParams{T},
     init_pos::AbstractVector{T},
     init_vel::AbstractVector{T},
-    time_domain::Tuple{T,T},
+    time_domain::NTuple{2},
     solver;
     kwargs...,
 ) where {T<:Number}
@@ -120,7 +120,7 @@ function __tracegeodesics(
     m::AbstractMetricParams{T},
     init_pos::AbstractVector{T},
     vel_func::Function,
-    time_domain::Tuple{T,T},
+    time_domain::NTuple{2},
     solver;
     trajectories::Int,
     ensemble = EnsembleThreads(),
@@ -141,7 +141,7 @@ function __tracegeodesics(
     m::AbstractMetricParams{T},
     init_positions,
     init_velocities,
-    time_domain::Tuple{T,T},
+    time_domain::NTuple{2},
     solver;
     ensemble = EnsembleThreads(),
     kwargs...,
@@ -163,12 +163,12 @@ function __tracegeodesics(
     )
 end
 
-function solve_geodesic(solver, prob, ensemble; solver_opts...)
+# ensemble dispatch
+solve_geodesic(solver, prob, ensemble; solver_opts...) =
     solve(prob, solver, ensemble; solver_opts..., kwargshandle = KeywordArgError)
-end
 
-function solve_geodesic(solver, prob; solver_opts...)
+# non-ensemble dispatch
+solve_geodesic(solver, prob; solver_opts...) =
     solve(prob, solver, ; solver_opts..., kwargshandle = KeywordArgError)
-end
 
 export tracegeodesics

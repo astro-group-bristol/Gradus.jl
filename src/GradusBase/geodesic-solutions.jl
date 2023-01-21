@@ -99,13 +99,11 @@ end
 # TODO: GeodesicPath structure for the full geodesic path
 # do we want to support this?
 
-function unpack_solution(sol::SciMLBase.AbstractODESolution{T,N,S}) where {T,N,S}
+function unpack_solution(sol::SciMLBase.AbstractODESolution)
     u = sol.u
     p = sol.prob.p
     t = sol.t
     (u, t, p)
 end
 
-function unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution{T,N,V}) where {T,N,V}
-    map(unpack_solution, simsol)
-end
+unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution) = map(unpack_solution, simsol.u)

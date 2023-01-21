@@ -25,7 +25,7 @@ function rendergeodesics(
 end
 
 function prerendergeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     init_pos,
     max_time;
     cache = EndpointCache(),
@@ -33,7 +33,7 @@ function prerendergeodesics(
     image_height = 250,
     fov_factor = 3.0,
     kwargs...,
-) where {T}
+)
     __prerendergeodesics(
         m,
         init_pos,
@@ -48,41 +48,41 @@ end
 
 function render_into_image!(
     image,
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     init_pos,
     max_time;
     pf,
     kwargs...,
-) where {T}
+)
     simsols = __render_geodesics(m, init_pos, max_time, ; kwargs...)
     apply_to_image!(m, image, simsols, pf, max_time)
     image
 end
 
-function apply_to_image!(m::AbstractMetricParams{T}, image, sols, pf, max_time) where {T}
+function apply_to_image!(m::AbstractMetricParams, image, sols, pf, max_time)
     @inbounds @threads for i = 1:length(sols)
         image[i] = pf(m, getgeodesicpoint(m, sols[i]), max_time)
     end
 end
 
 function __prerendergeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     init_pos,
     cache::AbstractRenderCache;
     kwargs...,
-) where {T}
+)
     error("Not implemented for render cache strategy '$typeof(cache)'.")
 end
 
 function __prerendergeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     init_pos,
     max_time,
     cache::SolutionCache;
     image_height,
     image_width,
     kwargs...,
-) where {T}
+)
     simsols = __render_geodesics(
         m,
         init_pos,
@@ -95,14 +95,14 @@ function __prerendergeodesics(
 end
 
 function __prerendergeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     init_pos,
     max_time,
     cache::EndpointCache;
     image_height,
     image_width,
     kwargs...,
-) where {T}
+)
     simsols = __render_geodesics(
         m,
         init_pos,
@@ -125,7 +125,7 @@ end
 
 function __render_geodesics(
     m::AbstractMetricParams{T},
-    init_pos,
+    init_pos::AbstractVector{T},
     max_time;
     image_width,
     image_height,

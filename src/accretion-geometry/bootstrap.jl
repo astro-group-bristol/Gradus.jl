@@ -1,13 +1,13 @@
 function tracegeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     init_positions,
     init_velocities,
     accretion_geometry::AbstractAccretionGeometry,
-    time_domain::Tuple{T,T};
+    time_domain::NTuple{2};
     callback = nothing,
     gtol = 1e-2,
     kwargs...,
-) where {T}
+)
     cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
     tracegeodesics(
         m,
@@ -20,27 +20,27 @@ function tracegeodesics(
 end
 
 function rendergeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     init_pos,
     accretion_geometry::AbstractAccretionGeometry,
-    max_time::T;
+    max_time::Number;
     callback = nothing,
     gtol = 1e-2,
     kwargs...,
-) where {T}
+)
     cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
     rendergeodesics(m, init_pos, max_time; callback = cbs, kwargs...)
 end
 
 function prerendergeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     init_pos,
     accretion_geometry::AbstractAccretionGeometry,
-    max_time::T;
+    max_time::Number;
     callback = nothing,
     gtol = 1e-2,
     kwargs...,
-) where {T}
+)
     cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
     prerendergeodesics(m, init_pos, max_time; callback = cbs, kwargs...)
 end
@@ -62,7 +62,7 @@ function callback(u, λ, integrator)::Bool
 end
 ```
 """
-function build_collision_callback(g::AbstractAccretionGeometry{T}; gtol) where {T}
+function build_collision_callback(g::AbstractAccretionGeometry; gtol)
     DiscreteCallback(
         (u, λ, integrator) ->
             intersects_geometry(g, line_element(u, integrator), integrator),

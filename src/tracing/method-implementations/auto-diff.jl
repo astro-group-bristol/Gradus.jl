@@ -41,7 +41,7 @@ a vector or tuple with the elements
 \\right).
 ```
 """
-metric_components(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ) where {T} =
+metric_components(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ) =
     error("Not implemented for $(typeof(m)).")
 
 """
@@ -233,7 +233,7 @@ function constrain(
     m::AbstractAutoDiffStaticAxisSymmetricParams{T},
     u,
     v;
-    μ::T = 0.0,
+    μ::T = T(0.0),
 ) where {T}
     rθ = (u[2], u[3])
     g_comps = metric_components(m, rθ)
@@ -281,7 +281,7 @@ end
 end
 
 
-function metric(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, u) where {T}
+function metric(m::AbstractAutoDiffStaticAxisSymmetricParams, u)
     rθ = (u[2], u[3])
     comps = metric_components(m, rθ)
     @SMatrix [

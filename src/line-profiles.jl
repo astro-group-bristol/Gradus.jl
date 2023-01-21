@@ -11,16 +11,17 @@ struct BinnedLineProfile <: AbstractLineProfileAlgorithm end
     algorithm::AbstractLineProfileAlgorithm = CunninghamLineProfile(),
     kwargs...,
 )
-    lineprofile(bins, algorithm, m, u, d, ε; kwargs...)
+    lineprofile(bins, ε, m, u, d, algorithm; kwargs...)
 end
 
 function lineprofile(
     bins,
-    ::CunninghamLineProfile,
+    ε::Function,
     m::AbstractMetricParams{T},
     u,
     d::AbstractAccretionGeometry,
-    ε;
+    ::CunninghamLineProfile,
+    ;
     minrₑ = isco(m) + 1e-2, # delta to avoid numerical instabilities
     maxrₑ = 50,
     numrₑ = 100,

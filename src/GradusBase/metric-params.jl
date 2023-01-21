@@ -24,9 +24,9 @@ Return a tuple with each non-zero metric component for the metric described by `
 only be a subset of the total manifold coordinates. See specific implementations for subtypes of
 [`AbstractMetricParams`](@ref) for details.
 """
-metric_components(m::AbstractMetricParams{T}, x) where {T} =
+metric_components(m::AbstractMetricParams, x) =
     error("Not implemented for metric $(typeof(m))")
-inverse_metric_components(m::AbstractMetricParams{T}, x) where {T} =
+inverse_metric_components(m::AbstractMetricParams, x) =
     error("Not implemented for metric $(typeof(m))")
 
 """
@@ -35,9 +35,9 @@ inverse_metric_components(m::AbstractMetricParams{T}, x) where {T} =
 
 Calculate the acceleration components of the geodesic equation given a position `u`, a velocity `v`, and a metric `m`.
 """
-geodesic_eq(m::AbstractMetricParams{T}, u, v) where {T} =
+geodesic_eq(m::AbstractMetricParams, u, v) =
     error("Not implemented for metric parameters $(typeof(m))")
-geodesic_eq!(m::AbstractMetricParams{T}, u, v) where {T} =
+geodesic_eq!(m::AbstractMetricParams, u, v) =
     error("Not implemented for metric parameters $(typeof(m))")
 
 """
@@ -64,7 +64,7 @@ inner_radius(::AbstractMetricParams{T}) where {T} = convert(T, 0.0)
 
 Return the [`AbstractMetric`](@ref) type associated with the metric parameters `m`.
 """
-metric_type(m::AbstractMetricParams{T}) where {T} =
+metric_type(m::AbstractMetricParams) =
     error("Not implemented for metric parameters $(typeof(m))")
 
 
@@ -74,14 +74,4 @@ metric_type(m::AbstractMetricParams{T}) where {T} =
 Numerically evaluate the corresponding metric for [`AbstractMetricParams`](@ref), given parameter values `m`
 and some point `u`.
 """
-metric(m::AbstractMetricParams{T}, u) where {T} =
-    error("Not implemented for metric $(typeof(m))")
-
-# do we actually want to support this?
-# since if it's a symbolic matrix, you can subs other ways better?
-#"""
-#    metric(m::AbstractMetric{T}, u)
-#
-#Evaluate the metric at a point `u`.
-#"""
-#metric(m::AbstractMetric{T}, u) where {T} = error("Not implemented for metric $(typeof(m))")
+metric(m::AbstractMetricParams, u) = error("Not implemented for metric $(typeof(m))")

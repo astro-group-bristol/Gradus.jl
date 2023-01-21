@@ -1,5 +1,5 @@
 # vectors of vectors 
-function constrain_all(m::AbstractMetricParams{T}, us, vs, μ) where {T}
+function constrain_all(m::AbstractMetricParams, us, vs, μ)
     @inbounds for i in eachindex(vs)
         vs[i] = constrain_all(m, us[i], vs[i], μ)
     end
@@ -31,11 +31,6 @@ function constrain_all(
     @inbounds SVector{S,T}(constrain(m, u, v, μ = μ), v[2], v[3], v[4])
 end
 
-function wrap_constraint(
-    m::AbstractMetricParams{T},
-    position,
-    velfunc::Function,
-    μ,
-) where {T}
+function wrap_constraint(m::AbstractMetricParams, position, velfunc::Function, μ)
     (i) -> constrain_all(m, position, velfunc(i), μ)
 end
