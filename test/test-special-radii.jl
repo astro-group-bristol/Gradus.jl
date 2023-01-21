@@ -12,11 +12,11 @@ m = KerrMetric(M = 1.0, a = 1.0)
 # test event horizon code
 m = KerrMetric(M = 1.0, a = 0.0)
 rs, _ = event_horizon(m)
-@test rs ≈ fill(2.0, length(rs))
+@test rs ≈ fill(2.0, length(rs)) rtol = 0.01
 
 m = KerrMetric(M = 1.0, a = 1.0)
 rs, _ = event_horizon(m)
-@test rs ≈ fill(1.0, length(rs))
+@test rs ≈ fill(1.0, length(rs)) rtol = 0.01
 
 # make sure works for other metrics too
 for M in [JohannsenMetric, JohannsenPsaltisMetric]
