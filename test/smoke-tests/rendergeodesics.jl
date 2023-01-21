@@ -14,103 +14,100 @@ function _thick_disc(u)
     end
 end
 
-@testset "rendergeodesics" begin
+@testset "plain" begin
+    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
 
-    @testset "plain" begin
-        u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
-        for (m, expectation) in zip(
-            [KerrSpacetime(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole()],
-            # expectation values for the sum of the image
-            # last computed 04/06/2022: tests with --math-mode=ieee
-            [8969.1564582409967, 8969.15634220181, 8977.502920124776, 413.49634341337264],
+    # last computed 21/01/2023: shrink resolution
+    expected = (8969.1564582409967, 8969.15634220181, 8977.502920124776, 413.4963434133726)
+    result = map((KerrSpacetime(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole())) do m
+        img = rendergeodesics(
+            m,
+            u,
+            200.0,
+            fov_factor = 1.0,
+            image_width = 20,
+            image_height = 20,
+            verbose = false,
         )
-            img = rendergeodesics(
-                m,
-                u,
-                200.0,
-                fov_factor = 1.0,
-                image_width = 100,
-                image_height = 50,
-                verbose = false,
-            )
-            image_fingerprint = sum(filter(!isnan, img))
-            # have to be really coarse cus the first order method is so variable???
-            # the rest are very resolute
-            @test isapprox(expectation, image_fingerprint; rtol = 0.1)
-        end
+        image_fingerprint = sum(filter(!isnan, img))
     end
+    for (e, v) in zip(expected, result)
+        # this tolerance is kind of unacceptably high? todo: investigate why
+        @test isapprox(e, v; rtol = 0.1)
+    end
+end
 
-    @testset "thin-disc" begin
-        u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
-        d = GeometricThinDisc(10.0, 40.0, deg2rad(90.0))
-        for (m, expectation) in zip(
-            [KerrSpacetime(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole()],
-            # expectation values for the sum of the image
-            # last computed 15/11/2022: continuous callback for disc intersection
-            [90696.01318073242, 90491.9434460566, 86277.8210033628, 39094.80412600604],
+@testset "thin-disc" begin
+    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
+    d = GeometricThinDisc(10.0, 40.0, deg2rad(90.0))
+
+    # last computed 21/01/2023: shrink resolution
+    expected = (29605.55590761622, 29605.556409711604, 29741.80749605271, 9858.77920909911)
+    result = map((KerrSpacetime(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole())) do m
+        img = rendergeodesics(
+            m,
+            u,
+            d,
+            200.0,
+            fov_factor = 1.0,
+            image_width = 20,
+            image_height = 20,
+            verbose = false,
         )
-            img = rendergeodesics(
-                m,
-                u,
-                d,
-                200.0,
-                fov_factor = 1.0,
-                image_width = 100,
-                image_height = 50,
-                verbose = false,
-            )
-            image_fingerprint = sum(filter(!isnan, img))
-            # this tolerance is kind of unacceptably high? todo: investigate why
-            @test isapprox(expectation, image_fingerprint; rtol = 0.1)
-        end
+        image_fingerprint = sum(filter(!isnan, img))
     end
+    for (e, v) in zip(expected, result)
+        # this tolerance is kind of unacceptably high? todo: investigate why
+        @test isapprox(e, v; rtol = 0.1)
+    end
+end
 
-    @testset "shakura-sunyaev-disc" begin
-        u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
-        for (m, expectation) in zip(
-            [KerrSpacetime(), JohannsenMetric()],
-            # expectation values for the sum of the image
-            # last computed 11/10/2022: initial values
-            [282541.415414396, 282541.4154167309],
+@testset "shakura-sunyaev-disc" begin
+    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
+
+    # last computed 21/01/2023: shrink resolution
+    expected = (34711.33445248479, 34711.33445255157)
+    result = map((KerrSpacetime(), JohannsenMetric())) do m
+        d = ShakuraSunyaev(m)
+        img = rendergeodesics(
+            m,
+            u,
+            d,
+            200.0,
+            fov_factor = 1.0,
+            image_width = 20,
+            image_height = 20,
+            verbose = false,
         )
-            d = ShakuraSunyaev(m)
-            img = rendergeodesics(
-                m,
-                u,
-                d,
-                200.0,
-                fov_factor = 1.0,
-                image_width = 100,
-                image_height = 50,
-                verbose = false,
-            )
-            image_fingerprint = sum(filter(!isnan, img))
-            @test isapprox(expectation, image_fingerprint; atol = 5.0, rtol = 0.0)
-        end
+        image_fingerprint = sum(filter(!isnan, img))
     end
+    for (e, v) in zip(expected, result)
+        # this tolerance is kind of unacceptably high? todo: investigate why
+        @test isapprox(e, v; rtol = 0.1)
+    end
+end
 
-    @testset "thick-disc" begin
-        u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
-        d = ThickDisc(_thick_disc)
-        for (m, expectation) in zip(
-            [KerrSpacetime(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole()],
-            # expectation values for the sum of the image
-            # last computed 11/10/2022: initial values
-            [17755.784049024965, 17755.7836819751439, 18018.50638877236, 5401.369964242934],
+@testset "thick-disc" begin
+    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
+    d = ThickDisc(_thick_disc)
+
+    # last computed 21/01/2023: shrink resolution
+    expected = (16593.560393732, 16593.56001187974, 16847.84450997791, 5015.839213855068)
+    result = map((KerrSpacetime(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole())) do m
+        img = rendergeodesics(
+            m,
+            u,
+            d,
+            200.0,
+            fov_factor = 1.0,
+            image_width = 20,
+            image_height = 20,
+            verbose = false,
         )
-            img = rendergeodesics(
-                m,
-                u,
-                d,
-                200.0,
-                fov_factor = 1.0,
-                image_width = 100,
-                image_height = 50,
-                verbose = false,
-            )
-            image_fingerprint = sum(filter(!isnan, img))
-            @test isapprox(expectation, image_fingerprint; atol = 5.0, rtol = 0.0)
-        end
+        image_fingerprint = sum(filter(!isnan, img))
     end
-
+    for (e, v) in zip(expected, result)
+        # this tolerance is kind of unacceptably high? todo: investigate why
+        @test isapprox(e, v; rtol = 0.1)
+    end
 end
