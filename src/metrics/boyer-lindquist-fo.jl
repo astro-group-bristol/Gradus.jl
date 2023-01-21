@@ -338,7 +338,7 @@ isco(M, a) = a > 0.0 ? isco(M, a, -) : isco(M, a, +)
 end # module
 
 """
-A first-order implementation of [`KerrSpacetime`](@ref).
+A first-order implementation of [`KerrMetric`](@ref).
 $(FIELDS)
 """
 @with_kw struct KerrSpacetimeFirstOrder{T} <: AbstractFirstOrderMetricParams{T}

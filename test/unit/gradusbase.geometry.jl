@@ -8,8 +8,8 @@ using Tullio
         # can't do first order yet since no four velocity
         # KerrSpacetimeFirstOrder(1.0, 0.998, 1.0),
         # KerrSpacetimeFirstOrder(1.0, -0.998, 1.0),
-        KerrSpacetime(1.0, 0.998),
-        KerrSpacetime(1.0, -0.998),
+        KerrMetric(1.0, 0.998),
+        KerrMetric(1.0, -0.998),
         JohannsenMetric(M = 1.0, a = 0.998, α13 = 1.0),
         JohannsenMetric(M = 1.0, a = 0.998, α22 = 1.0),
         # DilatonAxion(M = 1.0, a = 0.998, β = 0.2, b = 1.0),
@@ -74,7 +74,7 @@ using Tullio
         end
 
         for M = 0.2:0.8:2.0, a = -M:0.5:M
-            m = KerrSpacetime(M, a)
+            m = KerrMetric(M, a)
             r = inner_radius(m) + 4.2
             for θ in angles
                 u = @SVector [0.0, r, θ, 0.0]
@@ -108,7 +108,7 @@ using Tullio
         end
 
         for M = 0.2:0.8:2.0, a = -M:0.5:M
-            m = KerrSpacetime(M, a)
+            m = KerrMetric(M, a)
             r = inner_radius(m) + 0.3
             for θ in angles
                 u = @SVector [0.0, r, θ, 0.1]

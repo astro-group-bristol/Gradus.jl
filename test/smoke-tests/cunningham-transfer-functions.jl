@@ -3,7 +3,7 @@ using Gradus
 using StaticArrays
 
 @testset "cunningham-transfer-functions" begin
-    m = KerrSpacetime(1.0, 0.998)
+    m = KerrMetric(1.0, 0.998)
     d = GeometricThinDisc(0.0, 400.0, deg2rad(90))
 
     # test for different angles

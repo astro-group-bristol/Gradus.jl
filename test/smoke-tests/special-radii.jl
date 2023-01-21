@@ -8,8 +8,8 @@ using StaticArrays
     all_metrics = (
         KerrSpacetimeFirstOrder(1.0, 0.998, 1.0),
         KerrSpacetimeFirstOrder(1.0, -0.998, 1.0),
-        KerrSpacetime(1.0, 0.998),
-        KerrSpacetime(1.0, -0.998),
+        KerrMetric(1.0, 0.998),
+        KerrMetric(1.0, -0.998),
         JohannsenMetric(M = 1.0, a = 0.998, α13 = 1.0),
         JohannsenMetric(M = 1.0, a = 0.998, α22 = 1.0),
         DilatonAxion(M = 1.0, a = 0.998, β = 0.2, b = 1.0),

@@ -25,7 +25,7 @@ using StaticArrays
 
     @testset "redshift" begin
         # only implemented for the BoyerLindquist metrics at the moment
-        for m in [KerrSpacetime(), KerrSpacetimeFirstOrder()]
+        for m in [KerrMetric(), KerrSpacetimeFirstOrder()]
             run_pointfunction(m, Gradus.ConstPointFunctions.redshift(m, u))
         end
         # smoke test passed

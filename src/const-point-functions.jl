@@ -10,7 +10,7 @@ using ..Gradus:
     FilterPointFunction,
     _redshift_guard,
     StatusCodes,
-    KerrSpacetime,
+    KerrMetric,
     KerrSpacetimeFirstOrder,
     AbstractMetricParams,
     interpolate_redshift
@@ -60,14 +60,14 @@ Returns a [`PointFunction`](@ref).
 Calculate the analytic redshift at a given geodesic point, assuming equitorial, geometrically
 thin accretion disc. Implementation depends on the metric type. Currently implemented for
 
-- [`Gradus.KerrSpacetime`](@ref)
+- [`Gradus.KerrMetric`](@ref)
 - [`Gradus.KerrSpacetimeFirstOrder`](@ref)
 
 # Notes
 
 Wraps calls to [`Gradus._redshift_guard`](@ref) to dispatch different implementations.
 """
-redshift(::KerrSpacetime, _) = PointFunction(_redshift_guard)
+redshift(::KerrMetric, _) = PointFunction(_redshift_guard)
 redshift(::KerrSpacetimeFirstOrder, _) = PointFunction(_redshift_guard)
 redshift(m::AbstractMetricParams, u; kwargs...) = interpolate_redshift(m, u; kwargs...)
 

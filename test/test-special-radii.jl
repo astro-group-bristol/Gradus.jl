@@ -3,18 +3,18 @@ using Gradus
 using StaticArrays
 
 # test known radii
-m = KerrSpacetime(M = 1.0, a = 0.0)
+m = KerrMetric(M = 1.0, a = 0.0)
 @test Gradus.isco(m) == 6.0
 
-m = KerrSpacetime(M = 1.0, a = 1.0)
+m = KerrMetric(M = 1.0, a = 1.0)
 @test Gradus.isco(m) == 1.0
 
 # test event horizon code
-m = KerrSpacetime(M = 1.0, a = 0.0)
+m = KerrMetric(M = 1.0, a = 0.0)
 rs, _ = event_horizon(m)
 @test rs ≈ fill(2.0, length(rs))
 
-m = KerrSpacetime(M = 1.0, a = 1.0)
+m = KerrMetric(M = 1.0, a = 1.0)
 rs, _ = event_horizon(m)
 @test rs ≈ fill(1.0, length(rs))
 
@@ -26,5 +26,5 @@ for M in [JohannsenMetric, JohannsenPsaltisMetric]
 end
 
 # test naked singularities
-@test is_naked_singularity(KerrSpacetime(1.0, 0.0)) == false
+@test is_naked_singularity(KerrMetric(1.0, 0.0)) == false
 @test is_naked_singularity(JohannsenPsaltisMetric(1.0, 0.998, 2.0)) == true

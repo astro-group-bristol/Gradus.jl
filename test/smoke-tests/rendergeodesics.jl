@@ -19,7 +19,7 @@ end
 
     # last computed 21/01/2023: shrink resolution
     expected = (8969.1564582409967, 8969.15634220181, 8977.502920124776, 413.4963434133726)
-    result = map((KerrSpacetime(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole())) do m
+    result = map((KerrMetric(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole())) do m
         img = rendergeodesics(
             m,
             u,
@@ -43,7 +43,7 @@ end
 
     # last computed 21/01/2023: shrink resolution
     expected = (29605.55590761622, 29605.556409711604, 29741.80749605271, 9858.77920909911)
-    result = map((KerrSpacetime(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole())) do m
+    result = map((KerrMetric(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole())) do m
         img = rendergeodesics(
             m,
             u,
@@ -67,7 +67,7 @@ end
 
     # last computed 21/01/2023: shrink resolution
     expected = (34711.33445248479, 34711.33445255157)
-    result = map((KerrSpacetime(), JohannsenMetric())) do m
+    result = map((KerrMetric(), JohannsenMetric())) do m
         d = ShakuraSunyaev(m)
         img = rendergeodesics(
             m,
@@ -93,7 +93,7 @@ end
 
     # last computed 21/01/2023: shrink resolution
     expected = (16593.560393732, 16593.56001187974, 16847.84450997791, 5015.839213855068)
-    result = map((KerrSpacetime(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole())) do m
+    result = map((KerrMetric(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole())) do m
         img = rendergeodesics(
             m,
             u,

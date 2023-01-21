@@ -1,6 +1,6 @@
 module RedshiftFunctions
 import ..Gradus
-import ..Gradus: __BoyerLindquistFO, AbstractMetricParams, KerrSpacetime, metric
+import ..Gradus: __BoyerLindquistFO, AbstractMetricParams, KerrMetric, metric
 using StaticArrays
 using Tullio: @tullio
 
@@ -168,7 +168,7 @@ uᵗ(M, rms, r, a) = γₑ(M, rms) * (1 + 2 * M * (1 + H(M, rms, r, a)) / r)
 regular_pdotu_inv(L, M, r, a, θ) =
     (eⱽ(M, r, a, θ) * √(1 - Vₑ(M, r, a, θ)^2)) / (1 - L * Ωₑ(M, r, a))
 
-@inline function regular_pdotu_inv(m::KerrSpacetime, u, v)
+@inline function regular_pdotu_inv(m::KerrMetric, u, v)
     metric_matrix = metric(m, u)
 
     # TODO: this only works for Kerr
@@ -189,7 +189,7 @@ function plunging_p_dot_u(E, a, M, L, Q, rms, r, sign_r)
     )
 end
 
-function plunging_p_dot_u(m::KerrSpacetime, u, v, rms)
+function plunging_p_dot_u(m::KerrMetric, u, v, rms)
     metric_matrix = metric(m, u)
 
     # reverse signs of the velocity vector
@@ -222,7 +222,7 @@ end
     end
 end
 
-@inline function redshift_function(m::KerrSpacetime, u, v)
+@inline function redshift_function(m::KerrMetric, u, v)
     isco = Gradus.isco(m)
     if u[2] > isco
         regular_pdotu_inv(m, u, v)
