@@ -10,8 +10,8 @@ using ..Gradus:
     FilterPointFunction,
     _redshift_guard,
     StatusCodes,
-    BoyerLindquistAD,
-    BoyerLindquistFO,
+    KerrSpacetime,
+    KerrSpacetimeFirstOrder,
     AbstractMetricParams,
     interpolate_redshift
 # for doc bindings
@@ -60,15 +60,15 @@ Returns a [`PointFunction`](@ref).
 Calculate the analytic redshift at a given geodesic point, assuming equitorial, geometrically
 thin accretion disc. Implementation depends on the metric type. Currently implemented for
 
-- [`Gradus.BoyerLindquistAD`](@ref)
-- [`Gradus.BoyerLindquistFO`](@ref)
+- [`Gradus.KerrSpacetime`](@ref)
+- [`Gradus.KerrSpacetimeFirstOrder`](@ref)
 
 # Notes
 
 Wraps calls to [`Gradus._redshift_guard`](@ref) to dispatch different implementations.
 """
-redshift(::BoyerLindquistAD, _) = PointFunction(_redshift_guard)
-redshift(::BoyerLindquistFO, _) = PointFunction(_redshift_guard)
+redshift(::KerrSpacetime, _) = PointFunction(_redshift_guard)
+redshift(::KerrSpacetimeFirstOrder, _) = PointFunction(_redshift_guard)
 redshift(m::AbstractMetricParams, u; kwargs...) = interpolate_redshift(m, u; kwargs...)
 
 end # module

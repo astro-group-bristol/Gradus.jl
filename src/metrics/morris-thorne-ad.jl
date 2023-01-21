@@ -17,21 +17,21 @@ end # module
 
 # new structure for our spacetime
 """
-    struct MorrisThorneAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct MorrisThorneWormhole{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
 
 Morris-Thorne wormhole metric.
 
 $(FIELDS)
 """
-@with_kw struct MorrisThorneAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct MorrisThorneWormhole{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
     "Throat size."
     b = 1.0
 end
 
 # implementation
-metric_components(m::MorrisThorneAD{T}, rθ) where {T} =
+metric_components(m::MorrisThorneWormhole{T}, rθ) where {T} =
     __MorrisThorneAD.metric_components(m.b, rθ)
-GradusBase.inner_radius(m::MorrisThorneAD{T}) where {T} = 0.0
+GradusBase.inner_radius(m::MorrisThorneWormhole{T}) where {T} = 0.0
 
-export MorrisThorneAD
+export MorrisThorneWormhole

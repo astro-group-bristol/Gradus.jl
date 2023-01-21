@@ -4,7 +4,7 @@ using StaticArrays
 
 include("../utils.jl")
 
-m = BoyerLindquistAD()
+m = KerrSpacetime()
 u = @SVector [1.0, 1e3, π / 2, 0.0]
 
 # check the trace bootstrap works for each grid type

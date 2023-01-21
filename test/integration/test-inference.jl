@@ -2,7 +2,7 @@ using Test
 using Gradus
 using StaticArrays
 
-m = BoyerLindquistAD()
+m = KerrSpacetime()
 u = @SVector [0.0, 1e3, π / 2, 0.0]
 v = @SVector [0.0, 1.0, 0.0, 0.0]
 

@@ -1,6 +1,6 @@
 module RedshiftFunctions
 import ..Gradus
-import ..Gradus: __BoyerLindquistFO, AbstractMetricParams, BoyerLindquistAD, metric
+import ..Gradus: __BoyerLindquistFO, AbstractMetricParams, KerrSpacetime, metric
 using StaticArrays
 using Tullio: @tullio
 
@@ -168,7 +168,7 @@ uᵗ(M, rms, r, a) = γₑ(M, rms) * (1 + 2 * M * (1 + H(M, rms, r, a)) / r)
 regular_pdotu_inv(L, M, r, a, θ) =
     (eⱽ(M, r, a, θ) * √(1 - Vₑ(M, r, a, θ)^2)) / (1 - L * Ωₑ(M, r, a))
 
-@inline function regular_pdotu_inv(m::BoyerLindquistAD, u, v)
+@inline function regular_pdotu_inv(m::KerrSpacetime, u, v)
     metric_matrix = metric(m, u)
 
     # TODO: this only works for Kerr
@@ -189,7 +189,7 @@ function plunging_p_dot_u(E, a, M, L, Q, rms, r, sign_r)
     )
 end
 
-function plunging_p_dot_u(m::BoyerLindquistAD, u, v, rms)
+function plunging_p_dot_u(m::KerrSpacetime, u, v, rms)
     metric_matrix = metric(m, u)
 
     # reverse signs of the velocity vector
@@ -207,7 +207,7 @@ function plunging_p_dot_u(m::BoyerLindquistAD, u, v, rms)
     1 / g
 end
 
-@inline function redshift_function(m::Gradus.BoyerLindquistFO, u, p, λ)
+@inline function redshift_function(m::Gradus.KerrSpacetimeFirstOrder, u, p, λ)
     isco = Gradus.isco(m)
     if u[2] > isco
         @inbounds regular_pdotu_inv(p.L, m.M, u[2], m.a, u[3])
@@ -222,7 +222,7 @@ end
     end
 end
 
-@inline function redshift_function(m::BoyerLindquistAD, u, v)
+@inline function redshift_function(m::KerrSpacetime, u, v)
     isco = Gradus.isco(m)
     if u[2] > isco
         regular_pdotu_inv(m, u, v)
@@ -235,7 +235,7 @@ end # module
 
 # point functions exports
 function _redshift_guard(
-    m::Gradus.BoyerLindquistFO{T},
+    m::Gradus.KerrSpacetimeFirstOrder{T},
     gp::FirstOrderGeodesicPoint{T},
     max_time,
 ) where {T}

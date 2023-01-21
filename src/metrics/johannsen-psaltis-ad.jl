@@ -28,12 +28,12 @@ end
 end # module
 
 """
-    struct JohannsenPsaltisAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct JohannsenPsaltisMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
 
 Johannsen and Psaltis 2011
 $(FIELDS)
 """
-@with_kw struct JohannsenPsaltisAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct JohannsenPsaltisMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
     "Black hole mass."
     M = 1.0
@@ -43,8 +43,8 @@ $(FIELDS)
     ϵ3 = 0.0
 end
 
-metric_components(m::JohannsenPsaltisAD{T}, rθ) where {T} =
+metric_components(m::JohannsenPsaltisMetric{T}, rθ) where {T} =
     __JohannsenPsaltisAD.metric_components(m.M, m.a, m.ϵ3, rθ)
-GradusBase.inner_radius(m::JohannsenPsaltisAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+GradusBase.inner_radius(m::JohannsenPsaltisMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
-export JohannsenPsaltisAD
+export JohannsenPsaltisMetric

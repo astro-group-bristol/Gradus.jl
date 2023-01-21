@@ -47,12 +47,12 @@ end
 end # module
 
 """
-    struct DilatonAxionAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct DilatonAxion{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
 
 Einstein-Maxwell-Dilaton-Axion metric.
 $(FIELDS)
 """
-@with_kw struct DilatonAxionAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct DilatonAxion{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     @deftype T
     "Singularity mass."
     M = 1.0
@@ -64,8 +64,8 @@ $(FIELDS)
     b = 1.0
 end
 
-metric_components(m::DilatonAxionAD{T}, rθ) where {T} =
+metric_components(m::DilatonAxion{T}, rθ) where {T} =
     __DilatonAxionAD.metric_components(m.M, m.a, m.β, m.b, rθ)
-GradusBase.inner_radius(m::DilatonAxionAD{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+GradusBase.inner_radius(m::DilatonAxion{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
-export DilatonAxionAD
+export DilatonAxion

@@ -3,28 +3,28 @@ using Gradus
 using StaticArrays
 
 # test known radii
-m = BoyerLindquistAD(M = 1.0, a = 0.0)
+m = KerrSpacetime(M = 1.0, a = 0.0)
 @test Gradus.isco(m) == 6.0
 
-m = BoyerLindquistAD(M = 1.0, a = 1.0)
+m = KerrSpacetime(M = 1.0, a = 1.0)
 @test Gradus.isco(m) == 1.0
 
 # test event horizon code
-m = BoyerLindquistAD(M = 1.0, a = 0.0)
+m = KerrSpacetime(M = 1.0, a = 0.0)
 rs, _ = event_horizon(m)
 @test rs ≈ fill(2.0, length(rs))
 
-m = BoyerLindquistAD(M = 1.0, a = 1.0)
+m = KerrSpacetime(M = 1.0, a = 1.0)
 rs, _ = event_horizon(m)
 @test rs ≈ fill(1.0, length(rs))
 
 # make sure works for other metrics too
-for M in [JohannsenAD, JohannsenPsaltisAD]
+for M in [JohannsenMetric, JohannsenPsaltisMetric]
     @test Gradus.isco(M()) > 1.0
     _rs, _ = event_horizon(M())
     @test (_rs .> 1.0) |> all
 end
 
 # test naked singularities
-@test is_naked_singularity(BoyerLindquistAD(1.0, 0.0)) == false
-@test is_naked_singularity(JohannsenPsaltisAD(1.0, 0.998, 2.0)) == true
+@test is_naked_singularity(KerrSpacetime(1.0, 0.0)) == false
+@test is_naked_singularity(JohannsenPsaltisMetric(1.0, 0.998, 2.0)) == true

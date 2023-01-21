@@ -12,10 +12,10 @@ using StaticArrays
         # last updated: 22 Apr 2022
         r_range = 6.0:0.5:10.0
         for (m, expected) in [
-            (BoyerLindquistAD(M = 1.0, a = 0.0), 0.5432533297869712),
-            (BoyerLindquistAD(M = 1.0, a = 1.0), 0.5016710246454921),
-            (BoyerLindquistAD(M = 1.0, a = -1.0), 0.5993458160081419),
-            (JohannsenAD(M = 1.0, a = 1.0, α22 = 1.0), 0.4980454719932759),
+            (KerrSpacetime(M = 1.0, a = 0.0), 0.5432533297869712),
+            (KerrSpacetime(M = 1.0, a = 1.0), 0.5016710246454921),
+            (KerrSpacetime(M = 1.0, a = -1.0), 0.5993458160081419),
+            (JohannsenMetric(M = 1.0, a = 1.0, α22 = 1.0), 0.4980454719932759),
         ]
             vϕs = solve_equitorial_circular_orbit(m, r_range)
             @test isapprox(sum(vϕs), expected, atol = 1e-6, rtol = 0.0)
@@ -23,7 +23,7 @@ using StaticArrays
     end
 
     @testset "trace_equitorial_circular_orbit" begin
-        m = BoyerLindquistAD(M = 1.0, a = 0.0)
+        m = KerrSpacetime(M = 1.0, a = 0.0)
         Gradus.isco(m)
         r_range = 6.0:0.1:10.0
         simsols = trace_equitorial_circular_orbit(m, r_range)
