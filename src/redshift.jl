@@ -6,20 +6,24 @@ using Tullio: @tullio
 
 """
     eⱽ(M, r, a, θ)
+
 Modified from Cunningham et al. (1975) eq. (A2a):
+
 ```math
 e^\\nu = \\sqrt{\\frac{\\Delta \\Sigma}{A}}.
 ```
+
 """
 eⱽ(M, r, a, θ) = √(
     __BoyerLindquistFO.Σ(r, a, θ) * __BoyerLindquistFO.Δ(M, r, a) /
     __BoyerLindquistFO.A(M, r, a, θ),
 )
 
-
 """
     eᶲ(M, r, a, θ)
+
 Modified from Cunningham et al. (1975) eq. (A2b):
+
 ```math
 e^\\Phi = \\sin \\theta \\sqrt{\\frac{A}{\\Sigma}}.
 ```
@@ -27,49 +31,59 @@ e^\\Phi = \\sin \\theta \\sqrt{\\frac{A}{\\Sigma}}.
 eᶲ(M, r, a, θ) =
     sin(θ) * √(__BoyerLindquistFO.A(M, r, a, θ) / __BoyerLindquistFO.Σ(r, a, θ))
 
-
 """
     ω(M, r, a, θ)
+
 From Cunningham et al. (1975) eq. (A2c):
+
 ```math
 \\omega = \\frac{2 a M r}{A}.
 ```
 """
 ω(M, r, a, θ) = 2 * a * M * r / __BoyerLindquistFO.A(M, r, a, θ)
 
-
 """
     Ωₑ(M, r, a)
+
 Coordinate angular velocity of an accreting gas.
+
 Taken from Cunningham et al. (1975) eq. (A7b):
+
 ```math
 \\Omega_e = \\frac{\\sqrt{M}}{a \\sqrt{M} + r_e^{3/2}}.
 ```
+
 # Notes
+
 Fanton et al. (1997) use
+
 ```math
 \\Omega_e = \\frac{\\sqrt{M}}{a \\sqrt{M} \\pm r_e^{3/2}},
 ```
+
 where the sign is dependent on co- or contra-rotation. This function may be extended in the future to support this definition.
 """
 Ωₑ(M, r, a) = √M / (r^1.5 + a * √M)
 
-
 """
     Vₑ(M, r, a, θ)
+
 Velocity of an accreting gas in a locally non-rotating reference frame (see Bardeen et al. 1973).
 Taken from Cunningham et al. (1975) eq. (A7b):
+
 ```math
 V_e = (\\Omega_e - \\omega) e^{\\Phi - \\nu}.
 ```
 """
 Vₑ(M, r, a, θ) = (Ωₑ(M, r, a) - ω(M, r, a, θ)) * eᶲ(M, r, a, θ) / eⱽ(M, r, a, θ)
 
-
 """
     Lₑ(M, rms, a)
+
 Angular momentum of an accreting gas within ``r_ms``.
+
 Taken from Cunningham et al. (1975) eq. (A11b):
+
 ```math
 L_e = \\sqrt{M} \\frac{
         r_{\\text{ms}}^2 - 2 a \\sqrt{M r_{\\text{ms}}} + a^2
@@ -80,21 +94,24 @@ L_e = \\sqrt{M} \\frac{
 """
 Lₑ(M, rms, a) = √M * (rms^2 - 2 * a * √(M * rms) + a^2) / (rms^1.5 - 2 * M * √rms + a * √M)
 
-
 """
     H(M, rms, r, a)
+
 Taken from Cunningham et al. (1975) eq. (A12e):
+
 ```math
 H = \\frac{2 M r_e - a \\lambda_e}{\\Delta},
 ```
+
 where we distinguing ``r_e`` as the position of the accreting gas.
 """
 H(M, rms, r, a) = (2 * M * r - a * Lₑ(M, rms, a)) / __BoyerLindquistFO.Δ(M, r, a)
 
-
 """
     γₑ(M, rms)
+
 Taken from Cunningham et al. (1975) eq. (A11c):
+
 ```math
 \\gamma_e = \\sqrt{1 - \\frac{
         2M
@@ -105,10 +122,11 @@ Taken from Cunningham et al. (1975) eq. (A11c):
 """
 γₑ(M, rms) = √(1 - (2 * M) / (3 * rms))
 
-
 """
     uʳ(M, rms, r)
+
 Taken from Cunningham et al. (1975) eq. (A12b):
+
 ```math
 u^r = - \\sqrt{\\frac{
         2M
@@ -121,10 +139,11 @@ u^r = - \\sqrt{\\frac{
 """
 uʳ(M, rms, r) = -√((2 * M) / (3 * rms)) * (rms / r - 1)^1.5
 
-
 """
     uᶲ(M, rms, r, a)
+
 Taken from Cunningham et al. (1975) eq. (A12c):
+
 ```math
 u^\\phi = \\frac{\\gamma_e}{r_e^2} \\left(
         L_e + aH
@@ -133,10 +152,11 @@ u^\\phi = \\frac{\\gamma_e}{r_e^2} \\left(
 """
 uᶲ(M, rms, r, a) = γₑ(M, rms) / r^2 * (Lₑ(M, rms, a) + a * H(M, rms, r, a))
 
-
 """
     uᵗ(M, rms, r, a)
+
 Taken from Cunningham et al. (1975) eq. (A12b):
+
 ```math
 u^t = \\gamma_e \\left(
         1 + \\frac{2 M (1 + H)}{r_e}
@@ -145,15 +165,10 @@ u^t = \\gamma_e \\left(
 """
 uᵗ(M, rms, r, a) = γₑ(M, rms) * (1 + 2 * M * (1 + H(M, rms, r, a)) / r)
 
-
-"""
-Experimental API:
-"""
-function regular_pdotu_inv(L, M, r, a, θ)
+regular_pdotu_inv(L, M, r, a, θ) =
     (eⱽ(M, r, a, θ) * √(1 - Vₑ(M, r, a, θ)^2)) / (1 - L * Ωₑ(M, r, a))
-end
 
-@inline function regular_pdotu_inv(m::BoyerLindquistAD{T}, u, v) where {T}
+@inline function regular_pdotu_inv(m::BoyerLindquistAD, u, v)
     metric_matrix = metric(m, u)
 
     # TODO: this only works for Kerr
@@ -174,7 +189,7 @@ function plunging_p_dot_u(E, a, M, L, Q, rms, r, sign_r)
     )
 end
 
-function plunging_p_dot_u(m::AbstractMetricParams{T}, u, v, rms) where {T}
+function plunging_p_dot_u(m::BoyerLindquistAD, u, v, rms)
     metric_matrix = metric(m, u)
 
     # reverse signs of the velocity vector
@@ -192,7 +207,7 @@ function plunging_p_dot_u(m::AbstractMetricParams{T}, u, v, rms) where {T}
     1 / g
 end
 
-@inline function redshift_function(m::Gradus.BoyerLindquistFO{T}, u, p, λ) where {T}
+@inline function redshift_function(m::Gradus.BoyerLindquistFO, u, p, λ)
     isco = Gradus.isco(m)
     if u[2] > isco
         @inbounds regular_pdotu_inv(p.L, m.M, u[2], m.a, u[3])
@@ -207,7 +222,7 @@ end
     end
 end
 
-@inline function redshift_function(m::AbstractMetricParams{T}, u, v) where {T}
+@inline function redshift_function(m::BoyerLindquistAD, u, v)
     isco = Gradus.isco(m)
     if u[2] > isco
         regular_pdotu_inv(m, u, v)
@@ -226,7 +241,7 @@ function _redshift_guard(
 ) where {T}
     RedshiftFunctions.redshift_function(m, gp.u2, gp.p, gp.t2)
 end
-function _redshift_guard(m::AbstractMetricParams{T}, gp, max_time) where {T}
+function _redshift_guard(m::AbstractMetricParams, gp, max_time)
     RedshiftFunctions.redshift_function(m, gp.u2, gp.v2)
 end
 
@@ -269,7 +284,8 @@ function interpolate_redshift(plunging_interpolation, u)
         end
     PointFunction(closure)
 end
-# interpolate_redshift(m::AbstractMetricParams, u) =
-#     interpolate_redshift(interpolate_plunging_velocities(m), u)
+
+interpolate_redshift(m::AbstractMetricParams, u; kwargs...) =
+    interpolate_redshift(interpolate_plunging_velocities(m; kwargs...), u)
 
 export RedshiftFunctions, interpolate_redshift

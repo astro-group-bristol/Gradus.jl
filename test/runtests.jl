@@ -19,6 +19,10 @@ end
     include("test-special-radii.jl")
 end
 
+@testset "integration" verbose = true begin
+    include("integration/test-inference.jl")
+end
+
 @testset "image-planes" verbose = true begin
     include("image-planes/test-polar-grids.jl")
     include("image-planes/test-cartesian-grids.jl")
