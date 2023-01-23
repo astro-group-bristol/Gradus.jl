@@ -202,12 +202,7 @@ export AbstractPointFunction,
 # precompilation help
 precompile(
     tracegeodesics,
-    (
-        KerrMetric{Float64},
-        SVector{4,Float64},
-        SVector{4,Float64},
-        Tuple{Float64,Float64},
-    ),
+    (KerrMetric{Float64}, SVector{4,Float64}, SVector{4,Float64}, Tuple{Float64,Float64}),
 )
 precompile(
     rendergeodesics,
