@@ -25,7 +25,12 @@ using StaticArrays
         u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
         # arbitrary single velocity vector
         v = @SVector [0.0, -1.0, -0.0, -3.5e-6]
-        for m in [KerrMetric(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole()]
+        for m in [
+            KerrMetric(),
+            JohannsenMetric(),
+            KerrSpacetimeFirstOrder(),
+            MorrisThorneWormhole(),
+        ]
             test_single(m, u, v)
             test_many(m, u, v)
             # smoke test passed
@@ -37,7 +42,12 @@ using StaticArrays
         u = Float64[0.0, 100.0, deg2rad(85), 0.0]
         # arbitrary single velocity vector
         v = Float64[0.0, -1.0, -0.0, -3.5e-6]
-        for m in [KerrMetric(), JohannsenMetric(), KerrSpacetimeFirstOrder(), MorrisThorneWormhole()]
+        for m in [
+            KerrMetric(),
+            JohannsenMetric(),
+            KerrSpacetimeFirstOrder(),
+            MorrisThorneWormhole(),
+        ]
             test_single(m, u, v)
             test_many(m, u, v)
             @test true
