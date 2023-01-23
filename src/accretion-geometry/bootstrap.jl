@@ -1,7 +1,7 @@
 function tracegeodesics(
     m::AbstractMetricParams,
-    init_positions,
-    init_velocities,
+    u,
+    v,
     accretion_geometry::AbstractAccretionGeometry,
     time_domain::NTuple{2};
     callback = nothing,
@@ -9,19 +9,12 @@ function tracegeodesics(
     kwargs...,
 )
     cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
-    tracegeodesics(
-        m,
-        init_positions,
-        init_velocities,
-        time_domain;
-        callback = cbs,
-        kwargs...,
-    )
+    tracegeodesics(m, u, v, time_domain; callback = cbs, kwargs...)
 end
 
 function rendergeodesics(
     m::AbstractMetricParams,
-    init_pos,
+    u,
     accretion_geometry::AbstractAccretionGeometry,
     max_time::Number;
     callback = nothing,
@@ -29,7 +22,7 @@ function rendergeodesics(
     kwargs...,
 )
     cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
-    rendergeodesics(m, init_pos, max_time; callback = cbs, kwargs...)
+    rendergeodesics(m, u, max_time; callback = cbs, kwargs...)
 end
 
 function prerendergeodesics(
@@ -45,12 +38,17 @@ function prerendergeodesics(
     prerendergeodesics(m, init_pos, max_time; callback = cbs, kwargs...)
 end
 
-add_collision_callback(::Nothing, accretion_geometry; gtol) =
-    build_collision_callback(accretion_geometry; gtol = gtol)
-add_collision_callback(callback::Base.AbstractVecOrTuple, accretion_geometry; gtol) =
-    (callback..., build_collision_callback(accretion_geometry; gtol = gtol))
-add_collision_callback(callback, accretion_geometry; gtol) =
-    (callback, build_collision_callback(accretion_geometry; gtol = gtol))
+function add_collision_callback(callback::C, accretion_geometry; gtol) where {C}
+    if C <: Nothing
+        build_collision_callback(accretion_geometry; gtol = gtol)
+    elseif C <: Tuple
+        (callback..., build_collision_callback(accretion_geometry; gtol = gtol))
+    elseif C <: SciMLBase.DECallback
+        (callback, build_collision_callback(accretion_geometry; gtol = gtol))
+    else
+        error("Unknown callback type $C")
+    end
+end
 
 """
     build_collision_callback(m::AbstractAccretionGeometry{T})
