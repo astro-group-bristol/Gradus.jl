@@ -1,7 +1,7 @@
 name = "Gradus"
 uuid = "c5b7b928-ea15-451c-ad6f-a331a0f3e4b7"
 authors = ["fjebaker <fergusbkr@gmail.com>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -23,7 +23,6 @@ QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-Surrogates = "6fc51010-71bc-11e9-0e15-a3fcc6593c49"
 ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 VoronoiCells = "e3e34ffb-84e9-5012-9490-92c94d0c60a4"

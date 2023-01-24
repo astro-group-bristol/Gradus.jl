@@ -23,6 +23,10 @@ end
     include("integration/test-inference.jl")
 end
 
+@testset "transfer-functions" verbose = true begin
+    include("transfer-functions/test-2d.jl")
+end
+
 @testset "image-planes" verbose = true begin
     include("image-planes/test-polar-grids.jl")
     include("image-planes/test-cartesian-grids.jl")

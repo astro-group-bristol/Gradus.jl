@@ -25,7 +25,7 @@ abstract type AbstractGeodesicPoint{T} end
 $(FIELDS)
 
 """
-@with_kw struct GeodesicPoint{T,V<:AbstractVector} <: AbstractGeodesicPoint{T}
+struct GeodesicPoint{T,V<:AbstractVector} <: AbstractGeodesicPoint{T}
     "Return code of the integrator for this geodesic."
     status::StatusCodes.T
     "Start affine time"
@@ -44,6 +44,23 @@ $(FIELDS)
     # and can create a specialistion for the carter method
     # then provide dispatched accessor methods
     # p::P
+end
+
+function Base.show(io::IO, gp::GeodesicPoint)
+    print(io, "GeodesicPoint($(gp.u2...))")
+end
+
+function Base.show(io::IO, ::MIME"text/plain", gp::GeodesicPoint)
+    text = """GeodesicPoint:
+      . status : $(gp.status)
+      . t1     : $(gp.t1)
+      . t2     : $(gp.t2)
+      . u1     : $(gp.u1)
+      . v1     : $(gp.v1)
+      . u2     : $(gp.u2)
+      . v2     : $(gp.v2)
+    """
+    print(io, text)
 end
 
 """

@@ -57,7 +57,8 @@ $(FIELDS)
     ϵ3 = 0.0
 end
 
-metric_components(m::JohannsenMetric{T}, rθ) where {T} = __JohannsenAD.metric_components(m, rθ)
+metric_components(m::JohannsenMetric{T}, rθ) where {T} =
+    __JohannsenAD.metric_components(m, rθ)
 GradusBase.inner_radius(m::JohannsenMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
 export JohannsenMetric

@@ -37,7 +37,8 @@ end
 
 function image_plane(plane::PolarPlane, u)
     rs = plane.grid(plane.r_min, plane.r_max, plane.Nr)
-    θs = range(plane.θ_min, plane.θ_max, plane.Nθ)
+    δθ = (plane.θ_max - plane.θ_min) / (plane.Nθ)
+    θs = range(plane.θ_min, plane.θ_max - δθ, plane.Nθ)
 
     αs = [r * cos(θ) for r in rs, θ in θs]
     βs = [r * sin(θ) * sin(u[3]) for r in rs, θ in θs]

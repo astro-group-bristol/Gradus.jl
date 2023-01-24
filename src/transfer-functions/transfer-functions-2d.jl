@@ -38,4 +38,139 @@ function bin_and_interpolate(
     DataInterpolations.LinearInterpolation(y_binned, bins)
 end
 
-export bin_transfer_function
+function source_to_disc(
+    m::AbstractMetricParams,
+    model::AbstractCoronaModel,
+    d::AbstractAccretionGeometry,
+    max_t;
+    n_samples = 10_000,
+    sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
+    solver_opts...,
+)
+    sols = tracegeodesics(
+        m,
+        model,
+        d,
+        (0.0, max_t);
+        n_samples = n_samples,
+        save_on = false,
+        sampler = sampler,
+        solver_opts...,
+    )
+    points = filter(
+        i -> i.status == StatusCodes.IntersectedWithGeometry,
+        process_solution.(m, sols.u),
+    )
+    # sort by radius
+    sort!(points, by = i -> i.u2[2])
+    points
+end
+
+function observer_to_disc(
+    m::AbstractMetricParams,
+    u,
+    plane::AbstractImagePlane,
+    d::AbstractAccretionGeometry,
+    max_t,
+    ;
+    solver_opts...,
+)
+    sols = tracegeodesics(m, u, plane, d, (0.0, max_t); save_on = false, solver_opts...)
+    points = process_solution.(m, sols.u)
+    points
+end
+
+struct LagTransferFunction{T,M,U,P}
+    max_t::T
+    metric::M
+    u::U
+    area_elements::Vector{T}
+    source_to_disc::Vector{P}
+    observer_to_disc::Vector{P}
+end
+
+function Base.show(io::IO, ::MIME"text/plain", tf::LagTransferFunction)
+    text = """LagTransferFunction for $(typeof(tf.metric)) 
+      . observer position      
+          $(tf.u)
+      . observer to disc photon count : $(length(tf.observer_to_disc))
+      . source to disc photon count   : $(length(tf.source_to_disc))
+      Total memory: $(Base.format_bytes(Base.summarysize(tf)))
+    """
+    print(io, text)
+end
+
+function lagtransfer(
+    model::AbstractCoronaModel,
+    m::AbstractMetricParams,
+    u,
+    plane::AbstractImagePlane,
+    d::AbstractAccretionGeometry;
+    max_t = 2 * u[2],
+    n_samples = 10_000,
+    sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
+    solver_opts...,
+)
+    s_to_d = source_to_disc(
+        m,
+        model,
+        d,
+        max_t;
+        n_samples = n_samples,
+        sampler = sampler,
+        solver_opts...,
+    )
+    o_to_d = observer_to_disc(
+        m,
+        u,
+        plane,
+        d,
+        max_t;
+        effective_infinity = 1.1 * u[2],
+        solver_opts...,
+    )
+
+    # get the indices of all geodesics which intersected with the disc
+    I = [i.status == StatusCodes.IntersectedWithGeometry for i in o_to_d]
+    areas = unnormalized_areas(plane)[I]
+
+    LagTransferFunction(max_t, m, u, areas, s_to_d, o_to_d[I])
+end
+
+function _interpolate_profile(tf::LagTransferFunction)
+    times = map(i -> i.u2[1], tf.source_to_disc)
+    radii = map(i -> i.u2[2], tf.source_to_disc)
+    DataInterpolations.LinearInterpolation(times, radii)
+end
+
+function binflux(
+    tf::LagTransferFunction;
+    redshift = ConstPointFunctions.redshift(tf.metric, tf.u),
+    kwargs...,
+)
+    intp = _interpolate_profile(tf)
+    r = map(i -> i.u2[2], tf.observer_to_disc)
+    t1 = intp.(r)
+    t2 = map(i -> i.u2[1], tf.observer_to_disc)
+    # add times to get total time
+    t = @. t1 + t2
+    # todo: heuristic: just subtract radial position now
+    t .-= tf.u[2]
+
+    g = redshift.(tf.metric, tf.observer_to_disc, tf.max_t)
+
+    # calculate flux
+    f = @. g^4 * r^(-3) * tf.area_elements / (g * 6.4)
+    # normalize
+    F = f ./ sum(f)
+
+    tb, eb, td = bin_transfer_function(t, g * 6.4, F; kwargs...)
+    # correct for the off by one error in the binning
+    tb = tb[1:end-1]
+    eb = eb[1:end-1]
+    td = td[2:end, 2:end]
+
+    tb, eb, td
+end
+
+export bin_transfer_function, lagtransfer, binflux
