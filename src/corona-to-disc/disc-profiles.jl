@@ -120,7 +120,7 @@ end
 
 function findindex(vdp::VoronoiDiscProfile, gps::AbstractArray{<:GeodesicPoint}; kwargs...)
     ret = fill(-1, size(gps))
-    Threads.@threads for i = 1:length(gps)
+    Threads.@threads for i in eachindex(gps)
         gp = gps[i]
         ret[i] = findindex(vdp, gp)
     end
@@ -152,21 +152,8 @@ end
 struct SurrogateDiscProfile{D,S}
     disc::D
     surrogate::S
-end
-
-function SurrogateDiscProfile(
-    disc::D,
-    x::AbstractArray{<:SVector{N}},
-    y;
-    S = Surrogates.RadialBasis,
-) where {D,N}
-    bounds = map(1:N) do i
-        extrema(el -> el[i], x)
-    end
-    lower_bounds = first.(bounds)
-    upper_bounds = last.(bounds)
-    surrogate = S(x, y, lower_bounds, upper_bounds)
-    SurrogateDiscProfile{D,typeof(surrogate)}(disc, surrogate)
+    SurrogateDiscProfile(disc::AbstractAccretionGeometry, surrogate) =
+        new{typeof(disc),typeof(surrogate)}(disc, surrogate)
 end
 
 function evaluate(sdp::SurrogateDiscProfile, x::AbstractArray{<:AbstractArray})

@@ -27,7 +27,6 @@ using Tullio: @tullio
 import ThreadsX
 import ForwardDiff
 import GeometryBasics
-import Surrogates
 
 include("GradusBase/GradusBase.jl")
 import .GradusBase:
