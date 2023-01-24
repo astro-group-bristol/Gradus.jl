@@ -89,6 +89,17 @@ struct LagTransferFunction{T,M,U,P}
     observer_to_disc::Vector{P}
 end
 
+function Base.show(io::IO, ::MIME"text/plain", tf::LagTransferFunction)
+    text = """LagTransferFunction for $(typeof(tf.metric)) 
+      . observer position      
+          $(tf.u)
+      . observer to disc photon count : $(length(tf.observer_to_disc))
+      . source to disc photon count   : $(length(tf.source_to_disc))
+      Total memory: $(Base.format_bytes(Base.summarysize(tf)))
+    """
+    print(io, text)
+end
+
 function lagtransfer(
     model::AbstractCoronaModel,
     m::AbstractMetricParams,
@@ -119,6 +130,7 @@ function lagtransfer(
         solver_opts...,
     )
 
+    # get the indices of all geodesics which intersected with the disc
     I = [i.status == StatusCodes.IntersectedWithGeometry for i in o_to_d]
     areas = unnormalized_areas(plane)[I]
 
@@ -128,9 +140,6 @@ end
 function _interpolate_profile(tf::LagTransferFunction)
     times = map(i -> i.u2[1], tf.source_to_disc)
     radii = map(i -> i.u2[2], tf.source_to_disc)
-    I = sortperm(radii)
-    @show any(isnan.(times))
-    @show any(isnan.(radii))
     DataInterpolations.LinearInterpolation(times, radii)
 end
 
@@ -145,6 +154,8 @@ function binflux(
     t2 = map(i -> i.u2[1], tf.observer_to_disc)
     # add times to get total time
     t = @. t1 + t2
+    # todo: heuristic: just subtract radial position now
+    t .-= tf.u[2]
 
     g = redshift.(tf.metric, tf.observer_to_disc, tf.max_t)
 

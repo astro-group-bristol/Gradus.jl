@@ -25,7 +25,7 @@ struct WeierstrassSampler{D,G} <: AbstractDirectionSampler{D,G}
     ) = WeierstrassSampler(res, domain, generator)
 end
 
-@inline geti(::AbstractDirectionSampler{D,EvenGenerator}, i, N) where {D} = i
+@inline geti(::AbstractDirectionSampler{D,EvenGenerator}, i, N) where {D} = i / N
 @inline geti(::AbstractDirectionSampler{D,GoldenSpiralGenerator}, i, N) where {D} = i
 @inline geti(::AbstractDirectionSampler{D,RandomGenerator}, i, N) where {D} =
     rand(Float64) * N
@@ -35,9 +35,9 @@ end
     π * (1 + √5) * i
 @inline getangle(::AbstractDirectionSampler{D,RandomGenerator}, i) where {D} = 2π * i
 
-sample_angles(sm::AbstractDirectionSampler{D,G}, i, N) where {D,G} =
+@inline sample_angles(sm::AbstractDirectionSampler, i, N) =
     (sample_elevation(sm, i / N), mod2pi(getangle(sm, i)))
-@inline sample_angles(sm::WeierstrassSampler{D}, i, N) where {D} =
+@inline sample_angles(sm::WeierstrassSampler, i, N) =
     (sample_elevation(sm, i), mod2pi(getangle(sm, i)))
 
 
