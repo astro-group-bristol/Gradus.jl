@@ -12,7 +12,7 @@ using Gradus
 using Plots
 using StaticArrays
 
-m = JohannsenPsaltisAD(M=1.0, a=0.6, ϵ3=2.0)
+m = JohannsenPsaltisMetric(M=1.0, a=0.6, ϵ3=2.0)
 # observer position
 u = @SVector [0.0, 1000.0, π/2, 0.0]
 
@@ -57,7 +57,7 @@ using StaticArrays
 using Plots
 
 # metric and metric parameters
-m = BoyerLindquistAD(M=1.0, a=1.0)
+m = KerrMetric(M=1.0, a=1.0)
 # observer position
 u = @SVector [0.0, 1000.0, deg2rad(60), 0.0]
 # accretion disc
@@ -65,7 +65,7 @@ d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
 
 # define point function which filters geodesics that intersected the accretion disc
 # and use those to calculate redshift
-pf = ConstPointFunctions.redshift ∘ ConstPointFunctions.filter_intersected
+pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected
 
 img = rendergeodesics(
     m,
@@ -115,7 +115,7 @@ For a simple maximally-spinning Kerr black hole, the iron line profile (with a d
 ```julia
 d = GeometricThinDisc(0.0, 400.0, π / 2)
 u = @SVector [0.0, 1000.0, deg2rad(40), 0.0]
-m = BoyerLindquistAD(1.0, 0.998)
+m = KerrMetric(1.0, 0.998)
 
 # maximal integration radius
 maxrₑ = 50.0
@@ -146,7 +146,7 @@ using StaticArrays
 using Plots
 
 # metric and metric parameters
-m = BoyerLindquistAD(M=1.0, a=0.4)
+m = KerrMetric(M=1.0, a=0.4)
 # observer's initial position
 u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
 # accretion disc
@@ -185,7 +185,7 @@ using Gradus
 using StaticArrays
 using Plots
 
-m = BoyerLindquistAD(1.0, 0.0)
+m = KerrMetric(1.0, 0.0)
 u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
 
 # define the disc shape -- return a negative number 
@@ -230,7 +230,7 @@ using Gradus
 using Plots
 using StaticArrays
 
-m = BoyerLindquistAD(M=1.0, a=0.8)
+m = KerrMetric(M=1.0, a=0.8)
 
 p = plot(aspect_ratio=1)
 
@@ -246,6 +246,8 @@ for r in [3.0, 4.0, 5.0, 6.0]
 
     plot!(p, x, y, label = false)
 end
+
+p
 ```
 
 ![](./example-circular-orbits.svg)
@@ -263,7 +265,7 @@ p = plot(legend=:bottomright, ylabel = "E", xlabel = "r", xscale = :log10)
 
 # choice of spin to plot energy curves for
 for a in [0.0, 0.4, 0.6]
-    m = BoyerLindquistAD(M = 1.0, a = a)
+    m = KerrMetric(M = 1.0, a = a)
 
     rs = range(Gradus.isco(m), 100.0, 500)
     energy = map(rs) do r
@@ -275,7 +277,7 @@ end
 
 # calculate the ISCO as a function of spin
 data = map(range(-1.0, 0.8, 100)) do a
-    m = BoyerLindquistAD(M = 1.0, a = a)
+    m = KerrMetric(M = 1.0, a = a)
     r = Gradus.isco(m)
     CircularOrbits.energy(m, r), r
 end
@@ -295,7 +297,7 @@ using Gradus
 using Plots
 
 function draw_horizon(p, m)
-    rs, θs = eventhorizon(m, resolution = 200)
+    rs, θs = event_horizon(m, resolution = 200)
     radius = rs
 
     x = @. radius * cos(θs)
@@ -305,9 +307,10 @@ end
 
 p = plot(aspect_ratio = 1)
 for a in [0.0, 0.5, 0.6, 0.7, 0.8]
-    m = JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = 2.0)
+    m = JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = 2.0)
     draw_horizon(p, m)
 end
+p
 ```
 
 ![](./example-horizon.svg)
@@ -317,7 +320,7 @@ We can also calculate parameter combinations that lead to naked singularities, a
 ```julia
 function calc_exclusion(as, ϵs)
     regions = [
-        is_naked_singularity(JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = ϵ))
+        is_naked_singularity(JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = ϵ))
         for a in as, ϵ in ϵs
     ]
 
@@ -351,18 +354,19 @@ using Gradus
 using StaticArrays
 using Plots
 
-m = BoyerLindquistAD(M=1.0, a=0.998)
+m = KerrMetric(M=1.0, a=0.998)
 d = GeometricThinDisc(0.0, 100.0, π/2)
 
 p = plot(legend = false)
 for angle in [3, 35, 50, 65, 74, 85]
     u = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
     ctf = cunningham_transfer_function(
-        m, u, d, 4.0, 2000.0
+        m, u, d, 4.0
     )
-    mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
-    @views plot!(p, ctf.gstar[mask], ctf.f[mask])
+    mask = @. (ctf.g✶ > 0.001) & (ctf.g✶ < 0.999)
+    @views plot!(p, ctf.g✶[mask], ctf.f[mask])
 end
+p
 ```
 
 ![](./example-bambi-fig1.svg)
@@ -375,13 +379,14 @@ u = @SVector [0.0, 1000.0, deg2rad(30), 0.0]
 
 p = plot(legend = false)
 for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
-    m = BoyerLindquistAD(1.0, a)
+    m = KerrMetric(1.0, a)
     ctf = cunningham_transfer_function(
-        m, u, d, 7.0, 2000.0
+        m, u, d, 7.0
     )
-    mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
-    @views plot!(p, ctf.gstar[mask], ctf.f[mask])
+    mask = @. (ctf.g✶ > 0.001) & (ctf.g✶ < 0.999)
+    @views plot!(p, ctf.g✶[mask], ctf.f[mask])
 end
+p
 ```
 
 ![](./example-bambi-fig2.svg)
@@ -396,7 +401,7 @@ using StaticArrays
 using Plots
 
 # their papers has a=-a
-m = BoyerLindquistAD(M=1.0, a=-0.4)
+m = KerrMetric(M=1.0, a=-0.4)
 u = @SVector [0.0, 1000, acos(0.25), 0.0]
 d = GeometricThinDisc(0.0, 100.0, π / 2)
 
@@ -415,6 +420,7 @@ for r in radii
     α, β = impact_parameters_for_radius(m, u, d, r, N=100)
     plot!(p, α, β)
 end
+p
 ```
 
 ![](./example-concentric.svg)
