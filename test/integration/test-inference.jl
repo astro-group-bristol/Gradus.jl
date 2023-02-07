@@ -21,7 +21,13 @@ rtype = returntype(tracegeodesics, m, u, v, (0.0, 2000.0))
 # v is a velocity function
 u = @SVector [0.0, 1e3, π / 2, 0.0]
 vfunc = (i) -> @SVector [0.0, 1.0, 0.0, 0.0]
-rtype = returntype((args...) -> tracegeodesics(args...; trajectories = 10), m, u, vfunc, (0.0, 2000.0))
+rtype = returntype(
+    (args...) -> tracegeodesics(args...; trajectories = 10),
+    m,
+    u,
+    vfunc,
+    (0.0, 2000.0),
+)
 @test isconcretetype(rtype)
 
 # v is a plane

@@ -7,7 +7,7 @@ Plots.default(show = false)
 using StatsBase
 
 function ex_tracing()
-    m = JohannsenPsaltisAD(M = 1.0, a = 0.6, ϵ3 = 2.0)
+    m = JohannsenPsaltisMetric(M = 1.0, a = 0.6, ϵ3 = 2.0)
     # observer position
     u = @SVector [0.0, 1000.0, π / 2, 0.0]
 
@@ -40,7 +40,7 @@ end
 
 function ex_redshift()
     # metric and metric parameters
-    m = BoyerLindquistAD(M = 1.0, a = 1.0)
+    m = KerrMetric(M = 1.0, a = 1.0)
     # observer position
     u = @SVector [0.0, 1000.0, deg2rad(60), 0.0]
     # accretion disc
@@ -48,7 +48,7 @@ function ex_redshift()
 
     # define point function which filters geodesics that intersected the accretion disc
     # and use those to calculate redshift
-    pf = ConstPointFunctions.redshift ∘ ConstPointFunctions.filter_intersected
+    pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected
 
     img = rendergeodesics(
         m,
@@ -82,7 +82,7 @@ end
 
 function ex_interpolating()
     # metric and metric parameters
-    m = BoyerLindquistAD(M = 1.0, a = 0.4)
+    m = KerrMetric(M = 1.0, a = 0.4)
     # observer's initial position
     u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
     # accretion disc
@@ -112,7 +112,7 @@ function ex_interpolating()
 end
 
 function ex_circular_orbits()
-    m = BoyerLindquistAD(M = 1.0, a = 0.8)
+    m = KerrMetric(M = 1.0, a = 0.8)
 
     p = plot(aspect_ratio = 1)
 
@@ -140,7 +140,7 @@ function ex_isco()
 
     # choice of spin to plot energy curves for
     for a in [0.0, 0.4, 0.6]
-        m = BoyerLindquistAD(M = 1.0, a = a)
+        m = KerrMetric(M = 1.0, a = a)
 
         rs = range(Gradus.isco(m), 100.0, 500)
         energy = map(rs) do r
@@ -152,7 +152,7 @@ function ex_isco()
 
     # calculate the ISCO as a function of spin
     data = map(range(-1.0, 0.8, 100)) do a
-        m = BoyerLindquistAD(M = 1.0, a = a)
+        m = KerrMetric(M = 1.0, a = a)
         r = Gradus.isco(m)
         CircularOrbits.energy(m, r), r
     end
@@ -165,7 +165,7 @@ end
 
 function ex_horizon()
     function draw_horizon(p, m)
-        rs, θs = eventhorizon(m, resolution = 200)
+        rs, θs = event_horizon(m, resolution = 200)
         radius = rs
 
         x = @. radius * cos(θs)
@@ -175,7 +175,7 @@ function ex_horizon()
 
     p = plot(aspect_ratio = 1)
     for a in [0.0, 0.5, 0.6, 0.7, 0.8]
-        m = JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = 2.0)
+        m = JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = 2.0)
         draw_horizon(p, m)
     end
     p
@@ -185,7 +185,7 @@ function ex_horizon()
 
     function calc_exclusion(as, ϵs)
         regions = [
-            is_naked_singularity(JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = ϵ)) for
+            is_naked_singularity(JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = ϵ)) for
             a in as, ϵ in ϵs
         ]
 
@@ -203,7 +203,7 @@ function ex_horizon()
 end
 
 function ex_transfer_functions()
-    m = BoyerLindquistAD(M = 1.0, a = 0.998)
+    m = KerrMetric(M = 1.0, a = 0.998)
     d = GeometricThinDisc(0.0, 200.0, π / 2)
 
     p = plot(legend = false)
@@ -222,7 +222,7 @@ function ex_transfer_functions()
 
     p = plot(legend = false)
     for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
-        m = BoyerLindquistAD(1.0, a)
+        m = KerrMetric(1.0, a)
         ctf = cunningham_transfer_function(m, u, d, 7.0, 2000.0)
         mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
         @views plot!(p, ctf.gstar[mask], ctf.f[mask])
@@ -234,7 +234,7 @@ end
 
 function ex_concentric_rings()
     # their papers has a=-a
-    m = BoyerLindquistAD(M = 1.0, a = -0.4)
+    m = KerrMetric(M = 1.0, a = -0.4)
     u = @SVector [0.0, 1000, acos(0.25), 0.0]
     d = GeometricThinDisc(0.0, 100.0, π / 2)
 
@@ -257,7 +257,7 @@ function ex_concentric_rings()
 end
 
 function ex_doughnut()
-    m = BoyerLindquistAD(1.0, 0.0)
+    m = KerrMetric(1.0, 0.0)
     u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
 
     # define the disc shape -- return a negative number 
@@ -292,7 +292,7 @@ end
 function ex_lineprofile()
     d = GeometricThinDisc(0.0, 400.0, π / 2)
     u = @SVector [0.0, 1000.0, deg2rad(40), 0.0]
-    m = BoyerLindquistAD(1.0, 0.998)
+    m = KerrMetric(1.0, 0.998)
 
     # maximal integration radius
     maxrₑ = 50.0

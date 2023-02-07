@@ -54,7 +54,7 @@ end
 function emitted_flux(profile::VoronoiDiscProfile, gps)
     error("TODO")
 end
-function delay(profile::VoronoiDiscProfile, gps) 
+function delay(profile::VoronoiDiscProfile, gps)
     error("TODO")
 end
 

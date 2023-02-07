@@ -4,12 +4,21 @@ using StaticArrays
 
 m = KerrMetric(M = 1.0, a = 0.6)
 u = @SVector [0.0, 1000.0, deg2rad(60), 0.0]
-d = GeometricThinDisc(Gradus.isco(m), 250.0, π/2)
+d = GeometricThinDisc(Gradus.isco(m), 250.0, π / 2)
 
-plane = PolarPlane(GeometricGrid(); Nr = 100, Nθ=400)
+plane = PolarPlane(GeometricGrid(); Nr = 100, Nθ = 400)
 
 bins = collect(range(0.1, 1.3, 100))
-x, y = lineprofile(bins, (r) -> r^(-3), m, u, d, BinnedLineProfile(); plane = plane, callback = domain_upper_hemisphere())
+x, y = lineprofile(
+    bins,
+    (r) -> r^(-3),
+    m,
+    u,
+    d,
+    BinnedLineProfile();
+    plane = plane,
+    callback = domain_upper_hemisphere(),
+)
 
 # should be around .3 - .4
 g_low = x[findfirst(>(0), y)]
@@ -24,8 +33,17 @@ g_high = x[end-findfirst(>(0), reverse(y))]
 
 # test for other metrics
 m = JohannsenPsaltisMetric(M = 1.0, a = 0.6, ϵ3 = 2.0)
-d = GeometricThinDisc(Gradus.isco(m), 250.0, π/2)
-x, y = lineprofile(bins, (r) -> r^(-3), m, u, d, BinnedLineProfile(); plane = plane, callback = domain_upper_hemisphere())
+d = GeometricThinDisc(Gradus.isco(m), 250.0, π / 2)
+x, y = lineprofile(
+    bins,
+    (r) -> r^(-3),
+    m,
+    u,
+    d,
+    BinnedLineProfile();
+    plane = plane,
+    callback = domain_upper_hemisphere(),
+)
 
 # should be around 0.27
 g_low = x[findfirst(>(0), y)]

@@ -2,7 +2,12 @@ abstract type AbstractLineProfileAlgorithm end
 struct CunninghamLineProfile <: AbstractLineProfileAlgorithm end
 struct BinnedLineProfile <: AbstractLineProfileAlgorithm end
 
-@inline function lineprofile(m::AbstractMetricParams, u, d::AbstractAccretionGeometry; kwargs...)
+@inline function lineprofile(
+    m::AbstractMetricParams,
+    u,
+    d::AbstractAccretionGeometry;
+    kwargs...,
+)
     bins = collect(range(0.1, 1.3, 120))
     lineprofile(bins, r -> r^-3, m, u, d; kwargs...)
 end
