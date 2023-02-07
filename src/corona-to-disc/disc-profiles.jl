@@ -1,30 +1,34 @@
-function tracegeodesics(
-    m::AbstractMetricParams,
-    model::AbstractCoronaModel,
-    time_domain::NTuple{2},
-    n_samples = 1024,
-    sampler = WeierstrassSampler(res = 100.0),
-    kwargs...,
-)
-    us = sample_position(m, model, n_samples)
-    vs = sample_velocity(m, model, sampler, us, n_samples)
-    tracegeodesics(m, us, vs, time_domain; kwargs...)
+export VoronoiDiscProfile, getareas, getproperarea, getbarycenter
+
+# exported interface
+function emitted_flux(profile::AbstractDiscProfile, gps)
+    error("Not implemented for $(typeof(profile))")
+end
+function delay(profile::AbstractDiscProfile, gps)
+    error("Not implemented for $(typeof(profile))")
 end
 
-function tracegeodesics(
-    m::AbstractMetricParams,
-    model::AbstractCoronaModel,
-    d::AbstractAccretionGeometry,
-    time_domain::NTuple{2},
-    ;
-    n_samples = 1024,
-    sampler = WeierstrassSampler(res = 100.0),
-    kwargs...,
-)
-    us = sample_position(m, model, n_samples)
-    vs = sample_velocity(m, model, sampler, us, n_samples)
-    tracegeodesics(m, us, vs, d, time_domain; kwargs...)
+# tuple so the calculation may be combined if desired
+function delay_flux(profile::AbstractDiscProfile, gps)
+    (delay(profile, gps), emitted_flux(profile, gps))
 end
+
+struct RadialDiscProfile{F,R} <: AbstractDiscProfile
+    # geodesic point to flux
+    f::F
+    # geodesic point to time
+    t::R
+end
+
+function RadialDiscProfile(f, gps::AbstractVector{<:AbstractGeodesicPoint})
+    times = map(i -> i.u2[1], gps)
+    radii = map(i -> i.u2[2], gps)
+    t = DataInterpolations.LinearInterpolation(times, radii)
+    RadialDiscProfile(f, gp -> t(gp.u2[2]) + gp.u2[1])
+end
+
+emitted_flux(profile::RadialDiscProfile, gps) = map(profile.f, gps)
+delay(profile::RadialDiscProfile, gps) = map(profile.t, gps)
 
 struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
     disc::D
@@ -45,6 +49,18 @@ struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
         end
         new{D,V,G}(d, polys, gen, gps)
     end
+end
+
+function emitted_flux(profile::VoronoiDiscProfile, gps)
+    error("TODO")
+end
+function delay(profile::VoronoiDiscProfile, gps)
+    error("TODO")
+end
+
+# tuple so the calculation may be combined if desired
+function delay_flux(profile::VoronoiDiscProfile, gps)
+    (delay(profile, gps), emitted_flux(profile, gps))
 end
 
 function Base.show(io::IO, vdp::VoronoiDiscProfile{D}) where {D}
@@ -147,28 +163,6 @@ function unpack_polys(
     map(polys) do poly
         map(SVector{2,T}, getpoints(poly))
     end
-end
-
-struct SurrogateDiscProfile{D,S}
-    disc::D
-    surrogate::S
-    SurrogateDiscProfile(disc::AbstractAccretionGeometry, surrogate) =
-        new{typeof(disc),typeof(surrogate)}(disc, surrogate)
-end
-
-function evaluate(sdp::SurrogateDiscProfile, x::AbstractArray{<:AbstractArray})
-    map(i -> evaluate(sdp, i), x)
-end
-
-function evaluate(sdp::SurrogateDiscProfile, x)
-    sdp.surrogate(x)
-end
-
-function Base.show(io::IO, ::MIME"text/plain", sdp::SurrogateDiscProfile{D,S}) where {D,S}
-    print(
-        io,
-        "SurrogateDiscProfile\n - disc      : $D\n - surrogate : $(Base.typename(S).name) ($(length(sdp.surrogate.x)) points)",
-    )
 end
 
 """
@@ -285,5 +279,30 @@ end
     -1
 end
 
-export VoronoiDiscProfile,
-    getareas, getproperarea, getbarycenter, findindex, SurrogateDiscProfile, evaluate
+# bootstrap tracing functions
+function tracegeodesics(
+    m::AbstractMetricParams,
+    model::AbstractCoronaModel,
+    time_domain::NTuple{2},
+    n_samples = 1024,
+    sampler = WeierstrassSampler(res = 100.0),
+    kwargs...,
+)
+    us = sample_position(m, model, n_samples)
+    vs = sample_velocity(m, model, sampler, us, n_samples)
+    tracegeodesics(m, us, vs, time_domain; kwargs...)
+end
+function tracegeodesics(
+    m::AbstractMetricParams,
+    model::AbstractCoronaModel,
+    d::AbstractAccretionGeometry,
+    time_domain::NTuple{2},
+    ;
+    n_samples = 1024,
+    sampler = WeierstrassSampler(res = 100.0),
+    kwargs...,
+)
+    us = sample_position(m, model, n_samples)
+    vs = sample_velocity(m, model, sampler, us, n_samples)
+    tracegeodesics(m, us, vs, d, time_domain; kwargs...)
+end

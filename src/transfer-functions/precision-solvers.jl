@@ -64,7 +64,10 @@ function find_offset_for_radius(
 )
     measure = gp -> begin
         r = if gp.status == StatusCodes.IntersectedWithGeometry
-            gp.u2[2] * sin(gp.u2[3])
+            # projection into the equitorial plane
+            # gp.u2[2] * sin(gp.u2[3])
+            # this is very unstable for thin discs, so use standard for now
+            gp.u2[2]
         else
             0.0
         end

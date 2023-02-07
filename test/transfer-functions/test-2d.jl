@@ -28,4 +28,4 @@ tf = lagtransfer(
 
 # ensure binning works as expected
 t, E, f = binflux(tf, N_t = 100, N_E = 100)
-@test sum(filter(!isnan, f)) ≈ 8.461532 atol = 1e-2
+@test sum(filter(!isnan, f)) ≈ 8.5152 atol = 1e-2

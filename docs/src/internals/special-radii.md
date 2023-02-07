@@ -9,5 +9,5 @@ Gradus.isco
 Gradus.r_ph
 Gradus.r_mb
 Gradus.r_s
-Gradus.eventhorizon
+Gradus.event_horizon
 ```

@@ -24,7 +24,7 @@ using MuladdMacro
 using Accessors: @set
 using Tullio: @tullio
 
-import ThreadsX
+import Transducers
 import ForwardDiff
 import GeometryBasics
 
@@ -135,6 +135,8 @@ abstract type AbstractDiscProfile end
 abstract type AbstractCoronaModel{T} end
 
 abstract type AbstractDirectionSampler{SkyDomain,Generator} end
+
+include("utils.jl")
 
 include("tracing/tracing.jl")
 include("tracing/constraints.jl")
