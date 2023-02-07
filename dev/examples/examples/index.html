@@ -3,7 +3,7 @@
 using Plots
 using StaticArrays
 
-m = JohannsenPsaltisAD(M=1.0, a=0.6, ϵ3=2.0)
+m = JohannsenPsaltisMetric(M=1.0, a=0.6, ϵ3=2.0)
 # observer position
 u = @SVector [0.0, 1000.0, π/2, 0.0]
 
@@ -37,7 +37,7 @@ using StaticArrays
 using Plots
 
 # metric and metric parameters
-m = BoyerLindquistAD(M=1.0, a=1.0)
+m = KerrMetric(M=1.0, a=1.0)
 # observer position
 u = @SVector [0.0, 1000.0, deg2rad(60), 0.0]
 # accretion disc
@@ -45,7 +45,7 @@ d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
 
 # define point function which filters geodesics that intersected the accretion disc
 # and use those to calculate redshift
-pf = ConstPointFunctions.redshift ∘ ConstPointFunctions.filter_intersected
+pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected
 
 img = rendergeodesics(
     m,
@@ -73,7 +73,7 @@ lineprof = fit(Histogram, data, x_bins)
 
 plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)</code></pre><p><img src="../example-redshift-histogram.svg" alt/></p><h2 id="Line-profiles"><a class="docs-heading-anchor" href="#Line-profiles">Line profiles</a><a id="Line-profiles-1"></a><a class="docs-heading-anchor-permalink" href="#Line-profiles" title="Permalink"></a></h2><p>Line profiles may be calculated using two different methods – using image-plane binning and integrating Cunningham transfer functions – both of which are implemented in Gradus.jl. By default, the Cunningham transfer function method is used, however passing either <code>BinnedLineProfile()</code> or <code>CunninghamLineProfile()</code> as the first argument to <code>lineprofile</code> allows for explicit specification of the algorithm.</p><p>For a simple maximally-spinning Kerr black hole, the iron line profile (with a delta emission line at 6.4 keV) may be calculated with:</p><pre><code class="language-julia hljs">d = GeometricThinDisc(0.0, 400.0, π / 2)
 u = @SVector [0.0, 1000.0, deg2rad(40), 0.0]
-m = BoyerLindquistAD(1.0, 0.998)
+m = KerrMetric(1.0, 0.998)
 
 # maximal integration radius
 maxrₑ = 50.0
@@ -94,7 +94,7 @@ using StaticArrays
 using Plots
 
 # metric and metric parameters
-m = BoyerLindquistAD(M=1.0, a=0.4)
+m = KerrMetric(M=1.0, a=0.4)
 # observer&#39;s initial position
 u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
 # accretion disc
@@ -123,7 +123,7 @@ heatmap(img)</code></pre><p><img src="../example-interpolated.png" alt/></p><h2 
 using StaticArrays
 using Plots
 
-m = BoyerLindquistAD(1.0, 0.0)
+m = KerrMetric(1.0, 0.0)
 u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
 
 # define the disc shape -- return a negative number 
@@ -156,7 +156,7 @@ heatmap(img, aspect_ratio=1)</code></pre><p><img src="../example-thick-disc-doug
 using Plots
 using StaticArrays
 
-m = BoyerLindquistAD(M=1.0, a=0.8)
+m = KerrMetric(M=1.0, a=0.8)
 
 p = plot(aspect_ratio=1)
 
@@ -179,7 +179,7 @@ p = plot(legend=:bottomright, ylabel = &quot;E&quot;, xlabel = &quot;r&quot;, xs
 
 # choice of spin to plot energy curves for
 for a in [0.0, 0.4, 0.6]
-    m = BoyerLindquistAD(M = 1.0, a = a)
+    m = KerrMetric(M = 1.0, a = a)
 
     rs = range(Gradus.isco(m), 100.0, 500)
     energy = map(rs) do r
@@ -191,17 +191,17 @@ end
 
 # calculate the ISCO as a function of spin
 data = map(range(-1.0, 0.8, 100)) do a
-    m = BoyerLindquistAD(M = 1.0, a = a)
+    m = KerrMetric(M = 1.0, a = a)
     r = Gradus.isco(m)
     CircularOrbits.energy(m, r), r
 end
 
 # overlay onto plot
-plot!(last.(data), first.(data), color=:black, linestyle=:dash, label=&quot;ISCO&quot;)</code></pre><p><img src="../example-isco.svg" alt/></p><h2 id="Event-horizons-and-naked-singularities"><a class="docs-heading-anchor" href="#Event-horizons-and-naked-singularities">Event horizons and naked singularities</a><a id="Event-horizons-and-naked-singularities-1"></a><a class="docs-heading-anchor-permalink" href="#Event-horizons-and-naked-singularities" title="Permalink"></a></h2><p>Here is an example of how to use <a href="../../internals/special-radii/#Gradus.eventhorizon"><code>eventhorizon</code></a> to plot the shape of an event horizon in two dimensions. In the case of a naked singularity, as with the certain parameters combinations in the <a href="../../overview/metrics/#Gradus.JohannsenPsaltisAD"><code>JohannsenPsaltisAD</code></a> metric, we see a disconnected region in the plot.</p><pre><code class="language-julia hljs">using Gradus
+plot!(last.(data), first.(data), color=:black, linestyle=:dash, label=&quot;ISCO&quot;)</code></pre><p><img src="../example-isco.svg" alt/></p><h2 id="Event-horizons-and-naked-singularities"><a class="docs-heading-anchor" href="#Event-horizons-and-naked-singularities">Event horizons and naked singularities</a><a id="Event-horizons-and-naked-singularities-1"></a><a class="docs-heading-anchor-permalink" href="#Event-horizons-and-naked-singularities" title="Permalink"></a></h2><p>Here is an example of how to use <a href="../../internals/special-radii/#Gradus.event_horizon"><code>event_horizon</code></a> to plot the shape of an event horizon in two dimensions. In the case of a naked singularity, as with the certain parameters combinations in the <a href="../../overview/metrics/#Gradus.JohannsenPsaltisMetric"><code>JohannsenPsaltisMetric</code></a> metric, we see a disconnected region in the plot.</p><pre><code class="language-julia hljs">using Gradus
 using Plots
 
 function draw_horizon(p, m)
-    rs, θs = eventhorizon(m, resolution = 200)
+    rs, θs = event_horizon(m, resolution = 200)
     radius = rs
 
     x = @. radius * cos(θs)
@@ -211,11 +211,11 @@ end
 
 p = plot(aspect_ratio = 1)
 for a in [0.0, 0.5, 0.6, 0.7, 0.8]
-    m = JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = 2.0)
+    m = JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = 2.0)
     draw_horizon(p, m)
 end</code></pre><p><img src="../example-horizon.svg" alt/></p><p>We can also calculate parameter combinations that lead to naked singularities, and plot the parameter space domains to show exclusion zones:</p><pre><code class="language-julia hljs">function calc_exclusion(as, ϵs)
     regions = [
-        is_naked_singularity(JohannsenPsaltisAD(M = 1.0, a = a, ϵ3 = ϵ))
+        is_naked_singularity(JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = ϵ))
         for a in as, ϵ in ϵs
     ]
 
@@ -239,7 +239,7 @@ heatmap(
 using StaticArrays
 using Plots
 
-m = BoyerLindquistAD(M=1.0, a=0.998)
+m = KerrMetric(M=1.0, a=0.998)
 d = GeometricThinDisc(0.0, 100.0, π/2)
 
 p = plot(legend = false)
@@ -255,7 +255,7 @@ u = @SVector [0.0, 1000.0, deg2rad(30), 0.0]
 
 p = plot(legend = false)
 for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
-    m = BoyerLindquistAD(1.0, a)
+    m = KerrMetric(1.0, a)
     ctf = cunningham_transfer_function(
         m, u, d, 7.0, 2000.0
     )
@@ -266,7 +266,7 @@ using StaticArrays
 using Plots
 
 # their papers has a=-a
-m = BoyerLindquistAD(M=1.0, a=-0.4)
+m = KerrMetric(M=1.0, a=-0.4)
 u = @SVector [0.0, 1000, acos(0.25), 0.0]
 d = GeometricThinDisc(0.0, 100.0, π / 2)
 
@@ -284,4 +284,4 @@ vline!(p, [0.0], color = :black, linestyle=:dash)
 for r in radii
     α, β = impact_parameters_for_radius(m, u, d, r, N=100)
     plot!(p, α, β)
-end</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../overview/point-functions/">Point functions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Friday 20 January 2023 23:41">Friday 20 January 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../overview/point-functions/">Point functions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 7 February 2023 17:54">Tuesday 7 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
