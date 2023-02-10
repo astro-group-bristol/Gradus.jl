@@ -68,5 +68,25 @@ function _cart_local_direction(θ, ϕ)
     @SVector [sin(θ) * cos(ϕ), sin(θ) * sin(ϕ), cos(θ)]
 end
 
+@inbounds function sky_angles_to_velocity(
+    m::AbstractMetricParams{T},
+    u,
+    v_source,
+    θ,
+    ϕ,
+) where {T}
+    # multiply by -1 for consitency with LowerHemisphere()
+    hat = _cart_local_direction(θ, ϕ)
+
+    J = _cart_to_spher_jacobian(u[3], u[4])
+    k = J * hat
+
+    v = @SVector [T(0.0), k[1], k[2], k[3]]
+    basis = tetradframe(m, u, v_source)
+
+    B = reduce(hcat, basis)
+    B * v
+end
+
 export LowerHemisphere,
     BothHemispheres, RandomGenerator, GoldenSpiralGenerator, EvenSampler, WeierstrassSampler
