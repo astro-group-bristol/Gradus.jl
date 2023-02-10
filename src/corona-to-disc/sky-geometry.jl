@@ -76,7 +76,7 @@ end
     ϕ,
 ) where {T}
     # multiply by -1 for consitency with LowerHemisphere()
-    hat = _cart_local_direction(θ, ϕ)
+    hat = -1 * _cart_local_direction(θ, ϕ)
 
     J = _cart_to_spher_jacobian(u[3], u[4])
     k = J * hat
