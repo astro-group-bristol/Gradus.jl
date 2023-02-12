@@ -64,7 +64,7 @@ function find_offset_for_radius(
 )
     measure = gp -> begin
         r = if gp.status == StatusCodes.IntersectedWithGeometry
-            gp.u2[2] * sin(gp.u2[3])
+            gp.u2[2]
         else
             0.0
         end
