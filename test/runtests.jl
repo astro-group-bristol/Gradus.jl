@@ -11,7 +11,6 @@ using Aqua
     include("smoke-tests/disc-profiles.jl")
     include("smoke-tests/special-radii.jl")
     include("smoke-tests/cunningham-transfer-functions.jl")
-    include("smoke-tests/line-profiles.jl")
 end
 
 @testset "metric-geometry" verbose = true begin
@@ -30,6 +29,11 @@ end
 @testset "image-planes" verbose = true begin
     include("image-planes/test-polar-grids.jl")
     include("image-planes/test-cartesian-grids.jl")
+end
+
+@testset "line-profiles" verbose = true begin
+    include("line-profiles/test-cunningham.jl")
+    include("line-profiles/test-binning.jl")
 end
 
 # little bit of aqua

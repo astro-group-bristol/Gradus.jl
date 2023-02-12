@@ -44,7 +44,7 @@ function GradusBase.metric_components(m::EddingtonFinkelsteinAD{T}, rθ) where {
     (tt, rr, θθ, ϕϕ, T(0.0))
 end
 
-GradusBase.inner_radius(m::BoyerLindquistAD{T}) where {T} = 2 * m.M
+GradusBase.inner_radius(m::KerrMetric{T}) where {T} = 2 * m.M
 ```
 A few notes:
 - We use `@with_kw` from [Parameters.jl](https://github.com/mauro3/Parameters.jl) to define various utility constructors for us.

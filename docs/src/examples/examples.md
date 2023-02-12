@@ -290,7 +290,7 @@ plot!(last.(data), first.(data), color=:black, linestyle=:dash, label="ISCO")
 
 ## Event horizons and naked singularities
 
-Here is an example of how to use [`eventhorizon`](@ref) to plot the shape of an event horizon in two dimensions. In the case of a naked singularity, as with the certain parameters combinations in the [`JohannsenPsaltisAD`](@ref) metric, we see a disconnected region in the plot.
+Here is an example of how to use [`event_horizon`](@ref) to plot the shape of an event horizon in two dimensions. In the case of a naked singularity, as with the certain parameters combinations in the [`JohannsenPsaltisMetric`](@ref) metric, we see a disconnected region in the plot.
 
 ```julia
 using Gradus

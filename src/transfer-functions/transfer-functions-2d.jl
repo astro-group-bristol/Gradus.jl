@@ -84,7 +84,7 @@ struct LagTransferFunction{T,M,U,P}
     max_t::T
     metric::M
     u::U
-    area_elements::Vector{T}
+    image_plane_areas::Vector{T}
     source_to_disc::Vector{P}
     observer_to_disc::Vector{P}
 end
@@ -98,6 +98,12 @@ function Base.show(io::IO, ::MIME"text/plain", tf::LagTransferFunction)
       Total memory: $(Base.format_bytes(Base.summarysize(tf)))
     """
     print(io, text)
+end
+
+function lagtransfer(m::AbstractMetricParams, u, d::AbstractAccretionGeometry; kwargs...)
+    model = LampPostModel(h = 10.0, θ = deg2rad(0.0001))
+    plane = PolarPlane(GeometricGrid(); Nr = 800, Nθ = 800, r_max = 250.0)
+    lagtransfer(model, m, u, plane, d; kwargs...)
 end
 
 function lagtransfer(
@@ -146,31 +152,22 @@ end
 function binflux(
     tf::LagTransferFunction;
     redshift = ConstPointFunctions.redshift(tf.metric, tf.u),
+    ε = (gp) -> gp.u2[2]^(-3),
+    E₀ = 6.4,
     kwargs...,
 )
-    intp = _interpolate_profile(tf)
-    r = map(i -> i.u2[2], tf.observer_to_disc)
-    t1 = intp.(r)
-    t2 = map(i -> i.u2[1], tf.observer_to_disc)
-    # add times to get total time
-    t = @. t1 + t2
-    # todo: heuristic: just subtract radial position now
-    t .-= tf.u[2]
-
+    profile = RadialDiscProfile(ε, tf.source_to_disc)
+    t, i_em = delay_flux(profile, tf.observer_to_disc)
     g = redshift.(tf.metric, tf.observer_to_disc, tf.max_t)
 
     # calculate flux
-    f = @. g^4 * r^(-3) * tf.area_elements / (g * 6.4)
+    f = @. g^3 * i_em * tf.image_plane_areas
     # normalize
     F = f ./ sum(f)
 
-    tb, eb, td = bin_transfer_function(t, g * 6.4, F; kwargs...)
-    # correct for the off by one error in the binning
-    tb = tb[1:end-1]
-    eb = eb[1:end-1]
-    td = td[2:end, 2:end]
-
-    tb, eb, td
+    tb, eb, td = bin_transfer_function(t, g * E₀, F; kwargs...)
+    # subtract initial time
+    tb .- tf.u[2], eb, td
 end
 
 export bin_transfer_function, lagtransfer, binflux

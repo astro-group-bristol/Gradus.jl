@@ -33,23 +33,14 @@ function sample_velocity(
     us,
     N,
 ) where {T}
-    u_source = source_velocity(m, model)
+    v_source = source_velocity(m, model)
     @inbounds map(1:N) do index
         # todo: sampler should have proper iterator interface
         i = geti(sampler, index, N)
         θ, ϕ = sample_angles(sampler, i, N)
 
         u = us[index]
-        # multiply by -1 for consitency with LowerHemisphere()
-        hat = -1 * _cart_local_direction(θ, ϕ)
-        J = _cart_to_spher_jacobian(u[3], u[4])
-        (r, t, p) = J * hat
-
-        v = @SVector [T(0.0), r, t, p]
-
-        basis = tetradframe(m, u, u_source)
-        B = reduce(hcat, basis)
-        B * v
+        sky_angles_to_velocity(m, u, v_source, θ, ϕ)
     end
 end
 
