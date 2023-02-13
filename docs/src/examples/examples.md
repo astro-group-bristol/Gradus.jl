@@ -246,6 +246,8 @@ for r in [3.0, 4.0, 5.0, 6.0]
 
     plot!(p, x, y, label = false)
 end
+
+p
 ```
 
 ![](./example-circular-orbits.svg)
@@ -308,6 +310,7 @@ for a in [0.0, 0.5, 0.6, 0.7, 0.8]
     m = JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = 2.0)
     draw_horizon(p, m)
 end
+p
 ```
 
 ![](./example-horizon.svg)
@@ -358,11 +361,12 @@ p = plot(legend = false)
 for angle in [3, 35, 50, 65, 74, 85]
     u = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
     ctf = cunningham_transfer_function(
-        m, u, d, 4.0, 2000.0
+        m, u, d, 4.0
     )
-    mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
-    @views plot!(p, ctf.gstar[mask], ctf.f[mask])
+    mask = @. (ctf.g✶ > 0.001) & (ctf.g✶ < 0.999)
+    @views plot!(p, ctf.g✶[mask], ctf.f[mask])
 end
+p
 ```
 
 ![](./example-bambi-fig1.svg)
@@ -377,11 +381,12 @@ p = plot(legend = false)
 for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
     m = KerrMetric(1.0, a)
     ctf = cunningham_transfer_function(
-        m, u, d, 7.0, 2000.0
+        m, u, d, 7.0
     )
-    mask = @. (ctf.gstar > 0.001) & (ctf.gstar < 0.999)
-    @views plot!(p, ctf.gstar[mask], ctf.f[mask])
+    mask = @. (ctf.g✶ > 0.001) & (ctf.g✶ < 0.999)
+    @views plot!(p, ctf.g✶[mask], ctf.f[mask])
 end
+p
 ```
 
 ![](./example-bambi-fig2.svg)
@@ -415,6 +420,7 @@ for r in radii
     α, β = impact_parameters_for_radius(m, u, d, r, N=100)
     plot!(p, α, β)
 end
+p
 ```
 
 ![](./example-concentric.svg)
