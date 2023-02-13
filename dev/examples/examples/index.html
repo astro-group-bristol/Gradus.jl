@@ -171,7 +171,9 @@ for r in [3.0, 4.0, 5.0, 6.0]
     y = @. r * sin(ϕ)
 
     plot!(p, x, y, label = false)
-end</code></pre><p><img src="../example-circular-orbits.svg" alt/></p><h2 id="ISCO"><a class="docs-heading-anchor" href="#ISCO">ISCO</a><a id="ISCO-1"></a><a class="docs-heading-anchor-permalink" href="#ISCO" title="Permalink"></a></h2><p>The <a href="examples/@ref">Gradus.isco</a> may be calculated with a simple convenience function, as may the energy associated with a given stable circular orbit.</p><pre><code class="language-julia hljs">using Gradus
+end
+
+p</code></pre><p><img src="../example-circular-orbits.svg" alt/></p><h2 id="ISCO"><a class="docs-heading-anchor" href="#ISCO">ISCO</a><a id="ISCO-1"></a><a class="docs-heading-anchor-permalink" href="#ISCO" title="Permalink"></a></h2><p>The <a href="examples/@ref">Gradus.isco</a> may be calculated with a simple convenience function, as may the energy associated with a given stable circular orbit.</p><pre><code class="language-julia hljs">using Gradus
 using Plots
 
 # prepare plot
@@ -213,7 +215,8 @@ p = plot(aspect_ratio = 1)
 for a in [0.0, 0.5, 0.6, 0.7, 0.8]
     m = JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = 2.0)
     draw_horizon(p, m)
-end</code></pre><p><img src="../example-horizon.svg" alt/></p><p>We can also calculate parameter combinations that lead to naked singularities, and plot the parameter space domains to show exclusion zones:</p><pre><code class="language-julia hljs">function calc_exclusion(as, ϵs)
+end
+p</code></pre><p><img src="../example-horizon.svg" alt/></p><p>We can also calculate parameter combinations that lead to naked singularities, and plot the parameter space domains to show exclusion zones:</p><pre><code class="language-julia hljs">function calc_exclusion(as, ϵs)
     regions = [
         is_naked_singularity(JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = ϵ))
         for a in as, ϵ in ϵs
@@ -246,22 +249,24 @@ p = plot(legend = false)
 for angle in [3, 35, 50, 65, 74, 85]
     u = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
     ctf = cunningham_transfer_function(
-        m, u, d, 4.0, 2000.0
+        m, u, d, 4.0
     )
-    mask = @. (ctf.gstar &gt; 0.001) &amp; (ctf.gstar &lt; 0.999)
-    @views plot!(p, ctf.gstar[mask], ctf.f[mask])
-end</code></pre><p><img src="../example-bambi-fig1.svg" alt/></p><p>And Fig. 2:</p><pre><code class="language-julia hljs"># new position vector
+    mask = @. (ctf.g✶ &gt; 0.001) &amp; (ctf.g✶ &lt; 0.999)
+    @views plot!(p, ctf.g✶[mask], ctf.f[mask])
+end
+p</code></pre><p><img src="../example-bambi-fig1.svg" alt/></p><p>And Fig. 2:</p><pre><code class="language-julia hljs"># new position vector
 u = @SVector [0.0, 1000.0, deg2rad(30), 0.0]
 
 p = plot(legend = false)
 for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
     m = KerrMetric(1.0, a)
     ctf = cunningham_transfer_function(
-        m, u, d, 7.0, 2000.0
+        m, u, d, 7.0
     )
-    mask = @. (ctf.gstar &gt; 0.001) &amp; (ctf.gstar &lt; 0.999)
-    @views plot!(p, ctf.gstar[mask], ctf.f[mask])
-end</code></pre><p><img src="../example-bambi-fig2.svg" alt/></p><h2 id="Concentric-rings"><a class="docs-heading-anchor" href="#Concentric-rings">Concentric rings</a><a id="Concentric-rings-1"></a><a class="docs-heading-anchor-permalink" href="#Concentric-rings" title="Permalink"></a></h2><p>Recreating Figure 2 from Johannsen and Psaltis (2012, II):</p><pre><code class="language-julia hljs">using Gradus
+    mask = @. (ctf.g✶ &gt; 0.001) &amp; (ctf.g✶ &lt; 0.999)
+    @views plot!(p, ctf.g✶[mask], ctf.f[mask])
+end
+p</code></pre><p><img src="../example-bambi-fig2.svg" alt/></p><h2 id="Concentric-rings"><a class="docs-heading-anchor" href="#Concentric-rings">Concentric rings</a><a id="Concentric-rings-1"></a><a class="docs-heading-anchor-permalink" href="#Concentric-rings" title="Permalink"></a></h2><p>Recreating Figure 2 from Johannsen and Psaltis (2012, II):</p><pre><code class="language-julia hljs">using Gradus
 using StaticArrays
 using Plots
 
@@ -284,4 +289,5 @@ vline!(p, [0.0], color = :black, linestyle=:dash)
 for r in radii
     α, β = impact_parameters_for_radius(m, u, d, r, N=100)
     plot!(p, α, β)
-end</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../overview/point-functions/">Point functions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 7 February 2023 17:54">Tuesday 7 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end
+p</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../overview/point-functions/">Point functions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Monday 13 February 2023 08:54">Monday 13 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
