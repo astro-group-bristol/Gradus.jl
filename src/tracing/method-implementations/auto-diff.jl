@@ -74,7 +74,7 @@ inv(metric)
         g4 = g_comp[4],
         g5 = g_comp[5]
 
-        (
+        SVector{5}(
             (g2 * g3 * g4) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
             (g1 * g3 * g4 - (g5^2) * g3) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
             (g1 * g2 * g4 - (g5^2) * g2) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
@@ -176,7 +176,7 @@ jacobian = (j0, j1_mat, j2_mat, j0)
         v3 = v[3],
         v4 = v[4]
 
-        (
+        SVector{4}(
             -2(0.5gi5 * j14 + 0.5gi1 * j15) * v2 * v4 -
             2(0.5gi1 * j11 + 0.5gi5 * j15) * v1 * v2 -
             2(0.5gi1 * j21 + 0.5gi5 * j25) * v1 * v3 -
@@ -229,7 +229,7 @@ Limitations:
     end
 end
 
-function constrain(
+@inline function constrain(
     m::AbstractAutoDiffStaticAxisSymmetricParams{T},
     u,
     v;

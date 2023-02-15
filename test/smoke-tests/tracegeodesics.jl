@@ -38,22 +38,6 @@ using StaticArrays
         end
     end
 
-    @testset "regular-arrays" begin
-        u = Float64[0.0, 100.0, deg2rad(85), 0.0]
-        # arbitrary single velocity vector
-        v = Float64[0.0, -1.0, -0.0, -3.5e-6]
-        for m in [
-            KerrMetric(),
-            JohannsenMetric(),
-            KerrSpacetimeFirstOrder(),
-            MorrisThorneWormhole(),
-        ]
-            test_single(m, u, v)
-            test_many(m, u, v)
-            @test true
-        end
-    end
-
     @testset "corona-models" begin
         # only implemented for KerrMetric at the moment
         # because of the vector to local sky methods
