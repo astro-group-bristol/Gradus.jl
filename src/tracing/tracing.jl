@@ -81,26 +81,6 @@ function integrator_problem(
     ODEProblem{false}(f, u_init, time_domain, IntegrationParameters(StatusCodes.NoStatus))
 end
 
-function integrator_problem(
-    m::AbstractMetricParams{T},
-    pos::AbstractVector{T},
-    vel::AbstractVector{T},
-    time_domain,
-) where {T}
-    u_init = vcat(pos, vel)
-
-    function f!(du, u::AbstractVector{T}, p, λ) where {T}
-        @inbounds let x = @view(u[1:4]), v = @view(u[5:8])
-            dv = SVector{4,T}(geodesic_eq(m, x, v))
-
-            du[1:4] .= v
-            du[5:8] .= dv
-        end
-    end
-
-    ODEProblem{true}(f!, u_init, time_domain, IntegrationParameters(StatusCodes.NoStatus))
-end
-
 # single position and single velocity
 function __tracegeodesics(
     m::AbstractMetricParams{T},
