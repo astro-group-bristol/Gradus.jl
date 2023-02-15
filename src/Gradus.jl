@@ -81,6 +81,9 @@ export AbstractMetricParams,
     AbstractIntegrationParameters,
     IntegrationParameters
 
+# export static arrays too
+export SVector, @SVector
+
 """
     abstract type AbstractPointFunction
 
