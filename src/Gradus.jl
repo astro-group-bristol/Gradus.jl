@@ -24,7 +24,6 @@ using MuladdMacro
 using Accessors: @set
 using Tullio: @tullio
 
-import Transducers
 import ForwardDiff
 import GeometryBasics
 
