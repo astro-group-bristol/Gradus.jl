@@ -26,47 +26,65 @@ specifying the ensemble method to use.
 `solver_opts` are the common solver options in DifferentialEquations.
 """
 function tracegeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParams,
     position,
-    velocity,
+    velocity::V,
     time_domain::NTuple{2};
     solver = Tsit5(),
+    ensemble = EnsembleThreads(),
+    trajectories = nothing,
     μ = 0.0,
     closest_approach = 1.01,
     effective_infinity = 1200.0,
     callback = nothing,
     solver_opts...,
-) where {T}
-    _velocity = if (velocity isa Function) && (eltype(position) === T)
-        wrap_constraint(m, position, velocity, μ)
-    else
-        if eltype(position) !== eltype(velocity)
-            error(
-                "Position and velocity must have the same element type.\n(u: $(typeof(position)), v: $(typeof(velocity)))",
-            )
-        end
-        constrain_all(m, position, velocity, μ)
-    end
-
-    cbs = create_callback_set(m, callback, closest_approach, effective_infinity)
-    __tracegeodesics(
+) where {V}
+    problem = geodesic_problem(
         m,
         position,
-        _velocity,
-        time_domain,
-        solver;
-        callback = cbs,
-        abstol = 1e-9,
-        reltol = 1e-9,
-        solver_opts...,
+        velocity,
+        time_domain;
+        μ = μ,
+        closest_approach = closest_approach,
+        effective_infinity = effective_infinity,
+        callback = callback,
     )
+    # how many trajectories
+    if V <: Function
+        if isnothing(trajectories)
+            error("When velocity is a function, trajectories must be defined")
+        end
+        solve_geodesic_problem(
+            problem,
+            solver,
+            ensemble;
+            trajectories = trajectories,
+            solver_opts...,
+        )
+    elseif !(V <: SVector) && V <: AbstractVector
+        solve_geodesic_problem(
+            problem,
+            solver,
+            ensemble;
+            trajectories = length(velocity),
+            solver_opts...,
+        )
+    else
+        if !isnothing(trajectories)
+            error(
+                "Trajectories should be `nothing` when solving only a single geodesic problem.",
+            )
+        end
+        solve_geodesic_problem(problem, solver; solver_opts...)
+    end
 end
 
 function integrator_problem(
     m::AbstractMetricParams{T},
     pos::StaticVector{S,T},
     vel::StaticVector{S,T},
-    time_domain,
+    time_domain;
+    kwargs...,
 ) where {S,T}
     u_init = vcat(pos, vel)
 
@@ -78,77 +96,95 @@ function integrator_problem(
         end
     end
 
-    ODEProblem{false}(f, u_init, time_domain, IntegrationParameters(StatusCodes.NoStatus))
-end
-
-# single position and single velocity
-function __tracegeodesics(
-    m::AbstractMetricParams{T},
-    init_pos::AbstractVector{T},
-    init_vel::AbstractVector{T},
-    time_domain::NTuple{2},
-    solver;
-    kwargs...,
-) where {T<:Number}
-    prob = integrator_problem(m, init_pos, init_vel, time_domain)
-    solve_geodesic(solver, prob; kwargs...)
-end
-
-# single position and single velocity
-# ensembled with an indexable function
-function __tracegeodesics(
-    m::AbstractMetricParams{T},
-    init_pos::AbstractVector{T},
-    vel_func::Function,
-    time_domain::NTuple{2},
-    solver;
-    trajectories::Int,
-    ensemble = EnsembleThreads(),
-    kwargs...,
-) where {T<:Number}
-    prob = integrator_problem(m, init_pos, vel_func(1), time_domain)
-    ens_prob = EnsembleProblem(
-        prob,
-        prob_func = (prob, i, repeat) ->
-            integrator_problem(m, init_pos, vel_func(i), time_domain),
-        safetycopy = false,
-    )
-    solve_geodesic(solver, ens_prob, ensemble; trajectories = trajectories, kwargs...)
-end
-
-# indexables
-function __tracegeodesics(
-    m::AbstractMetricParams{T},
-    init_positions,
-    init_velocities,
-    time_domain::NTuple{2},
-    solver;
-    ensemble = EnsembleThreads(),
-    kwargs...,
-) where {T}
-    prob = integrator_problem(m, init_positions[1], init_velocities[1], time_domain)
-    ens_prob = EnsembleProblem(
-        prob,
-        prob_func = (prob, i, repeat) ->
-            integrator_problem(m, init_positions[i], init_velocities[i], time_domain),
-        safetycopy = false,
-    )
-
-    solve_geodesic(
-        solver,
-        ens_prob,
-        ensemble;
-        trajectories = length(init_velocities),
+    ODEProblem{false}(
+        f,
+        u_init,
+        time_domain,
+        IntegrationParameters(StatusCodes.NoStatus);
         kwargs...,
     )
 end
 
+function geodesic_problem(
+    m::AbstractMetricParams,
+    init_pos::U,
+    init_vel::V,
+    time_domain::NTuple{2};
+    closest_approach = 1.01,
+    effective_infinity = 1200.0,
+    callback = nothing,
+    μ = 0.0,
+) where {U,V}
+    # create the callback set for the problem
+    cbs = create_callback_set(m, callback, closest_approach, effective_infinity)
+
+    if U <: SVector && V <: SVector
+        # single position and velocity
+        return integrator_problem(
+            m,
+            init_pos,
+            constrain_all(m, init_pos, init_vel, μ),
+            time_domain;
+            callback = cbs,
+        )
+    elseif U <: SVector && V <: Function
+        # single position, velocity generating function
+        _vfunc = wrap_constraint(m, init_pos, init_vel, μ)
+        prob = integrator_problem(m, init_pos, _vfunc(1), time_domain)
+        ens_prob = EnsembleProblem(
+            prob,
+            prob_func = (prob, i, repeat) ->
+                integrator_problem(m, init_pos, _vfunc(i), time_domain, callback = cbs),
+            safetycopy = false,
+        )
+        return ens_prob
+    elseif U === V
+        # both are arrays of SVectors
+        _vels = constrain_all(m, init_pos, init_vel, μ)
+        prob = integrator_problem(m, init_pos[1], _vels[1], time_domain, callback = cbs)
+        ens_prob = EnsembleProblem(
+            prob,
+            prob_func = (prob, i, repeat) -> integrator_problem(
+                m,
+                init_pos[i],
+                _vels[i],
+                time_domain,
+                callback = cbs,
+            ),
+            safetycopy = false,
+        )
+        return ens_prob
+    end
+end
+
 # ensemble dispatch
-solve_geodesic(solver, prob, ensemble; solver_opts...) =
-    solve(prob, solver, ensemble; solver_opts..., kwargshandle = KeywordArgError)
+@inline solve_geodesic_problem(
+    prob,
+    solver,
+    ensemble;
+    abstol = 1e-9,
+    reltol = 1e-9,
+    solver_opts...,
+) = solve(
+    prob,
+    solver,
+    ensemble;
+    abstol = abstol,
+    reltol = reltol,
+    solver_opts...,
+    kwargshandle = KeywordArgError,
+)
 
 # non-ensemble dispatch
-solve_geodesic(solver, prob; solver_opts...) =
-    solve(prob, solver, ; solver_opts..., kwargshandle = KeywordArgError)
+@inline solve_geodesic_problem(prob, solver; abstol = 1e-9, reltol = 1e-9, solver_opts...) =
+    solve(
+        prob,
+        solver,
+        ;
+        abstol = abstol,
+        reltol = reltol,
+        solver_opts...,
+        kwargshandle = KeywordArgError,
+    )
 
-export tracegeodesics
+export tracegeodesics, geodesic_problem

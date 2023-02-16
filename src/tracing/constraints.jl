@@ -1,5 +1,10 @@
 # vectors of vectors 
-function constrain_all(m::AbstractMetricParams, us::AbstractArray{<:StaticVector}, vs::AbstractArray{<:StaticVector}, μ)
+function constrain_all(
+    m::AbstractMetricParams,
+    us::AbstractArray{<:StaticVector},
+    vs::AbstractArray{<:StaticVector},
+    μ,
+)
     @inbounds for i in eachindex(vs)
         vs[i] = constrain_all(m, us[i], vs[i], μ)
     end
