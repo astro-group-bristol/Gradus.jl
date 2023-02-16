@@ -1,3 +1,5 @@
+struct EnsembleEndpointThreads end
+
 """
     tracegeodesics(
         m::AbstractMetricParams{T},
@@ -54,21 +56,9 @@ function tracegeodesics(
         if isnothing(trajectories)
             error("When velocity is a function, trajectories must be defined")
         end
-        solve_geodesic_problem(
-            problem,
-            solver,
-            ensemble;
-            trajectories = trajectories,
-            solver_opts...,
-        )
-    elseif !(V <: SVector) && V <: AbstractVector
-        solve_geodesic_problem(
-            problem,
-            solver,
-            ensemble;
-            trajectories = length(velocity),
-            solver_opts...,
-        )
+        solve_geodesic_problem(problem, solver, ensemble, trajectories; solver_opts...)
+    elseif eltype(velocity) <: SVector
+        solve_geodesic_problem(problem, solver, ensemble, length(velocity); solver_opts...)
     else
         if !isnothing(trajectories)
             error(
@@ -130,7 +120,7 @@ function geodesic_problem(
     elseif U <: SVector && V <: Function
         # single position, velocity generating function
         _vfunc = wrap_constraint(m, init_pos, init_vel, μ)
-        prob = integrator_problem(m, init_pos, _vfunc(1), time_domain)
+        prob = integrator_problem(m, init_pos, _vfunc(1), time_domain, callback = cbs)
         ens_prob = EnsembleProblem(
             prob,
             prob_func = (prob, i, repeat) ->
@@ -158,26 +148,37 @@ function geodesic_problem(
 end
 
 # ensemble dispatch
-@inline solve_geodesic_problem(
+@inline function solve_geodesic_problem(
     prob,
     solver,
-    ensemble;
+    ensemble,
+    trajectories::Int;
     abstol = 1e-9,
     reltol = 1e-9,
     solver_opts...,
-) = solve(
-    prob,
-    solver,
-    ensemble;
-    abstol = abstol,
-    reltol = reltol,
-    solver_opts...,
-    kwargshandle = KeywordArgError,
 )
+    ensol = solve(
+        prob,
+        solver,
+        ensemble;
+        trajectories = trajectories,
+        abstol = abstol,
+        reltol = reltol,
+        solver_opts...,
+        kwargshandle = KeywordArgError,
+    )
+    ensol
+end
 
 # non-ensemble dispatch
-@inline solve_geodesic_problem(prob, solver; abstol = 1e-9, reltol = 1e-9, solver_opts...) =
-    solve(
+@inline function solve_geodesic_problem(
+    prob,
+    solver;
+    abstol = 1e-9,
+    reltol = 1e-9,
+    solver_opts...,
+)
+    ensol = solve(
         prob,
         solver,
         ;
@@ -186,5 +187,53 @@ end
         solver_opts...,
         kwargshandle = KeywordArgError,
     )
+    ensol
+end
+
+# thread reusing
+@inline function Gradus.solve_geodesic_problem(
+    prob,
+    solver,
+    ensemble::EnsembleEndpointThreads,
+    trajectories::Int;
+    abstol = 1e-9,
+    reltol = 1e-9,
+    save_on = false,
+    solver_opts...,
+)
+    if save_on
+        error("Cannot use `EnsembleEndpointThreads` with `save_on`")
+    end
+    N = Threads.nthreads()
+    # init one integrator for each thread
+    integrators = map(
+        i -> init(
+            prob.prob_func(prob.prob, 4, 0),
+            solver,
+            abstol = abstol,
+            reltol = reltol;
+            save_on = false,
+            solver_opts...,
+        ),
+        1:N,
+    )
+
+    # pre-allocate all of the returns
+    # T = Core.Compiler.return_type(solve!, Tuple{eltype(integrators)})
+    T = GeodesicPoint{Float64,SVector{4,Float64}}
+    output = Vector{T}(undef, trajectories)
+
+    pf = prob.prob_func
+
+    # solve
+    Threads.@threads for i = 1:trajectories
+        integ = integrators[Threads.threadid()]
+        p = pf(prob.prob, i, 0)
+        reinit!(integ, p.u0)
+        auto_dt_reset!(integ)
+        output[i] = process_solution(solve!(integ))
+    end
+    output
+end
 
 export tracegeodesics, geodesic_problem
