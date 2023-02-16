@@ -47,20 +47,18 @@ function source_to_disc(
     sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
     solver_opts...,
 )
-    sols = tracegeodesics(
+    all_points = tracegeodesics(
         m,
         model,
         d,
         (0.0, max_t);
         n_samples = n_samples,
         save_on = false,
+        ensemble = EnsembleEndpointThreads(),
         sampler = sampler,
         solver_opts...,
     )
-    points = filter(
-        i -> i.status == StatusCodes.IntersectedWithGeometry,
-        process_solution.(m, sols.u),
-    )
+    points = filter(i -> i.status == StatusCodes.IntersectedWithGeometry, all_points)
     # sort by radius
     sort!(points, by = i -> i.u2[2])
     points
@@ -75,8 +73,16 @@ function observer_to_disc(
     ;
     solver_opts...,
 )
-    sols = tracegeodesics(m, u, plane, d, (0.0, max_t); save_on = false, solver_opts...)
-    points = process_solution.(m, sols.u)
+    points = tracegeodesics(
+        m,
+        u,
+        plane,
+        d,
+        (0.0, max_t);
+        save_on = false,
+        ensemble = EnsembleEndpointThreads(),
+        solver_opts...,
+    )
     points
 end
 

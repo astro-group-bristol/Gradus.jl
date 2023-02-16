@@ -88,23 +88,17 @@ function integrator_problem(
     m::AbstractFirstOrderMetricParams{T},
     pos::StaticVector{S,T},
     vel::StaticVector{S,T},
-    time_domain,
+    time_domain;
+    kwargs...,
 ) where {S,T}
     L, Q = calc_lq(m, pos, vel)
-    ODEProblem{false}(pos, time_domain, make_parameters(L, Q, vel[2], T)) do u, p, λ
+    ODEProblem{false}(
+        pos,
+        time_domain,
+        make_parameters(L, Q, vel[2], T);
+        kwargs...,
+    ) do u, p, λ
         SVector(four_velocity(u, m, p)...)
-    end
-end
-
-function integrator_problem(
-    m::AbstractFirstOrderMetricParams{T},
-    pos::AbstractVector{T},
-    vel::AbstractVector{T},
-    time_domain,
-) where {T}
-    L, Q = calc_lq(m, pos, vel)
-    ODEProblem{true}(pos, time_domain, make_parameters(L, Q, vel[2], T)) do du, u, p, λ
-        du .= four_velocity(u, m, p)
     end
 end
 

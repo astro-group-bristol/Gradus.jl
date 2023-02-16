@@ -60,7 +60,9 @@ function find_offset_for_radius(
     θₒ;
     zero_atol = 1e-7,
     offset_max = 20.0,
-    kwargs...,
+    max_time = 2 * u[2],
+    μ = 0.0,
+    solver_opts...,
 )
     measure = gp -> begin
         r = if gp.status == StatusCodes.IntersectedWithGeometry
@@ -71,15 +73,31 @@ function find_offset_for_radius(
         rₑ - r
     end
 
+    velfunc = r -> begin
+        α = r * cos(θₒ)
+        β = r * sin(θₒ)
+        constrain_all(m, u, map_impact_parameters(m, u, α, β), μ)
+    end
+    # init a reusable integrator
+    integ = _init_integrator(
+        m,
+        u,
+        velfunc(0.0),
+        d,
+        (0.0, max_time);
+        save_on = false,
+        solver_opts...,
+    )
+
     f = r -> begin
-        gp = integrate_single_geodesic(m, u, d, r, θₒ; kwargs...)
+        gp = _solve_reinit!(integ, vcat(u, velfunc(r)))
         measure(gp)
     end
 
     # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
     r0 = Roots.find_zero(f, offset_max / 2; atol = zero_atol)
 
-    gp0 = integrate_single_geodesic(m, u, d, r0, θₒ; kwargs...)
+    gp0 = _solve_reinit!(integ, vcat(u, velfunc(r0)))
     if !isapprox(measure(gp0), 0.0, atol = 10 * zero_atol)
         return NaN, gp0
     end
@@ -162,20 +180,33 @@ function jacobian_∂αβ_∂gr(
     β,
     max_time;
     diff_order = 5,
+    μ = 0.0,
     redshift_pf = ConstPointFunctions.redshift(m, u),
-    kwargs...,
+    solver_opts...,
 )
+    velfunc = (α, β) -> begin
+        constrain_all(m, u, map_impact_parameters(m, u, α, β), μ)
+    end
+
+    # init a reusable integrator
+    integ = _init_integrator(
+        m,
+        u,
+        velfunc(0.0, 0.0),
+        d,
+        (0.0, max_time);
+        save_on = false,
+        solver_opts...,
+    )
+
     # map impact parameters to r, g
-    f =
-        ((α, β),) -> begin
-            v = map_impact_parameters(m, u, α, β)
-            sol =
-                tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
-            gp = process_solution(m, sol)
-            g = redshift_pf(m, gp, 2000.0)
-            # return r and g*
-            @SVector [gp.u2[2], g]
-        end
+    f = ((α, β),) -> begin
+        v = velfunc(α, β)
+        gp = _solve_reinit!(integ, vcat(u, v))
+        g = redshift_pf(m, gp, max_time)
+        # return r and g*
+        @SVector [gp.u2[2], g]
+    end
 
     # choice between FiniteDifferences and FiniteDiff is tricky
     # since FiniteDiff is so much faster, but seems to yield really bad jacobians

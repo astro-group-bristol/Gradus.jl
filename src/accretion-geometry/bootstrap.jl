@@ -1,15 +1,21 @@
-function tracegeodesics(
+function geodesic_problem(
     m::AbstractMetricParams,
     u,
     v,
     accretion_geometry::AbstractAccretionGeometry,
     time_domain::NTuple{2};
-    callback = nothing,
     gtol = 1e-2,
-    kwargs...,
+    callback = nothing,
+    solver_opts...,
 )
-    cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
-    tracegeodesics(m, u, v, time_domain; callback = cbs, kwargs...)
+    geodesic_problem(
+        m,
+        u,
+        v,
+        time_domain;
+        callback = add_collision_callback(callback, accretion_geometry; gtol = gtol),
+        solver_opts...,
+    )
 end
 
 function rendergeodesics(
