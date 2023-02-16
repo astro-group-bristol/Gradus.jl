@@ -58,8 +58,15 @@ function lineprofile(
     redshift_pf = ConstPointFunctions.redshift(m, u),
     kwargs...,
 )
-    simsols = tracegeodesics(m, u, plane, d, (0.0, λ_max); save_on = false)
-    gps = process_solution.(m, simsols.u)
+    gps = tracegeodesics(
+        m,
+        u,
+        plane,
+        d,
+        (0.0, λ_max);
+        save_on = false,
+        ensemble = EnsembleEndpointThreads(),
+    )
 
     I = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
     points = @views gps[I]
