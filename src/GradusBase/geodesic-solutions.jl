@@ -70,10 +70,11 @@ Used to get pack a `SciMLBase.AbstractODESolution` into a [`GeodesicPoint`](@ref
 information relevant to start and endpoint of the integration. To keep the full geodesic path, it is
 encouraged to use the `SciMLBase.AbstractODESolution` directly.
 """
-function process_solution(
-    _::AbstractMetricParams{T},
-    sol::SciMLBase.AbstractODESolution{T,N,S},
-) where {T,N,S}
+function process_solution(_::AbstractMetricParams, sol::SciMLBase.AbstractODESolution)
+    process_solution(sol)
+end
+
+function process_solution(sol::SciMLBase.AbstractODESolution{T,N,S}) where {T,N,S}
     @inbounds @views begin
         us, ts, _ = unpack_solution(sol)
 
