@@ -31,7 +31,7 @@ function tracegeodesics(
     m::AbstractMetricParams,
     position,
     velocity::V,
-    time_domain::NTuple{2};
+    args...;
     solver = Tsit5(),
     ensemble = EnsembleThreads(),
     trajectories = nothing,
@@ -45,7 +45,7 @@ function tracegeodesics(
         m,
         position,
         velocity,
-        time_domain;
+        args...;
         μ = μ,
         closest_approach = closest_approach,
         effective_infinity = effective_infinity,
@@ -191,13 +191,11 @@ end
 end
 
 # thread reusing
-@inline function Gradus.solve_geodesic_problem(
+@inline function solve_geodesic_problem(
     prob,
     solver,
     ensemble::EnsembleEndpointThreads,
     trajectories::Int;
-    abstol = 1e-9,
-    reltol = 1e-9,
     save_on = false,
     solver_opts...,
 )
@@ -205,14 +203,14 @@ end
         error("Cannot use `EnsembleEndpointThreads` with `save_on`")
     end
     N = Threads.nthreads()
+    pf = prob.prob_func
     # init one integrator for each thread
     integrators = map(
-        i -> init(
-            prob.prob_func(prob.prob, 4, 0),
-            solver,
-            abstol = abstol,
-            reltol = reltol;
-            save_on = false,
+        i -> _init_integrator(
+            pf(prob.prob, 1, 0),
+            ;
+            solver = solver,
+            save_on = save_on,
             solver_opts...,
         ),
         1:N,
@@ -223,17 +221,56 @@ end
     T = GeodesicPoint{Float64,SVector{4,Float64}}
     output = Vector{T}(undef, trajectories)
 
-    pf = prob.prob_func
-
     # solve
     Threads.@threads for i = 1:trajectories
         integ = integrators[Threads.threadid()]
-        p = pf(prob.prob, i, 0)
-        reinit!(integ, p.u0)
-        auto_dt_reset!(integ)
-        output[i] = process_solution(solve!(integ))
+        output[i] = _solve_reinit!(integ, pf(prob.prob, i, 0).u0)
     end
     output
+end
+
+@inline function _init_integrator(
+    problem;
+    solver = Tsit5(),
+    save_on = true,
+    abstol = 1e-9,
+    reltol = 1e-9,
+    solver_opts...,
+)
+    SciMLBase.init(
+        problem,
+        solver;
+        save_on = save_on,
+        abstol = abstol,
+        reltol = reltol,
+        solver_opts...,
+    )
+end
+
+@inline function _init_integrator(
+    m,
+    u,
+    v,
+    args...;
+    closest_approach = 1.01,
+    effective_infinity = 1200.0,
+    solver_opts...,
+)
+    prob = geodesic_problem(
+        m,
+        u,
+        v,
+        args...;
+        closest_approach = closest_approach,
+        effective_infinity = effective_infinity,
+    )
+    _init_integrator(prob; solver_opts...)
+end
+
+@inline function _solve_reinit!(integrator, u0)
+    reinit!(integrator, u0)
+    auto_dt_reset!(integrator)
+    process_solution(solve!(integrator))
 end
 
 export tracegeodesics, geodesic_problem

@@ -103,7 +103,7 @@ function tracegeodesics(
     m::AbstractMetricParams,
     observer_position,
     plane::AbstractImagePlane,
-    time_domain::NTuple{2};
+    args...;
     kwargs...,
 )
     αs, βs = impact_parameters(plane, observer_position)
@@ -112,7 +112,7 @@ function tracegeodesics(
         m,
         observer_position,
         velfunc,
-        time_domain;
+        args...;
         trajectories = trajectory_count(plane),
         kwargs...,
     )

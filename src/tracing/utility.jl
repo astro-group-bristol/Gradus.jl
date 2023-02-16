@@ -18,8 +18,7 @@ function map_impact_parameters(
     α::AbstractVector{P},
     β::AbstractVector{P},
 ) where {T,P}
-    curried(_α, _β) = map_impact_parameters(m, u, _α, _β)
-    curried.(α, β)
+    [map_impact_parameters(m, u, a, b) for (a, b) in zip(α, β)]
 end
 
 @inline function impact_parameters_to_vel(m::AbstractMetricParams{T}, u, α, β) where {T}
