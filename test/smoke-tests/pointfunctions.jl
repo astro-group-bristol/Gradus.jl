@@ -9,7 +9,7 @@ using StaticArrays
 
     function run_pointfunction(m, pf)
         d = GeometricThinDisc(10.0, 40.0, deg2rad(90.0))
-        img = rendergeodesics(
+        α, β, img = rendergeodesics(
             m,
             u,
             d,
