@@ -36,18 +36,18 @@ end
     $(TYPEDSIGNATURES)
 
 Utility function for converting some `X` on an image plane into ``\\alpha``, given
-the midpoint `x_mid` and field-of-view multiplier `fov_factor`.
+the midpoint `x_mid` and field-of-view multiplier `fov`.
 """
 # have to use a slight 0.001 offset to avoid integrating α=0.0 geodesics in first order methods
-x_to_α(X, x_mid, fov_factor) = (X + 1e-3 - x_mid) / fov_factor
+x_to_α(X, x_mid, fov) = (X + 1e-3 - x_mid) / fov
 
 """
     $(TYPEDSIGNATURES)
 
 Utility function for converting some `Y` on an image plane into ``\\beta``, given
-the midpoint `y_mid` and field-of-view multiplier `fov_factor`.
+the midpoint `y_mid` and field-of-view multiplier `fov`.
 """
-y_to_β(Y, y_mid, fov_factor) = (Y - y_mid) / fov_factor
+y_to_β(Y, y_mid, fov) = (Y - y_mid) / fov
 
 function init_progress_bar(text, N, enabled)
     ProgressMeter.Progress(
@@ -60,4 +60,12 @@ function init_progress_bar(text, N, enabled)
         enabled = enabled,
         showspeed = true,
     )
+end
+
+function impact_axes(width, height, fov)
+    x_mid = width ÷ 2
+    y_mid = height ÷ 2
+    α = [Gradus.x_to_α(X, x_mid, fov) for X = 1:width]
+    β = [Gradus.y_to_β(Y, y_mid, fov) for Y = 1:height]
+    α, β
 end
