@@ -10,5 +10,5 @@ suite = BenchmarkGroup()
 suite["tracing"] = tracing_suite
 
 # run and display
-results = run(suite, verbose=true)
+results = run(suite, verbose = true)
 display(results)
