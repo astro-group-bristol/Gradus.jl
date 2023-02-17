@@ -50,7 +50,7 @@ function ex_redshift()
     # and use those to calculate redshift
     pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected
 
-    img = rendergeodesics(
+    α, β, img = rendergeodesics(
         m,
         u,
         d,
@@ -63,7 +63,7 @@ function ex_redshift()
         pf = pf,
     )
 
-    p = heatmap(img)
+    p = heatmap(α, β, img)
     savefig(p, "example-redshift.png")
 
 
@@ -94,7 +94,7 @@ function ex_interpolating()
 
     pf = redshift ∘ ConstPointFunctions.filter_intersected
 
-    img = rendergeodesics(
+    α, β, img = rendergeodesics(
         m,
         u,
         d,
@@ -107,7 +107,7 @@ function ex_interpolating()
         pf = pf,
     )
 
-    p = heatmap(img)
+    p = heatmap(α, β, img)
     savefig(p, "example-interpolated.png")
 end
 
@@ -274,7 +274,7 @@ function ex_doughnut()
     end
 
     # and then render as usual
-    img = rendergeodesics(
+    α, β, img = rendergeodesics(
         m,
         u,
         d,
@@ -285,7 +285,7 @@ function ex_doughnut()
         verbose = true,
     )
 
-    p = heatmap(img, aspect_ratio = 1)
+    p = heatmap(α, β, img, aspect_ratio = 1)
     savefig(p, "example-thick-disc-doughtnut.png")
 end
 

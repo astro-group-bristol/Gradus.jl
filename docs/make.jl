@@ -10,15 +10,13 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Overview" => [
-            "Examples" => "examples/examples.md",
-            # "Tracing"
-            # "Rendering"
+            "Getting started" => "getting-started.md",
+            "Problems and solvers" => "problems-and-solvers.md",
             "Point functions" => "overview/point-functions.md",
-            # "Callbacks"
             "Available metrics" => "overview/metrics.md",
             "Accretion geometry" => "overview/accretion-geometry.md",
+            "Examples" => "examples/examples.md",
         ],
-        # "Reverberation Lags"
         "Internals" => [
             "Geodesic integration" => "overview/geodesic-integration.md",
             "Implementing new metrics" => "internals/custom-metrics.md",
