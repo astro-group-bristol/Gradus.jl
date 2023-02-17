@@ -56,9 +56,21 @@ function tracegeodesics(
         if isnothing(trajectories)
             error("When velocity is a function, trajectories must be defined")
         end
-        solve_geodesic_problem(problem, solver, ensemble, trajectories; solver_opts...)
+        solve_geodesic_problem(
+            problem,
+            solver,
+            restric_ensemble(m, ensemble),
+            trajectories;
+            solver_opts...,
+        )
     elseif eltype(velocity) <: SVector
-        solve_geodesic_problem(problem, solver, ensemble, length(velocity); solver_opts...)
+        solve_geodesic_problem(
+            problem,
+            solver,
+            restric_ensemble(m, ensemble),
+            length(velocity);
+            solver_opts...,
+        )
     else
         if !isnothing(trajectories)
             error(
@@ -159,10 +171,17 @@ end
     solver_opts...,
 )
     prob = if !isnothing(progress_bar)
-        remake(ens_prob, output_func = (sol, i) -> begin
+        function output_bump_progress(sol, i)
             ProgressMeter.next!(progress_bar)
-            sol, false
-        end)
+            (sol, false)
+        end
+        # bootstrap incrementing progress bar
+        EnsembleProblem(
+            ens_prob.prob;
+            prob_func = ens_prob.prob_func,
+            output_func = output_bump_progress,
+            safetycopy = ens_prob.safetycopy,
+        )
     else
         ens_prob
     end
@@ -229,14 +248,17 @@ end
         1:Threads.nthreads(),
     )
     # pre-allocate all of the returns
-    T = Core.Compiler.return_type(_solve_reinit!, Tuple{eltype(integrators),S})
-    output = Vector{T}(undef, trajectories)
+    output =
+        Vector{Core.Compiler.return_type(_solve_reinit!, Tuple{eltype(integrators),S})}(
+            undef,
+            trajectories,
+        )
 
     # solve
     Threads.@threads for i = 1:trajectories
         integ = integrators[Threads.threadid()]
-        output[i] = _solve_reinit!(integ, pf(prob.prob, i, 0).u0)
-
+        p = pf(prob.prob, i, 0)
+        output[i] = _solve_reinit!(integ, p.u0, p.p)
         # update progress bar 
         if !isnothing(progress_bar)
             ProgressMeter.next!(progress_bar)
@@ -284,7 +306,7 @@ end
     _init_integrator(prob; solver_opts...)
 end
 
-@inline function _solve_reinit!(integrator, u0)
+@inline function _solve_reinit!(integrator, u0, p = nothing)
     reinit!(
         integrator,
         u0,
@@ -294,6 +316,10 @@ end
         reinit_cache = true,
     )
     auto_dt_reset!(integrator)
+    # if new parameters have been passed, update them
+    if !isnothing(p)
+        integrator.p = update_integration_parameters!(integrator.sol.prob.p, p)
+    end
     process_solution(solve!(integrator))
 end
 

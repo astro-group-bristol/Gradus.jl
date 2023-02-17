@@ -16,6 +16,14 @@ Require implementation of
 """
 abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 
+function restric_ensemble(
+    ::AbstractFirstOrderMetricParams,
+    ensemble::EnsembleEndpointThreads,
+)
+    @warn "First order methods do not support `EnsembleEndpointThreads`. Automatically switching to `EnsembleThreads`"
+    EnsembleThreads()
+end
+
 @with_kw struct FirstOrderGeodesicPoint{T,V,P} <: AbstractGeodesicPoint{T}
     status::StatusCodes.T
     "Start time"
@@ -40,15 +48,26 @@ end
 ) where {T}
     us, ts, p = unpack_solution(sol)
 
-    u_start = SVector{4,T}(us[1][1:4])
-    v_start = SVector{4,T}(four_velocity(u_start, m, p))
-    t_start = ts[1]
+    @inbounds @views begin
+        u_start = SVector{4,T}(us[1][1:4])
+        v_start = SVector{4,T}(four_velocity(u_start, m, p))
+        t_start = ts[1]
 
-    u_end = SVector{4,T}(us[end][1:4])
-    v_end = SVector{4,T}(four_velocity(u_end, m, p))
-    t_end = ts[end]
+        u_end = SVector{4,T}(us[end][1:4])
+        v_end = SVector{4,T}(four_velocity(u_end, m, p))
+        t_end = ts[end]
+    end
 
-    FirstOrderGeodesicPoint(p.status, t_start, t_end, u_start, u_end, v_start, v_end, p)
+    FirstOrderGeodesicPoint(
+        p.status,
+        t_start,
+        t_end,
+        u_start,
+        u_end,
+        v_start,
+        v_end,
+        deepcopy(p),
+    )
 end
 
 function metric_callback(
@@ -84,6 +103,18 @@ end
 make_parameters(L, Q, sign_θ, ::Type{T}) where {T} =
     FirstOrderIntegrationParameters{T}(L, Q, -1, sign_θ, [0.0, 0.0], StatusCodes.NoStatus)
 
+function update_integration_parameters!(
+    p::FirstOrderIntegrationParameters,
+    new::FirstOrderIntegrationParameters,
+)
+    p.L = new.L
+    p.Q = new.Q
+    p.θ = new.θ
+    p.changes = new.changes
+    p.status = new.status
+    p
+end
+
 function integrator_problem(
     m::AbstractFirstOrderMetricParams{T},
     pos::StaticVector{S,T},
@@ -102,7 +133,7 @@ function integrator_problem(
     end
 end
 
-convert_velocity_type(u::StaticVector{S,T}, v) where {S,T} = convert(SVector{S,T}, v)
+convert_velocity_type(::StaticVector{S,T}, v) where {S,T} = convert(SVector{S,T}, v)
 convert_velocity_type(u::AbstractVector{T}, v) where {T} = convert(typeof(u), collect(v))
 
 """

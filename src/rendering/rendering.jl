@@ -54,14 +54,15 @@ function render_into_image!(
     pf,
     kwargs...,
 )
-    simsols = __render_geodesics(m, init_pos, max_time, ; kwargs...)
-    apply_to_image!(m, image, simsols, pf, max_time)
+    sol_or_points = __render_geodesics(m, init_pos, max_time, ; kwargs...)
+    points = sol_or_points_to_points(sol_or_points)
+    apply_to_image!(m, image, points, pf, max_time)
     image
 end
 
-function apply_to_image!(m::AbstractMetricParams, image, sols, pf, max_time)
-    @inbounds @threads for i = 1:length(sols)
-        image[i] = pf(m, process_solution(m, sols[i]), max_time)
+function apply_to_image!(m::AbstractMetricParams, image, points, pf, max_time)
+    @inbounds Threads.@threads for i in eachindex(points)
+        image[i] = pf(m, points[i], max_time)
     end
 end
 
@@ -89,6 +90,7 @@ function __prerendergeodesics(
         max_time;
         image_height = image_height,
         image_width = image_width,
+        ensemble = EnsembleThreads(),
         kwargs...,
     )
     SolutionRenderCache(m, max_time, image_height, image_width, simsols.u)
@@ -103,7 +105,7 @@ function __prerendergeodesics(
     image_width,
     kwargs...,
 )
-    simsols = __render_geodesics(
+    sol_or_points = __render_geodesics(
         m,
         init_pos,
         max_time;
@@ -112,14 +114,14 @@ function __prerendergeodesics(
         kwargs...,
     )
 
-    point_cache = map(sol -> process_solution(m, sol), simsols)
+    points = sol_or_points_to_points(sol_or_points)
 
     EndpointRenderCache(
         m,
         max_time,
         image_height,
         image_width,
-        reshape(point_cache, (image_height, image_width)),
+        reshape(points, (image_height, image_width)),
     )
 end
 
@@ -131,6 +133,7 @@ function __render_geodesics(
     image_height,
     fov_factor,
     verbose = false,
+    ensemble = EnsembleEndpointThreads(),
     solver_opts...,
 ) where {T}
     y_mid = image_height ÷ 2
@@ -149,11 +152,10 @@ function __render_geodesics(
         X = i ÷ image_height
         α = x_to_α(X, x_mid, fov_factor)
         β = y_to_β(Y, y_mid, fov_factor)
-        ProgressMeter.next!(progress_bar)
         map_impact_parameters(m, init_pos, α, β)
     end
 
-    simsols = tracegeodesics(
+    sol_or_points = tracegeodesics(
         m,
         init_pos,
         velfunc,
@@ -161,6 +163,8 @@ function __render_geodesics(
         save_on = false,
         verbose = verbose,
         trajectories = trajectories,
+        progress_bar = progress_bar,
+        ensemble = ensemble,
         solver_opts...,
     )
 
@@ -168,7 +172,19 @@ function __render_geodesics(
         println("+ Trace complete.")
     end
 
-    simsols
+    sol_or_points
+end
+
+function sol_or_points_to_points(points::AbstractArray{<:AbstractGeodesicPoint})
+    points
+end
+
+function sol_or_points_to_points(sols::AbstractArray)
+    map(process_solution, sols)
+end
+
+function sol_or_points_to_points(sol::SciMLBase.EnsembleSolution)
+    sol_or_points_to_points(sol.u)
 end
 
 export rendergeodesics, prerendergeodesics
