@@ -56,9 +56,21 @@ function tracegeodesics(
         if isnothing(trajectories)
             error("When velocity is a function, trajectories must be defined")
         end
-        solve_geodesic_problem(problem, solver, ensemble, trajectories; solver_opts...)
+        solve_geodesic_problem(
+            problem,
+            solver,
+            restric_ensemble(m, ensemble),
+            trajectories;
+            solver_opts...,
+        )
     elseif eltype(velocity) <: SVector
-        solve_geodesic_problem(problem, solver, ensemble, length(velocity); solver_opts...)
+        solve_geodesic_problem(
+            problem,
+            solver,
+            restric_ensemble(m, ensemble),
+            length(velocity);
+            solver_opts...,
+        )
     else
         if !isnothing(trajectories)
             error(
@@ -149,14 +161,30 @@ end
 
 # ensemble dispatch
 @inline function solve_geodesic_problem(
-    prob,
+    ens_prob::EnsembleProblem,
     solver,
     ensemble,
     trajectories::Int;
     abstol = 1e-9,
     reltol = 1e-9,
+    progress_bar = nothing,
     solver_opts...,
 )
+    prob = if !isnothing(progress_bar)
+        function output_bump_progress(sol, i)
+            ProgressMeter.next!(progress_bar)
+            (sol, false)
+        end
+        # bootstrap incrementing progress bar
+        EnsembleProblem(
+            ens_prob.prob;
+            prob_func = ens_prob.prob_func,
+            output_func = output_bump_progress,
+            safetycopy = ens_prob.safetycopy,
+        )
+    else
+        ens_prob
+    end
     ensol = solve(
         prob,
         solver,
@@ -172,13 +200,17 @@ end
 
 # non-ensemble dispatch
 @inline function solve_geodesic_problem(
-    prob,
+    prob::ODEProblem,
     solver;
     abstol = 1e-9,
     reltol = 1e-9,
+    progress_bar = nothing,
     solver_opts...,
 )
-    ensol = solve(
+    if !isnothing(progress_bar)
+        @warn "Ignoring progress bar for single geodesic"
+    end
+    sol = solve(
         prob,
         solver,
         ;
@@ -187,22 +219,22 @@ end
         solver_opts...,
         kwargshandle = KeywordArgError,
     )
-    ensol
+    sol
 end
 
 # thread reusing
 @inline function solve_geodesic_problem(
-    prob,
+    prob::EnsembleProblem{<:ODEProblem{S}},
     solver,
     ensemble::EnsembleEndpointThreads,
     trajectories::Int;
     save_on = false,
+    progress_bar = nothing,
     solver_opts...,
-)
+) where {S}
     if save_on
         error("Cannot use `EnsembleEndpointThreads` with `save_on`")
     end
-    N = Threads.nthreads()
     pf = prob.prob_func
     # init one integrator for each thread
     integrators = map(
@@ -213,18 +245,24 @@ end
             save_on = save_on,
             solver_opts...,
         ),
-        1:N,
+        1:Threads.nthreads(),
     )
-
     # pre-allocate all of the returns
-    # T = Core.Compiler.return_type(solve!, Tuple{eltype(integrators)})
-    T = GeodesicPoint{Float64,SVector{4,Float64}}
-    output = Vector{T}(undef, trajectories)
+    output =
+        Vector{Core.Compiler.return_type(_solve_reinit!, Tuple{eltype(integrators),S})}(
+            undef,
+            trajectories,
+        )
 
     # solve
     Threads.@threads for i = 1:trajectories
         integ = integrators[Threads.threadid()]
-        output[i] = _solve_reinit!(integ, pf(prob.prob, i, 0).u0)
+        p = pf(prob.prob, i, 0)
+        output[i] = _solve_reinit!(integ, p.u0, p.p)
+        # update progress bar 
+        if !isnothing(progress_bar)
+            ProgressMeter.next!(progress_bar)
+        end
     end
     output
 end
@@ -244,6 +282,7 @@ end
         abstol = abstol,
         reltol = reltol,
         solver_opts...,
+        kwargshandle = KeywordArgError,
     )
 end
 
@@ -267,9 +306,20 @@ end
     _init_integrator(prob; solver_opts...)
 end
 
-@inline function _solve_reinit!(integrator, u0)
-    reinit!(integrator, u0)
+@inline function _solve_reinit!(integrator, u0, p = nothing)
+    reinit!(
+        integrator,
+        u0,
+        reset_dt = true,
+        reinit_callbacks = true,
+        erase_sol = true,
+        reinit_cache = true,
+    )
     auto_dt_reset!(integrator)
+    # if new parameters have been passed, update them
+    if !isnothing(p)
+        integrator.p = update_integration_parameters!(integrator.sol.prob.p, p)
+    end
     process_solution(solve!(integrator))
 end
 

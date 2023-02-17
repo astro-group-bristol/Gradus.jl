@@ -11,17 +11,20 @@ end
     effective_infinity,
 )
     min_r = inner_radius(m) * closest_approach
-    # terminate integration if we come within some % of the black hole radius
-    DiscreteCallback(
-        (u, λ, integrator) -> u[2] ≤ min_r || u[2] > effective_infinity,
-        integrator -> if integrator.u[2] ≤ min_r
+    function on_chart(u, λ, integrator)
+        # terminate integration if we come within some % of the black hole radius
+        u[2] ≤ min_r || u[2] > effective_infinity
+    end
+    function chart_terminate!(integrator)
+        if integrator.u[2] ≤ min_r
             integrator.p.status = StatusCodes.WithinInnerBoundary
             terminate!(integrator)
         else
             integrator.p.status = StatusCodes.OutOfDomain
             terminate!(integrator)
-        end,
-    )
+        end
+    end
+    DiscreteCallback(on_chart, chart_terminate!)
 end
 
 function metric_callback(m::AbstractMetricParams, closest_approach, effective_infinity)

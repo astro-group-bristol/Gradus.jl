@@ -57,7 +57,9 @@ import .GradusBase:
     raiseindices,
     StatusCodes,
     AbstractIntegrationParameters,
-    IntegrationParameters
+    IntegrationParameters,
+    update_integration_parameters!,
+    restric_ensemble
 
 export AbstractMetricParams,
     process_solution,

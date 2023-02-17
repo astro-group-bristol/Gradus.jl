@@ -23,7 +23,10 @@ tracing_suite["single-geodesic"]["with-disc-no-save"] =
 
 # many positions, many velocities
 
-vs = vec([map_impact_parameters(m, u, a, b) for a in range(-11.0, 11.0, 128) for b in range(-11.0, 11.0, 128)])
+vs = vec([
+    map_impact_parameters(m, u, a, b) for a in range(-11.0, 11.0, 128) for
+    b in range(-11.0, 11.0, 128)
+])
 us = fill(u, length(vs))
 
 tracing_suite["many-geodesic"] = BenchmarkGroup(["tracing"])
@@ -36,6 +39,21 @@ tracing_suite["many-geodesic"]["with-disc"] =
 tracing_suite["many-geodesic"]["with-disc-no-save"] =
     @benchmarkable tracegeodesics($m, $us, $vs, $d, $time_span; save_on = false)
 tracing_suite["many-geodesic"]["with-disc-no-save-ensemble-endpoint"] =
-    @benchmarkable tracegeodesics($m, $us, $vs, $d, $time_span; save_on = false, ensemble = Gradus.EnsembleEndpointThreads())
+    @benchmarkable tracegeodesics(
+        $m,
+        $us,
+        $vs,
+        $d,
+        $time_span;
+        save_on = false,
+        ensemble = Gradus.EnsembleEndpointThreads(),
+    )
 tracing_suite["many-geodesic"]["no-disc-no-save-ensemble-endpoint"] =
-    @benchmarkable tracegeodesics($m, $us, $vs, $time_span; save_on = false, ensemble = Gradus.EnsembleEndpointThreads())
+    @benchmarkable tracegeodesics(
+        $m,
+        $us,
+        $vs,
+        $time_span;
+        save_on = false,
+        ensemble = Gradus.EnsembleEndpointThreads(),
+    )
