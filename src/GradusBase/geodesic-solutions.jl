@@ -64,17 +64,14 @@ function Base.show(io::IO, ::MIME"text/plain", gp::GeodesicPoint)
 end
 
 """
-    $(TYPEDSIGNATURES)
+    process_solution(sol::SciMLBase.AbstractODESolution)
+    process_solution(gp::GeodesicPoint)
 
 Used to get pack a `SciMLBase.AbstractODESolution` into a [`GeodesicPoint`](@ref). Will only store
 information relevant to start and endpoint of the integration. To keep the full geodesic path, it is
 encouraged to use the `SciMLBase.AbstractODESolution` directly.
 """
-function process_solution(_::AbstractMetricParams, sol::SciMLBase.AbstractODESolution)
-    process_solution(sol)
-end
-
-function process_solution(sol::SciMLBase.AbstractODESolution{T,N,S}) where {T,N,S}
+function process_solution(_, sol::SciMLBase.AbstractODESolution{T}) where {T}
     @inbounds @views begin
         us, ts, _ = unpack_solution(sol)
 
@@ -98,8 +95,8 @@ array of [`GeodesicPoint`](@ref).
 """
 function process_solution_full(
     _::AbstractMetricParams{T},
-    sol::SciMLBase.AbstractODESolution{T,N,S},
-) where {T,N,S}
+    sol::SciMLBase.AbstractODESolution{T},
+) where {T}
     us, ts, _ = unpack_solution(sol)
     @inbounds @views begin
         u_start = SVector{4,T}(us[1][1:4])
@@ -113,6 +110,9 @@ function process_solution_full(
         end
     end
 end
+
+process_solution(gp::AbstractGeodesicPoint) = gp
+process_solution(sol::SciMLBase.AbstractODESolution) = process_solution(sol.prob.f.f.m, sol)
 
 # TODO: GeodesicPath structure for the full geodesic path
 # do we want to support this?
