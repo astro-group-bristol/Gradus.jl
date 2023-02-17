@@ -75,3 +75,5 @@ Numerically evaluate the corresponding metric for [`AbstractMetricParams`](@ref)
 and some point `u`.
 """
 metric(m::AbstractMetricParams, u) = error("Not implemented for metric $(typeof(m))")
+
+restric_ensemble(::AbstractMetricParams, ensemble) = ensemble

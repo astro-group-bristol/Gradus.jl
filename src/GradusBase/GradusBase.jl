@@ -46,6 +46,9 @@ lnrframe,
 lowerindices,
 raiseindices,
 StatusCodes,
-IntegrationParameters
+AbstractIntegrationParameters,
+IntegrationParameters,
+update_integration_parameters!,
+restric_ensemble
 
 end # module
