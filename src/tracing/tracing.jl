@@ -149,14 +149,23 @@ end
 
 # ensemble dispatch
 @inline function solve_geodesic_problem(
-    prob,
+    ens_prob::EnsembleProblem,
     solver,
     ensemble,
     trajectories::Int;
     abstol = 1e-9,
     reltol = 1e-9,
+    progress_bar = nothing,
     solver_opts...,
 )
+    prob = if !isnothing(progress_bar)
+        remake(ens_prob, output_func = (sol, i) -> begin
+            ProgressMeter.next!(progress_bar)
+            sol, false
+        end)
+    else
+        ens_prob
+    end
     ensol = solve(
         prob,
         solver,
@@ -172,13 +181,17 @@ end
 
 # non-ensemble dispatch
 @inline function solve_geodesic_problem(
-    prob,
+    prob::ODEProblem,
     solver;
     abstol = 1e-9,
     reltol = 1e-9,
+    progress_bar = nothing,
     solver_opts...,
 )
-    ensol = solve(
+    if !isnothing(progress_bar)
+        @warn "Ignoring progress bar for single geodesic"
+    end
+    sol = solve(
         prob,
         solver,
         ;
@@ -187,22 +200,22 @@ end
         solver_opts...,
         kwargshandle = KeywordArgError,
     )
-    ensol
+    sol
 end
 
 # thread reusing
 @inline function solve_geodesic_problem(
-    prob,
+    prob::EnsembleProblem{<:ODEProblem{S}},
     solver,
     ensemble::EnsembleEndpointThreads,
     trajectories::Int;
     save_on = false,
+    progress_bar = nothing,
     solver_opts...,
-)
+) where {S}
     if save_on
         error("Cannot use `EnsembleEndpointThreads` with `save_on`")
     end
-    N = Threads.nthreads()
     pf = prob.prob_func
     # init one integrator for each thread
     integrators = map(
@@ -213,18 +226,21 @@ end
             save_on = save_on,
             solver_opts...,
         ),
-        1:N,
+        1:Threads.nthreads(),
     )
-
     # pre-allocate all of the returns
-    # T = Core.Compiler.return_type(solve!, Tuple{eltype(integrators)})
-    T = GeodesicPoint{Float64,SVector{4,Float64}}
+    T = Core.Compiler.return_type(_solve_reinit!, Tuple{eltype(integrators),S})
     output = Vector{T}(undef, trajectories)
 
     # solve
     Threads.@threads for i = 1:trajectories
         integ = integrators[Threads.threadid()]
         output[i] = _solve_reinit!(integ, pf(prob.prob, i, 0).u0)
+
+        # update progress bar 
+        if !isnothing(progress_bar)
+            ProgressMeter.next!(progress_bar)
+        end
     end
     output
 end
@@ -244,6 +260,7 @@ end
         abstol = abstol,
         reltol = reltol,
         solver_opts...,
+        kwargshandle = KeywordArgError,
     )
 end
 
@@ -268,7 +285,14 @@ end
 end
 
 @inline function _solve_reinit!(integrator, u0)
-    reinit!(integrator, u0)
+    reinit!(
+        integrator,
+        u0,
+        reset_dt = true,
+        reinit_callbacks = true,
+        erase_sol = true,
+        reinit_cache = true,
+    )
     auto_dt_reset!(integrator)
     process_solution(solve!(integrator))
 end
