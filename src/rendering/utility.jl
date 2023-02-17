@@ -58,5 +58,6 @@ function init_progress_bar(text, N, enabled)
         barlen = 40,
         color = :none,
         enabled = enabled,
+        showspeed = true,
     )
 end
