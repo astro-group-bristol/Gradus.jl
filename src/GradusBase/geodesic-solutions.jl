@@ -1,7 +1,20 @@
 abstract type AbstractIntegrationParameters end
 
+update_integration_parameters!(
+    p::AbstractIntegrationParameters,
+    ::AbstractIntegrationParameters,
+) = error("Not implemented for $(typeof(p))")
+
 mutable struct IntegrationParameters <: AbstractIntegrationParameters
     status::StatusCodes.T
+end
+
+function update_integration_parameters!(
+    p::IntegrationParameters,
+    new::IntegrationParameters,
+)
+    p.status = new.status
+    p
 end
 
 """
