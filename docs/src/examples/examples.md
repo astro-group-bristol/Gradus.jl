@@ -112,7 +112,7 @@ pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersect
     d,
     # maximum integration time
     2000.0,
-    fov_factor = 6.0,
+    fov = 6.0,
     image_width = 700,
     image_height = 240,
     verbose = true,
@@ -203,7 +203,7 @@ pf = redshift ∘ ConstPointFunctions.filter_intersected
     d,
     # maximum integration time
     2000.0,
-    fov_factor = 6.0,
+    fov = 6.0,
     image_width = 700,
     image_height = 240,
     verbose = true,
@@ -246,7 +246,7 @@ end
     u,
     d,
     2000.0,
-    fov_factor = 18.0,
+    fov = 18.0,
     image_width = 700,
     image_height = 350,
     verbose = true,

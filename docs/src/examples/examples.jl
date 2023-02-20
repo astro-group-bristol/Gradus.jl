@@ -56,7 +56,7 @@ function ex_redshift()
         d,
         # maximum integration time
         2000.0,
-        fov_factor = 6.0,
+        fov = 6.0,
         image_width = 700,
         image_height = 240,
         verbose = true,
@@ -100,7 +100,7 @@ function ex_interpolating()
         d,
         # maximum integration time
         2000.0,
-        fov_factor = 6.0,
+        fov = 6.0,
         image_width = 700,
         image_height = 240,
         verbose = true,
@@ -279,7 +279,7 @@ function ex_doughnut()
         u,
         d,
         2000.0,
-        fov_factor = 18.0,
+        fov = 18.0,
         image_width = 700,
         image_height = 350,
         verbose = true,
