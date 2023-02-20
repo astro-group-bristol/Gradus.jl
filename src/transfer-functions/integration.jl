@@ -33,7 +33,7 @@ function _cunningham_integrand(f, g, gs, gmin, gmax)
     f * π * (g)^3 / (√(gs * (1 - gs)) * (gmax - gmin))
 end
 
-function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8)
+function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8, segbuf=nothing)
     glo = clamp(lo, gmin, gmax)
     ghi = clamp(hi, gmin, gmax)
 
@@ -63,7 +63,7 @@ function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8)
         end
     end
 
-    res, _ = quadgk(S, glo, ghi)
+    res, _ = quadgk(S, glo, ghi; segbuf = segbuf)
     lum += res
     return lum
 end
@@ -106,6 +106,7 @@ function integrate_drdg✶(
 
     # build fine radial grid for trapezoidal integration
     fine_rₑ_grid = Grids._inverse_grid(minrₑ, maxrₑ, 1000) |> collect
+    segbuf = alloc_segbuf(Float64)
     @inbounds for (i, rₑ) in enumerate(fine_rₑ_grid)
         gmin = gmin_interp(rₑ)
         gmax = gmax_interp(rₑ)
@@ -125,7 +126,7 @@ function integrate_drdg✶(
         for j in eachindex(g_grid_view)
             glo = g_grid[j]
             ghi = g_grid[j+1]
-            flux[j] += integrate_bin(S, gmin, gmax, glo, ghi; h = h) * weight
+            flux[j] += integrate_bin(S, gmin, gmax, glo, ghi; h = h, segbuf = segbuf) * weight
         end
     end
 
