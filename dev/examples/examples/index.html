@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · Gradus.jl Documentation</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Gradus.jl Documentation logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Gradus.jl Documentation</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Overview</span><ul><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#Tracing-geodesic-paths"><span>Tracing geodesic paths</span></a></li><li><a class="tocitem" href="#Redshift-image"><span>Redshift image</span></a></li><li><a class="tocitem" href="#Redshift-line-profile"><span>Redshift line-profile</span></a></li><li><a class="tocitem" href="#Line-profiles"><span>Line profiles</span></a></li><li><a class="tocitem" href="#Interpolating-redshifts"><span>Interpolating redshifts</span></a></li><li><a class="tocitem" href="#Disc-geometries"><span>Disc geometries</span></a></li><li><a class="tocitem" href="#Circular-orbits"><span>Circular orbits</span></a></li><li><a class="tocitem" href="#ISCO"><span>ISCO</span></a></li><li><a class="tocitem" href="#Event-horizons-and-naked-singularities"><span>Event horizons and naked singularities</span></a></li><li><a class="tocitem" href="#Cunningham-transfer-functions"><span>Cunningham transfer functions</span></a></li><li><a class="tocitem" href="#Concentric-rings"><span>Concentric rings</span></a></li></ul></li><li><a class="tocitem" href="../../overview/point-functions/">Point functions</a></li><li><a class="tocitem" href="../../overview/metrics/">Available metrics</a></li><li><a class="tocitem" href="../../overview/accretion-geometry/">Accretion geometry</a></li></ul></li><li><span class="tocitem">Internals</span><ul><li><a class="tocitem" href="../../overview/geodesic-integration/">Geodesic integration</a></li><li><a class="tocitem" href="../../internals/custom-metrics/">Implementing new metrics</a></li><li><a class="tocitem" href="../../internals/special-radii/">Special radii</a></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../api-documentation/Gradus/">Gradus</a></li><li><a class="tocitem" href="../../api-documentation/GradusBase/">GradusBase</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Overview</a></li><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/astro-group-bristol/Gradus.jl/blob/main/docs/src/examples/examples.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h1><ul><li><a href="#Examples">Examples</a></li><li class="no-marker"><ul><li><a href="#Tracing-geodesic-paths">Tracing geodesic paths</a></li><li><a href="#Redshift-image">Redshift image</a></li><li><a href="#Redshift-line-profile">Redshift line-profile</a></li><li><a href="#Line-profiles">Line profiles</a></li><li><a href="#Interpolating-redshifts">Interpolating redshifts</a></li><li><a href="#Disc-geometries">Disc geometries</a></li><li><a href="#Circular-orbits">Circular orbits</a></li><li><a href="#ISCO">ISCO</a></li><li><a href="#Event-horizons-and-naked-singularities">Event horizons and naked singularities</a></li><li><a href="#Cunningham-transfer-functions">Cunningham transfer functions</a></li><li><a href="#Concentric-rings">Concentric rings</a></li></ul></li></ul><h2 id="Tracing-geodesic-paths"><a class="docs-heading-anchor" href="#Tracing-geodesic-paths">Tracing geodesic paths</a><a id="Tracing-geodesic-paths-1"></a><a class="docs-heading-anchor-permalink" href="#Tracing-geodesic-paths" title="Permalink"></a></h2><pre><code class="language-julia hljs">using Gradus
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · Gradus.jl Documentation</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="Gradus.jl Documentation logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Gradus.jl Documentation</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Overview</span><ul><li><a class="tocitem" href="../../getting-started/">Getting started</a></li><li><a class="tocitem" href="../../problems-and-solvers/">Problems and solvers</a></li><li><a class="tocitem" href="../../overview/point-functions/">Point functions</a></li><li><a class="tocitem" href="../../overview/metrics/">Available metrics</a></li><li><a class="tocitem" href="../../overview/accretion-geometry/">Accretion geometry</a></li><li class="is-active"><a class="tocitem" href>Examples</a><ul class="internal"><li><a class="tocitem" href="#Tracing-geodesic-paths"><span>Tracing geodesic paths</span></a></li><li><a class="tocitem" href="#Shadow"><span>Shadow</span></a></li><li><a class="tocitem" href="#Redshift-image"><span>Redshift image</span></a></li><li><a class="tocitem" href="#Redshift-line-profile"><span>Redshift line-profile</span></a></li><li><a class="tocitem" href="#Line-profiles"><span>Line profiles</span></a></li><li><a class="tocitem" href="#Interpolating-redshifts"><span>Interpolating redshifts</span></a></li><li><a class="tocitem" href="#Disc-geometries"><span>Disc geometries</span></a></li><li><a class="tocitem" href="#Circular-orbits"><span>Circular orbits</span></a></li><li><a class="tocitem" href="#ISCO"><span>ISCO</span></a></li><li><a class="tocitem" href="#Event-horizons-and-naked-singularities"><span>Event horizons and naked singularities</span></a></li><li><a class="tocitem" href="#Cunningham-transfer-functions"><span>Cunningham transfer functions</span></a></li><li><a class="tocitem" href="#Concentric-rings"><span>Concentric rings</span></a></li></ul></li></ul></li><li><span class="tocitem">Internals</span><ul><li><a class="tocitem" href="../../overview/geodesic-integration/">Geodesic integration</a></li><li><a class="tocitem" href="../../internals/custom-metrics/">Implementing new metrics</a></li><li><a class="tocitem" href="../../internals/special-radii/">Special radii</a></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../api-documentation/Gradus/">Gradus</a></li><li><a class="tocitem" href="../../api-documentation/GradusBase/">GradusBase</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Overview</a></li><li class="is-active"><a href>Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Examples</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/astro-group-bristol/Gradus.jl/blob/main/docs/src/examples/examples.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Examples"><a class="docs-heading-anchor" href="#Examples">Examples</a><a id="Examples-1"></a><a class="docs-heading-anchor-permalink" href="#Examples" title="Permalink"></a></h1><ul><li><a href="#Examples">Examples</a></li><li class="no-marker"><ul><li><a href="#Tracing-geodesic-paths">Tracing geodesic paths</a></li><li><a href="#Shadow">Shadow</a></li><li><a href="#Redshift-image">Redshift image</a></li><li><a href="#Redshift-line-profile">Redshift line-profile</a></li><li><a href="#Line-profiles">Line profiles</a></li><li><a href="#Interpolating-redshifts">Interpolating redshifts</a></li><li><a href="#Disc-geometries">Disc geometries</a></li><li><a href="#Circular-orbits">Circular orbits</a></li><li><a href="#ISCO">ISCO</a></li><li><a href="#Event-horizons-and-naked-singularities">Event horizons and naked singularities</a></li><li><a href="#Cunningham-transfer-functions">Cunningham transfer functions</a></li><li><a href="#Concentric-rings">Concentric rings</a></li></ul></li></ul><h2 id="Tracing-geodesic-paths"><a class="docs-heading-anchor" href="#Tracing-geodesic-paths">Tracing geodesic paths</a><a id="Tracing-geodesic-paths-1"></a><a class="docs-heading-anchor-permalink" href="#Tracing-geodesic-paths" title="Permalink"></a></h2><pre><code class="language-julia hljs">using Gradus
 using Plots
 using StaticArrays
 
@@ -32,7 +32,38 @@ end
 
 # plot event horizon 
 r0 = inner_radius(m)
-plot!(p, collect(range(0, 2π, 200)), [r0 for _ in 1:200], color = :black, linewidth = 2)</code></pre><p><img src="../example-tracing.svg" alt/></p><h2 id="Redshift-image"><a class="docs-heading-anchor" href="#Redshift-image">Redshift image</a><a id="Redshift-image-1"></a><a class="docs-heading-anchor-permalink" href="#Redshift-image" title="Permalink"></a></h2><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>The <a href="../../overview/point-functions/#Gradus.ConstPointFunctions.redshift"><code>Gradus.ConstPointFunctions.redshift</code></a> function is an analytic solution for redshift, which may not be implemented for every type of metric or disc geometry. See <a href="#Interpolating-redshifts">Interpolating redshifts</a> for a more flexible numeric alternative.</p></div></div><pre><code class="language-julia hljs">using Gradus
+plot!(p, collect(range(0, 2π, 200)), [r0 for _ in 1:200], color = :black, linewidth = 2)</code></pre><p><img src="../example-tracing.svg" alt/></p><h2 id="Shadow"><a class="docs-heading-anchor" href="#Shadow">Shadow</a><a id="Shadow-1"></a><a class="docs-heading-anchor-permalink" href="#Shadow" title="Permalink"></a></h2><pre><code class="language-julia hljs">using Gradus
+using Plots
+
+m = KerrMetric(1.0, 0.998)
+u = SVector(0.0, 1000.0, π / 2, 0.0)
+
+α, β, img = rendergeodesics(
+    m,
+    u,
+    # max integration time
+    2000.0,
+    image_width = 1000,
+    image_height = 1000,
+    fov = 70.0,
+    verbose = true,
+    # geodesics can get much closer to the event horizon than 
+    # normal
+    closest_approach = 1.001,
+    ensemble = Gradus.EnsembleEndpointThreads(),
+)
+
+p = heatmap(
+    α,
+    β,
+    img,
+    color = :grayC,
+    xlabel = &quot;α&quot;,
+    ylabel = &quot;β&quot;,
+    aspect_ratio = 1,
+    minorgrid = true,
+)
+contour!(p, α, β, img, color = :red)</code></pre><p><img src="../example-shadow.png" alt/></p><h2 id="Redshift-image"><a class="docs-heading-anchor" href="#Redshift-image">Redshift image</a><a id="Redshift-image-1"></a><a class="docs-heading-anchor-permalink" href="#Redshift-image" title="Permalink"></a></h2><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>The <a href="../../overview/point-functions/#Gradus.ConstPointFunctions.redshift"><code>Gradus.ConstPointFunctions.redshift</code></a> function is an analytic solution for redshift, which may not be implemented for every type of metric or disc geometry. See <a href="#Interpolating-redshifts">Interpolating redshifts</a> for a more flexible numeric alternative.</p></div></div><pre><code class="language-julia hljs">using Gradus
 using StaticArrays
 using Plots
 
@@ -47,20 +78,20 @@ d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
 # and use those to calculate redshift
 pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected
 
-img = rendergeodesics(
+α, β, img = rendergeodesics(
     m,
     u,
     d,
     # maximum integration time
     2000.0,
-    fov_factor = 6.0,
+    fov = 6.0,
     image_width = 700,
     image_height = 240,
     verbose = true,
     pf = pf
 )
 
-heatmap(img)</code></pre><p><img src="../example-redshift.png" alt/></p><h2 id="Redshift-line-profile"><a class="docs-heading-anchor" href="#Redshift-line-profile">Redshift line-profile</a><a id="Redshift-line-profile-1"></a><a class="docs-heading-anchor-permalink" href="#Redshift-line-profile" title="Permalink"></a></h2><p>Using the redshift example, we can bin a redshift line-profile using <a href="https://juliastats.org/StatsBase.jl/stable/empirical/#StatsBase.Histogram">StatsBase.jl</a>. We&#39;ll calculate the iron line redshift profile, with a delta-emission at 6.4 keV.</p><pre><code class="language-julia hljs">using StatsBase
+heatmap(α, β, img)</code></pre><p><img src="../example-redshift.png" alt/></p><h2 id="Redshift-line-profile"><a class="docs-heading-anchor" href="#Redshift-line-profile">Redshift line-profile</a><a id="Redshift-line-profile-1"></a><a class="docs-heading-anchor-permalink" href="#Redshift-line-profile" title="Permalink"></a></h2><p>Using the redshift example, we can bin a redshift line-profile using <a href="https://juliastats.org/StatsBase.jl/stable/empirical/#StatsBase.Histogram">StatsBase.jl</a>. We&#39;ll calculate the iron line redshift profile, with a delta-emission at 6.4 keV.</p><pre><code class="language-julia hljs">using StatsBase
 
 # remove nans and flatten the redshift image
 redshift_data = filter(!isnan, vec(img))
@@ -106,20 +137,20 @@ redshift = interpolate_redshift(pl_int, u)
 
 pf = redshift ∘ ConstPointFunctions.filter_intersected
 
-img = rendergeodesics(
+α, β, img = rendergeodesics(
     m,
     u,
     d,
     # maximum integration time
     2000.0,
-    fov_factor = 6.0,
+    fov = 6.0,
     image_width = 700,
     image_height = 240,
     verbose = true,
     pf = pf
 )
 
-heatmap(img)</code></pre><p><img src="../example-interpolated.png" alt/></p><h2 id="Disc-geometries"><a class="docs-heading-anchor" href="#Disc-geometries">Disc geometries</a><a id="Disc-geometries-1"></a><a class="docs-heading-anchor-permalink" href="#Disc-geometries" title="Permalink"></a></h2><p>Gradus makes it easy to define new height cross sections for thick discs:</p><pre><code class="language-julia hljs">using Gradus
+heatmap(α, β, img)</code></pre><p><img src="../example-interpolated.png" alt/></p><h2 id="Disc-geometries"><a class="docs-heading-anchor" href="#Disc-geometries">Disc geometries</a><a id="Disc-geometries-1"></a><a class="docs-heading-anchor-permalink" href="#Disc-geometries" title="Permalink"></a></h2><p>Gradus makes it easy to define new height cross sections for thick discs:</p><pre><code class="language-julia hljs">using Gradus
 using StaticArrays
 using Plots
 
@@ -140,19 +171,19 @@ d = ThickDisc() do u
 end
 
 # and then render as usual
-img = rendergeodesics(
+α, β, img = rendergeodesics(
     m,
     u,
     d,
     2000.0,
-    fov_factor = 18.0,
+    fov = 18.0,
     image_width = 700,
     image_height = 350,
     verbose = true,
     pf = pf
 )
 
-heatmap(img, aspect_ratio=1)</code></pre><p><img src="../example-thick-disc-doughnut.png" alt/></p><p>For more disc on disc geometry, see <a href="../../overview/accretion-geometry/#Gradus.AbstractAccretionDisc"><code>AbstractAccretionDisc</code></a> and associated sections.</p><h2 id="Circular-orbits"><a class="docs-heading-anchor" href="#Circular-orbits">Circular orbits</a><a id="Circular-orbits-1"></a><a class="docs-heading-anchor-permalink" href="#Circular-orbits" title="Permalink"></a></h2><p>Simple equatorial circular orbits are straight forward to calculate with Gradus.jl:</p><pre><code class="language-julia hljs">using Gradus
+heatmap(α, β, img, aspect_ratio=1)</code></pre><p><img src="../example-thick-disc-doughnut.png" alt/></p><p>For more disc on disc geometry, see <a href="../../overview/accretion-geometry/#Gradus.AbstractAccretionDisc"><code>AbstractAccretionDisc</code></a> and associated sections.</p><h2 id="Circular-orbits"><a class="docs-heading-anchor" href="#Circular-orbits">Circular orbits</a><a id="Circular-orbits-1"></a><a class="docs-heading-anchor-permalink" href="#Circular-orbits" title="Permalink"></a></h2><p>Simple equatorial circular orbits are straight forward to calculate with Gradus.jl:</p><pre><code class="language-julia hljs">using Gradus
 using Plots
 using StaticArrays
 
@@ -290,4 +321,4 @@ for r in radii
     α, β = impact_parameters_for_radius(m, u, d, r, N=100)
     plot!(p, α, β)
 end
-p</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../overview/point-functions/">Point functions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Monday 13 February 2023 08:54">Monday 13 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+p</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../overview/accretion-geometry/">« Accretion geometry</a><a class="docs-footer-nextpage" href="../../overview/geodesic-integration/">Geodesic integration »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Monday 20 February 2023 22:47">Monday 20 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
