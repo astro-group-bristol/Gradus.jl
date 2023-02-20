@@ -158,6 +158,7 @@ function interpolated_transfer_branches(
     verbose = false,
     kwargs...,
 ) where {T}
+    progress_bar = init_progress_bar("Transfer functions:", length(radii), verbose)
     # IILF for calculating the interpolated branches
     𝔉 =
         rₑ -> begin
@@ -177,7 +178,9 @@ function interpolated_transfer_branches(
                 max_time = 10 * u_prob[2],
                 kwargs...,
             )
-            interpolate_transfer_function(ctf)
+            itp = interpolate_transfer_function(ctf)
+            ProgressMeter.next!(progress_bar)
+            itp
         end
 
     # calculate interpolated transfer functions for each emission radius

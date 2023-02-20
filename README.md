@@ -79,7 +79,6 @@ Pkg.add(url = "https://github.com/fjebaker/Buckets.jl")
 After this, Gradus.jl can be installed, also directly from GitHub:
 ```julia
 Pkg.add(url = "https://github.com/astro-group-bristol/Gradus.jl")
-
 using Gradus
 ```
 

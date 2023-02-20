@@ -25,11 +25,11 @@ end
         KerrSpacetimeFirstOrder(),
         MorrisThorneWormhole(),
     )) do m
-        img = rendergeodesics(
+        α, β, img = rendergeodesics(
             m,
             u,
             200.0,
-            fov_factor = 1.0,
+            fov = 1.0,
             image_width = 20,
             image_height = 20,
             verbose = false,
@@ -54,12 +54,12 @@ end
         KerrSpacetimeFirstOrder(),
         MorrisThorneWormhole(),
     )) do m
-        img = rendergeodesics(
+        α, β, img = rendergeodesics(
             m,
             u,
             d,
             200.0,
-            fov_factor = 1.0,
+            fov = 1.0,
             image_width = 20,
             image_height = 20,
             verbose = false,
@@ -79,12 +79,12 @@ end
     expected = (34711.33445248479, 34711.33445255157)
     result = map((KerrMetric(), JohannsenMetric())) do m
         d = ShakuraSunyaev(m)
-        img = rendergeodesics(
+        α, β, img = rendergeodesics(
             m,
             u,
             d,
             200.0,
-            fov_factor = 1.0,
+            fov = 1.0,
             image_width = 20,
             image_height = 20,
             verbose = false,
@@ -109,12 +109,12 @@ end
         KerrSpacetimeFirstOrder(),
         MorrisThorneWormhole(),
     )) do m
-        img = rendergeodesics(
+        α, β, img = rendergeodesics(
             m,
             u,
             d,
             200.0,
-            fov_factor = 1.0,
+            fov = 1.0,
             image_width = 20,
             image_height = 20,
             verbose = false,

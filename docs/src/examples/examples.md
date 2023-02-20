@@ -46,6 +46,45 @@ plot!(p, collect(range(0, 2π, 200)), [r0 for _ in 1:200], color = :black, linew
 
 ![](./example-tracing.svg)
 
+## Shadow
+
+```julia
+using Gradus
+using Plots
+
+m = KerrMetric(1.0, 0.998)
+u = SVector(0.0, 1000.0, π / 2, 0.0)
+
+α, β, img = rendergeodesics(
+    m,
+    u,
+    # max integration time
+    2000.0,
+    image_width = 1000,
+    image_height = 1000,
+    fov = 70.0,
+    verbose = true,
+    # geodesics can get much closer to the event horizon than 
+    # normal
+    closest_approach = 1.001,
+    ensemble = Gradus.EnsembleEndpointThreads(),
+)
+
+p = heatmap(
+    α,
+    β,
+    img,
+    color = :grayC,
+    xlabel = "α",
+    ylabel = "β",
+    aspect_ratio = 1,
+    minorgrid = true,
+)
+contour!(p, α, β, img, color = :red)
+```
+
+![](./example-shadow.png)
+
 ## Redshift image
 
 !!! note
@@ -67,20 +106,20 @@ d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
 # and use those to calculate redshift
 pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected
 
-img = rendergeodesics(
+α, β, img = rendergeodesics(
     m,
     u,
     d,
     # maximum integration time
     2000.0,
-    fov_factor = 6.0,
+    fov = 6.0,
     image_width = 700,
     image_height = 240,
     verbose = true,
     pf = pf
 )
 
-heatmap(img)
+heatmap(α, β, img)
 ```
 
 ![](./example-redshift.png)
@@ -158,20 +197,20 @@ redshift = interpolate_redshift(pl_int, u)
 
 pf = redshift ∘ ConstPointFunctions.filter_intersected
 
-img = rendergeodesics(
+α, β, img = rendergeodesics(
     m,
     u,
     d,
     # maximum integration time
     2000.0,
-    fov_factor = 6.0,
+    fov = 6.0,
     image_width = 700,
     image_height = 240,
     verbose = true,
     pf = pf
 )
 
-heatmap(img)
+heatmap(α, β, img)
 ```
 
 ![](./example-interpolated.png)
@@ -202,19 +241,19 @@ d = ThickDisc() do u
 end
 
 # and then render as usual
-img = rendergeodesics(
+α, β, img = rendergeodesics(
     m,
     u,
     d,
     2000.0,
-    fov_factor = 18.0,
+    fov = 18.0,
     image_width = 700,
     image_height = 350,
     verbose = true,
     pf = pf
 )
 
-heatmap(img, aspect_ratio=1)
+heatmap(α, β, img, aspect_ratio=1)
 ```
 
 ![](./example-thick-disc-doughnut.png)

@@ -6,7 +6,7 @@ function rendergeodesics(
          FilterPointFunction((m, gp, max_time; kwargs...) -> gp.t2 < max_time, NaN),
     image_width = 350,
     image_height = 250,
-    fov_factor = 3.0,
+    fov = 3.0,
     kwargs...,
 ) where {T}
     image = zeros(T, (image_height, image_width))
@@ -18,10 +18,11 @@ function rendergeodesics(
         pf = pf,
         image_width = image_width,
         image_height = image_height,
-        fov_factor = fov_factor,
+        fov = fov,
         kwargs...,
     )
-    image
+    α, β = impact_axes(image_width, image_height, fov)
+    α, β, image
 end
 
 function prerendergeodesics(
@@ -31,7 +32,7 @@ function prerendergeodesics(
     cache = EndpointCache(),
     image_width = 350,
     image_height = 250,
-    fov_factor = 3.0,
+    fov = 3.0,
     kwargs...,
 )
     __prerendergeodesics(
@@ -41,7 +42,7 @@ function prerendergeodesics(
         cache;
         image_width = image_width,
         image_height = image_height,
-        fov_factor = fov_factor,
+        fov = fov,
         kwargs...,
     )
 end
@@ -131,7 +132,7 @@ function __render_geodesics(
     max_time;
     image_width,
     image_height,
-    fov_factor,
+    fov,
     verbose = false,
     ensemble = EnsembleEndpointThreads(),
     solver_opts...,
@@ -150,8 +151,8 @@ function __render_geodesics(
     function velfunc(i)
         Y = i % image_height
         X = i ÷ image_height
-        α = x_to_α(X, x_mid, fov_factor)
-        β = y_to_β(Y, y_mid, fov_factor)
+        α = x_to_α(X, x_mid, fov)
+        β = y_to_β(Y, y_mid, fov)
         map_impact_parameters(m, init_pos, α, β)
     end
 

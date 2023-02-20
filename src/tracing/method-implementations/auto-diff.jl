@@ -110,7 +110,7 @@ The Christoffel symbols ``\\Gamma^{\\mu}_{\\phantom{\\mu}\\nu\\sigma}`` are defi
 
 ```math
 \\Gamma^{\\mu}_{\\phantom{\\mu}\\nu\\sigma}
-= \\frac{1}{2} g^{\\mu, \\rho} \\left(
+= \\frac{1}{2} g^{\\mu\\rho} \\left(
     \\partial_{\\nu}g_{\\rho \\sigma}
     + \\partial_{\\sigma}g_{\\rho \\nu}
     - \\partial_{\\rho}g_{\\sigma \\nu}
