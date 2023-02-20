@@ -14,7 +14,7 @@ using StaticArrays
             u,
             d,
             200.0,
-            fov_factor = 1.0,
+            fov = 1.0,
             image_width = 100,
             image_height = 50,
             pf = pf,
