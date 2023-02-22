@@ -30,22 +30,30 @@ function RadialDiscProfile(f, tf::LagTransferFunction)
     end
 end
 
-function RadialDiscProfile(tf::LagTransferFunction; nbins = 1000)
+function RadialDiscProfile(tf::LagTransferFunction; grid = InverseGrid(), N = 1000)
     let gps = tf.source_to_disc
         times = map(i -> i.u2[1], gps)
         radii = map(i -> i.u2[2], gps)
-        bins = collect(range(extrema(radii)..., nbins))
+        bins = collect(grid(extrema(radii)..., N))
         t = DataInterpolations.LinearInterpolation(times, radii)
+
+        # interpolate the energy ratio over the disc
+        gs = energy_ratio(tf.metric, tf.source_to_disc, tf.model)
+        g = DataInterpolations.LinearInterpolation(gs, radii)
 
         # count number of photons in each radial bin
         counts = bucket(radii, bins)
         for i in eachindex(counts)
             R = bins[i]
             r = i == 1 ? 0 : bins[i-1]
+
+            # get components of the metric at the outer radius
+            gcomp = metric_components(tf.metric, SVector(R, π / 2))
             # divide by area of the annulus to get number density
-            counts[i] = counts[i] / (π * (R^2 - r^2))
+            # account for relativistic effects
+            A = (2π * (R - r)) * √(gcomp[2] * gcomp[3])
+            counts[i] = counts[i] / (g(R)^2 * A)
         end
-        counts .= counts ./ maximum(counts)
         ε = DataInterpolations.LinearInterpolation(counts, bins)
         # wrap geodesic point wrappers
         RadialDiscProfile(gp -> ε(gp.u2[2]), gp -> t(gp.u2[2]) + gp.u2[1])

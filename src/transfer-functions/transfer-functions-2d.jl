@@ -140,7 +140,7 @@ function lagtransfer(
     I = [i.status == StatusCodes.IntersectedWithGeometry for i in o_to_d]
     areas = unnormalized_areas(plane)[I]
 
-    LagTransferFunction(max_t, m, u, areas, s_to_d, o_to_d[I])
+    LagTransferFunction(max_t, m, model, u, areas, s_to_d, o_to_d[I])
 end
 
 function _interpolate_profile(tf::LagTransferFunction)

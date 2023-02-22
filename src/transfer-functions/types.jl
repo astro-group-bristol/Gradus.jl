@@ -17,9 +17,10 @@ struct InterpolatedCunninghamTransferFunction{T,U,L}
     rₑ::T
 end
 
-struct LagTransferFunction{T,M,U,P}
+struct LagTransferFunction{T,M,Q,U,P}
     max_t::T
     metric::M
+    model::Q
     u::U
     image_plane_areas::Vector{T}
     source_to_disc::Vector{P}
@@ -30,6 +31,7 @@ function Base.show(io::IO, ::MIME"text/plain", tf::LagTransferFunction)
     text = """LagTransferFunction for $(typeof(tf.metric)) 
       . observer position      
           $(tf.u)
+      . model                         : $(typeof(tf.model))
       . observer to disc photon count : $(length(tf.observer_to_disc))
       . source to disc photon count   : $(length(tf.source_to_disc))
       Total memory: $(Base.format_bytes(Base.summarysize(tf)))
