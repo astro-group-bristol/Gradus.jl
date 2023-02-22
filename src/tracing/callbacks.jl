@@ -6,11 +6,11 @@ function terminate_with_status!(status::StatusCodes.T)
 end
 
 # this function gets specialised for different metric parameters types, e.g. for first order
-@inline function metric_callback(::AbstractMetricParams, chart)
+@inline function metric_callback(::AbstractMetricParams, chart::AbstractChart)
     chart_callback(chart)
 end
 
-function create_callback_set(m::AbstractMetricParams, cb::C, chart) where {C}
+function create_callback_set(m::AbstractMetricParams, cb::C, chart::AbstractChart) where {C}
     mcb = metric_callback(m, chart)
     if C <: SciMLBase.DECallback
         mcb isa Tuple ? CallbackSet(cb, mcb...) : CallbackSet(cb, mcb)

@@ -70,7 +70,7 @@ end
     )
 end
 
-function metric_callback(m::AbstractFirstOrderMetricParams, chart)
+function metric_callback(m::AbstractFirstOrderMetricParams, chart::AbstractChart)
     (
         chart_callback(chart),
         DiscreteCallback(radial_negative_check(m), flip_radial_sign!),
