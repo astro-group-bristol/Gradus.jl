@@ -144,6 +144,7 @@ include("utils.jl")
 
 include("tracing/tracing.jl")
 include("tracing/constraints.jl")
+include("tracing/charts.jl")
 include("tracing/callbacks.jl")
 include("tracing/utility.jl")
 

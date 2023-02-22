@@ -17,8 +17,8 @@ function isco(m::AbstractAutoDiffStaticAxisSymmetricParams, lower_bound, upper_b
     Roots.find_zero((dE, d2E), (lower_bound, upper_bound))
 end
 
-isco(m::AbstractAutoDiffStaticAxisSymmetricParams) =
-    isco(m, find_lower_isco_bound(m), 100.0)
+isco(m::AbstractAutoDiffStaticAxisSymmetricParams; kwargs...) =
+    isco(m, find_lower_isco_bound(m; kwargs...), 100.0)
 
 """
     $(TYPEDSIGNATURES)

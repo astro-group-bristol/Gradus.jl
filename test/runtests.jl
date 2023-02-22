@@ -20,6 +20,7 @@ end
 
 @testset "integration" verbose = true begin
     include("integration/test-inference.jl")
+    include("integration/test-charts.jl")
 end
 
 @testset "transfer-functions" verbose = true begin

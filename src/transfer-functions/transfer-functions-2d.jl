@@ -138,7 +138,7 @@ function lagtransfer(
         plane,
         d,
         max_t;
-        effective_infinity = 1.1 * u[2],
+        chart = chart_for_metric(m, 1.1 * u[2]),
         solver_opts...,
     )
 

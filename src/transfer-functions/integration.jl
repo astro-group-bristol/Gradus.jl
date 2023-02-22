@@ -33,7 +33,7 @@ function _cunningham_integrand(f, g, gs, gmin, gmax)
     f * π * (g)^3 / (√(gs * (1 - gs)) * (gmax - gmin))
 end
 
-function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8, segbuf=nothing)
+function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8, segbuf = nothing)
     glo = clamp(lo, gmin, gmax)
     ghi = clamp(hi, gmin, gmax)
 
@@ -126,7 +126,8 @@ function integrate_drdg✶(
         for j in eachindex(g_grid_view)
             glo = g_grid[j]
             ghi = g_grid[j+1]
-            flux[j] += integrate_bin(S, gmin, gmax, glo, ghi; h = h, segbuf = segbuf) * weight
+            flux[j] +=
+                integrate_bin(S, gmin, gmax, glo, ghi; h = h, segbuf = segbuf) * weight
         end
     end
 
