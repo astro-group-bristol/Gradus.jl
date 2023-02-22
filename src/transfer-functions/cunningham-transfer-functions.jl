@@ -1,22 +1,3 @@
-@with_kw struct CunninghamTransferFunction{T}
-    "``g^\\ast`` values."
-    g✶::Vector{T}
-    "Transfer function data."
-    f::Vector{T}
-    gmin::T
-    gmax::T
-    "Emission radius."
-    rₑ::T
-end
-
-@with_kw struct InterpolatedCunninghamTransferFunction{T,U,L}
-    upper_f::U
-    lower_f::L
-    gmin::T
-    gmax::T
-    rₑ::T
-end
-
 function _make_sorted_interpolation(g, f)
     I = sortperm(g)
     _g = @inbounds g[I]

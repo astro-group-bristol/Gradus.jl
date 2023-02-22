@@ -171,6 +171,7 @@ include("accretion-geometry/discs.jl")
 include("accretion-geometry/meshes.jl")
 include("accretion-geometry/bootstrap.jl")
 
+include("transfer-functions/types.jl")
 include("transfer-functions/cunningham-transfer-functions.jl")
 include("transfer-functions/integration.jl")
 include("transfer-functions/precision-solvers.jl")
@@ -178,6 +179,7 @@ include("transfer-functions/precision-solvers.jl")
 include("corona-to-disc/sky-geometry.jl")
 include("corona-to-disc/corona-models.jl")
 include("corona-to-disc/disc-profiles.jl")
+# needs the types from disc profiles so defer include
 include("transfer-functions/transfer-functions-2d.jl")
 include("corona-to-disc/flux-calculations.jl")
 
