@@ -2,14 +2,15 @@ struct EnsembleEndpointThreads end
 
 """
     tracegeodesics(
-        m::AbstractMetricParams{T},
+        m::AbstractMetricParams,
         position,
-        velocity,
-        time_domain::NTuple{2};
+        velocity::V,
+        args...;
         solver = Tsit5(),
+        ensemble = EnsembleThreads(),
+        trajectories = nothing,
         μ = 0.0,
-        closest_approach = 1.01,
-        effective_infinity = 1200.0,
+        chart = chart_for_metric(m),
         callback = nothing,
         solver_opts...,
     )
@@ -36,8 +37,7 @@ function tracegeodesics(
     ensemble = EnsembleThreads(),
     trajectories = nothing,
     μ = 0.0,
-    closest_approach = 1.01,
-    effective_infinity = 1200.0,
+    chart = chart_for_metric(m),
     callback = nothing,
     solver_opts...,
 ) where {V}
@@ -47,8 +47,7 @@ function tracegeodesics(
         velocity,
         args...;
         μ = μ,
-        closest_approach = closest_approach,
-        effective_infinity = effective_infinity,
+        chart = chart,
         callback = callback,
     )
     # how many trajectories
@@ -112,13 +111,12 @@ function geodesic_problem(
     init_pos::U,
     init_vel::V,
     time_domain::NTuple{2};
-    closest_approach = 1.01,
-    effective_infinity = 1200.0,
     callback = nothing,
     μ = 0.0,
+    chart = chart_for_metric(m),
 ) where {U,V}
     # create the callback set for the problem
-    cbs = create_callback_set(m, callback, closest_approach, effective_infinity)
+    cbs = create_callback_set(m, callback, chart)
 
     if U <: SVector && V <: SVector
         # single position and velocity
@@ -291,18 +289,10 @@ end
     u,
     v,
     args...;
-    closest_approach = 1.01,
-    effective_infinity = 1200.0,
+    chart = chart_for_metric(m),
     solver_opts...,
 )
-    prob = geodesic_problem(
-        m,
-        u,
-        v,
-        args...;
-        closest_approach = closest_approach,
-        effective_infinity = effective_infinity,
-    )
+    prob = geodesic_problem(m, u, v, args...; chart = chart)
     _init_integrator(prob; solver_opts...)
 end
 

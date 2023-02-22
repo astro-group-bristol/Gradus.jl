@@ -174,7 +174,7 @@ function interpolated_transfer_branches(
                 rₑ,
                 ;
                 offset_max = 3rₑ + 20.0,
-                effective_infinity = 10 * u_prob[2],
+                chart = chart_for_metric(m, 10 * u_prob[2]),
                 max_time = 10 * u_prob[2],
                 kwargs...,
             )

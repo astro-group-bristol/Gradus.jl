@@ -70,13 +70,9 @@ end
     )
 end
 
-function metric_callback(
-    m::AbstractFirstOrderMetricParams,
-    closest_approach,
-    effective_infinity,
-)
+function metric_callback(m::AbstractFirstOrderMetricParams, chart)
     (
-        ensure_chart_callback(m, closest_approach, effective_infinity),
+        chart_callback(chart),
         DiscreteCallback(radial_negative_check(m), flip_radial_sign!),
         DiscreteCallback(angular_negative_check(m), flip_angular_sign!),
     )

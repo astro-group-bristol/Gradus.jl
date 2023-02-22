@@ -56,7 +56,7 @@ function lineprofile(
     plane = PolarPlane(GeometricGrid(); Nr = 250, Nθ = 1300, r_max = 50.0),
     λ_max = 2 * u[2],
     redshift_pf = ConstPointFunctions.redshift(m, u),
-    verbose=false,
+    verbose = false,
     minrₑ = isco(m),
     maxrₑ = 50,
     solver_args...,
@@ -70,13 +70,15 @@ function lineprofile(
         d,
         (0.0, λ_max);
         save_on = false,
-        verbose=verbose,
+        verbose = verbose,
         progress_bar = progress_bar,
         ensemble = EnsembleEndpointThreads(),
         solver_args...,
     )
 
-    I = [(i.status == StatusCodes.IntersectedWithGeometry) && (minrₑ <= i.u2[2] <= maxrₑ) for i in gps]
+    I = [
+        (i.status == StatusCodes.IntersectedWithGeometry) && (minrₑ <= i.u2[2] <= maxrₑ) for i in gps
+    ]
     points = @views gps[I]
     areas = unnormalized_areas(plane)[I]
 

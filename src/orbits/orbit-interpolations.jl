@@ -64,7 +64,7 @@ function interpolate_plunging_velocities(
         μ = 1.0,
         reltol = reltol,
         # ensure we gets sufficiently close to the event horizon
-        closest_approach = 1.000001,
+        chart = chart_for_metric(m; closest_approach = 1.000001),
         kwargs...,
     )
 
