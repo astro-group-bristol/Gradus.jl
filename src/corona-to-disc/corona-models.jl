@@ -64,4 +64,22 @@ function source_velocity(m::AbstractMetricParams, model::LampPostModel)
     inv(√(-gcomp[1])) * @SVector[1.0, 0.0, 0.0, 0.0]
 end
 
+# this function is a placeholder: needs to be able to work
+# for any disc geometry and model type
+function energy_ratio(m, gps, model::LampPostModel)
+    energy_ratio(m, gps, SVector(0.0, model.h, model.θ, 0.0), source_velocity(m, model))
+end
+function energy_ratio(m, gps, u_src, v_src)
+    g_src = metric(m, u_src)
+    map(gps) do gp
+        @tullio e_src := g_src[i, j] * gp.v1[i] * v_src[j]
+        # at the disc
+        g_disc = metric(m, gp.u2)
+        v_disc = CircularOrbits.fourvelocity(m, SVector(gp.u2[2], gp.u2[3]))
+        @tullio e_disc := g_disc[i, j] * gp.v2[i] * v_disc[j]
+        # ratio g = E_source / E_disc
+        e_src / e_disc
+    end
+end
+
 export LampPostModel

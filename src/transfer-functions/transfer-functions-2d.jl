@@ -86,26 +86,6 @@ function observer_to_disc(
     points
 end
 
-struct LagTransferFunction{T,M,U,P}
-    max_t::T
-    metric::M
-    u::U
-    image_plane_areas::Vector{T}
-    source_to_disc::Vector{P}
-    observer_to_disc::Vector{P}
-end
-
-function Base.show(io::IO, ::MIME"text/plain", tf::LagTransferFunction)
-    text = """LagTransferFunction for $(typeof(tf.metric)) 
-      . observer position      
-          $(tf.u)
-      . observer to disc photon count : $(length(tf.observer_to_disc))
-      . source to disc photon count   : $(length(tf.source_to_disc))
-      Total memory: $(Base.format_bytes(Base.summarysize(tf)))
-    """
-    print(io, text)
-end
-
 function lagtransfer(m::AbstractMetricParams, u, d::AbstractAccretionGeometry; kwargs...)
     model = LampPostModel(h = 10.0, θ = deg2rad(0.0001))
     plane = PolarPlane(GeometricGrid(); Nr = 800, Nθ = 800, r_max = 250.0)
@@ -121,8 +101,14 @@ function lagtransfer(
     max_t = 2 * u[2],
     n_samples = 10_000,
     sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
+    verbose = false,
     solver_opts...,
 )
+    progress_bar = init_progress_bar(
+        "Source to disc:   ",
+        n_samples + trajectory_count(plane),
+        verbose,
+    )
     s_to_d = source_to_disc(
         m,
         model,
@@ -130,8 +116,14 @@ function lagtransfer(
         max_t;
         n_samples = n_samples,
         sampler = sampler,
+        verbose = verbose,
+        progress_bar = progress_bar,
         solver_opts...,
     )
+
+    if verbose
+        progress_bar.desc = "Observer to disc: "
+    end
     o_to_d = observer_to_disc(
         m,
         u,
@@ -139,6 +131,8 @@ function lagtransfer(
         d,
         max_t;
         chart = chart_for_metric(m, 1.1 * u[2]),
+        verbose = verbose,
+        progress_bar = progress_bar,
         solver_opts...,
     )
 
@@ -146,7 +140,7 @@ function lagtransfer(
     I = [i.status == StatusCodes.IntersectedWithGeometry for i in o_to_d]
     areas = unnormalized_areas(plane)[I]
 
-    LagTransferFunction(max_t, m, u, areas, s_to_d, o_to_d[I])
+    LagTransferFunction(max_t, m, model, u, areas, s_to_d, o_to_d[I])
 end
 
 function _interpolate_profile(tf::LagTransferFunction)
@@ -160,9 +154,9 @@ function binflux(
     redshift = ConstPointFunctions.redshift(tf.metric, tf.u),
     ε = (gp) -> gp.u2[2]^(-3),
     E₀ = 6.4,
+    profile = RadialDiscProfile(ε, tf),
     kwargs...,
 )
-    profile = RadialDiscProfile(ε, tf.source_to_disc)
     t, i_em = delay_flux(profile, tf.observer_to_disc)
     g = redshift.(tf.metric, tf.observer_to_disc, tf.max_t)
 
