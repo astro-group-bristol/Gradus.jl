@@ -1,34 +1,4 @@
 """
-    integrate_single_geodesic(m::AbstractMetricParams, u, d::AbstractAccretionDisc, rₒ, θₒ; kwargs...)
-
-Integrate a single geodesic with impact parameters calculated via
-
-```math
-\\begin{align}
-    \\alpha &= r_\\text{o} \\cos (\\theta_\\text{o}), \\
-    \\beta &= r_\\text{o} \\sin (\\theta_\\text{o}).
-\\end{align}
-```
-
-Returns an [AbstractGeodesicPoint](@ref), depending on `m`.
-"""
-function integrate_single_geodesic(
-    m::AbstractMetricParams,
-    u,
-    d::AbstractAccretionDisc,
-    rₒ,
-    θₒ;
-    max_time = 2e4,
-    kwargs...,
-)
-    α = rₒ * cos(θₒ)
-    β = rₒ * sin(θₒ)
-    v = map_impact_parameters(m, u, α, β)
-    sol = tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, kwargs...)
-    process_solution(m, sol)
-end
-
-"""
     find_offset_for_radius(
         m::AbstractMetricParams,
         u,
@@ -214,6 +184,80 @@ function jacobian_∂αβ_∂gr(
     cfdm = FiniteDifferences.central_fdm(diff_order, 1)
     j = FiniteDifferences.jacobian(cfdm, f, @SVector([α, β])) |> first
     abs(inv(det(j)))
+end
+
+function make_target_objective(
+    target::SVector,
+    m::AbstractMetricParams,
+    u0,
+    args...;
+    d_tol = 1e-2,
+    max_time = 2u0[2],
+    callback = nothing,
+    μ = 0.0,
+    solver_opts...,
+)
+    # convenience velocity function
+    velfunc = (α, β) -> begin
+        constrain_all(m, u0, map_impact_parameters(m, u0, α, β), μ)
+    end
+
+    # used to track how close the current solver got
+    closest_approach = Ref(u0[2])
+    # convert target to cartesian once
+    target_cart = to_cartesian(target)
+    distance_callback = ContinuousCallback(
+        (u, λ, integrator) -> begin
+            # get vector distance between current u and target
+            k = target_cart - to_cartesian(u)
+            distance = √sum(i -> i^2, k)
+            # update best
+            closest_approach[] = min(closest_approach[], distance)
+            # if within d_tol, just immediately terminate
+            distance - d_tol
+        end,
+        terminate!,
+        interp_points = 8,
+        save_positions = (true, false),
+    )
+
+    # init a reusable integrator
+    integ = _init_integrator(
+        m,
+        u0,
+        velfunc(0.0, 0.0),
+        args...,
+        (0.0, max_time);
+        save_on = false,
+        callback = merge_callbacks(callback, distance_callback),
+        solver_opts...,
+    )
+
+    # map impact parameters to a closest approach 
+    f = ((α, β),) -> begin
+        # reset the closest approach
+        closest_approach[] = u0[2]
+        v = velfunc(α, β)
+        _ = _solve_reinit!(integ, vcat(u0, v))
+        closest_approach[]
+    end
+
+    return f
+end
+
+function impact_parameters_for_target(
+    target::SVector,
+    m::AbstractMetricParams,
+    u0,
+    args...;
+    optimizer = NelderMead(),
+    kwargs...,
+)
+    f = make_target_objective(target, m, u0, args...; kwargs...)
+    res = optimize(f, [0.0, 0.0], optimizer)
+    out = Optim.minimizer(res)
+    # return α, β, accuracy
+    out[1], out[2], Optim.minimum(res)
 end
 
 export find_offset_for_radius, impact_parameters_for_radius, impact_parameters_for_radius!
