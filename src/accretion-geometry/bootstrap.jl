@@ -44,16 +44,9 @@ function prerendergeodesics(
     prerendergeodesics(m, init_pos, max_time; callback = cbs, kwargs...)
 end
 
-function add_collision_callback(callback::C, accretion_geometry; gtol) where {C}
-    if C <: Nothing
-        build_collision_callback(accretion_geometry; gtol = gtol)
-    elseif C <: Tuple
-        (callback..., build_collision_callback(accretion_geometry; gtol = gtol))
-    elseif C <: SciMLBase.DECallback
-        (callback, build_collision_callback(accretion_geometry; gtol = gtol))
-    else
-        error("Unknown callback type $C")
-    end
+function add_collision_callback(callback, accretion_geometry; gtol)
+    geometry_cb = build_collision_callback(accretion_geometry; gtol = gtol)
+    merge_callbacks(callback, geometry_cb)
 end
 
 """

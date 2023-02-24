@@ -1,5 +1,13 @@
-function to_cartesian(vec::AbstractVector{T}) where {T}
+function to_cartesian(vec::SVector{8,T}) where {T}
     SVector{3,T}(to_cartesian(vec[2], vec[3], vec[4]))
+end
+
+function to_cartesian(vec::SVector{4,T}) where {T}
+    SVector{3,T}(to_cartesian(vec[2], vec[3], vec[4]))
+end
+
+function to_cartesian(vec::SVector{3,T}) where {T}
+    SVector{3,T}(to_cartesian(vec[1], vec[2], vec[3]))
 end
 
 function to_cartesian(r, ϕ, θ)

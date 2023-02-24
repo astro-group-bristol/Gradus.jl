@@ -147,6 +147,7 @@ include("tracing/constraints.jl")
 include("tracing/charts.jl")
 include("tracing/callbacks.jl")
 include("tracing/utility.jl")
+include("tracing/precision-solvers.jl")
 
 include("tracing/method-implementations/auto-diff.jl")
 
@@ -174,7 +175,6 @@ include("accretion-geometry/bootstrap.jl")
 include("transfer-functions/types.jl")
 include("transfer-functions/cunningham-transfer-functions.jl")
 include("transfer-functions/integration.jl")
-include("transfer-functions/precision-solvers.jl")
 
 include("corona-to-disc/sky-geometry.jl")
 include("corona-to-disc/corona-models.jl")

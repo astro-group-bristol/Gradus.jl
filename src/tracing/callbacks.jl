@@ -10,17 +10,21 @@ end
     chart_callback(chart)
 end
 
-function create_callback_set(m::AbstractMetricParams, cb::C, chart::AbstractChart) where {C}
-    mcb = metric_callback(m, chart)
+function merge_callbacks(cbs1, cb::C) where {C}
     if C <: SciMLBase.DECallback
-        mcb isa Tuple ? CallbackSet(cb, mcb...) : CallbackSet(cb, mcb)
+        cbs1 isa Tuple ? CallbackSet(cb, cbs1...) : CallbackSet(cb, cbs1)
     elseif C <: Tuple
-        mcb isa Tuple ? CallbackSet(cb..., mcb...) : CallbackSet(cb..., mcb)
+        cbs1 isa Tuple ? CallbackSet(cb..., cbs1...) : CallbackSet(cb..., cbs1)
     elseif C <: Nothing
-        mcb isa Tuple ? CallbackSet(mcb...) : mcb
+        cbs1 isa Tuple ? CallbackSet(cbs1...) : cbs1
     else
         error("Unknown callback type $C")
     end
+end
+
+function create_callback_set(m::AbstractMetricParams, cb, chart::AbstractChart)
+    mcb = metric_callback(m, chart)
+    merge_callbacks(mcb, cb)
 end
 
 # predefined callbacks
