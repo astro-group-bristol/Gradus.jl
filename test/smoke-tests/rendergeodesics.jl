@@ -37,7 +37,6 @@ end
         )
         image_fingerprint = sum(filter(!isnan, img))
     end
-    @show result
     for (e, v) in zip(expected, result)
         # this tolerance is kind of unacceptably high? todo: investigate why
         @test isapprox(e, v; rtol = 0.1)
