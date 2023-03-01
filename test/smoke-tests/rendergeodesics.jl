@@ -18,12 +18,13 @@ end
     u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
 
     # last computed 21/01/2023: shrink resolution
-    expected = (8969.1564582409967, 8969.15634220181, 8977.502920124776, 413.4963434133726)
+    expected = (8969.1564582409967, 8969.15634220181, 8977.502920124776, 413.4963434133726, 8969.155411207657)
     result = map((
         KerrMetric(),
         JohannsenMetric(),
         KerrSpacetimeFirstOrder(),
         MorrisThorneWormhole(),
+        BumblebeeMetric(),
     )) do m
         α, β, img = rendergeodesics(
             m,
@@ -36,6 +37,7 @@ end
         )
         image_fingerprint = sum(filter(!isnan, img))
     end
+    @show result
     for (e, v) in zip(expected, result)
         # this tolerance is kind of unacceptably high? todo: investigate why
         @test isapprox(e, v; rtol = 0.1)

@@ -30,6 +30,7 @@ using StaticArrays
             JohannsenMetric(),
             KerrSpacetimeFirstOrder(),
             MorrisThorneWormhole(),
+            BumblebeeMetric()
         ]
             test_single(m, u, v)
             test_many(m, u, v)
