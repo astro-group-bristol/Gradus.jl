@@ -34,12 +34,14 @@ struct BumblebeeMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
             error("l must be >-1")
         end
         if abs(a) > 0.3
-            error("This metric is for the slow rotation approximation only, and requires |a| < 0.3.")
+            error(
+                "This metric is for the slow rotation approximation only, and requires |a| < 0.3.",
+            )
         end
         new{T}(T(M), T(a), T(l))
     end
 end
-BumblebeeMetric(;M=1.0, a=0.0, l=0.0) = BumblebeeMetric(M, a, l)
+BumblebeeMetric(; M = 1.0, a = 0.0, l = 0.0) = BumblebeeMetric(M, a, l)
 
 # implementation
 metric_components(m::BumblebeeMetric{T}, rθ) where {T} =
