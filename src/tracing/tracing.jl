@@ -37,6 +37,7 @@ function tracegeodesics(
     ensemble = EnsembleThreads(),
     trajectories = nothing,
     μ = 0.0,
+    q = 0.0,
     chart = chart_for_metric(m),
     callback = nothing,
     solver_opts...,
@@ -47,6 +48,7 @@ function tracegeodesics(
         velocity,
         args...;
         μ = μ,
+        q = q,
         chart = chart,
         callback = callback,
     )
@@ -77,83 +79,6 @@ function tracegeodesics(
             )
         end
         solve_geodesic_problem(problem, solver; solver_opts...)
-    end
-end
-
-function integrator_problem(
-    m::AbstractMetricParams{T},
-    pos::StaticVector{S,T},
-    vel::StaticVector{S,T},
-    time_domain;
-    kwargs...,
-) where {S,T}
-    u_init = vcat(pos, vel)
-
-    function f(u::SVector{8,T}, p, λ) where {T}
-        @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
-            dv = SVector{4,T}(geodesic_eq(m, x, v))
-            # SVector{8}(v[1], v[2], v[3], v[4], dv[1], dv[2], dv[3], dv[4])
-            vcat(v, dv)
-        end
-    end
-
-    ODEProblem{false}(
-        f,
-        u_init,
-        time_domain,
-        IntegrationParameters(StatusCodes.NoStatus);
-        kwargs...,
-    )
-end
-
-function geodesic_problem(
-    m::AbstractMetricParams,
-    init_pos::U,
-    init_vel::V,
-    time_domain::NTuple{2};
-    callback = nothing,
-    μ = 0.0,
-    chart = chart_for_metric(m),
-) where {U,V}
-    # create the callback set for the problem
-    cbs = create_callback_set(m, callback, chart)
-
-    if U <: SVector && V <: SVector
-        # single position and velocity
-        return integrator_problem(
-            m,
-            init_pos,
-            constrain_all(m, init_pos, init_vel, μ),
-            time_domain;
-            callback = cbs,
-        )
-    elseif U <: SVector && V <: Function
-        # single position, velocity generating function
-        _vfunc = wrap_constraint(m, init_pos, init_vel, μ)
-        prob = integrator_problem(m, init_pos, _vfunc(1), time_domain, callback = cbs)
-        ens_prob = EnsembleProblem(
-            prob,
-            prob_func = (prob, i, repeat) ->
-                integrator_problem(m, init_pos, _vfunc(i), time_domain, callback = cbs),
-            safetycopy = false,
-        )
-        return ens_prob
-    elseif U === V
-        # both are arrays of SVectors
-        _vels = constrain_all(m, init_pos, init_vel, μ)
-        prob = integrator_problem(m, init_pos[1], _vels[1], time_domain, callback = cbs)
-        ens_prob = EnsembleProblem(
-            prob,
-            prob_func = (prob, i, repeat) -> integrator_problem(
-                m,
-                init_pos[i],
-                _vels[i],
-                time_domain,
-                callback = cbs,
-            ),
-            safetycopy = false,
-        )
-        return ens_prob
     end
 end
 

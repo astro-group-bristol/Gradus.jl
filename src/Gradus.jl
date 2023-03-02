@@ -143,6 +143,7 @@ abstract type AbstractDirectionSampler{SkyDomain,Generator} end
 include("utils.jl")
 
 include("tracing/tracing.jl")
+include("tracing/geodesic-problem.jl")
 include("tracing/constraints.jl")
 include("tracing/charts.jl")
 include("tracing/callbacks.jl")
@@ -191,6 +192,7 @@ include("metrics/morris-thorne-ad.jl")
 include("metrics/kerr-refractive-ad.jl")
 include("metrics/dilaton-axion-ad.jl")
 include("metrics/bumblebee-ad.jl")
+include("metrics/kerr-newman-ad.jl")
 
 include("special-radii.jl")
 include("redshift.jl")
