@@ -3,9 +3,8 @@ using ..StaticArrays
 using ..MuladdMacro
 
 @muladd @fastmath begin
-    rQ(Q) = Q^2 / (4 * π)
     Σ(r, a, θ) = r^2 + (a * cos(θ))^2
-    Δ(r, R, a, Q) = r^2 - R * r + a^2 + rQ(Q)^2
+    Δ(r, R, a, Q) = r^2 - R * r + a^2 + Q^2
 
     # the way this function must be defined is a little complex
     # but helps with type-stability
@@ -14,13 +13,15 @@ using ..MuladdMacro
         R = 2M
         Σ₀ = Σ(r, a, θ)
         sinθ2 = sin(θ)^2
+        Δ₀ = Δ(r, R, a, Q)
 
-        tt = -(1 - (R * r) / Σ₀)
-        rr = Σ₀ / Δ(r, R, a, Q)
+        r2a2 = r^2 + a^2
+        tt = (a^2 * sinθ2 - Δ₀) / Σ₀
+        rr = Σ₀ / Δ₀
         θθ = Σ₀
-        ϕϕ = sinθ2 * (r^2 + a^2 + (sinθ2 * R * r * a^2) / Σ₀)
+        ϕϕ = (sinθ2 / Σ₀) * (r2a2^2 - a^2 * sinθ2 * Δ₀)
 
-        tϕ = (-R * r * a * sinθ2) / Σ₀
+        tϕ = (2a * sinθ2 / Σ₀) * (Δ₀ - r2a2)
         @SVector [tt, rr, θθ, ϕϕ, tϕ]
     end
 
@@ -56,8 +57,7 @@ end
 # implementation
 metric_components(m::KerrNewmanMetric{T}, rθ) where {T} =
     __KerrNewmanAD.metric_components(m.M, m.a, m.Q, rθ)
-inner_radius(m::KerrNewmanMetric{T}) where {T} =
-    m.M + √(m.M^2 - m.a^2 - __KerrNewmanAD.rQ(m.Q)^2)
+inner_radius(m::KerrNewmanMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2 - m.Q^2)
 
 electromagnetic_potential(m::KerrNewmanMetric, x) =
     __KerrNewmanAD.electromagnetic_potential(m, x)
@@ -75,8 +75,12 @@ function geodesic_ode_problem(
         @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
             dv = SVector{4,T}(geodesic_eq(m, x, v))
             # add maxwell part
-            F = maxwell_tensor(m, x)
-            dvf = q * (F * v)
+            dvf = if !(q ≈ 0.0)
+                F = maxwell_tensor(m, x)
+                q * (F * v)
+            else
+                SVector{4,T}(0, 0, 0, 0)
+            end
             vcat(v, dv + dvf)
         end
     end

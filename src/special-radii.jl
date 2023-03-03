@@ -89,6 +89,7 @@ event_horizon(m::AbstractMetricParams; kwargs...) =
 function _event_horizon_condition(m, r, θ)
     g = metric_components(m, (r, θ))
     g[5]^2 - g[1] * g[4]
+    # inv(g[2])
 end
 
 function event_horizon(
@@ -102,10 +103,11 @@ function event_horizon(
     rs = map(θs) do θ
         f(r) = _event_horizon_condition(m, r, θ)
         r = Roots.find_zeros(f, 0.0, rmax)
-        if isempty(r)
-            push!(r, NaN)
+        if isempty(r) || all(isnan, r)
+            NaN
+        else
+            select(r)
         end
-        select(r)
     end
     rs, θs
 end
