@@ -21,7 +21,7 @@ using ..MuladdMacro
         θθ = Σ₀
         ϕϕ = (sinθ2 / Σ₀) * (r2a2^2 - a^2 * sinθ2 * Δ₀)
 
-        tϕ = (2a * sinθ2 / Σ₀) * (Δ₀ - r2a2)
+        tϕ = (a * sinθ2 / Σ₀) * (Δ₀ - r2a2)
         @SVector [tt, rr, θθ, ϕϕ, tϕ]
     end
 
