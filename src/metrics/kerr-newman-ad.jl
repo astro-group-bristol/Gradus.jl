@@ -28,8 +28,7 @@ using ..MuladdMacro
     function electromagnetic_potential(m, rθ)
         (r, θ) = rθ
         Σ₀ = Σ(r, m.a, θ)
-        rq = rQ(m.Q)
-        SVector{4,eltype(rθ)}(r * rq / Σ₀, 0, 0, -m.a * r * rq * sin(θ)^2 / Σ₀)
+        SVector{4,eltype(rθ)}(r * m.Q / Σ₀, 0, 0, -m.a * r * m.Q * sin(θ)^2 / Σ₀)
     end
 end
 
