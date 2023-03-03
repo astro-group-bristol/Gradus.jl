@@ -111,11 +111,12 @@ function update_integration_parameters!(
     p
 end
 
-function integrator_problem(
+function geodesic_ode_problem(
     m::AbstractFirstOrderMetricParams{T},
     pos::StaticVector{S,T},
     vel::StaticVector{S,T},
     time_domain;
+    q = 0.0,
     kwargs...,
 ) where {S,T}
     L, Q = calc_lq(m, pos, vel)

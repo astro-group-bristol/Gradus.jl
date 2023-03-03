@@ -262,7 +262,10 @@ function metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ)
     f = x -> metric_components(m, x)
     T = typeof(ForwardDiff.Tag(f, eltype(rθ)))
     ydual = ForwardDiff.ForwardDiffStaticArraysExt.static_dual_eval(T, f, rθ)
-    ForwardDiff.value.(T, ydual), ForwardDiff.ForwardDiffStaticArraysExt.extract_jacobian(T, ydual, rθ)
+    (
+        ForwardDiff.value.(T, ydual),
+        ForwardDiff.ForwardDiffStaticArraysExt.extract_jacobian(T, ydual, rθ),
+    )
 end
 
 @inbounds function geodesic_eq(

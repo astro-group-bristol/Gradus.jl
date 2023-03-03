@@ -18,13 +18,21 @@ end
     u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
 
     # last computed 21/01/2023: shrink resolution
-    expected = (8969.1564582409967, 8969.15634220181, 8977.502920124776, 413.4963434133726, 8969.155411207657)
+    expected = (
+        8969.1564582409967,
+        8969.15634220181,
+        8977.502920124776,
+        413.4963434133726,
+        8969.155411207657,
+        8969.157492589824,
+    )
     result = map((
         KerrMetric(),
         JohannsenMetric(),
         KerrSpacetimeFirstOrder(),
         MorrisThorneWormhole(),
         BumblebeeMetric(),
+        KerrNewmanMetric(),
     )) do m
         α, β, img = rendergeodesics(
             m,
