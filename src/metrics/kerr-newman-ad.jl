@@ -53,6 +53,8 @@ struct KerrNewmanMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
     end
 end
 
+KerrNewmanMetric(; M = 1.0, a = 0.0, Q = 0.0) = KerrNewmanMetric(M, a, Q)
+
 # implementation
 metric_components(m::KerrNewmanMetric{T}, rθ) where {T} =
     __KerrNewmanAD.metric_components(m.M, m.a, m.Q, rθ)
