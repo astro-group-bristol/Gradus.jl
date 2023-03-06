@@ -1,22 +1,15 @@
-"""
-    $(TYPEDSIGNATURES)
-
-Quality of stability measure, which has a minima for circular orbits. Effectively
-a sum of the normalised residuals.
-"""
-Qs(rs) = sqrt(sum((rs ./ rs[1] .- 1.0) .^ 2) / length(rs))
-
-function trace_single_orbit(m, r, vϕ; max_time = 300.0, μ = 1.0, tracer_args...)
+function trace_single_orbit(m, r, vϕ; max_time = 300.0, μ = 1.0, θ₀ = π / 2, tracer_args...)
     # fixed in equitorial plane
-    u = @SVector [0.0, r, deg2rad(90.0), 0.0]
+    u = @SVector [0.0, r, θ₀, 0.0]
     v = @SVector [0.0, 0.0, 0.0, vϕ]
     Gradus.tracegeodesics(m, u, v, (0.0, max_time); μ = μ, tracer_args...)
 end
 
 function measure_stability(m::AbstractMetricParams, r, vϕ; tracer_args...)
     sol = trace_single_orbit(m, r, vϕ; tracer_args...)
-    rs = selectdim(sol, 1, 2)
-    Qs(rs)
+    rs = [sol.u[i][2] for i in eachindex(sol.u)]
+    # Qs
+    sum(((rs .- r) ./ r) .^ 2) / length(rs)
 end
 
 function __solve_equitorial_circular_orbit(
@@ -44,7 +37,14 @@ function solve_equitorial_circular_orbit(
     optimizer = GoldenSection(),
     tracer_args...,
 )
-    __solve_equitorial_circular_orbit(m, r, optimizer, lower_bound, upper_bound)
+    __solve_equitorial_circular_orbit(
+        m,
+        r,
+        optimizer,
+        lower_bound,
+        upper_bound;
+        tracer_args...,
+    )
 end
 
 function sliding_window(func, N, lower_bound, upper_bound, lower_rate, upper_rate)
@@ -89,5 +89,10 @@ function trace_equitorial_circular_orbit(m::AbstractMetricParams, rs; kwargs...)
         trace_single_orbit(m, r, vϕ; kwargs...)
     end
 end
+function trace_equitorial_circular_orbit(m::AbstractMetricParams, r::Number; kwargs...)
+    vϕ = solve_equitorial_circular_orbit(m, r; kwargs...)
+    trace_single_orbit(m, r, vϕ; kwargs...)
+end
+
 
 export solve_equitorial_circular_orbit, trace_equitorial_circular_orbit
