@@ -61,9 +61,9 @@ function solve_equitorial_circular_orbit(
     r_range::Union{<:AbstractRange,<:AbstractArray};
     lower_bound = 0.0,
     upper_bound = 1.0,
-    lower_rate = 0.98,
-    upper_rate = 1.5,
-    kwargs...,
+    lower_rate = 0.88,
+    upper_rate = 1.8,
+    tracer_args...,
 )
     r_range_reverse = sort(r_range) |> reverse
     candidate_vϕ = sliding_window(
@@ -77,8 +77,10 @@ function solve_equitorial_circular_orbit(
         solve_equitorial_circular_orbit(
             m,
             r,
+            ;
             lower_bound = lower_bound,
             upper_bound = upper_bound,
+            tracer_args...
         )
     end
     reverse!(candidate_vϕ)
