@@ -10,15 +10,29 @@ the radius at which the above condition is met.
 """
 isco(m::AbstractMetricParams) = error("Not implemented for $(typeof(m)).")
 
-function isco(m::AbstractAutoDiffStaticAxisSymmetricParams, lower_bound, upper_bound)
-    dE(r) = ForwardDiff.derivative(x -> CircularOrbits.energy(m, x), r)
+function isco(
+    m::AbstractAutoDiffStaticAxisSymmetricParams,
+    lower_bound,
+    upper_bound;
+    kwargs...,
+)
+    dE(r) = ForwardDiff.derivative(x -> CircularOrbits.energy(m, x; kwargs...), r)
     d2E(r) = ForwardDiff.derivative(dE, r)
 
     Roots.find_zero((dE, d2E), (lower_bound, upper_bound))
 end
 
-isco(m::AbstractAutoDiffStaticAxisSymmetricParams; kwargs...) =
-    isco(m, find_lower_isco_bound(m; kwargs...), 100.0)
+isco(
+    m::AbstractAutoDiffStaticAxisSymmetricParams;
+    upper_bound = 100.0,
+    step = -0.005,
+    kwargs...,
+) = isco(
+    m,
+    find_lower_isco_bound(m; upper_bound = upper_bound, step = step),
+    100.0;
+    kwargs...,
+)
 
 """
     $(TYPEDSIGNATURES)
