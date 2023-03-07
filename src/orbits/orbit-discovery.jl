@@ -80,7 +80,7 @@ function solve_equitorial_circular_orbit(
             ;
             lower_bound = lower_bound,
             upper_bound = upper_bound,
-            tracer_args...
+            tracer_args...,
         )
     end
     reverse!(candidate_vϕ)

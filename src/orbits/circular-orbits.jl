@@ -1,114 +1,137 @@
 module CircularOrbits
-import ..StaticArrays: @SVector
+import ..StaticArrays: SVector, @SVector
 import ..Gradus:
     AbstractAutoDiffStaticAxisSymmetricParams,
     metric_components,
     metric_jacobian,
-    inverse_metric_components
+    inverse_metric_components,
+    MuladdMacro
 
-function Ω(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; contra_rotating = false)
-    _, jacs = metric_jacobian(m, rθ)
-    ∂rg = jacs[:, 1]
+MuladdMacro.@muladd begin
+    function Ω(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; contra_rotating = false)
+        _, jacs = metric_jacobian(m, rθ)
+        ∂rg = jacs[:, 1]
 
-    Δ = √(∂rg[5]^2 - ∂rg[1] * ∂rg[4])
-    if contra_rotating
-        -(∂rg[5] + Δ) / ∂rg[4]
-    else
-        -(∂rg[5] - Δ) / ∂rg[4]
+        Δ = √(∂rg[5]^2 - ∂rg[1] * ∂rg[4])
+        if contra_rotating
+            -(∂rg[5] + Δ) / ∂rg[4]
+        else
+            -(∂rg[5] - Δ) / ∂rg[4]
+        end
     end
-end
 
-function __energy(g, Ωϕ)
-    @inbounds -(g[1] + g[5] * Ωϕ) / √(-g[1] - 2g[5] * Ωϕ - g[4] * Ωϕ^2)
-end
+    function ut_uϕ(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        rθ,
+        ginv = inverse_metric_components(metric_components(m, rθ));
+        contra_rotating = false,
+    )
+        𝛺 = Ω(m, rθ; contra_rotating = contra_rotating)
 
-function energy(m, rθ; contra_rotating = false)
-    Ωϕ = Ω(m, rθ; contra_rotating = contra_rotating)
-    __energy(metric_components(m, rθ), Ωϕ)
-end
-energy(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
-    energy(m, @SVector([r, π / 2]); kwargs...)
+        𝒜 = -(𝛺 * ginv[1] - ginv[5])
+        ℬ = (𝛺 * ginv[5] - ginv[4])
 
-function __angmom(g, Ωϕ, prograde)
-    @inbounds res = (g[5] + g[4] * Ωϕ) / √(-g[1] - 2g[5] * Ωϕ - g[4] * Ωϕ^2)
-    if prograde
-        res
-    else
-        -res
+        denom = ℬ^2 * ginv[1] + 2 * 𝒜 * ℬ * ginv[5] + 𝒜^2 * ginv[4]
+        d = sqrt(inv(-denom))
+        ut = ℬ * d
+        uϕ = 𝒜 * d
+
+        SVector(ut, uϕ)
     end
-end
 
-function angmom(m, rθ; contra_rotating = false, prograde = true)
-    Ωϕ = Ω(m, rθ; contra_rotating = contra_rotating)
-    __angmom(metric_components(m, rθ), Ωϕ, prograde)
-end
-angmom(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
-    angmom(m, @SVector([r, π / 2]); kwargs...)
+    # these 4 functions can be overwritten for a specific
+    # metric, e.g. Kerr-Newman
+    function energy(::AbstractAutoDiffStaticAxisSymmetricParams, rθ, utuϕ)
+        -utuϕ[1]
+    end
+    function angmom(::AbstractAutoDiffStaticAxisSymmetricParams, rθ, utuϕ)
+        utuϕ[2]
+    end
+    # this component doesn't actually seem to correctly constrain the geodesic
+    # to being light- / null-like, or timelike. maybe revist? else call constrain before returning
+    vt(::AbstractAutoDiffStaticAxisSymmetricParams, rθ, ginv, utuϕ) =
+        ginv[1] * utuϕ[1] + ginv[5] * utuϕ[2]
+    vϕ(::AbstractAutoDiffStaticAxisSymmetricParams, rθ, ginv, utuϕ) =
+        ginv[5] * utuϕ[1] + ginv[4] * utuϕ[2]
 
-function g_ginv_energy_angmom(
-    m::AbstractAutoDiffStaticAxisSymmetricParams,
-    rθ;
-    contra_rotating = false,
-    prograde = true,
-)
-    g = metric_components(m, rθ)
-    ginv = inverse_metric_components(g)
+    # dispatch helpers
+    energy(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        rθ::SVector;
+        contra_rotating = false,
+        kwargs...,
+    ) = energy(m, rθ, ut_uϕ(m, rθ; contra_rotating = contra_rotating); kwargs...)
+    angmom(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        rθ::SVector;
+        contra_rotating = false,
+        kwargs...,
+    ) = angmom(m, rθ, ut_uϕ(m, rθ; contra_rotating = contra_rotating); kwargs...)
+    energy(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+        energy(m, SVector(r, π / 2); kwargs...)
+    angmom(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+        angmom(m, SVector(r, π / 2); kwargs...)
 
-    Ωϕ = Ω(m, rθ; contra_rotating = contra_rotating)
-    E = __energy(g, Ωϕ)
-    L = __angmom(g, Ωϕ, prograde)
+    function vt(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        rθ::SVector;
+        contra_rotating = false,
+        kwargs...,
+    )
+        ginv = inverse_metric_components(metric_components(m, rθ))
+        utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating)
+        vt(m, ginv, rθ, utuϕ; kwargs...)
+    end
+    vt(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+        vt(m, SVector(r, π / 2); kwargs...)
 
-    (g, ginv, E, L)
-end
+    function vϕ(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ::SVector; contra_rotating = false, kwargs...)
+        ginv = inverse_metric_components(metric_components(m, rθ))
+        utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating)
+        vϕ(m, rθ, ginv, utuϕ; kwargs...)
+    end
+    vϕ(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+        vϕ(m, SVector(r, π / 2); kwargs...)
 
-function __vϕ(ginv, E, L)
-    -E * ginv[5] + L * ginv[4]
-end
+    function fourvelocity(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        rθ::SVector;
+        contra_rotating = false,
+        kwargs...,
+    )
+        ginv = inverse_metric_components(metric_components(m, rθ))
+        utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating)
 
-function vϕ(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; kwargs...)
-    _, ginv, E, L = g_ginv_energy_angmom(m, rθ; kwargs...)
-    __vϕ(ginv, E, L)
-end
-vϕ(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
-    vϕ(m, @SVector([r, π / 2]); kwargs...)
+        SVector(vt(m, rθ, ginv, utuϕ; kwargs...), 0, 0, vϕ(m, rθ, ginv, utuϕ; kwargs...))
+    end
+    fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+        fourvelocity(m, SVector(r, π / 2); kwargs...)
 
-# this component doesn't actually seem to correctly constrain the geodesic
-# to being light- / null-like, or timelike. maybe revist? else call constrain before returning
-function __vt(ginv, E, L)
-    -E * ginv[1] + L * ginv[5]
-end
+    function plunging_fourvelocity(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        rθ;
+        contra_rotating = false,
+        kwargs...,
+    )
+        ginv = inverse_metric_components(metric_components(m, rθ))
+        utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating, kwargs...)
+        E = energy(m, rθ, utuϕ; kwargs...)
+        L = angmom(m, rθ, utuϕ; kwargs...)
+        _vt = vt(m, rθ, ginv, utuϕ; kwargs...)
+        _vϕ = vϕ(m, rθ, ginv, utuϕ; kwargs...)
 
-function vt(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; kwargs...)
-    _, ginv, E, L = g_ginv_energy_angmom(m, rθ; kwargs...)
-    __vt(ginv, E, L)
-end
-vt(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
-    vt(m, @SVector([r, π / 2]); kwargs...)
+        nom = ginv[1] * E^2 - 2ginv[5] * E * L + ginv[4] * L^2 + 1
+        denom = -g[2]
 
-function fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; kwargs...)
-    _, ginv, E, L = g_ginv_energy_angmom(m, rθ; kwargs...)
+        @SVector[_vt, -sqrt(abs(nom / denom)), 0.0, _vϕ]
+    end
+    plunging_fourvelocity(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        r::Number;
+        kwargs...,
+    ) = plunging_fourvelocity(m, @SVector([r, π / 2]); kwargs...)
 
-    vt = __vt(ginv, E, L)
-    vϕ = __vϕ(ginv, E, L)
-
-    @SVector [vt, 0.0, 0.0, vϕ]
-end
-fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
-    fourvelocity(m, @SVector([r, π / 2]); kwargs...)
-
-function plunging_fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; kwargs...)
-    g, ginv, E, L = g_ginv_energy_angmom(m, rθ; kwargs...)
-    vt = __vt(ginv, E, L)
-    vϕ = __vϕ(ginv, E, L)
-
-    nom = ginv[1] * E^2 - 2ginv[5] * E * L + ginv[4] * L^2 + 1
-    denom = -g[2]
-
-    @SVector[vt, -sqrt(abs(nom / denom)), 0.0, vϕ]
-end
-plunging_fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
-    plunging_fourvelocity(m, @SVector([r, π / 2]); kwargs...)
-
+end # mulladd macro
 end # module
 
 export CircularOrbits
