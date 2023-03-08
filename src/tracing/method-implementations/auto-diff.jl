@@ -83,6 +83,8 @@ inv(metric)
         )
     end
 end
+inverse_metric_components(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ) =
+    inverse_metric_components(metric_components(m, rθ))
 
 
 """
