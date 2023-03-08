@@ -36,9 +36,7 @@ function maxwell_tensor(m::AbstractMetricParams, x)
     ∂A = hcat(zeros(ST), dA, zeros(ST))
     g = inv(metric(m, x))
     # raise first index: F^μ_κ
-
     # @tullio F[μ, κ] := g[μ, σ] * (∂A[σ, κ] - ∂A[κ, σ])
-    # SMatrix(F)
 
     # faster
     g * (∂A - ∂A')
