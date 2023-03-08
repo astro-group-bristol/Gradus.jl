@@ -105,7 +105,13 @@ function CircularOrbits.angmom(m::KerrNewmanMetric, rθ, utuϕ; q = 0.0)
     (utuϕ[2] + q * V[4])
 end
 
-function CircularOrbits.Ω(m::KerrNewmanMetric, rθ; q = 0.0, contra_rotating = false)
+function CircularOrbits.Ω(
+    m::KerrNewmanMetric,
+    rθ;
+    q = 0.0,
+    μ = 1.0,
+    contra_rotating = false,
+)
     _, jacs = metric_jacobian(m, rθ)
     ∂rg = jacs[:, 1]
 
@@ -113,20 +119,19 @@ function CircularOrbits.Ω(m::KerrNewmanMetric, rθ; q = 0.0, contra_rotating = 
     g = metric_components(m, rθ)
     F = maxwell_tensor(m, x)
 
-    # set up quadratic coefficients, lowering index on F
-    a = ∂rg[4]
+    # 4th order polynomial
+    function f(ω)
+        ut = sqrt(abs(ω^2 * g[4] + 2 * ω * g[5] + g[1]) / μ^2)
 
-    # todo: !!! missing a 1/uₜ on the terms with an F
-    b = 2 * ∂rg[5] + 2q * F[2, 4] * g[2]
-    c = ∂rg[1] + 2q * F[2, 1] * g[2]
+        Δ = (ω^2 * ∂rg[4] + 2 * ω * ∂rg[5] + ∂rg[1])
 
-    # quadratic formula
-    Δ = sqrt(b^2 - 4 * a * c)
-    if contra_rotating
-        (-b - Δ) / (2 * a)
-    else
-        (-b + Δ) / (2 * a)
+        0.5 * Δ + (F[2, 4] * ω + F[2, 1]) * g[2] * q * ut
     end
+    Roots.find_zero(
+        (f, w -> ForwardDiff.derivative(f, w)),
+        (contra_rotating ? -1 : 1),
+        Roots.Newton(),
+    )
 end
 
 export KerrNewmanMetric
