@@ -41,7 +41,6 @@ function interpolate_plunging_velocities(
     m::AbstractMetricParams{T};
     max_time = 50_000,
     contra_rotating = false,
-    prograde = true,
     reltol = 1e-9,
     kwargs...,
 ) where {T}
@@ -54,7 +53,6 @@ function interpolate_plunging_velocities(
         m,
         isco;
         contra_rotating = contra_rotating,
-        prograde = prograde,
     )
     sol = Gradus.tracegeodesics(
         m,

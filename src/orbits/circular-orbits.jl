@@ -24,9 +24,9 @@ MuladdMacro.@muladd begin
         m::AbstractAutoDiffStaticAxisSymmetricParams,
         rθ,
         ginv = inverse_metric_components(metric_components(m, rθ));
-        contra_rotating = false,
+        kwargs...,
     )
-        𝛺 = Ω(m, rθ; contra_rotating = contra_rotating)
+        𝛺 = Ω(m, rθ; kwargs...)
 
         𝒜 = -(𝛺 * ginv[1] - ginv[5])
         ℬ = (𝛺 * ginv[5] - ginv[4])
@@ -60,13 +60,13 @@ MuladdMacro.@muladd begin
         rθ::SVector;
         contra_rotating = false,
         kwargs...,
-    ) = energy(m, rθ, ut_uϕ(m, rθ; contra_rotating = contra_rotating); kwargs...)
+    ) = energy(m, rθ, ut_uϕ(m, rθ; contra_rotating = contra_rotating, kwargs...); kwargs...)
     angmom(
         m::AbstractAutoDiffStaticAxisSymmetricParams,
         rθ::SVector;
         contra_rotating = false,
         kwargs...,
-    ) = angmom(m, rθ, ut_uϕ(m, rθ; contra_rotating = contra_rotating); kwargs...)
+    ) = angmom(m, rθ, ut_uϕ(m, rθ; contra_rotating = contra_rotating, kwargs...); kwargs...)
     energy(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
         energy(m, SVector(r, π / 2); kwargs...)
     angmom(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
@@ -79,16 +79,21 @@ MuladdMacro.@muladd begin
         kwargs...,
     )
         ginv = inverse_metric_components(metric_components(m, rθ))
-        utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating)
-        vt(m, ginv, rθ, utuϕ; kwargs...)
+        utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating, kwargs...)
+        vt(m, ginv, rθ, utuϕ)
     end
     vt(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
         vt(m, SVector(r, π / 2); kwargs...)
 
-    function vϕ(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ::SVector; contra_rotating = false, kwargs...)
+    function vϕ(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        rθ::SVector;
+        contra_rotating = false,
+        kwargs...,
+    )
         ginv = inverse_metric_components(metric_components(m, rθ))
-        utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating)
-        vϕ(m, rθ, ginv, utuϕ; kwargs...)
+        utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating, kwargs...)
+        vϕ(m, rθ, ginv, utuϕ)
     end
     vϕ(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
         vϕ(m, SVector(r, π / 2); kwargs...)
@@ -96,13 +101,12 @@ MuladdMacro.@muladd begin
     function fourvelocity(
         m::AbstractAutoDiffStaticAxisSymmetricParams,
         rθ::SVector;
-        contra_rotating = false,
         kwargs...,
     )
         ginv = inverse_metric_components(metric_components(m, rθ))
-        utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating)
+        utuϕ = ut_uϕ(m, rθ, ginv; kwargs...)
 
-        SVector(vt(m, rθ, ginv, utuϕ; kwargs...), 0, 0, vϕ(m, rθ, ginv, utuϕ; kwargs...))
+        SVector(vt(m, rθ, ginv, utuϕ), 0, 0, vϕ(m, rθ, ginv, utuϕ))
     end
     fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
         fourvelocity(m, SVector(r, π / 2); kwargs...)
@@ -113,7 +117,8 @@ MuladdMacro.@muladd begin
         contra_rotating = false,
         kwargs...,
     )
-        ginv = inverse_metric_components(metric_components(m, rθ))
+        g = metric_components(m, rθ)
+        ginv = inverse_metric_components(g)
         utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating, kwargs...)
         E = energy(m, rθ, utuϕ; kwargs...)
         L = angmom(m, rθ, utuϕ; kwargs...)
