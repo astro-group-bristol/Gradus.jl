@@ -32,7 +32,7 @@ MuladdMacro.@muladd begin
         ℬ = (𝛺 * ginv[5] - ginv[4])
 
         denom = ℬ^2 * ginv[1] + 2 * 𝒜 * ℬ * ginv[5] + 𝒜^2 * ginv[4]
-        d = sqrt(inv(-denom))
+        d = -1 * sign(denom) * sqrt(inv(abs(denom)))
         ut = ℬ * d
         uϕ = 𝒜 * d
 
