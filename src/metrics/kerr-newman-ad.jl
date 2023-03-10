@@ -77,7 +77,7 @@ function geodesic_ode_problem(
             dv = SVector{4,T}(geodesic_eq(m, x, v))
             # add maxwell part
             dvf = if !(q ≈ 0.0)
-                F = maxwell_tensor(m, x)
+                F = faraday_tensor(m, x)
                 q * (F * v)
             else
                 SVector{4,T}(0, 0, 0, 0)
@@ -111,27 +111,62 @@ function CircularOrbits.Ω(
     q = 0.0,
     μ = 1.0,
     contra_rotating = false,
+    Ω_init = 1e-3,
 )
-    _, jacs = metric_jacobian(m, rθ)
+    g, jacs = Gradus.metric_jacobian(m, rθ)
+    # only want the derivatives w.r.t. r
     ∂rg = jacs[:, 1]
 
     x = SVector(0, rθ[1], rθ[2], 0)
-    g = metric_components(m, rθ)
-    F = maxwell_tensor(m, x)
+    F = Gradus.faraday_tensor(m, x)
 
-    # 4th order polynomial
     function f(ω)
-        ut = sqrt(abs(ω^2 * g[4] + 2 * ω * g[5] + g[1]) / μ^2)
-
         Δ = (ω^2 * ∂rg[4] + 2 * ω * ∂rg[5] + ∂rg[1])
-
+        if q == 0
+            return 0.5 * Δ
+        end
+        arg = -(ω^2 * g[4] + 2 * ω * g[5] + g[1]) / μ^2
+        # analytic continuation
+        ut = sign(arg) * sqrt(abs(arg))
+        # combine with charge terms
         0.5 * Δ + (F[2, 4] * ω + F[2, 1]) * g[2] * q * ut
     end
-    Roots.find_zero(
-        (f, w -> ForwardDiff.derivative(f, w)),
-        (contra_rotating ? -1 : 1),
-        Roots.Newton(),
-    )
+    T = eltype(rθ)
+    Ω₀ = (contra_rotating ? -T(Ω_init) : T(Ω_init))
+    Roots.find_zero((f, w -> ForwardDiff.derivative(f, w)), Ω₀)
+end
+
+function find_isco_bounds(
+    m::KerrNewmanMetric{T},
+    max_upper_bound,
+    step,
+    ;
+    kwargs...,
+) where {T}
+    # find upper bounds quick and dirty
+    upper_bound = max_upper_bound
+    for r = inner_radius(m):step:max_upper_bound
+        # i don't want to have to try/catch here but
+        # unsure how else to do this
+        try
+            CircularOrbits.energy(m, r; kwargs...)
+        catch e
+            if isa(e, Roots.ConvergenceFailed)
+                break
+            end
+            rethrow(e)
+        end
+        upper_bound = r
+    end
+    # iterate in reverse with a negative step to find lower bound
+    for r = upper_bound:(-step):1
+        en = CircularOrbits.energy(m, r; kwargs...)
+        if abs(en) > 1
+            return r, upper_bound
+        end
+    end
+    # for type stability
+    return T(0), T(0)
 end
 
 export KerrNewmanMetric
