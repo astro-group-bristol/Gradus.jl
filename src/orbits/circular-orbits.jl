@@ -8,16 +8,19 @@ import ..Gradus:
     MuladdMacro
 
 MuladdMacro.@muladd begin
-    function Ω(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; contra_rotating = false)
-        _, jacs = metric_jacobian(m, rθ)
-        ∂rg = jacs[:, 1]
-
+    @inline function _Ω_analytic(∂rg, contra_rotating)
         Δ = √(∂rg[5]^2 - ∂rg[1] * ∂rg[4])
         if contra_rotating
             -(∂rg[5] + Δ) / ∂rg[4]
         else
             -(∂rg[5] - Δ) / ∂rg[4]
         end
+    end
+
+    function Ω(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; contra_rotating = false)
+        _, jacs = metric_jacobian(m, rθ)
+        ∂rg = jacs[:, 1]
+        _Ω_analytic(∂rg, contra_rotating)
     end
 
     function ut_uϕ(

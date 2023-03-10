@@ -21,9 +21,7 @@ function isco(
             "No boundaries for minimization could be determined. It is likely this configuration does not have an ISCO solution.",
         )
     end
-    dE(r) = ForwardDiff.derivative(x -> begin
-        CircularOrbits.energy(m, x; kwargs...)
-    end, r)
+    dE(r) = ForwardDiff.derivative(x -> CircularOrbits.energy(m, x; kwargs...), r)
     d2E(r) = ForwardDiff.derivative(dE, r)
 
     Roots.find_zero((dE, d2E), (lower_bound, upper_bound))

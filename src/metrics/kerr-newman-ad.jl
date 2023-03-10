@@ -117,14 +117,17 @@ function CircularOrbits.Ω(
     # only want the derivatives w.r.t. r
     ∂rg = jacs[:, 1]
 
+    # if q == 0.0 we have an analytic solution
+    # since no maxwell tensor
+    if q == 0.0
+        return _Ω_analytic(∂rg, contra_rotating)
+    end
+
     x = SVector(0, rθ[1], rθ[2], 0)
     F = Gradus.faraday_tensor(m, x)
 
     function f(ω)
         Δ = (ω^2 * ∂rg[4] + 2 * ω * ∂rg[5] + ∂rg[1])
-        if q == 0
-            return 0.5 * Δ
-        end
         arg = -(ω^2 * g[4] + 2 * ω * g[5] + g[1]) / μ^2
         # analytic continuation
         ut = sign(arg) * sqrt(abs(arg))
