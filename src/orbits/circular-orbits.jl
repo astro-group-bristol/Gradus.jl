@@ -75,6 +75,17 @@ MuladdMacro.@muladd begin
     angmom(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
         angmom(m, SVector(r, π / 2); kwargs...)
 
+    function energy_angmom(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        rθ::SVector;
+        kwargs...,
+    )
+        utuϕ = ut_uϕ(m, rθ; kwargs...)
+        energy(m, rθ, utuϕ; kwargs...), angmom(m, rθ, utuϕ; kwargs...)
+    end
+    energy_angmom(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+        energy_angmom(m, SVector(r, π / 2); kwargs...)
+
     function vt(
         m::AbstractAutoDiffStaticAxisSymmetricParams,
         rθ::SVector;
