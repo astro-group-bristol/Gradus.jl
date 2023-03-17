@@ -10,15 +10,32 @@ the radius at which the above condition is met.
 """
 isco(m::AbstractMetricParams) = error("Not implemented for $(typeof(m)).")
 
-function isco(m::AbstractAutoDiffStaticAxisSymmetricParams, lower_bound, upper_bound)
-    dE(r) = ForwardDiff.derivative(x -> CircularOrbits.energy(m, x), r)
+function isco(
+    m::AbstractAutoDiffStaticAxisSymmetricParams,
+    lower_bound,
+    upper_bound;
+    kwargs...,
+)
+    if lower_bound == upper_bound
+        error(
+            "No boundaries for minimization could be determined. It is likely this configuration does not have an ISCO solution.",
+        )
+    end
+    dE(r) = ForwardDiff.derivative(x -> CircularOrbits.energy(m, x; kwargs...), r)
     d2E(r) = ForwardDiff.derivative(dE, r)
 
     Roots.find_zero((dE, d2E), (lower_bound, upper_bound))
 end
 
-isco(m::AbstractAutoDiffStaticAxisSymmetricParams; kwargs...) =
-    isco(m, find_lower_isco_bound(m; kwargs...), 100.0)
+function isco(
+    m::AbstractAutoDiffStaticAxisSymmetricParams{T};
+    max_upper_bound = T(100),
+    step = T(0.005),
+    kwargs...,
+) where {T}
+    lower_bound, upper_bound = find_isco_bounds(m, max_upper_bound, step; kwargs...)
+    isco(m, lower_bound, upper_bound, ; kwargs...)
+end
 
 """
     $(TYPEDSIGNATURES)
@@ -29,19 +46,21 @@ calculates ``E`` with [`CircularOrbits.energy`](@ref), where `r` steps from `upp
 
 Returns `T(0.0)` if no such radius found.
 """
-function find_lower_isco_bound(
-    m::AbstractAutoDiffStaticAxisSymmetricParams{T};
-    upper_bound = 100.0,
-    step = -0.005,
+function find_isco_bounds(
+    m::AbstractAutoDiffStaticAxisSymmetricParams{T},
+    max_upper_bound,
+    step;
+    kwargs...,
 ) where {T}
-    # iterate in reverse with a negative step
-    for r = upper_bound:step:1.0
-        if CircularOrbits.energy(m, r) > 1.0
-            return r
+    # iterate in reverse with a negative step to find lower bound
+    for r = max_upper_bound:(-step):1
+        en = CircularOrbits.energy(m, r; kwargs...)
+        if abs(en) > 1
+            return r, max_upper_bound
         end
     end
     # for type stability
-    return T(0.0)
+    return T(0), T(0)
 end
 
 """
@@ -92,17 +111,19 @@ function _event_horizon_condition(m, r, θ)
     # inv(g[2])
 end
 
-function event_horizon(
-    m::AbstractAutoDiffStaticAxisSymmetricParams{T};
+function _solve_radius_condition(
+    m::AbstractAutoDiffStaticAxisSymmetricParams{T},
+    condition_function;
     select = maximum,
     resolution::Int = 100,
     θε::T = T(1e-7),
     rmax = 5.0,
+    init = 0.0,
 ) where {T}
     θs = range(θε, 2π - θε, resolution)
     rs = map(θs) do θ
-        f(r) = _event_horizon_condition(m, r, θ)
-        r = Roots.find_zeros(f, 0.0, rmax)
+        f(r) = condition_function(m, r, θ)
+        r = Roots.find_zeros(f, init, rmax)
         if isempty(r) || all(isnan, r)
             NaN
         else
@@ -110,6 +131,10 @@ function event_horizon(
         end
     end
     rs, θs
+end
+
+function event_horizon(m::AbstractAutoDiffStaticAxisSymmetricParams; kwargs...)
+    _solve_radius_condition(m, _event_horizon_condition; kwargs...)
 end
 
 function is_naked_singularity(
@@ -123,6 +148,15 @@ function is_naked_singularity(
         r = Roots.find_zeros(f, 0.0, rmax)
         isempty(r)
     end
+end
+
+function _ergosphere_condition(m, r, θ)
+    g = metric_components(m, (r, θ))
+    g[1]
+end
+
+function ergosphere(m::AbstractAutoDiffStaticAxisSymmetricParams; kwargs...)
+    _solve_radius_condition(m, _ergosphere_condition; init = 1.0, kwargs...)
 end
 
 export event_horizon, is_naked_singularity

@@ -30,15 +30,13 @@ end
     T(-1.0), -β / mcomp[3], -α / √(mcomp[3] * mcomp[4])
 end
 
-function maxwell_tensor(m::AbstractMetricParams, x)
+function faraday_tensor(m::AbstractMetricParams, x)
     ST = SVector{4,eltype(x)}
     dA = ForwardDiff.jacobian(t -> electromagnetic_potential(m, t), SVector(x[2], x[3]))
     ∂A = hcat(zeros(ST), dA, zeros(ST))
     g = inv(metric(m, x))
     # raise first index: F^μ_κ
-
     # @tullio F[μ, κ] := g[μ, σ] * (∂A[σ, κ] - ∂A[κ, σ])
-    # SMatrix(F)
 
     # faster
     g * (∂A - ∂A')
