@@ -98,11 +98,11 @@ end
 
 function CircularOrbits.energy(m::KerrNewmanMetric, rθ, utuϕ; q = 0.0)
     V = __KerrNewmanAD.electromagnetic_potential(m, rθ)
-    -(utuϕ[1] + q * V[1])
+    -(utuϕ[1] - q * V[1])
 end
 function CircularOrbits.angmom(m::KerrNewmanMetric, rθ, utuϕ; q = 0.0)
     V = __KerrNewmanAD.electromagnetic_potential(m, rθ)
-    (utuϕ[2] + q * V[4])
+    (utuϕ[2] - q * V[4])
 end
 
 function CircularOrbits.Ω(
@@ -111,7 +111,7 @@ function CircularOrbits.Ω(
     q = 0.0,
     μ = 1.0,
     contra_rotating = false,
-    Ω_init = 1e-3,
+    Ω_init = eltype(rθ)(rθ[1] / 100),
 )
     g, jacs = Gradus.metric_jacobian(m, rθ)
     # only want the derivatives w.r.t. r
@@ -119,8 +119,8 @@ function CircularOrbits.Ω(
 
     # if q == 0.0 we have an analytic solution
     # since no maxwell tensor
-    if q == 0.0
-        return _Ω_analytic(∂rg, contra_rotating)
+    if q ≈ 0.0
+        return CircularOrbits._Ω_analytic(∂rg, contra_rotating)
     end
 
     x = SVector(0, rθ[1], rθ[2], 0)
@@ -130,13 +130,14 @@ function CircularOrbits.Ω(
         Δ = (ω^2 * ∂rg[4] + 2 * ω * ∂rg[5] + ∂rg[1])
         arg = -(ω^2 * g[4] + 2 * ω * g[5] + g[1]) / μ^2
         # analytic continuation
-        ut = sign(arg) * sqrt(abs(arg))
+        inv_ut = sign(arg) * sqrt(abs(arg))
         # combine with charge terms
-        0.5 * Δ + (F[2, 4] * ω + F[2, 1]) * g[2] * q * ut
+        0.5 * Δ + (F[2, 4] * ω + F[2, 1]) * g[2] * q * inv_ut
     end
-    T = eltype(rθ)
-    Ω₀ = (contra_rotating ? -T(Ω_init) : T(Ω_init))
-    Roots.find_zero((f, w -> ForwardDiff.derivative(f, w)), Ω₀)
+    Roots.find_zero(
+        (f, w -> ForwardDiff.derivative(f, w)),
+        contra_rotating ? -Ω_init : Ω_init,
+    )
 end
 
 function find_isco_bounds(
@@ -161,6 +162,10 @@ function find_isco_bounds(
         end
         upper_bound = r
     end
+
+    # !!! todo: this is such a terrible heuristic
+    upper_bound = max(5.0, upper_bound)
+
     # iterate in reverse with a negative step to find lower bound
     for r = upper_bound:(-step):1
         en = CircularOrbits.energy(m, r; kwargs...)
@@ -170,6 +175,15 @@ function find_isco_bounds(
     end
     # for type stability
     return T(0), T(0)
+end
+
+function ergosphere_radius(m::KerrNewmanMetric, θ; positive = true)
+    Δ = m.M^2 - m.a^2 * cos(θ)^2 - m.Q^2
+    if positive
+        m.M + sqrt(Δ)
+    else
+        m.M - sqrt(Δ)
+    end
 end
 
 export KerrNewmanMetric
