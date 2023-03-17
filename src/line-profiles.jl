@@ -6,9 +6,9 @@ struct BinnedLineProfile <: AbstractLineProfileAlgorithm end
     m::AbstractMetricParams,
     u,
     d::AbstractAccretionGeometry;
+    bins = collect(range(0.1, 1.3, 120)),
     kwargs...,
 )
-    bins = collect(range(0.1, 1.3, 120))
     lineprofile(bins, r -> r^-3, m, u, d; kwargs...)
 end
 
