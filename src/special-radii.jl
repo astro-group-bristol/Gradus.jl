@@ -152,11 +152,11 @@ end
 
 function _ergosphere_condition(m, r, θ)
     g = metric_components(m, (r, θ))
-    inv(g[1])
+    g[1]
 end
 
 function ergosphere(m::AbstractAutoDiffStaticAxisSymmetricParams; kwargs...)
-    _solve_radius_condition(m, _ergosphere_condition; init = 2.0, kwargs...)
+    _solve_radius_condition(m, _ergosphere_condition; init = 1.0, kwargs...)
 end
 
 export event_horizon, is_naked_singularity
