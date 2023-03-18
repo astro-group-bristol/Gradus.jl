@@ -11,7 +11,7 @@ render_configuration(m, position, args...; image_width, image_height, fov, kwarg
     )
 
 function rendergeodesics(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParameters{T},
     position,
     args...;
     image_width = 350,
@@ -37,7 +37,7 @@ function rendergeodesics(
 end
 
 function prerendergeodesics(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     args...;
     cache = EndpointCache(),
     image_width = 350,
@@ -76,7 +76,7 @@ function render_into_image!(
     image
 end
 
-function apply_to_image!(m::AbstractMetricParams, image, points, pf, max_time)
+function apply_to_image!(m::AbstractMetricParameters, image, points, pf, max_time)
     @inbounds Threads.@threads for i in eachindex(points)
         image[i] = pf(m, points[i], max_time)
     end
@@ -112,7 +112,7 @@ function __prerendergeodesics(
 end
 
 function _render_velocity_function(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     position,
     image_width,
     image_height,

@@ -13,7 +13,7 @@ end
 
 """
     tracegeodesics(
-        m::AbstractMetricParams,
+        m::AbstractMetricParameters,
         position,
         velocity::V,
         args...;
@@ -39,7 +39,7 @@ specifying the ensemble method to use.
 
 `solver_opts` are the common solver options in DifferentialEquations.
 """
-function tracegeodesics(m::AbstractMetricParams, args...; μ = 0.0, q = 0.0, kwargs...)
+function tracegeodesics(m::AbstractMetricParameters, args...; μ = 0.0, q = 0.0, kwargs...)
     config, solver_opts = tracing_configuration(m, args...; kwargs...)
     problem = assemble_tracing_problem(TraceGeodesic(; μ = μ, q = q), config)
     solve_tracing_problem(problem, config; solver_opts...)
@@ -177,12 +177,12 @@ end
     )
 end
 
-_init_integrator(m::AbstractMetricParams, args...; trace = TraceGeodesic(), kwargs...) =
+_init_integrator(m::AbstractMetricParameters, args...; trace = TraceGeodesic(), kwargs...) =
     _init_integrator(trace, m, args...; kwargs...)
 
 @inline function _init_integrator(
     trace::AbstractTraceParameters,
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     args...;
     kwargs...,
 )

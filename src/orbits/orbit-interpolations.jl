@@ -4,7 +4,7 @@ struct PlungingInterpolation{M,_interp_type}
     r::_interp_type
     ϕ::_interp_type
 
-    function PlungingInterpolation(m::M, sol) where {M<:AbstractMetricParams{T}} where {T}
+    function PlungingInterpolation(m::M, sol) where {M<:AbstractMetricParameters{T}} where {T}
         # sort relevant features
         I = sortperm(@view(sol[2, :]))[2:end]
 
@@ -38,7 +38,7 @@ function (pintrp::PlungingInterpolation)(r)
 end
 
 function interpolate_plunging_velocities(
-    m::AbstractMetricParams{T};
+    m::AbstractMetricParameters{T};
     max_time = 50_000,
     contra_rotating = false,
     reltol = 1e-9,

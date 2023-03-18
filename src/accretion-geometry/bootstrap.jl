@@ -1,5 +1,5 @@
 @inline function tracing_configuration(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     position,
     velocity,
     geometry::AbstractAccretionGeometry,

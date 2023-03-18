@@ -5,7 +5,7 @@ function trace_single_orbit(m, r, vϕ; max_time = 300.0, μ = 1.0, θ₀ = π / 
     tracegeodesics(m, u, v, (0.0, max_time); μ = μ, tracer_args...)
 end
 
-function measure_stability(m::AbstractMetricParams, r, vϕ; tracer_args...)
+function measure_stability(m::AbstractMetricParameters, r, vϕ; tracer_args...)
     sol = trace_single_orbit(m, r, vϕ; tracer_args...)
     rs = [sol.u[i][2] for i in eachindex(sol.u)]
     # Qs
@@ -13,7 +13,7 @@ function measure_stability(m::AbstractMetricParams, r, vϕ; tracer_args...)
 end
 
 function __solve_equitorial_circular_orbit(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     r,
     optimizer,
     lower_bound,
@@ -30,7 +30,7 @@ function __solve_equitorial_circular_orbit(
 end
 
 function solve_equitorial_circular_orbit(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     r::Number;
     lower_bound = 0.0,
     upper_bound = 1.0,
@@ -57,7 +57,7 @@ function sliding_window(func, N, lower_bound, upper_bound, lower_rate, upper_rat
 end
 
 function solve_equitorial_circular_orbit(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     r_range::Union{<:AbstractRange,<:AbstractArray};
     lower_bound = 0.0,
     upper_bound = 1.0,
@@ -86,12 +86,12 @@ function solve_equitorial_circular_orbit(
     reverse!(candidate_vϕ)
 end
 
-function trace_equitorial_circular_orbit(m::AbstractMetricParams, rs; kwargs...)
+function trace_equitorial_circular_orbit(m::AbstractMetricParameters, rs; kwargs...)
     map(zip(rs, solve_equitorial_circular_orbit(m, rs; kwargs...))) do (r, vϕ)
         trace_single_orbit(m, r, vϕ; kwargs...)
     end
 end
-function trace_equitorial_circular_orbit(m::AbstractMetricParams, r::Number; kwargs...)
+function trace_equitorial_circular_orbit(m::AbstractMetricParameters, r::Number; kwargs...)
     vϕ = solve_equitorial_circular_orbit(m, r; kwargs...)
     trace_single_orbit(m, r, vϕ; kwargs...)
 end

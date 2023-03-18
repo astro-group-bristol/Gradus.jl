@@ -31,7 +31,7 @@ include("GradusBase/GradusBase.jl")
 import .GradusBase:
     E,
     Lz,
-    AbstractMetricParams,
+    AbstractMetricParameters,
     metric_params,
     metric,
     process_solution,
@@ -39,7 +39,7 @@ import .GradusBase:
     GeodesicPoint,
     AbstractGeodesicPoint,
     vector_to_local_sky,
-    AbstractMetricParams,
+    AbstractMetricParameters,
     geodesic_eq,
     geodesic_eq!,
     constrain,
@@ -61,12 +61,12 @@ import .GradusBase:
     update_integration_parameters!,
     restrict_ensemble
 
-export AbstractMetricParams,
+export AbstractMetricParameters,
     process_solution,
     process_solution_full,
     GeodesicPoint,
     AbstractGeodesicPoint,
-    AbstractMetricParams,
+    AbstractMetricParameters,
     constrain,
     inner_radius,
     metric_components,

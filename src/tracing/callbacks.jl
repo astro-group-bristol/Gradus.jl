@@ -6,7 +6,7 @@ function terminate_with_status!(status::StatusCodes.T)
 end
 
 # this function gets specialised for different metric parameters types, e.g. for first order
-@inline function metric_callback(::AbstractMetricParams, chart::AbstractChart)
+@inline function metric_callback(::AbstractMetricParameters, chart::AbstractChart)
     chart_callback(chart)
 end
 
@@ -22,7 +22,7 @@ function merge_callbacks(cbs1, cb::C) where {C}
     end
 end
 
-function create_callback_set(m::AbstractMetricParams, cb, chart::AbstractChart)
+function create_callback_set(m::AbstractMetricParameters, cb, chart::AbstractChart)
     mcb = metric_callback(m, chart)
     merge_callbacks(mcb, cb)
 end

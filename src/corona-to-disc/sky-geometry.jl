@@ -69,7 +69,7 @@ function _cart_local_direction(θ, ϕ)
 end
 
 @inbounds function sky_angles_to_velocity(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParameters{T},
     u,
     v_source,
     θ,

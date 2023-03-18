@@ -1,5 +1,5 @@
 """
-    AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T}
+    AbstractFirstOrderMetricParams{T} <: AbstractMetricParameters{T}
 
 Abstract type for metrics using the 1st-order integration method. The 1st-order methods
 reuse the velocity vector as a parameter vector, where only element `vel[2]` and `vel[3]`
@@ -14,7 +14,7 @@ Require implementation of
 - [`Vθ`](@ref)
 - [`impact_parameters_to_vel`](@ref)
 """
-abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
+abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParameters{T} end
 
 function restrict_ensemble(
     ::AbstractFirstOrderMetricParams,

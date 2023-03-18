@@ -100,7 +100,7 @@ function image_plane(plane::CartesianPlane, u)
 end
 
 # @inline function tracing_configuration(
-#     m::AbstractMetricParams,
+#     m::AbstractMetricParameters,
 #     position,
 #     plane::AbstractImagePlane,
 #     args...;
@@ -120,7 +120,7 @@ end
 # end
 
 function promote_velfunc(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     position,
     plane::AbstractImagePlane,
     _unused,

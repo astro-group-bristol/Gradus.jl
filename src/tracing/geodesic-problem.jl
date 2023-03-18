@@ -1,6 +1,6 @@
 function tracing_ode_problem(
     ::AbstractTraceParameters,
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     pos::StaticVector,
     vel::StaticVector,
     time_domain,
@@ -44,7 +44,7 @@ function assemble_tracing_problem(
 end
 
 function wrap_arguments(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     init_pos::U,
     init_vel::V,
     _problem_func,

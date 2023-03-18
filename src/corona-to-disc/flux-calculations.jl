@@ -19,7 +19,7 @@ function lorentz_factor(g::AbstractMatrix, isco_r, u, v)
 end
 
 function flux_source_to_disc(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     model::AbstractCoronaModel,
     vdp::AbstractDiscProfile;
     kwargs...,
@@ -30,7 +30,7 @@ function flux_source_to_disc(
 end
 
 function flux_source_to_disc(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     model::AbstractCoronaModel,
     points,
     areas::AbstractVector;
@@ -79,7 +79,7 @@ function flux_source_to_disc(
 end
 
 function flux_source_to_disc(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     model::AbstractCoronaModel,
     vdp::VoronoiDiscProfile;
     kwargs...,
