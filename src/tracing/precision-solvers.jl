@@ -1,6 +1,6 @@
 """
     find_offset_for_radius(
-        m::AbstractMetricParams,
+        m::AbstractMetricParameters,
         u,
         d::AbstractAccretionDisc,
         radius,
@@ -23,7 +23,7 @@ Returns ``NaN`` if no offset exists. This may occur of the geometry is not prese
 the event horizon.
 """
 function find_offset_for_radius(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     u,
     d::AbstractAccretionDisc,
     rₑ,
@@ -78,7 +78,7 @@ end
     impact_parameters_for_radius!(
         αs::AbstractVector,
         βs::AbstractVector,
-        m::AbstractMetricParams,
+        m::AbstractMetricParameters,
         u::AbstractVector{T},
         d::AbstractAccretionDisc,
         rₑ;
@@ -96,7 +96,7 @@ This function is threaded.
 function impact_parameters_for_radius!(
     αs::AbstractVector,
     βs::AbstractVector,
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     u::AbstractVector{T},
     d::AbstractAccretionDisc,
     rₑ;
@@ -117,7 +117,7 @@ end
 
 """
     function impact_parameters_for_radius(
-        m::AbstractMetricParams,
+        m::AbstractMetricParameters,
         u::AbstractVector{T},
         d::AbstractAccretionDisc,
         radius;
@@ -129,7 +129,7 @@ Pre-allocating version of [`impact_parameters_for_radius!`](@ref), which allocat
 for `N` impact paramter pairs. Filters for `NaN` and returns `(αs, βs)`.
 """
 function impact_parameters_for_radius(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     u::AbstractVector{T},
     d::AbstractAccretionDisc,
     radius;
@@ -188,7 +188,7 @@ end
 
 function make_target_objective(
     target::SVector,
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     u0,
     args...;
     d_tol = 1e-2,
@@ -247,7 +247,7 @@ end
 
 function impact_parameters_for_target(
     target::SVector,
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     u0,
     args...;
     optimizer = NelderMead(),

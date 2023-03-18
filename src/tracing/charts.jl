@@ -49,7 +49,7 @@ end
 end
 
 function chart_for_metric(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParameters{T},
     outer_radius = 1200.0;
     closest_approach = 1.01,
 ) where {T}
@@ -59,7 +59,7 @@ function chart_for_metric(
 end
 
 function event_horizon_chart(
-    m::AbstractMetricParams;
+    m::AbstractMetricParameters;
     outer_radius = 1200.0,
     closest_approach = 1.01,
     kwargs...,

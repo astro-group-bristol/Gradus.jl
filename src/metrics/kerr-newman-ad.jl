@@ -63,24 +63,28 @@ inner_radius(m::KerrNewmanMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2 - m.Q^2
 electromagnetic_potential(m::KerrNewmanMetric, x) =
     __KerrNewmanAD.electromagnetic_potential(m, x)
 
-function geodesic_ode_problem(
+function tracing_ode_problem(
+    trace::TraceGeodesic,
     m::KerrNewmanMetric{T},
-    pos::StaticVector{S,T},
-    vel::StaticVector{S,T},
+    pos::SVector{S,T},
+    vel::SVector{S,T},
     time_domain,
-    ;
-    q = 0.0,
-    kwargs...,
+    callback,
 ) where {S,T}
+    q_μ = if trace.μ ≈ 0
+        trace.q
+    else
+        trace.q / trace.μ
+    end
     function f(u::SVector{8,T}, p, λ) where {T}
         @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
             dv = SVector{4,T}(geodesic_eq(m, x, v))
             # add maxwell part
-            dvf = if !(q ≈ 0.0)
+            dvf = if !(trace.q ≈ 0.0)
                 F = faraday_tensor(m, x)
-                q * (F * v)
+                q_μ * (F * v)
             else
-                SVector{4,T}(0, 0, 0, 0)
+                zero(SVector{4,T})
             end
             vcat(v, dv + dvf)
         end
@@ -92,7 +96,7 @@ function geodesic_ode_problem(
         u_init,
         time_domain,
         IntegrationParameters(StatusCodes.NoStatus);
-        kwargs...,
+        callback = callback,
     )
 end
 

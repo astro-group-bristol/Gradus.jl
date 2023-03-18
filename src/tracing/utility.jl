@@ -1,14 +1,14 @@
-function split_options(::AbstractMetricParams, opts)
+function split_options(::AbstractMetricParameters, opts)
     opts, (;)
 end
 
 """
-    map_impact_parameters(m::AbstractMetricParams{T}, u, α, β)
+    map_impact_parameters(m::AbstractMetricParameters{T}, u, α, β)
 
 Map impact parameters `α` and `β` to a velocity vector at some position `u` in the given metric `m`.
 """
 function map_impact_parameters(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParameters{T},
     u::SVector{S,T},
     α::N,
     β::N,
@@ -17,7 +17,7 @@ function map_impact_parameters(
 end
 
 function map_impact_parameters(
-    m::AbstractMetricParams{T},
+    m::AbstractMetricParameters{T},
     u,
     α::AbstractVector{P},
     β::AbstractVector{P},
@@ -25,12 +25,12 @@ function map_impact_parameters(
     [map_impact_parameters(m, u, a, b) for (a, b) in zip(α, β)]
 end
 
-@inline function impact_parameters_to_vel(m::AbstractMetricParams{T}, u, α, β) where {T}
+@inline function impact_parameters_to_vel(m::AbstractMetricParameters{T}, u, α, β) where {T}
     mcomp = metric_components(m, @view(u[2:3]))
     T(-1.0), -β / mcomp[3], -α / √(mcomp[3] * mcomp[4])
 end
 
-function faraday_tensor(m::AbstractMetricParams, x)
+function faraday_tensor(m::AbstractMetricParameters, x)
     ST = SVector{4,eltype(x)}
     dA = ForwardDiff.jacobian(t -> electromagnetic_potential(m, t), SVector(x[2], x[3]))
     ∂A = hcat(zeros(ST), dA, zeros(ST))

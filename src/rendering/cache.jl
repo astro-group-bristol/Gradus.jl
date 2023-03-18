@@ -16,7 +16,7 @@ struct SolutionRenderCache{M,T,G} <: AbstractRenderCache{M,T}
     geodesics::AbstractMatrix{G}
 
     function SolutionRenderCache(
-        m::AbstractMetricParams{T},
+        m::AbstractMetricParameters{T},
         max_time::T,
         height,
         width,

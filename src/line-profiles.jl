@@ -3,7 +3,7 @@ struct CunninghamLineProfile <: AbstractLineProfileAlgorithm end
 struct BinnedLineProfile <: AbstractLineProfileAlgorithm end
 
 @inline function lineprofile(
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     u,
     d::AbstractAccretionGeometry;
     bins = collect(range(0.1, 1.3, 120)),
@@ -15,7 +15,7 @@ end
 @inline function lineprofile(
     bins,
     ε::Function,
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     u,
     d::AbstractAccretionGeometry;
     algorithm::AbstractLineProfileAlgorithm = CunninghamLineProfile(),
@@ -27,7 +27,7 @@ end
 function lineprofile(
     bins,
     ε::Function,
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     u,
     d::AbstractAccretionGeometry,
     ::CunninghamLineProfile,
@@ -49,7 +49,7 @@ end
 function lineprofile(
     bins,
     ε::Function,
-    m::AbstractMetricParams,
+    m::AbstractMetricParameters,
     u,
     d::AbstractAccretionGeometry,
     ::BinnedLineProfile;

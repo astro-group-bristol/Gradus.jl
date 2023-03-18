@@ -1,12 +1,12 @@
 # for use with static, axis-symmetric metrics
 # create new abstract type for easy re-definition
 """
-    AbstractAutoDiffMetricParams{T} <: AbstractMetricParams{T}
+    AbstractAutoDiffMetricParams{T} <: AbstractMetricParameters{T}
 
 Abstract type for metrics using the 2nd-order integration method, with the automatic
 differentiation backend.
 """
-abstract type AbstractAutoDiffMetricParams{T} <: AbstractMetricParams{T} end
+abstract type AbstractAutoDiffMetricParams{T} <: AbstractMetricParameters{T} end
 
 """
     AbstractAutoDiffStaticAxisSymmetricParams{T} <: AbstractAutoDiffMetricParams{T}
@@ -74,12 +74,13 @@ inv(metric)
         g4 = g_comp[4],
         g5 = g_comp[5]
 
+        Δ = inv(g1 * g2 * g3 * g4 - (g5^2) * g2 * g3)
         SVector{5}(
-            (g2 * g3 * g4) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
-            (g1 * g3 * g4 - (g5^2) * g3) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
-            (g1 * g2 * g4 - (g5^2) * g2) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
-            (g1 * g2 * g3) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
-            (-g2 * g3 * g5) / (g1 * g2 * g3 * g4 - (g5^2) * g2 * g3),
+            (g2 * g3 * g4) * Δ,
+            (g1 * g3 * g4 - (g5^2) * g3) * Δ,
+            (g1 * g2 * g4 - (g5^2) * g2) * Δ,
+            (g1 * g2 * g3) * Δ,
+            (-g2 * g3 * g5) * Δ,
         )
     end
 end

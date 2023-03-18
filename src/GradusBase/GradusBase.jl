@@ -26,11 +26,12 @@ include("geodesic-solutions.jl")
 include("geometry.jl")
 include("physical-quantities.jl")
 
-export AbstractMetricParams, metric_params, metric, process_solution, process_solution_full
+export AbstractMetricParameters,
+    metric_params, metric, process_solution, process_solution_full
 GeodesicPoint,
 AbstractGeodesicPoint,
 vector_to_local_sky,
-AbstractMetricParams,
+AbstractMetricParameters,
 geodesic_eq,
 geodesic_eq!,
 constrain,
@@ -49,6 +50,6 @@ StatusCodes,
 AbstractIntegrationParameters,
 IntegrationParameters,
 update_integration_parameters!,
-restric_ensemble
+restrict_ensemble
 
 end # module

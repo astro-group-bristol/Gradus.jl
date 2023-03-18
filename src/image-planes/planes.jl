@@ -99,23 +99,35 @@ function image_plane(plane::CartesianPlane, u)
     αs, βs
 end
 
-function tracegeodesics(
-    m::AbstractMetricParams,
-    observer_position,
+# @inline function tracing_configuration(
+#     m::AbstractMetricParameters,
+#     position,
+#     plane::AbstractImagePlane,
+#     args...;
+#     kwargs...,
+# )
+#     αs, βs = impact_parameters(plane, position)
+#     velfunc(i) = map_impact_parameters(m, position, αs[i], βs[i])
+#     # forward remaining arguments
+#     tracing_configuration(
+#         m,
+#         position,
+#         velfunc,
+#         args...;
+#         trajectories = trajectory_count(plane),
+#         kwargs...,
+#     )
+# end
+
+function promote_velfunc(
+    m::AbstractMetricParameters,
+    position,
     plane::AbstractImagePlane,
-    args...;
-    kwargs...,
+    _unused,
 )
-    αs, βs = impact_parameters(plane, observer_position)
-    velfunc(i) = map_impact_parameters(m, observer_position, αs[i], βs[i])
-    tracegeodesics(
-        m,
-        observer_position,
-        velfunc,
-        args...;
-        trajectories = trajectory_count(plane),
-        kwargs...,
-    )
+    αs, βs = impact_parameters(plane, position)
+    velfunc(i) = map_impact_parameters(m, position, αs[i], βs[i])
+    velfunc, trajectory_count(plane)
 end
 
 export PolarPlane, CartesianPlane, image_plane
