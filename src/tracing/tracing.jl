@@ -177,17 +177,15 @@ end
     )
 end
 
-_init_integrator(m::AbstractMetricParameters, args...; trace = TraceGeodesic(), kwargs...) =
-    _init_integrator(trace, m, args...; kwargs...)
-
 @inline function _init_integrator(
-    trace::AbstractTraceParameters,
     m::AbstractMetricParameters,
     args...;
+    μ = 0.0,
+    q = 0.0,
     kwargs...,
 )
     config, solver_opts = tracing_configuration(m, args...; kwargs...)
-    problem = assemble_tracing_problem(trace, config)
+    problem = assemble_tracing_problem(TraceGeodesic(; μ = μ, q = q), config)
     _init_integrator(problem; solver_opts...)
 end
 
