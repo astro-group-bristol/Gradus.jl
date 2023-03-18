@@ -52,7 +52,11 @@ end
     ϕ = 0.0
 end
 
-function sample_position(::AbstractMetricParameters{T}, model::LampPostModel{T}, N) where {T}
+function sample_position(
+    ::AbstractMetricParameters{T},
+    model::LampPostModel{T},
+    N,
+) where {T}
     u = @SVector [T(0.0), model.h, model.θ, model.ϕ]
     fill(u, N)
 end

@@ -16,7 +16,7 @@ function test_tracer(m, u, q; kwargs...)
         image_height = 40,
         fov = 2.5,
         q = q,
-        kwargs...
+        kwargs...,
     )
     fingerprint = sum(filter(!isnan, img))
     fingerprint

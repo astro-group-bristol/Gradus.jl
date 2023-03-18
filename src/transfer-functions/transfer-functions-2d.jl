@@ -86,7 +86,12 @@ function observer_to_disc(
     points
 end
 
-function lagtransfer(m::AbstractMetricParameters, u, d::AbstractAccretionGeometry; kwargs...)
+function lagtransfer(
+    m::AbstractMetricParameters,
+    u,
+    d::AbstractAccretionGeometry;
+    kwargs...,
+)
     model = LampPostModel(h = 10.0, θ = deg2rad(0.0001))
     plane = PolarPlane(GeometricGrid(); Nr = 800, Nθ = 800, r_max = 250.0)
     lagtransfer(model, m, u, plane, d; kwargs...)

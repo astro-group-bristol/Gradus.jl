@@ -4,7 +4,10 @@ struct PlungingInterpolation{M,_interp_type}
     r::_interp_type
     ϕ::_interp_type
 
-    function PlungingInterpolation(m::M, sol) where {M<:AbstractMetricParameters{T}} where {T}
+    function PlungingInterpolation(
+        m::M,
+        sol,
+    ) where {M<:AbstractMetricParameters{T}} where {T}
         # sort relevant features
         I = sortperm(@view(sol[2, :]))[2:end]
 

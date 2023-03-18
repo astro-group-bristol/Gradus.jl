@@ -81,7 +81,8 @@ Marginally bound orbit
     \\frac{E}{\\mu} = 1.
 ```
 """
-marginally_bound_orbit(m::AbstractMetricParameters) = error("Not implemented for $(typeof(m)).")
+marginally_bound_orbit(m::AbstractMetricParameters) =
+    error("Not implemented for $(typeof(m)).")
 
 """
     event_horizon(m::AbstractMetricParameters; select = last, resolution = 100, θε = 1e-7, rmax = 5.0)

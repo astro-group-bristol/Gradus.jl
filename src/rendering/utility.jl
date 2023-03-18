@@ -12,7 +12,12 @@ function calculate_velocities(m::AbstractMetricParameters, init_pos, α_generato
     [map_impact_parameters(m, init_pos, α, β) for α in α_generator]
 end
 
-function calculate_velocities(m::AbstractMetricParameters, init_pos, α_genetator, β_generator)
+function calculate_velocities(
+    m::AbstractMetricParameters,
+    init_pos,
+    α_genetator,
+    β_generator,
+)
     [map_impact_parameters(m, init_pos, α, β) for α in α_genetator, β in β_generator]
 end
 

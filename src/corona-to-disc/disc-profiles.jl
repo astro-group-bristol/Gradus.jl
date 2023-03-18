@@ -224,7 +224,11 @@ Trims each polygon in `polys` to match the chart of the disc. Walks the edges of
 polygon until some intersection ``A`` is found. Continues walking until a second intersection
 ``B`` is found, and then interpolates an arc between ``A`` and ``B``.
 """
-function cutchart!(polys, m::AbstractMetricParameters{T}, d::AbstractAccretionDisc{T}) where {T}
+function cutchart!(
+    polys,
+    m::AbstractMetricParameters{T},
+    d::AbstractAccretionDisc{T},
+) where {T}
     rs = inner_radius(m)
     inside_radius = rs < d.inner_radius ? d.inner_radius : rs
     outside_radius = d.outer_radius
