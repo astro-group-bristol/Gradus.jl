@@ -49,6 +49,6 @@ StatusCodes,
 AbstractIntegrationParameters,
 IntegrationParameters,
 update_integration_parameters!,
-restric_ensemble
+restrict_ensemble
 
 end # module

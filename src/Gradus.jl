@@ -59,7 +59,7 @@ import .GradusBase:
     AbstractIntegrationParameters,
     IntegrationParameters,
     update_integration_parameters!,
-    restric_ensemble
+    restrict_ensemble
 
 export AbstractMetricParams,
     process_solution,
@@ -140,8 +140,13 @@ abstract type AbstractCoronaModel{T} end
 
 abstract type AbstractDirectionSampler{SkyDomain,Generator} end
 
+abstract type AbstractTraceParameters end
+
+struct EnsembleEndpointThreads end
+
 include("utils.jl")
 
+include("tracing/configuration.jl")
 include("tracing/tracing.jl")
 include("tracing/geodesic-problem.jl")
 include("tracing/constraints.jl")

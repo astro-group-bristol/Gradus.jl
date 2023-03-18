@@ -2,7 +2,7 @@ function trace_single_orbit(m, r, vϕ; max_time = 300.0, μ = 1.0, θ₀ = π / 
     # fixed in equitorial plane
     u = @SVector [0.0, r, θ₀, 0.0]
     v = @SVector [0.0, 0.0, 0.0, vϕ]
-    Gradus.tracegeodesics(m, u, v, (0.0, max_time); μ = μ, tracer_args...)
+    tracegeodesics(m, u, v, (0.0, max_time); μ = μ, tracer_args...)
 end
 
 function measure_stability(m::AbstractMetricParams, r, vϕ; tracer_args...)

@@ -1,47 +1,22 @@
-function geodesic_problem(
+@inline function tracing_configuration(
     m::AbstractMetricParams,
-    u,
-    v,
-    accretion_geometry::AbstractAccretionGeometry,
-    time_domain::NTuple{2};
+    position,
+    velocity,
+    geometry::AbstractAccretionGeometry,
+    args...;
     gtol = 1e-2,
     callback = nothing,
-    solver_opts...,
+    kwargs...,
 )
-    geodesic_problem(
+    _tracing_configuration(
         m,
-        u,
-        v,
-        time_domain;
-        callback = add_collision_callback(callback, accretion_geometry; gtol = gtol),
-        solver_opts...,
+        position,
+        velocity,
+        geometry,
+        args...;
+        callback = add_collision_callback(callback, geometry; gtol = gtol),
+        kwargs...,
     )
-end
-
-function rendergeodesics(
-    m::AbstractMetricParams,
-    u,
-    accretion_geometry::AbstractAccretionGeometry,
-    max_time::Number;
-    callback = nothing,
-    gtol = 1e-2,
-    kwargs...,
-)
-    cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
-    rendergeodesics(m, u, max_time; callback = cbs, kwargs...)
-end
-
-function prerendergeodesics(
-    m::AbstractMetricParams,
-    init_pos,
-    accretion_geometry::AbstractAccretionGeometry,
-    max_time::Number;
-    callback = nothing,
-    gtol = 1e-2,
-    kwargs...,
-)
-    cbs = add_collision_callback(callback, accretion_geometry; gtol = gtol)
-    prerendergeodesics(m, init_pos, max_time; callback = cbs, kwargs...)
 end
 
 function add_collision_callback(callback, accretion_geometry; gtol)

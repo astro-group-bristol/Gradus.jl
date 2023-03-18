@@ -16,7 +16,7 @@ Require implementation of
 """
 abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetricParams{T} end
 
-function restric_ensemble(
+function restrict_ensemble(
     ::AbstractFirstOrderMetricParams,
     ensemble::EnsembleEndpointThreads,
 )
@@ -111,20 +111,20 @@ function update_integration_parameters!(
     p
 end
 
-function geodesic_ode_problem(
+function tracing_ode_problem(
+    ::TraceGeodesic,
     m::AbstractFirstOrderMetricParams{T},
     pos::StaticVector{S,T},
     vel::StaticVector{S,T},
-    time_domain;
-    q = 0.0,
-    kwargs...,
+    time_domain,
+    callback,
 ) where {S,T}
     L, Q = calc_lq(m, pos, vel)
     ODEProblem{false}(
         pos,
         time_domain,
         make_parameters(L, Q, vel[2], T);
-        kwargs...,
+        callback = callback,
     ) do u, p, λ
         SVector(four_velocity(u, m, p)...)
     end

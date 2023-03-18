@@ -76,4 +76,4 @@ and some point `u`.
 """
 metric(m::AbstractMetricParams, u) = error("Not implemented for metric $(typeof(m))")
 
-restric_ensemble(::AbstractMetricParams, ensemble) = ensemble
+restrict_ensemble(::AbstractMetricParams, ensemble) = ensemble
