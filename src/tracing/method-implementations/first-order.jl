@@ -25,19 +25,20 @@ function restrict_ensemble(
 end
 
 @with_kw struct FirstOrderGeodesicPoint{T,V,P} <: AbstractGeodesicPoint{T}
+    "Return code of the integrator for this geodesic."
     status::StatusCodes.T
-    "Start time"
-    t1::T
-    "End time"
-    t2::T
-    "Start position"
-    u1::V
-    "End position"
-    u2::V
-    "Start velocity"
-    v1::V
-    "End velocity"
-    v2::V
+    "Start affine time"
+    λ_min::T
+    "End affine time"
+    λ_max::T
+    "Start four position"
+    x_init::V
+    "End four position"
+    x::V
+    "Start four velocity"
+    v_init::V
+    "End four velocity"
+    v::V
     "First order extra parameter"
     p::P
 end
