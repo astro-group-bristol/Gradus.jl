@@ -2,7 +2,7 @@ using Test
 using Gradus
 
 m = KerrMetric(1.0, 0.2)
-d = PolishDoughnut(m, 12.0, 0.21);
+d = PolishDoughnut(m, rₖ = 12.0, n = 0.21);
 d.inner_radius;
 
 r = collect(range(10.0, 15.0, 200))
