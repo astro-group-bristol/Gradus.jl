@@ -36,7 +36,7 @@ function find_offset_for_radius(
 )
     measure = gp -> begin
         r = if gp.status == StatusCodes.IntersectedWithGeometry
-            gp.u2[2]
+            gp.x[2]
         else
             0.0
         end
@@ -175,7 +175,7 @@ function jacobian_∂αβ_∂gr(
         gp = _solve_reinit!(integ, vcat(u, v))
         g = redshift_pf(m, gp, max_time)
         # return r and g*
-        @SVector [gp.u2[2], g]
+        @SVector [gp.x[2], g]
     end
 
     # choice between FiniteDifferences and FiniteDiff is tricky

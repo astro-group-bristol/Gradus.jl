@@ -20,7 +20,7 @@ function E(metric::AbstractMatrix{T}, v) where {T}
     T(@inbounds -(metric[1, 1] * v[1] + metric[1, 4] * v[4]))
 end
 E(m::AbstractMetricParameters, u, v) = E(metric(m, u), v)
-E(m::AbstractMetricParameters, gp::AbstractGeodesicPoint) = E(m, gp.u2, gp.v2)
+E(m::AbstractMetricParameters, gp::AbstractGeodesicPoint) = E(m, gp.x, gp.v)
 
 
 """
@@ -36,4 +36,4 @@ function Lz(metric::AbstractMatrix{T}, v) where {T}
     T(@inbounds metric[4, 4] * v[4] + metric[1, 4] * v[1])
 end
 Lz(m::AbstractMetricParameters, u, v) = Lz(metric(m, u), v)
-Lz(m::AbstractMetricParameters, gp::AbstractGeodesicPoint) = Lz(m, gp.u2, gp.v2)
+Lz(m::AbstractMetricParameters, gp::AbstractGeodesicPoint) = Lz(m, gp.x, gp.v)

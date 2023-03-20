@@ -67,7 +67,7 @@ function has_intersect(m::MeshAccretionGeometry{T}, line_element) where {T}
     false
 end
 
-function build_collision_callback(g::MeshAccretionGeometry{T}; gtol) where {T}
+function geometry_collision_callback(g::MeshAccretionGeometry{T}; gtol) where {T}
     DiscreteCallback(
         (u, λ, integrator) ->
             intersects_geometry(g, cartesian_line_element(u, integrator), integrator),

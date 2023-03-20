@@ -105,7 +105,7 @@ Supertype of all accretion geometry. Concrete sub-types must minimally implement
 - [`in_nearby_region`](@ref)
 - [`has_intersect`](@ref)
 
-Alternativey, for more control, either [`intersects_geometry`](@ref) or [`build_collision_callback`](@ref)
+Alternativey, for more control, either [`intersects_geometry`](@ref) or [`geometry_collision_callback`](@ref)
 may be implemented for a given geometry type.
 
 Geometry intersection calculations are performed by strapping discrete callbacks to the integration
@@ -154,6 +154,7 @@ include("tracing/charts.jl")
 include("tracing/callbacks.jl")
 include("tracing/utility.jl")
 include("tracing/precision-solvers.jl")
+include("tracing/radiative-transfer-problem.jl")
 
 include("tracing/method-implementations/auto-diff.jl")
 
@@ -204,6 +205,7 @@ include("redshift.jl")
 include("const-point-functions.jl")
 
 include("line-profiles.jl")
+include("accretion-geometry/polish-doughnut.jl")
 
 export AbstractPointFunction,
     AbstractCacheStrategy,

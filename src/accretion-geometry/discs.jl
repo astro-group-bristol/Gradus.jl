@@ -1,4 +1,3 @@
-
 """
     distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...)
 
@@ -37,20 +36,10 @@ function Gradus.cross_section(d::TopHatDisc, u)
 end
 ```
 """
-cross_section(d::AbstractThickAccretionDisc, u) = error("Not implemented for $(typeof(d)).")
-
-function build_collision_callback(
-    g::AbstractAccretionDisc{T};
-    gtol,
-    interp_points = 8,
-) where {T}
-    ContinuousCallback(
-        (u, λ, integrator) -> distance_to_disc(g, u; gtol = gtol),
-        terminate_with_status!(StatusCodes.IntersectedWithGeometry),
-        interp_points = interp_points,
-        save_positions = (true, false),
-    )
-end
+cross_section(d::AbstractThickAccretionDisc, u4) =
+    error("Not implemented for $(typeof(d)).")
+r_cross_section(d::AbstractThickAccretionDisc, r::Number) =
+    cross_section(d, SVector(0.0, r, π / 2, 0.0))
 
 """
     struct GeometricThinDisc{T} <: AbstractAccretionDisc{T}

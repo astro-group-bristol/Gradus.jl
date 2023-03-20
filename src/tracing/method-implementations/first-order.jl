@@ -111,7 +111,7 @@ function update_integration_parameters!(
     p
 end
 
-function tracing_ode_problem(
+function geodesic_ode_problem(
     ::TraceGeodesic,
     m::AbstractFirstOrderMetricParams{T},
     pos::StaticVector{S,T},

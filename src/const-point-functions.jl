@@ -24,7 +24,7 @@ A [`FilterPointFunction`](@ref) that filters geodesics that termined early (i.e.
 Default: `NaN`.
 """
 const filter_early_term =
-    FilterPointFunction((m, gp, max_time; kwargs...) -> gp.t2 < max_time, NaN)
+    FilterPointFunction((m, gp, max_time; kwargs...) -> gp.λ_max < max_time, NaN)
 
 """
     filter_intersected(m::AbstractMetricParameters, gp::AbstractGeodesicPoint, max_time)
@@ -42,7 +42,7 @@ const filter_intersected = FilterPointFunction(
 
 A [`PointFunction`](@ref) returning the affine integration time at the endpoint of the geodesic.
 """
-const affine_time = PointFunction((m, gp, max_time; kwargs...) -> gp.t2)
+const affine_time = PointFunction((m, gp, max_time; kwargs...) -> gp.λ_max)
 
 """
     shadow(m::AbstractMetricParameters, gp::AbstractGeodesicPoint, max_time)

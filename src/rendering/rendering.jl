@@ -1,5 +1,17 @@
-render_configuration(m, position, args...; image_width, image_height, fov, kwargs...) =
-    tracing_configuration(
+function render_configuration(
+    m,
+    position,
+    args...;
+    image_width,
+    image_height,
+    fov,
+    μ = 0.0,
+    q = 0.0,
+    trace = TraceGeodesic(; μ = μ, q = q),
+    kwargs...,
+)
+    config, solver_opts = tracing_configuration(
+        trace,
         m,
         position,
         _render_velocity_function(m, position, image_width, image_height, fov),
@@ -9,6 +21,8 @@ render_configuration(m, position, args...; image_width, image_height, fov, kwarg
         save_on = false,
         kwargs...,
     )
+    trace, config, solver_opts
+end
 
 function rendergeodesics(
     m::AbstractMetricParameters{T},
@@ -20,7 +34,7 @@ function rendergeodesics(
     ensemble = EnsembleEndpointThreads(),
     kwargs...,
 ) where {T}
-    config, solver_opts = render_configuration(
+    trace, config, solver_opts = render_configuration(
         m,
         position,
         args...;
@@ -31,7 +45,7 @@ function rendergeodesics(
         kwargs...,
     )
     image = zeros(T, (image_height, image_width))
-    render_into_image!(image, config; solver_opts...)
+    render_into_image!(image, trace, config; solver_opts...)
     α, β = impact_axes(image_width, image_height, fov)
     α, β, image
 end
@@ -45,7 +59,7 @@ function prerendergeodesics(
     fov = 3.0,
     kwargs...,
 )
-    config, solver_opts = render_configuration(
+    trace, config, solver_opts = render_configuration(
         m,
         position,
         args...;
@@ -55,6 +69,7 @@ function prerendergeodesics(
         kwargs...,
     )
     __prerendergeodesics(
+        trace,
         config,
         cache;
         image_height = image_height,
@@ -65,12 +80,13 @@ end
 
 function render_into_image!(
     image,
+    trace::AbstractTraceParameters,
     config::TracingConfiguration;
-    pf = PointFunction((m, gp, λ_max) -> gp.t2) ∘
-         FilterPointFunction((m, gp, λ_max; kwargs...) -> gp.t2 < λ_max, NaN),
+    pf = PointFunction((m, gp, λ_max) -> gp.λ_max) ∘
+         FilterPointFunction((m, gp, λ_max; kwargs...) -> gp.λ_max < λ_max, NaN),
     solver_opts...,
 )
-    sol_or_points = __render_geodesics(config; solver_opts...)
+    sol_or_points = __render_geodesics(trace, config; solver_opts...)
     points = sol_or_points_to_points(sol_or_points)
     apply_to_image!(config.metric, image, points, pf, config.λ_domain[2])
     image
@@ -83,24 +99,26 @@ function apply_to_image!(m::AbstractMetricParameters, image, points, pf, max_tim
 end
 
 function __prerendergeodesics(
+    trace::AbstractTraceParameters,
     config::TracingConfiguration,
     ::SolutionCache;
     image_height,
     image_width,
     kwargs...,
 )
-    simsols = __render_geodesics(config; kwargs...)
+    simsols = __render_geodesics(trace, config; kwargs...)
     SolutionRenderCache(config.m, config.λ_domain[2], image_height, image_width, simsols.u)
 end
 
 function __prerendergeodesics(
+    trace::AbstractTraceParameters,
     config::TracingConfiguration,
     ::EndpointCache;
     image_height,
     image_width,
     kwargs...,
 )
-    sol_or_points = __render_geodesics(config; kwargs...)
+    sol_or_points = __render_geodesics(trace, config; kwargs...)
     points = sol_or_points_to_points(sol_or_points)
     EndpointRenderCache(
         config.m,
@@ -130,9 +148,8 @@ function _render_velocity_function(
 end
 
 function __render_geodesics(
+    trace::AbstractTraceParameters,
     config::TracingConfiguration;
-    μ = 0.0,
-    q = 0.0,
     verbose = false,
     solver_opts...,
 )
@@ -140,7 +157,7 @@ function __render_geodesics(
         println("+ Starting trace...")
     end
 
-    problem = assemble_tracing_problem(TraceGeodesic(; μ = μ, q = q), config)
+    problem = assemble_tracing_problem(trace, config)
     progress_bar = init_progress_bar("Rendering:", config.trajectories, verbose)
     sol_or_points =
         solve_tracing_problem(problem, config; progress_bar = progress_bar, solver_opts...)

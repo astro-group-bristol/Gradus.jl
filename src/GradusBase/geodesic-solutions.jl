@@ -38,41 +38,47 @@ abstract type AbstractGeodesicPoint{T} end
 $(FIELDS)
 
 """
-struct GeodesicPoint{T,V<:AbstractVector} <: AbstractGeodesicPoint{T}
+struct GeodesicPoint{T,V<:AbstractVector,A} <: AbstractGeodesicPoint{T}
     "Return code of the integrator for this geodesic."
     status::StatusCodes.T
     "Start affine time"
-    t1::T
+    λ_min::T
     "End affine time"
-    t2::T
+    λ_max::T
     "Start four position"
-    u1::V
+    x_init::V
     "End four position"
-    u2::V
+    x::V
     "Start four velocity"
-    v1::V
+    v_init::V
     "End four velocity"
-    v2::V
-    # we don't store the problem parameters
-    # and can create a specialistion for the carter method
-    # then provide dispatched accessor methods
-    # p::P
+    v::V
+    "Auxillary values (polarisation, intensities, etc.)"
+    aux::A
 end
 
 function Base.show(io::IO, gp::GeodesicPoint)
-    print(io, "GeodesicPoint($(gp.u2...))")
+    print(io, "GeodesicPoint($(gp.x...))")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", gp::GeodesicPoint)
-    text = """GeodesicPoint:
-      . status : $(gp.status)
-      . t1     : $(gp.t1)
-      . t2     : $(gp.t2)
-      . u1     : $(gp.u1)
-      . v1     : $(gp.v1)
-      . u2     : $(gp.u2)
-      . v2     : $(gp.v2)
-    """
+    # text = """GeodesicPoint:
+    #   . status : $(gp.status)
+    #   . λ_min  : $(gp.λ_min)
+    #   . λ_max  : $(gp.λ_max)
+    #   . x_init : $(gp.x_init)
+    #   . v_init : $(gp.v_init)
+    #   . x      : $(gp.x)
+    #   . v      : $(gp.v)
+    # """
+    text =
+        "GeodesicPoint:\n" * join(
+            (
+                rpad("  . $f", 12) * ": $(getproperty(gp, f))" for
+                f in fieldnames(typeof(gp))
+            ),
+            "\n",
+        )
     print(io, text)
 end
 
@@ -96,7 +102,16 @@ function process_solution(_, sol::SciMLBase.AbstractODESolution{T}) where {T}
         v_end = SVector{4,T}(us[end][5:8])
         t_end = ts[end]
 
-        GeodesicPoint(sol.prob.p.status, t_start, t_end, u_start, u_end, v_start, v_end)
+        GeodesicPoint(
+            sol.prob.p.status,
+            t_start,
+            t_end,
+            u_start,
+            u_end,
+            v_start,
+            v_end,
+            eltype(us) <: SVector{9} ? us[end][9] : nothing,
+        )
     end
 end
 

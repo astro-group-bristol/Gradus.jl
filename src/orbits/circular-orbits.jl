@@ -23,23 +23,25 @@ MuladdMacro.@muladd begin
         _Ω_analytic(∂rg, contra_rotating)
     end
 
-    function ut_uϕ(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
-        rθ,
-        ginv = inverse_metric_components(metric_components(m, rθ));
-        kwargs...,
-    )
-        𝛺 = Ω(m, rθ; kwargs...)
-
+    function ut_uϕ(𝛺::Number, ginv)
         𝒜 = -(𝛺 * ginv[1] - ginv[5])
         ℬ = (𝛺 * ginv[5] - ginv[4])
 
         denom = ℬ^2 * ginv[1] + 2 * 𝒜 * ℬ * ginv[5] + 𝒜^2 * ginv[4]
-        d = -1 * sign(denom) * sqrt(inv(abs(denom)))
+        d = -sign(denom) * sqrt(inv(abs(denom)))
         ut = ℬ * d
         uϕ = 𝒜 * d
 
         SVector(ut, uϕ)
+    end
+
+    function ut_uϕ(
+        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        rθ,
+        ginv = inverse_metric_components(m, rθ);
+        kwargs...,
+    )
+        ut_uϕ(Ω(m, rθ; kwargs...), ginv)
     end
 
     # these 4 functions can be overwritten for a specific
@@ -92,7 +94,7 @@ MuladdMacro.@muladd begin
         contra_rotating = false,
         kwargs...,
     )
-        ginv = inverse_metric_components(metric_components(m, rθ))
+        ginv = inverse_metric_components(m, rθ)
         utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating, kwargs...)
         vt(m, ginv, rθ, utuϕ)
     end
@@ -105,7 +107,7 @@ MuladdMacro.@muladd begin
         contra_rotating = false,
         kwargs...,
     )
-        ginv = inverse_metric_components(metric_components(m, rθ))
+        ginv = inverse_metric_components(m, rθ)
         utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating, kwargs...)
         vϕ(m, rθ, ginv, utuϕ)
     end
@@ -117,7 +119,7 @@ MuladdMacro.@muladd begin
         rθ::SVector;
         kwargs...,
     )
-        ginv = inverse_metric_components(metric_components(m, rθ))
+        ginv = inverse_metric_components(m, rθ)
         utuϕ = ut_uϕ(m, rθ, ginv; kwargs...)
 
         SVector(vt(m, rθ, ginv, utuϕ), 0, 0, vϕ(m, rθ, ginv, utuϕ))
