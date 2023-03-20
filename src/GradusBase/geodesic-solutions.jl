@@ -38,7 +38,7 @@ abstract type AbstractGeodesicPoint{T} end
 $(FIELDS)
 
 """
-struct GeodesicPoint{T,V<:AbstractVector,A} <: AbstractGeodesicPoint{T}
+struct GeodesicPoint{T,A} <: AbstractGeodesicPoint{T}
     "Return code of the integrator for this geodesic."
     status::StatusCodes.T
     "Start affine time"
@@ -46,13 +46,13 @@ struct GeodesicPoint{T,V<:AbstractVector,A} <: AbstractGeodesicPoint{T}
     "End affine time"
     λ_max::T
     "Start four position"
-    x_init::V
+    x_init::SVector{4,T}
     "End four position"
-    x::V
+    x::SVector{4,T}
     "Start four velocity"
-    v_init::V
+    v_init::SVector{4,T}
     "End four velocity"
-    v::V
+    v::SVector{4,T}
     "Auxillary values (polarisation, intensities, etc.)"
     aux::A
 end
