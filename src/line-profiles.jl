@@ -76,10 +76,7 @@ function lineprofile(
         solver_args...,
     )
 
-    I = [
-        (i.status == StatusCodes.IntersectedWithGeometry) && (minrₑ <= i.x[2] <= maxrₑ)
-        for i in gps
-    ]
+    I = intersected_with_geometry(gps)
     points = @views gps[I]
     areas = unnormalized_areas(plane)[I]
 
