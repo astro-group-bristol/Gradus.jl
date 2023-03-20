@@ -3,10 +3,7 @@ using ..StaticArrays
 using ..MuladdMacro
 
 @muladd @fastmath begin
-    Σ(r, a, θ) = begin
-        cosθ = cos(θ)
-        r^2 + a^2 * cosθ^2
-    end
+    Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
     Δ(r, R, a) = r^2 + a^2 - R * r
 
     # the way this function must be defined is a little complex

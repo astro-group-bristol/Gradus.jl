@@ -114,6 +114,7 @@ end
 end
 
 @inline function tracing_configuration(
+    ::AbstractTraceParameters,
     m::AbstractMetricParameters,
     position,
     velocity,

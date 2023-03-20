@@ -63,7 +63,7 @@ inner_radius(m::KerrNewmanMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2 - m.Q^2
 electromagnetic_potential(m::KerrNewmanMetric, x) =
     __KerrNewmanAD.electromagnetic_potential(m, x)
 
-function tracing_ode_problem(
+function geodesic_ode_problem(
     trace::TraceGeodesic,
     m::KerrNewmanMetric{T},
     pos::SVector{S,T},

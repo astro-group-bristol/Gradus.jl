@@ -60,7 +60,7 @@ function source_to_disc(
     )
     points = filter(i -> i.status == StatusCodes.IntersectedWithGeometry, all_points)
     # sort by radius
-    sort!(points, by = i -> i.u2[2])
+    sort!(points, by = i -> i.x[2])
     points
 end
 
@@ -149,15 +149,15 @@ function lagtransfer(
 end
 
 function _interpolate_profile(tf::LagTransferFunction)
-    times = map(i -> i.u2[1], tf.source_to_disc)
-    radii = map(i -> i.u2[2], tf.source_to_disc)
+    times = map(i -> i.x[1], tf.source_to_disc)
+    radii = map(i -> i.x[2], tf.source_to_disc)
     DataInterpolations.LinearInterpolation(times, radii)
 end
 
 function binflux(
     tf::LagTransferFunction;
     redshift = ConstPointFunctions.redshift(tf.metric, tf.u),
-    ε = (gp) -> gp.u2[2]^(-3),
+    ε = (gp) -> gp.x[2]^(-3),
     E₀ = 6.4,
     profile = RadialDiscProfile(ε, tf),
     kwargs...,

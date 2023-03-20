@@ -76,15 +76,13 @@ function lineprofile(
         solver_args...,
     )
 
-    I = [
-        (i.status == StatusCodes.IntersectedWithGeometry) && (minrₑ <= i.u2[2] <= maxrₑ) for i in gps
-    ]
+    I = intersected_with_geometry(gps, x -> (minrₑ <= x[2] <= maxrₑ))
     points = @views gps[I]
     areas = unnormalized_areas(plane)[I]
 
     # calculate physical flux
     g = redshift_pf.(m, points, λ_max)
-    r = [p.u2[2] for p in points]
+    r = [p.x[2] for p in points]
 
     f = @. ε(r) * g^3 * areas
     # bin

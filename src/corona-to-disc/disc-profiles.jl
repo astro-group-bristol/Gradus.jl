@@ -22,18 +22,18 @@ end
 
 function RadialDiscProfile(f, tf::LagTransferFunction)
     let gps = tf.source_to_disc
-        times = map(i -> i.u2[1], gps)
-        radii = map(i -> i.u2[2], gps)
+        times = map(i -> i.x[1], gps)
+        radii = map(i -> i.x[2], gps)
         t = DataInterpolations.LinearInterpolation(times, radii)
         # wrap geodesic point wrapper
-        RadialDiscProfile(f, gp -> t(gp.u2[2]) + gp.u2[1])
+        RadialDiscProfile(f, gp -> t(gp.x[2]) + gp.x[1])
     end
 end
 
 function RadialDiscProfile(tf::LagTransferFunction; grid = InverseGrid(), N = 1000)
     let gps = tf.source_to_disc
-        times = map(i -> i.u2[1], gps)
-        radii = map(i -> i.u2[2], gps)
+        times = map(i -> i.x[1], gps)
+        radii = map(i -> i.x[2], gps)
         bins = collect(grid(extrema(radii)..., N))
         t = DataInterpolations.LinearInterpolation(times, radii)
 
@@ -56,7 +56,7 @@ function RadialDiscProfile(tf::LagTransferFunction; grid = InverseGrid(), N = 10
         end
         ε = DataInterpolations.LinearInterpolation(counts, bins)
         # wrap geodesic point wrappers
-        RadialDiscProfile(gp -> ε(gp.u2[2]), gp -> t(gp.u2[2]) + gp.u2[1])
+        RadialDiscProfile(gp -> ε(gp.x[2]), gp -> t(gp.x[2]) + gp.x[1])
     end
 end
 

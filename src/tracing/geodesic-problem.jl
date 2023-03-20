@@ -1,8 +1,8 @@
-function tracing_ode_problem(
-    ::AbstractTraceParameters,
+function geodesic_ode_problem(
+    ::TraceGeodesic,
     m::AbstractMetricParameters,
-    pos::StaticVector,
-    vel::StaticVector,
+    pos,
+    vel,
     time_domain,
     callback,
 )
@@ -32,16 +32,13 @@ function assemble_tracing_problem(
     cbs = create_callback_set(config.metric, config.callback, config.chart)
     # wrap a function that can build the ODE problems
     function _problem_builder(x, v)
-        tracing_ode_problem(trace, config.metric, x, v, config.λ_domain, cbs)
+        geodesic_ode_problem(trace, config.metric, x, v, config.λ_domain, cbs)
     end
-    wrap_arguments(
-        config.metric,
-        config.position,
-        config.velocity,
-        _problem_builder,
-        trace.μ,
-    )
+    wrap_arguments(config, _problem_builder, trace.μ)
 end
+
+wrap_arguments(config, f, μ) =
+    wrap_arguments(config.metric, config.position, config.velocity, f, μ)
 
 function wrap_arguments(
     m::AbstractMetricParameters,

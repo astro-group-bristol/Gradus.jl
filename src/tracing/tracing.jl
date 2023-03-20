@@ -39,9 +39,24 @@ specifying the ensemble method to use.
 
 `solver_opts` are the common solver options in DifferentialEquations.
 """
-function tracegeodesics(m::AbstractMetricParameters, args...; μ = 0.0, q = 0.0, kwargs...)
-    config, solver_opts = tracing_configuration(m, args...; kwargs...)
-    problem = assemble_tracing_problem(TraceGeodesic(; μ = μ, q = q), config)
+function tracegeodesics(
+    m::AbstractMetricParameters,
+    args...;
+    μ = 0.0,
+    q = 0.0,
+    trace = TraceGeodesic(; μ = μ, q = q),
+    kwargs...,
+)
+    tracegeodesics(trace, m, args...; kwargs...)
+end
+function tracegeodesics(
+    trace::AbstractTraceParameters,
+    m::AbstractMetricParameters,
+    args...;
+    kwargs...,
+)
+    config, solver_opts = tracing_configuration(trace, m, args...; kwargs...)
+    problem = assemble_tracing_problem(trace, config)
     solve_tracing_problem(problem, config; solver_opts...)
 end
 
@@ -184,8 +199,9 @@ end
     q = 0.0,
     kwargs...,
 )
-    config, solver_opts = tracing_configuration(m, args...; kwargs...)
-    problem = assemble_tracing_problem(TraceGeodesic(; μ = μ, q = q), config)
+    trace = TraceGeodesic(; μ = μ, q = q)
+    config, solver_opts = tracing_configuration(trace, m, args...; kwargs...)
+    problem = assemble_tracing_problem(trace, config)
     _init_integrator(problem; solver_opts...)
 end
 

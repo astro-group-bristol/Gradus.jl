@@ -76,11 +76,11 @@ end
 function energy_ratio(m, gps, u_src, v_src)
     g_src = metric(m, u_src)
     map(gps) do gp
-        @tullio e_src := g_src[i, j] * gp.v1[i] * v_src[j]
+        @tullio e_src := g_src[i, j] * gp.v_init[i] * v_src[j]
         # at the disc
-        g_disc = metric(m, gp.u2)
-        v_disc = CircularOrbits.fourvelocity(m, SVector(gp.u2[2], gp.u2[3]))
-        @tullio e_disc := g_disc[i, j] * gp.v2[i] * v_disc[j]
+        g_disc = metric(m, gp.x)
+        v_disc = CircularOrbits.fourvelocity(m, SVector(gp.x[2], gp.x[3]))
+        @tullio e_disc := g_disc[i, j] * gp.v[i] * v_disc[j]
         # ratio g = E_source / E_disc
         e_src / e_disc
     end

@@ -239,10 +239,10 @@ function _redshift_guard(
     gp::FirstOrderGeodesicPoint{T},
     max_time,
 ) where {T}
-    RedshiftFunctions.redshift_function(m, gp.u2, gp.p, gp.t2)
+    RedshiftFunctions.redshift_function(m, gp.x, gp.p, gp.λ_max)
 end
 function _redshift_guard(m::AbstractMetricParameters, gp, max_time)
-    RedshiftFunctions.redshift_function(m, gp.u2, gp.v2)
+    RedshiftFunctions.redshift_function(m, gp.x, gp.v)
 end
 
 """
@@ -263,7 +263,7 @@ function interpolate_redshift(plunging_interpolation, u)
     v_obs = @SVector [1.0, 0.0, 0.0, 0.0]
     closure =
         (m, gp, max_time) -> begin
-            let r = gp.u2[2]
+            let r = gp.x[2]
                 v_disc = if r < isco
                     # plunging region
                     vtemp = plunging_interpolation(r)
@@ -276,9 +276,9 @@ function interpolate_redshift(plunging_interpolation, u)
                 end
 
                 # get metric matrix at position on disc
-                g = metric(plunging_interpolation.m, gp.u2)
-                @tullio E_disc := -g[i, j] * gp.v2[i] * v_disc[j]
-                @tullio E_obs := -g_obs[i, j] * gp.v1[i] * v_obs[j]
+                g = metric(plunging_interpolation.m, gp.x)
+                @tullio E_disc := -g[i, j] * gp.v[i] * v_disc[j]
+                @tullio E_obs := -g_obs[i, j] * gp.v_init[i] * v_obs[j]
                 E_obs / E_disc
             end
         end

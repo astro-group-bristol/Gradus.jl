@@ -39,6 +39,10 @@ end
     include("line-profiles/test-binning.jl")
 end
 
+@time @testset "geometry" verbose = true begin
+    include("discs/test-polish-doughnut.jl")
+end
+
 # little bit of aqua
 Aqua.test_undefined_exports(Gradus)
 Aqua.test_unbound_args(Gradus)
