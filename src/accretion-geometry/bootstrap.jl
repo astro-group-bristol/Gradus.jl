@@ -58,9 +58,6 @@ function geometry_collision_callback(
 end
 
 
-function intersected_with_geometry(gps::AbstractArray{<:AbstractGeodesicPoint})
-    [
-        (i.status == StatusCodes.IntersectedWithGeometry) && (minrₑ <= i.x[2] <= maxrₑ)
-        for i in gps
-    ]
+function intersected_with_geometry(gps::AbstractArray{<:AbstractGeodesicPoint}, limiter)
+    [(i.status == StatusCodes.IntersectedWithGeometry) && limiter(i.x) for i in gps]
 end

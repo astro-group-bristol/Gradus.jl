@@ -76,7 +76,7 @@ function lineprofile(
         solver_args...,
     )
 
-    I = intersected_with_geometry(gps)
+    I = intersected_with_geometry(gps, x -> (minrₑ <= x[2] <= maxrₑ))
     points = @views gps[I]
     areas = unnormalized_areas(plane)[I]
 
