@@ -94,7 +94,7 @@ function isobar(
     r[I], z[I]
 end
 
-end # module
+end # module
 
 struct PolishDoughnut{T,F} <: AbstractThickAccretionDisc{T}
     inner_radius::T
@@ -113,7 +113,7 @@ function PolishDoughnut(
 )
     inner_radius = __PolishDoughnut.innermost_radius(m, rₖ, n; init_r = init_r)
     r, z = __PolishDoughnut.isobar(m, inner_radius, rₖ, n; kwargs...)
-    # interpolate cross section
+    # interpolate cross section
     f = DataInterpolations.LinearInterpolation(z, r)
     outer_radius = maximum(r)
     PolishDoughnut(inner_radius, outer_radius, rₖ, n, f)

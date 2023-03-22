@@ -39,7 +39,7 @@ end
 # most of these functions are utility methods for GeometryBasics
 # which may or may not be included. GeometryBasics seems to be about
 # to undergo major breaking changes, which would refine the package
-# so may wait before using another libraries version of these:
+# so may wait before using another libraries version of these:
 
 getorientation(line::GeometryBasics.AbstractPolygon, p) = getorientation(line.points, p)
 

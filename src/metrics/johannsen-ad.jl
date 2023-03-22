@@ -36,12 +36,12 @@ end
 end # module
 
 """
-    struct JohannsenMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct JohannsenMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
 
 The Johannsen (20xx) metric.
 $(FIELDS)
 """
-@with_kw struct JohannsenMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct JohannsenMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
     @deftype T
     "Black hole mass."
     M = 1.0

@@ -22,7 +22,7 @@ using StaticArrays
             filter(i -> i.prob.p.status == StatusCodes.IntersectedWithGeometry, simsols.u)
         sd_endpoints = map(sol -> process_solution(m, sol), intersected_simsols)
 
-        # test ensemble solution constructor
+        # test ensemble solution constructor
         vdp1 = VoronoiDiscProfile(m, d, simsols)
         @test true
 
@@ -30,12 +30,12 @@ using StaticArrays
         vdp2 = VoronoiDiscProfile(m, d, sd_endpoints)
         @test true
 
-        # check areas
+        # check areas
         areas1 = getareas(vdp1)
         areas2 = getareas(vdp2)
 
         # values computed under visual inspection
-        # last computed 03/10/22: updated sampling method
+        # last computed 03/10/22: updated sampling method
         expected_areas = [
             75.64302307389167,
             114.78829414215679,

@@ -28,7 +28,7 @@ using ..StaticArrays
     elseif corona_radius ≤ r ≤ corona_radius + δr
         t = (r - corona_radius) / δr
         # use an arbitrarily steep smooth interpolation
-        # this one isn't perfect, but does a good job
+        # this one isn't perfect, but does a good job
         k = atan(1e5t) * 2 / π
         n = k + n * (1 - k)
     else
@@ -41,13 +41,13 @@ end
 end # module
 
 """
-    struct KerrRefractive{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct KerrRefractive{T} <: AbstractStaticAxisSymmetricParameters{T}
 
 Kerr metric in Boyer-Lindquist coordintes with a path-length ansatz, equivalent to a refractive
 index `n`, within the coronal radius `corona_radius`.
 $(FIELDS)
 """
-@with_kw struct KerrRefractive{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct KerrRefractive{T} <: AbstractStaticAxisSymmetricParameters{T}
     @deftype T
     "Black hole mass."
     M = 1.0

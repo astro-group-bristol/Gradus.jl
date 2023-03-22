@@ -28,7 +28,7 @@ Here is a possible implementation for Gradus.jl:
 ```julia
 using Gradus
 
-@with_kw struct EddingtonFinkelsteinAD{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct EddingtonFinkelsteinAD{T} <: AbstractStaticAxisSymmetricParameters{T}
     M = 1.0
 end
 
@@ -48,7 +48,7 @@ GradusBase.inner_radius(m::KerrMetric{T}) where {T} = 2 * m.M
 ```
 A few notes:
 - We use `@with_kw` from [Parameters.jl](https://github.com/mauro3/Parameters.jl) to define various utility constructors for us.
-- [`GradusBase.metric_components`](@ref) must return five elements for [`AbstractAutoDiffStaticAxisSymmetricParams`](@ref), where the last element is the off-axis ``g_{t \phi}`` matrix element, which in this case is always 0.
+- [`GradusBase.metric_components`](@ref) must return five elements for [`AbstractStaticAxisSymmetricParameters`](@ref), where the last element is the off-axis ``g_{t \phi}`` matrix element, which in this case is always 0.
 - The [`GradusBase.inner_radius`](@ref) function defines the inner-radius of integration chart. This defines where the integration should terminate to avoid running indefinitely, and is, in this case, set to the event-horizon of our metric.
 
 That's all we need! This metric is now ready to be traced in the usual way.
@@ -76,5 +76,5 @@ Gradus.Vθ
 ```@docs
 AbstractAutoDiffMetricParams
 metric_components
-AbstractAutoDiffStaticAxisSymmetricParams
+AbstractStaticAxisSymmetricParameters
 ```

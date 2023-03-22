@@ -16,7 +16,7 @@ using StaticArrays
     )
 
     @testset "iscos" begin
-        # last computed 04/06/2022: tests with --math-mode=ieee
+        # last computed 04/06/2022: tests with --math-mode=ieee
         for (m, expected) in zip(
             all_metrics,
             [

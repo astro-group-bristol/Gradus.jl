@@ -28,12 +28,12 @@ end
 end # module
 
 """
-    struct JohannsenPsaltisMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct JohannsenPsaltisMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
 
 Johannsen and Psaltis 2011
 $(FIELDS)
 """
-@with_kw struct JohannsenPsaltisMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct JohannsenPsaltisMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
     @deftype T
     "Black hole mass."
     M = 1.0

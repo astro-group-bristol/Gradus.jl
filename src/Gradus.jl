@@ -40,8 +40,7 @@ import .GradusBase:
     AbstractGeodesicPoint,
     vector_to_local_sky,
     AbstractMetricParameters,
-    geodesic_eq,
-    geodesic_eq!,
+    geodesic_equation,
     constrain,
     inner_radius,
     metric_type,
@@ -206,6 +205,8 @@ include("const-point-functions.jl")
 
 include("line-profiles.jl")
 include("accretion-geometry/polish-doughnut.jl")
+
+include("plotting-recipes.jl")
 
 export AbstractPointFunction,
     AbstractCacheStrategy,

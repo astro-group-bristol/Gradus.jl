@@ -54,7 +54,7 @@ function _logistic_grid(min, max, N; k = 0.5)
     (f(y) for y in range(-10, 10, N))
 end
 
-end # module
+end # module
 
 using .Grids
 

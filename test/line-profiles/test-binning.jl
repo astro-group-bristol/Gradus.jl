@@ -20,18 +20,18 @@ x, y = lineprofile(
     callback = domain_upper_hemisphere(),
 )
 
-# should be around .3 - .4
+# should be around .3 - .4
 g_low = x[findfirst(>(0), y)]
 @test g_low ≈ 0.355 atol = 0.05
 
-# should be 1.15 - 1.25
+# should be 1.15 - 1.25
 g_high = x[end-findfirst(>(0), reverse(y))]
 @test g_high ≈ 1.2 atol = 0.05
 
-# area under the curve
+# area under the curve
 @test sum(y) ≈ 1.0
 
-# test for other metrics
+# test for other metrics
 m = JohannsenPsaltisMetric(M = 1.0, a = 0.6, ϵ3 = 2.0)
 d = GeometricThinDisc(Gradus.isco(m), 250.0, π / 2)
 x, y = lineprofile(
@@ -45,13 +45,13 @@ x, y = lineprofile(
     callback = domain_upper_hemisphere(),
 )
 
-# should be around 0.27
+# should be around 0.27
 g_low = x[findfirst(>(0), y)]
 @test g_low ≈ 0.27 atol = 0.05
 
-# should be 1.15 - 1.25
+# should be 1.15 - 1.25
 g_high = x[end-findfirst(>(0), reverse(y))]
 @test g_high ≈ 1.2 atol = 0.05
 
-# area under the curve
+# area under the curve
 @test sum(y) ≈ 1.0

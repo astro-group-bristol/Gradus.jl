@@ -80,7 +80,7 @@ for a discussion.
         w < s + t + u && return false, float(0)
     elseif w < -ϵ
         return false, float(0)
-    else # w == 0
+    else # w == 0
         D = Q₂ .- V₃
         s = D ⋅ W₁
         if s > ϵ

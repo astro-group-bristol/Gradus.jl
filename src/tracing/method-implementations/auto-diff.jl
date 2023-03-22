@@ -9,7 +9,7 @@ differentiation backend.
 abstract type AbstractAutoDiffMetricParams{T} <: AbstractMetricParameters{T} end
 
 """
-    AbstractAutoDiffStaticAxisSymmetricParams{T} <: AbstractAutoDiffMetricParams{T}
+    AbstractStaticAxisSymmetricParameters{T} <: AbstractAutoDiffMetricParams{T}
 
 Specialisation for static, axis-symmetric metrics. Here, the metric is of the form
 ```math
@@ -27,13 +27,12 @@ Required implementations:
 - [`inner_radius`](@ref)
 - [`metric_components`](@ref)
 """
-abstract type AbstractAutoDiffStaticAxisSymmetricParams{T} <:
-              AbstractAutoDiffMetricParams{T} end
+abstract type AbstractStaticAxisSymmetricParameters{T} <: AbstractAutoDiffMetricParams{T} end
 
 """
     $(TYPEDSIGNATURES)
 
-Interface for [`AbstractAutoDiffStaticAxisSymmetricParams`](@ref). Should return
+Interface for [`AbstractStaticAxisSymmetricParameters`](@ref). Should return
 a vector or tuple with the elements
 ```math
 \\left(
@@ -41,7 +40,7 @@ a vector or tuple with the elements
 \\right).
 ```
 """
-metric_components(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ) =
+metric_components(m::AbstractStaticAxisSymmetricParameters, rθ) =
     error("Not implemented for $(typeof(m)).")
 
 """
@@ -84,7 +83,7 @@ inv(metric)
         )
     end
 end
-inverse_metric_components(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ) =
+inverse_metric_components(m::AbstractStaticAxisSymmetricParameters, rθ) =
     inverse_metric_components(metric_components(m, rθ))
 
 
@@ -233,7 +232,7 @@ Limitations:
 end
 
 @inline function constrain(
-    m::AbstractAutoDiffStaticAxisSymmetricParams{T},
+    m::AbstractStaticAxisSymmetricParameters{T},
     u,
     v;
     μ::T = T(0.0),
@@ -244,7 +243,7 @@ end
 end
 
 """
-    metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams{T}, rθ)
+    metric_jacobian(m::AbstractStaticAxisSymmetricParameters{T}, rθ)
 
 Calculate the value and Jacobian elements of the metric with respect to ``r`` and ``\\theta``.
 
@@ -261,7 +260,7 @@ f(rθ), J
 ```
 but non-allocating.
 """
-function metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ)
+function metric_jacobian(m::AbstractStaticAxisSymmetricParameters, rθ)
     f = x -> metric_components(m, x)
     T = typeof(ForwardDiff.Tag(f, eltype(rθ)))
     ydual = ForwardDiff.ForwardDiffStaticArraysExt.static_dual_eval(T, f, rθ)
@@ -271,8 +270,8 @@ function metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ)
     )
 end
 
-@inbounds function geodesic_eq(
-    m::AbstractAutoDiffStaticAxisSymmetricParams,
+@inbounds function geodesic_equation(
+    m::AbstractStaticAxisSymmetricParameters,
     u::AbstractArray{T},
     v::AbstractArray{T},
 ) where {T}
@@ -286,8 +285,7 @@ end
     compute_geodesic_equation(ginv_comps, jacs[:, 1], jacs[:, 2], v)
 end
 
-
-function metric(m::AbstractAutoDiffStaticAxisSymmetricParams, u)
+function metric(m::AbstractStaticAxisSymmetricParameters, u)
     rθ = (u[2], u[3])
     comps = metric_components(m, rθ)
     @SMatrix [
@@ -298,4 +296,4 @@ function metric(m::AbstractAutoDiffStaticAxisSymmetricParams, u)
     ]
 end
 
-export AbstractAutoDiffMetricParams, AbstractAutoDiffStaticAxisSymmetricParams
+export AbstractAutoDiffMetricParams, AbstractStaticAxisSymmetricParameters

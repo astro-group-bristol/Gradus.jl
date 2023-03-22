@@ -71,7 +71,7 @@ function flux_source_to_disc(
 
         γ = lorentz_factor(g_2, isco_r, gp.x, v_disc)
         f_sd = inv(areas[i] / total_area)
-        # total reflected flux 
+        # total reflected flux 
         g_sd^(1 + α) * E_d^(-α) * dA * f_sd / γ
     end
 

@@ -176,7 +176,7 @@ regular_pdotu_inv(L, M, r, a, θ) =
 
     u_disc = @SVector [1 / disc_norm, 0, 0, Ωₑ(m.M, u[2], m.a) / disc_norm]
 
-    # use Tullio to do the einsum
+    # use Tullio to do the einsum
     @tullio g := -metric_matrix[i, j] * u_disc[i] * v[j]
     1 / g
 end

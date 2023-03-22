@@ -1,7 +1,7 @@
 module CircularOrbits
 import ..StaticArrays: SVector, @SVector
 import ..Gradus:
-    AbstractAutoDiffStaticAxisSymmetricParams,
+    AbstractStaticAxisSymmetricParameters,
     metric_components,
     metric_jacobian,
     inverse_metric_components,
@@ -17,7 +17,7 @@ MuladdMacro.@muladd begin
         end
     end
 
-    function Ω(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ; contra_rotating = false)
+    function Ω(m::AbstractStaticAxisSymmetricParameters, rθ; contra_rotating = false)
         _, jacs = metric_jacobian(m, rθ)
         ∂rg = jacs[:, 1]
         _Ω_analytic(∂rg, contra_rotating)
@@ -36,7 +36,7 @@ MuladdMacro.@muladd begin
     end
 
     function ut_uϕ(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        m::AbstractStaticAxisSymmetricParameters,
         rθ,
         ginv = inverse_metric_components(m, rθ);
         kwargs...,
@@ -45,51 +45,47 @@ MuladdMacro.@muladd begin
     end
 
     # these 4 functions can be overwritten for a specific
-    # metric, e.g. Kerr-Newman
-    function energy(::AbstractAutoDiffStaticAxisSymmetricParams, rθ, utuϕ)
+    # metric, e.g. Kerr-Newman
+    function energy(::AbstractStaticAxisSymmetricParameters, rθ, utuϕ)
         -utuϕ[1]
     end
-    function angmom(::AbstractAutoDiffStaticAxisSymmetricParams, rθ, utuϕ)
+    function angmom(::AbstractStaticAxisSymmetricParameters, rθ, utuϕ)
         utuϕ[2]
     end
     # this component doesn't actually seem to correctly constrain the geodesic
     # to being light- / null-like, or timelike. maybe revist? else call constrain before returning
-    vt(::AbstractAutoDiffStaticAxisSymmetricParams, rθ, ginv, utuϕ) =
+    vt(::AbstractStaticAxisSymmetricParameters, rθ, ginv, utuϕ) =
         ginv[1] * utuϕ[1] + ginv[5] * utuϕ[2]
-    vϕ(::AbstractAutoDiffStaticAxisSymmetricParams, rθ, ginv, utuϕ) =
+    vϕ(::AbstractStaticAxisSymmetricParameters, rθ, ginv, utuϕ) =
         ginv[5] * utuϕ[1] + ginv[4] * utuϕ[2]
 
     # dispatch helpers
     energy(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        m::AbstractStaticAxisSymmetricParameters,
         rθ::SVector;
         contra_rotating = false,
         kwargs...,
     ) = energy(m, rθ, ut_uϕ(m, rθ; contra_rotating = contra_rotating, kwargs...); kwargs...)
     angmom(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        m::AbstractStaticAxisSymmetricParameters,
         rθ::SVector;
         contra_rotating = false,
         kwargs...,
     ) = angmom(m, rθ, ut_uϕ(m, rθ; contra_rotating = contra_rotating, kwargs...); kwargs...)
-    energy(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+    energy(m::AbstractStaticAxisSymmetricParameters, r::Number; kwargs...) =
         energy(m, SVector(r, π / 2); kwargs...)
-    angmom(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+    angmom(m::AbstractStaticAxisSymmetricParameters, r::Number; kwargs...) =
         angmom(m, SVector(r, π / 2); kwargs...)
 
-    function energy_angmom(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
-        rθ::SVector;
-        kwargs...,
-    )
+    function energy_angmom(m::AbstractStaticAxisSymmetricParameters, rθ::SVector; kwargs...)
         utuϕ = ut_uϕ(m, rθ; kwargs...)
         energy(m, rθ, utuϕ; kwargs...), angmom(m, rθ, utuϕ; kwargs...)
     end
-    energy_angmom(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+    energy_angmom(m::AbstractStaticAxisSymmetricParameters, r::Number; kwargs...) =
         energy_angmom(m, SVector(r, π / 2); kwargs...)
 
     function vt(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        m::AbstractStaticAxisSymmetricParameters,
         rθ::SVector;
         contra_rotating = false,
         kwargs...,
@@ -98,11 +94,11 @@ MuladdMacro.@muladd begin
         utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating, kwargs...)
         vt(m, ginv, rθ, utuϕ)
     end
-    vt(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+    vt(m::AbstractStaticAxisSymmetricParameters, r::Number; kwargs...) =
         vt(m, SVector(r, π / 2); kwargs...)
 
     function vϕ(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        m::AbstractStaticAxisSymmetricParameters,
         rθ::SVector;
         contra_rotating = false,
         kwargs...,
@@ -111,24 +107,20 @@ MuladdMacro.@muladd begin
         utuϕ = ut_uϕ(m, rθ, ginv; contra_rotating = contra_rotating, kwargs...)
         vϕ(m, rθ, ginv, utuϕ)
     end
-    vϕ(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+    vϕ(m::AbstractStaticAxisSymmetricParameters, r::Number; kwargs...) =
         vϕ(m, SVector(r, π / 2); kwargs...)
 
-    function fourvelocity(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
-        rθ::SVector;
-        kwargs...,
-    )
+    function fourvelocity(m::AbstractStaticAxisSymmetricParameters, rθ::SVector; kwargs...)
         ginv = inverse_metric_components(m, rθ)
         utuϕ = ut_uϕ(m, rθ, ginv; kwargs...)
 
         SVector(vt(m, rθ, ginv, utuϕ), 0, 0, vϕ(m, rθ, ginv, utuϕ))
     end
-    fourvelocity(m::AbstractAutoDiffStaticAxisSymmetricParams, r::Number; kwargs...) =
+    fourvelocity(m::AbstractStaticAxisSymmetricParameters, r::Number; kwargs...) =
         fourvelocity(m, SVector(r, π / 2); kwargs...)
 
     function plunging_fourvelocity(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
+        m::AbstractStaticAxisSymmetricParameters,
         rθ;
         contra_rotating = false,
         kwargs...,
@@ -146,13 +138,10 @@ MuladdMacro.@muladd begin
 
         @SVector[_vt, -sqrt(abs(nom / denom)), 0.0, _vϕ]
     end
-    plunging_fourvelocity(
-        m::AbstractAutoDiffStaticAxisSymmetricParams,
-        r::Number;
-        kwargs...,
-    ) = plunging_fourvelocity(m, @SVector([r, π / 2]); kwargs...)
+    plunging_fourvelocity(m::AbstractStaticAxisSymmetricParameters, r::Number; kwargs...) =
+        plunging_fourvelocity(m, @SVector([r, π / 2]); kwargs...)
 
 end # mulladd macro
-end # module
+end # module
 
 export CircularOrbits

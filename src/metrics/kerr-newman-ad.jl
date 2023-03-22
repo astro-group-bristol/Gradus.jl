@@ -35,9 +35,9 @@ end
 end # module
 
 """
-    struct KerrNewmanMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct KerrNewmanMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
 """
-struct KerrNewmanMetric{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+struct KerrNewmanMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
     "Black hole mass."
     M::T
     "Black hole spin."
@@ -78,7 +78,7 @@ function geodesic_ode_problem(
     end
     function f(u::SVector{8,T}, p, λ) where {T}
         @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
-            dv = SVector{4,T}(geodesic_eq(m, x, v))
+            dv = SVector{4,T}(geodesic_equation(m, x, v))
             # add maxwell part
             dvf = if !(trace.q ≈ 0.0)
                 F = faraday_tensor(m, x)
@@ -121,8 +121,8 @@ function CircularOrbits.Ω(
     # only want the derivatives w.r.t. r
     ∂rg = jacs[:, 1]
 
-    # if q == 0.0 we have an analytic solution
-    # since no maxwell tensor
+    # if q == 0.0 we have an analytic solution
+    # since no maxwell tensor
     if q ≈ 0.0
         return CircularOrbits._Ω_analytic(∂rg, contra_rotating)
     end
@@ -177,7 +177,7 @@ function find_isco_bounds(
             return r, upper_bound
         end
     end
-    # for type stability
+    # for type stability
     return T(0), T(0)
 end
 

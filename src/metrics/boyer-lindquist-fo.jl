@@ -161,7 +161,7 @@ function sinΦsinΨ(Σ₀, sinθ, A₀, Δ₀, S₀, r, a, α, β)
         ((α * Σ₀) / √A₀) /
         sqrt(β^2 + (α + a * sinθ)^2 + (A₀ * S₀^2 - (r^2 + a^2 + a * α * sinθ)^2) / Δ₀)
 
-    # calc 2
+    # calc 2
     sinΨ = -(α * Σ₀ * √Δ₀) / (S₀ * A₀ * sinΦ)
 
     # return

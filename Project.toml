@@ -1,7 +1,7 @@
 name = "Gradus"
 uuid = "c5b7b928-ea15-451c-ad6f-a331a0f3e4b7"
 authors = ["fjebaker <fergusbkr@gmail.com>"]
-version = "0.3.1"
+version = "0.3.2"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -20,6 +20,7 @@ OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"

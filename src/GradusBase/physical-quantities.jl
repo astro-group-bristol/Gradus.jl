@@ -1,8 +1,8 @@
 
 # both energy and angular momentum
 # assume time only coupled to radial coordinate
-# need to think of a nice way to keep this efficient
-# whilst allowing metrics with other couplings
+# need to think of a nice way to keep this efficient
+# whilst allowing metrics with other couplings
 
 """
     E(m::AbstractMatrix{T}, v)

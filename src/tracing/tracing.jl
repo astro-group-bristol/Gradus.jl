@@ -14,30 +14,49 @@ end
 """
     tracegeodesics(
         m::AbstractMetricParameters,
-        position,
-        velocity::V,
-        args...;
-        solver = Tsit5(),
-        ensemble = EnsembleThreads(),
-        trajectories = nothing,
-        μ = 0.0,
-        chart = chart_for_metric(m),
-        callback = nothing,
-        solver_opts...,
+        x, v, [disc], λ_domain;
+        kwargs...
+    )
+    tracegeodesics(
+        m::AbstractMetricParameters,
+        x, p::AbstractImagePlane, [disc], λ_domain;
+        kwargs...
+    )
+    tracegeodesics(
+        m::AbstractMetricParameters,
+        model::AbstractCoronaModel, [disc], λ_domain;
+        kwargs...
     )
 
-Integrate a geodesic for metric parameterised by `m`, for some initial positions and velocities.
-The positions and velocities may be
+Trace a geodesic in the spacetime given by `m` with initial four-position `x` and four-velocity `v`.
+- If both `x` and `v` are arrays of `SVector`, then many geodesics are traced in parallel.
+- If `x` is an `SVector` and the third argument is of type [`AbstractImagePlane`](@ref), then every geodesic
+of the image plane is traced in parallel.
+- If `x` is an SVector and `v` is a function, then `trajectories` must be specified as a `kwarg`, and tracing is performed
+in parallel.
 
-  - a single position and velocity in the form of a vector of numbers,
-  - a collection of positions and velocities, as either a vector of vectors, or as a matrix,
-  - a single position and a function with signature ``vel_func(i)`` which returns a four-velocity.
+The functional form for the velocity must map an index to a velocity
 
-The matrix specification reads each corresponding column as the initial position and velocity. When a collection of
-positions and velocities is supplied, this method dispatched `EnsembleProblem`, offering `ensemble` as a `solver_opts`,
-specifying the ensemble method to use.
+```julia
+function velocity_function(i)
+    return SVector(...)
+end
+```
 
-`solver_opts` are the common solver options in DifferentialEquations.
+The possible keyword arguments are
+
+```julia
+    chart = chart_for_metric(m),
+    callback = nothing,
+    solver = Tsit5(),
+    ensemble = EnsembleThreads(),
+    trajectories = nothing,
+    abstol = 1e-9,
+    reltol = 1e-9,
+    solver_opts...,
+```
+
+with `solver_opts` being forwarded to the [SciML `solve` function](https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/#solver_options).
 """
 function tracegeodesics(
     m::AbstractMetricParameters,
@@ -197,9 +216,9 @@ end
     args...;
     μ = 0.0,
     q = 0.0,
+    trace = TraceGeodesic(; μ = μ, q = q),
     kwargs...,
 )
-    trace = TraceGeodesic(; μ = μ, q = q)
     config, solver_opts = tracing_configuration(trace, m, args...; kwargs...)
     problem = assemble_tracing_problem(trace, config)
     _init_integrator(problem; solver_opts...)

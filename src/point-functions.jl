@@ -82,6 +82,9 @@ struct FilterPointFunction{F,T} <: AbstractPointFunction
     default::T
 end
 
+# todo: this should type specialize better
+FilterPointFunction(f) = FilterPointFunction(f, NaN)
+
 @inline function (pf::AbstractPointFunction)(
     m::AbstractMetricParameters{T},
     gp::GradusBase.AbstractGeodesicPoint{T},
@@ -126,4 +129,9 @@ end
     end
 end
 
-export apply, PointFunction, FilterPointFunction
+
+# some utility methods
+FilterStatusCode(code::StatusCodes.T, default = NaN) =
+    FilterPointFunction((m, gp, λ) -> gp.status == code, default)
+
+export apply, PointFunction, FilterPointFunction, FilterStatusCode

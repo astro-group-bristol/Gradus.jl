@@ -9,20 +9,27 @@ Map impact parameters `α` and `β` to a velocity vector at some position `u` in
 """
 function map_impact_parameters(
     m::AbstractMetricParameters{T},
-    u::SVector{S,T},
+    x::SVector{S,T},
     α::N,
     β::N,
 ) where {S,T,N<:Number}
-    SVector{S,T}(T(0.0), impact_parameters_to_vel(m, u, α, β)...)
+    SVector{S,T}(T(0.0), impact_parameters_to_vel(m, x, α, β)...)
 end
 
 function map_impact_parameters(
     m::AbstractMetricParameters{T},
-    u,
+    x,
     α::AbstractVector{P},
     β::AbstractVector{P},
 ) where {T,P}
-    [map_impact_parameters(m, u, a, b) for (a, b) in zip(α, β)]
+    [map_impact_parameters(m, x, a, b) for (a, b) in zip(α, β)]
+end
+
+function map_impact_parameters(m::AbstractMetricParameters, x, α::AbstractVector, β::Number)
+    [map_impact_parameters(m, x, a, β) for a in α]
+end
+function map_impact_parameters(m::AbstractMetricParameters, x, α::Number, β::AbstractVector)
+    [map_impact_parameters(m, x, α, b) for b in β]
 end
 
 @inline function impact_parameters_to_vel(m::AbstractMetricParameters{T}, u, α, β) where {T}
