@@ -9,7 +9,7 @@ using StaticArrays
     @testset "solve_equitorial_circular_orbit" begin
         # only implemented for the BoyerLindquist metrics at the moment
         # expected is sum of the circular orbit vϕ
-        # last updated: 22 Apr 2022
+        # last updated: 22 Apr 2022
         r_range = 6.0:0.5:10.0
         for (m, expected) in [
             (KerrMetric(M = 1.0, a = 0.0), 0.5432533297869712),
@@ -27,7 +27,7 @@ using StaticArrays
         Gradus.isco(m)
         r_range = 6.0:0.1:10.0
         simsols = trace_equitorial_circular_orbit(m, r_range)
-        # smoke test passed
+        # smoke test passed
         @test true
     end
 end

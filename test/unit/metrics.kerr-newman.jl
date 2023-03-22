@@ -2,7 +2,7 @@ using Test
 using Gradus
 
 # test that tracing with charged test-particles actually
-# produces different results (/ is being executed correctly)
+# produces different results (/ is being executed correctly)
 m = KerrNewmanMetric(M = 1.0, a = 0.6, Q = 0.6)
 u = SVector(0.0, 1000.0, π / 2, 0.0)
 

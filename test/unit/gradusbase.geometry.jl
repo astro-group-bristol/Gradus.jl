@@ -31,7 +31,7 @@ using Tullio
 
         m_mat = Gradus.metric(m, u)
         @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
-        # ensure it gives minkowski
+        # ensure it gives minkowski
         @test isapprox(res, minkowski, atol = 1e-13)
     end
 
@@ -44,7 +44,7 @@ using Tullio
 
             m_mat = Gradus.metric(m, u)
             @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
-            # ensure it gives minkowski
+            # ensure it gives minkowski
             @test isapprox(res, minkowski, atol = 1e-13)
         end
     end
