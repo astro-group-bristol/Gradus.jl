@@ -20,7 +20,7 @@ sols = tracegeodesics(
     abstol = 1e-12, reltol = 1e-12
 )
 
-# only use the subset of the solution we&#39;re plotting
+# only use the subset of the solution we&#39;re plotting
 trange = range(990, 1035, 5000)
 
 p = plot(projection = :polar, legend = false, range = (0, 10))
@@ -75,7 +75,7 @@ u = @SVector [0.0, 1000.0, deg2rad(60), 0.0]
 d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
 
 # define point function which filters geodesics that intersected the accretion disc
-# and use those to calculate redshift
+# and use those to calculate redshift
 pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected
 
 α, β, img = rendergeodesics(
@@ -93,7 +93,7 @@ pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersect
 
 heatmap(α, β, img)</code></pre><p><img src="../example-redshift.png" alt/></p><h2 id="Redshift-line-profile"><a class="docs-heading-anchor" href="#Redshift-line-profile">Redshift line-profile</a><a id="Redshift-line-profile-1"></a><a class="docs-heading-anchor-permalink" href="#Redshift-line-profile" title="Permalink"></a></h2><p>Using the redshift example, we can bin a redshift line-profile using <a href="https://juliastats.org/StatsBase.jl/stable/empirical/#StatsBase.Histogram">StatsBase.jl</a>. We&#39;ll calculate the iron line redshift profile, with a delta-emission at 6.4 keV.</p><pre><code class="language-julia hljs">using StatsBase
 
-# remove nans and flatten the redshift image
+# remove nans and flatten the redshift image
 redshift_data = filter(!isnan, vec(img))
 
 # transpose to iron-line
@@ -106,7 +106,7 @@ plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)</code></pre><p><i
 u = @SVector [0.0, 1000.0, deg2rad(40), 0.0]
 m = KerrMetric(1.0, 0.998)
 
-# maximal integration radius
+# maximal integration radius
 maxrₑ = 50.0
 
 # emissivity function
@@ -158,7 +158,7 @@ m = KerrMetric(1.0, 0.0)
 u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
 
 # define the disc shape -- return a negative number 
-# where the disc should not be intersected, else the cross 
+# where the disc should not be intersected, else the cross 
 # sectional height
 d = ThickDisc() do u
     r = u[2]
@@ -193,7 +193,7 @@ p = plot(aspect_ratio=1)
 
 for r in [3.0, 4.0, 5.0, 6.0]
     v = CircularOrbits.fourvelocity(m, r)
-    # trace the circular orbit
+    # trace the circular orbit
     path = tracegeodesics(m, @SVector([0.0, r, π/2, 0.0]), v, (0.0, 300.0), μ = 1.0)
     r = [path(t)[2] for t in range(0.0, 100, 200)]
     ϕ = [path(t)[4] for t in range(0.0, 100, 200)]
@@ -222,7 +222,7 @@ for a in [0.0, 0.4, 0.6]
     plot!(rs, energy, label = &quot;a=$a&quot;)
 end
 
-# calculate the ISCO as a function of spin
+# calculate the ISCO as a function of spin
 data = map(range(-1.0, 0.8, 100)) do a
     m = KerrMetric(M = 1.0, a = a)
     r = Gradus.isco(m)
@@ -321,4 +321,4 @@ for r in radii
     α, β = impact_parameters_for_radius(m, u, d, r, N=100)
     plot!(p, α, β)
 end
-p</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../overview/accretion-geometry/">« Accretion geometry</a><a class="docs-footer-nextpage" href="../../overview/geodesic-integration/">Geodesic integration »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Saturday 18 March 2023 21:21">Saturday 18 March 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+p</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../overview/accretion-geometry/">« Accretion geometry</a><a class="docs-footer-nextpage" href="../../overview/geodesic-integration/">Geodesic integration »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Wednesday 22 March 2023 22:58">Wednesday 22 March 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

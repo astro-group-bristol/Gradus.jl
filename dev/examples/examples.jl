@@ -21,7 +21,7 @@ function ex_tracing()
 
     sols = tracegeodesics(m, us, vs, (0.0, 2000.0); abstol = 1e-12, reltol = 1e-12)
 
-    # only use the subset of the solution we're plotting
+    # only use the subset of the solution we're plotting
     trange = range(990, 1035, 5000)
 
     p = plot(projection = :polar, legend = false, range = (0, 10))
@@ -47,7 +47,7 @@ function ex_redshift()
     d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
 
     # define point function which filters geodesics that intersected the accretion disc
-    # and use those to calculate redshift
+    # and use those to calculate redshift
     pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected
 
     α, β, img = rendergeodesics(
@@ -67,7 +67,7 @@ function ex_redshift()
     savefig(p, "example-redshift.png")
 
 
-    # remove nans and flatten the redshift image
+    # remove nans and flatten the redshift image
     redshift_data = filter(!isnan, vec(img))
 
     # transpose to iron-line
@@ -118,7 +118,7 @@ function ex_circular_orbits()
 
     for r in [3.0, 4.0, 5.0, 6.0]
         v = CircularOrbits.fourvelocity(m, r)
-        # trace the circular orbit
+        # trace the circular orbit
         path = tracegeodesics(m, @SVector([0.0, r, π / 2, 0.0]), v, (0.0, 300.0), μ = 1.0)
         r = [path(t)[2] for t in range(0.0, 100, 200)]
         ϕ = [path(t)[4] for t in range(0.0, 100, 200)]
@@ -150,7 +150,7 @@ function ex_isco()
         plot!(rs, energy, label = "a=$a")
     end
 
-    # calculate the ISCO as a function of spin
+    # calculate the ISCO as a function of spin
     data = map(range(-1.0, 0.8, 100)) do a
         m = KerrMetric(M = 1.0, a = a)
         r = Gradus.isco(m)
@@ -261,7 +261,7 @@ function ex_doughnut()
     u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
 
     # define the disc shape -- return a negative number 
-    # where the disc should not be intersected, else the cross 
+    # where the disc should not be intersected, else the cross 
     # sectional height
     d = ThickDisc() do u
         r = u[2]
@@ -294,7 +294,7 @@ function ex_lineprofile()
     u = @SVector [0.0, 1000.0, deg2rad(40), 0.0]
     m = KerrMetric(1.0, 0.998)
 
-    # maximal integration radius
+    # maximal integration radius
     maxrₑ = 50.0
 
     # emissivity function
