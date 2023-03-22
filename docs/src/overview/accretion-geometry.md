@@ -15,6 +15,8 @@ Gradus.in_nearby_region
 Gradus.has_intersect
 ```
 
+## Adding new accretion geometry
+
 ## Accretion discs
 
 ```@docs
