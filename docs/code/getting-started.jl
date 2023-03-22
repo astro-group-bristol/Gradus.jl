@@ -264,9 +264,3 @@ plot(g, kk)
 plot!(g2, kk2)
 
 # ---------------------------------------------------------
-
-# ---------------------------------------------------------
-# FIG_DIR = "/Users/lx21966/Developer/devenv/dev/Gradus/docs/src/figs/"
-# p = plot(p, dpi = 400)
-# savefig(p, FIG_DIR * "getting-started-9-polar-plane.svg")
-# savefig(p, FIG_DIR * "getting-started-8-jm-weird-redshift.png")
