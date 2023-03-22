@@ -53,7 +53,7 @@ function lineprofile(
     u,
     d::AbstractAccretionGeometry,
     ::BinnedLineProfile;
-    plane = PolarPlane(GeometricGrid(); Nr = 250, Nθ = 1300, r_max = 50.0),
+    plane = PolarPlane(GeometricGrid(); Nr = 450, Nθ = 1300, r_max = 50.0),
     λ_max = 2 * u[2],
     redshift_pf = ConstPointFunctions.redshift(m, u),
     verbose = false,

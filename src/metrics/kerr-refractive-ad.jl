@@ -41,13 +41,13 @@ end
 end # module
 
 """
-    struct KerrRefractive{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+    struct KerrRefractive{T} <: AbstractStaticAxisSymmetricParameters{T}
 
 Kerr metric in Boyer-Lindquist coordintes with a path-length ansatz, equivalent to a refractive
 index `n`, within the coronal radius `corona_radius`.
 $(FIELDS)
 """
-@with_kw struct KerrRefractive{T} <: AbstractAutoDiffStaticAxisSymmetricParams{T}
+@with_kw struct KerrRefractive{T} <: AbstractStaticAxisSymmetricParameters{T}
     @deftype T
     "Black hole mass."
     M = 1.0

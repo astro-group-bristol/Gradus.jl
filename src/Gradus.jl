@@ -206,6 +206,8 @@ include("const-point-functions.jl")
 include("line-profiles.jl")
 include("accretion-geometry/polish-doughnut.jl")
 
+include("plotting-recipes.jl")
+
 export AbstractPointFunction,
     AbstractCacheStrategy,
     AbstractRenderCache,
