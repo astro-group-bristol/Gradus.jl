@@ -69,7 +69,7 @@ function radiative_transfer_ode_problem(
             k = SVector{4,T}(@view(u[5:8])),
             I = u[9]
 
-            dk = SVector{4,T}(geodesic_eq(m, x, k))
+            dk = SVector{4,T}(geodesic_equation(m, x, k))
             dI = if p.within_geometry
                 radiative_transfer(m, x, k, geometry, I, trace.ν, invν3)
             else

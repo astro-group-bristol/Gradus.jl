@@ -5,7 +5,7 @@ function terminate_with_status!(status::StatusCodes.T)
     end
 end
 
-# this function gets specialised for different metric parameters types, e.g. for first order
+# this function gets specialised for different metric parameters types, e.g. for first order
 @inline function metric_callback(::AbstractMetricParameters, chart::AbstractChart)
     chart_callback(chart)
 end

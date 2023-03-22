@@ -171,7 +171,7 @@ function binflux(
     F = f ./ sum(f)
 
     tb, eb, td = bin_transfer_function(t, g * E₀, F; kwargs...)
-    # subtract initial time
+    # subtract initial time
     tb .- tf.u[2], eb, td
 end
 

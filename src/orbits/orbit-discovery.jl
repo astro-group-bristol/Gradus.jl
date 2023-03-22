@@ -1,5 +1,5 @@
 function trace_single_orbit(m, r, vϕ; max_time = 300.0, μ = 1.0, θ₀ = π / 2, tracer_args...)
-    # fixed in equitorial plane
+    # fixed in equitorial plane
     u = @SVector [0.0, r, θ₀, 0.0]
     v = @SVector [0.0, 0.0, 0.0, vϕ]
     tracegeodesics(m, u, v, (0.0, max_time); μ = μ, tracer_args...)

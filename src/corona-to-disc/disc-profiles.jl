@@ -181,7 +181,7 @@ getareas(vdp::VoronoiDiscProfile) = getarea.(vdp.polys)
 function getproperarea(poly::AbstractArray, m::AbstractMetricParameters)
     A = getarea(poly)
     c = getbarycenter(poly)
-    # get value of metric at the radius of the polygon's barycenter, and in the equitorial plane
+    # get value of metric at the radius of the polygon's barycenter, and in the equitorial plane
     m_params = metric_components(m, (sqrt(c[1]^2 + c[2]^2), π / 2))
     # need radial and azimuthal components of the metric
     sqrt(m_params[2] * m_params[4]) * A

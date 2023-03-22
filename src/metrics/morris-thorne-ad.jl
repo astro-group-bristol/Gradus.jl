@@ -9,7 +9,7 @@ using ..StaticArrays
     θθ = b^2 + l^2
     ϕϕ = (b^2 + l^2) * sin(θ)
 
-    # no time-azimuth couple
+    # no time-azimuth couple
     @SVector [tt, rr, θθ, ϕϕ, 0.0]
 end
 

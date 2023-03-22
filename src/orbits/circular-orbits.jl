@@ -45,7 +45,7 @@ MuladdMacro.@muladd begin
     end
 
     # these 4 functions can be overwritten for a specific
-    # metric, e.g. Kerr-Newman
+    # metric, e.g. Kerr-Newman
     function energy(::AbstractAutoDiffStaticAxisSymmetricParams, rθ, utuϕ)
         -utuϕ[1]
     end
@@ -153,6 +153,6 @@ MuladdMacro.@muladd begin
     ) = plunging_fourvelocity(m, @SVector([r, π / 2]); kwargs...)
 
 end # mulladd macro
-end # module
+end # module
 
 export CircularOrbits

@@ -12,7 +12,7 @@ struct SolutionRenderCache{M,T,G} <: AbstractRenderCache{M,T}
     height::Int
     width::Int
 
-    # geodesics themselves in 2d array
+    # geodesics themselves in 2d array
     geodesics::AbstractMatrix{G}
 
     function SolutionRenderCache(

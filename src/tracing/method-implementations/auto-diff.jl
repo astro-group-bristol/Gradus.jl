@@ -271,7 +271,7 @@ function metric_jacobian(m::AbstractAutoDiffStaticAxisSymmetricParams, rθ)
     )
 end
 
-@inbounds function geodesic_eq(
+@inbounds function geodesic_equation(
     m::AbstractAutoDiffStaticAxisSymmetricParams,
     u::AbstractArray{T},
     v::AbstractArray{T},
@@ -285,7 +285,6 @@ end
     # calculate acceleration
     compute_geodesic_equation(ginv_comps, jacs[:, 1], jacs[:, 2], v)
 end
-
 
 function metric(m::AbstractAutoDiffStaticAxisSymmetricParams, u)
     rθ = (u[2], u[3])

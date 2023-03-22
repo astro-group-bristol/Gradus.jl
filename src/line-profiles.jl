@@ -80,12 +80,12 @@ function lineprofile(
     points = @views gps[I]
     areas = unnormalized_areas(plane)[I]
 
-    # calculate physical flux
+    # calculate physical flux
     g = redshift_pf.(m, points, λ_max)
     r = [p.x[2] for p in points]
 
     f = @. ε(r) * g^3 * areas
-    # bin
+    # bin
     F = bucket(Simple(), g, f, bins)
     bins, F ./ sum(F)
 end

@@ -21,7 +21,7 @@ end
     # mut[1] = constrain(m, u, v, μ = μ)
     # SVector{S,T}(mut)
     # this results in no performance gain over the above, but i think it
-    # reads nicer
+    # reads nicer
     @inbounds SVector{S,T}(constrain(m, u, v, μ = μ), v[2], v[3], v[4])
 end
 

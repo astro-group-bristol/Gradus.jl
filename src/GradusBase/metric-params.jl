@@ -6,7 +6,7 @@ Abstract type used to dispatch different geodesic problems.
 abstract type AbstractMetricParameters{T} end
 
 
-# contains the full metric components (this type needed for DiffGeoSymbolics)
+# contains the full metric components (this type needed for DiffGeoSymbolics)
 abstract type AbstractMetric{T} <: AbstractMatrix{T} end
 
 metric_params(m::AbstractMetric{T}) where {T} =
@@ -29,15 +29,30 @@ metric_components(m::AbstractMetricParameters, x) =
 inverse_metric_components(m::AbstractMetricParameters, x) =
     error("Not implemented for metric $(typeof(m))")
 
-"""
-    geodesic_eq(m::AbstractMetricParameters{T}, u, v)
-    geodesic_eq!(m::AbstractMetricParameters{T}, u, v)
+raw"""
+    geodesic_equation(m::AbstractMetricParameters, x, v)
 
-Calculate the acceleration components of the geodesic equation given a position `u`, a velocity `v`, and a metric `m`.
+Calculate the four-acceleration of the geodesic equation for a spacetime given by the metric `m`,
+four-position `x` and four-velocity `v`.
+
+A geodesic is the shortest path connecting two points in space. For flat space, this is just a straight line. In
+curved space, geodesics are analogous to straight lines between points (e.g. the great circle on a sphere).
+
+The geodesic equation calculates the acceleration experienced by a particle at position ``x^\mu = (t, r, \theta, \phi)`` travelling
+with tangential velocity ``v^\nu = \text{d} x / \text{d} \lambda`` due to the curvature of spacetime. The curvature is calculated from the metric, encoded in the 
+[Christoffel symbols](https://en.wikipedia.org/wiki/Christoffel_symbols). The acceleration is then calculated via
+
+```math
+\frac{\text{d}^2 x^\mu}{\text{d} \lambda^2}
+    = - \Gamma^{\mu}_{\phantom{\mu}\nu\sigma}
+    \frac{\text{d}x^\nu}{\text{d} \lambda}
+    \frac{\text{d}x^\sigma}{\text{d} \lambda}
+```
+
+where ``\Gamma^{\mu}_{\phantom{\mu}\nu\sigma}`` are the Christoffel symbols (of the second kind), and ``\lambda`` is an affine parameter
+that parameterizes the solution.
 """
-geodesic_eq(m::AbstractMetricParameters, u, v) =
-    error("Not implemented for metric parameters $(typeof(m))")
-geodesic_eq!(m::AbstractMetricParameters, u, v) =
+geodesic_equation(m::AbstractMetricParameters, x, v) =
     error("Not implemented for metric parameters $(typeof(m))")
 
 """

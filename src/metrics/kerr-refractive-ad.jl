@@ -28,7 +28,7 @@ using ..StaticArrays
     elseif corona_radius ≤ r ≤ corona_radius + δr
         t = (r - corona_radius) / δr
         # use an arbitrarily steep smooth interpolation
-        # this one isn't perfect, but does a good job
+        # this one isn't perfect, but does a good job
         k = atan(1e5t) * 2 / π
         n = k + n * (1 - k)
     else

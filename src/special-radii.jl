@@ -59,7 +59,7 @@ function find_isco_bounds(
             return r, max_upper_bound
         end
     end
-    # for type stability
+    # for type stability
     return T(0), T(0)
 end
 

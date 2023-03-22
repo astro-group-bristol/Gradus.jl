@@ -179,8 +179,8 @@ function jacobian_∂αβ_∂gr(
     end
 
     # choice between FiniteDifferences and FiniteDiff is tricky
-    # since FiniteDiff is so much faster, but seems to yield really bad jacobians
-    # for this specific problem, so instead stenciling with a given order
+    # since FiniteDiff is so much faster, but seems to yield really bad jacobians
+    # for this specific problem, so instead stenciling with a given order
     cfdm = FiniteDifferences.central_fdm(diff_order, 1)
     j = FiniteDifferences.jacobian(cfdm, f, @SVector([α, β])) |> first
     abs(inv(det(j)))
@@ -202,18 +202,18 @@ function make_target_objective(
         constrain_all(m, u0, map_impact_parameters(m, u0, α, β), μ)
     end
 
-    # used to track how close the current solver got
+    # used to track how close the current solver got
     closest_approach = Ref(u0[2])
-    # convert target to cartesian once
+    # convert target to cartesian once
     target_cart = to_cartesian(target)
     distance_callback = ContinuousCallback(
         (u, λ, integrator) -> begin
-            # get vector distance between current u and target
+            # get vector distance between current u and target
             k = target_cart - to_cartesian(u)
             distance = √sum(i -> i^2, k)
             # update best
             closest_approach[] = min(closest_approach[], distance)
-            # if within d_tol, just immediately terminate
+            # if within d_tol, just immediately terminate
             distance - d_tol
         end,
         terminate!,
