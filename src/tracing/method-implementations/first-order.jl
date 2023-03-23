@@ -12,7 +12,7 @@ Require implementation of
 - [`calc_lq`](@ref)
 - [`Vr`](@ref)
 - [`Vθ`](@ref)
-- [`impact_parameters_to_vel`](@ref)
+- [`impact_parameters_to_three_velocity`](@ref)
 """
 abstract type AbstractFirstOrderMetric{T} <: AbstractMetric{T,BoyerLindquist{(:r, :θ)}} end
 

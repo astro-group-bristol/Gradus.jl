@@ -83,12 +83,20 @@ function Base.show(io::IO, ::MIME"text/plain", gp::GeodesicPoint)
 end
 
 """
-    process_solution(sol::SciMLBase.AbstractODESolution)
-    process_solution(gp::GeodesicPoint)
+    process_solution([m], sol)
 
-Used to get pack a `SciMLBase.AbstractODESolution` into a [`GeodesicPoint`](@ref). Will only store
-information relevant to start and endpoint of the integration. To keep the full geodesic path, it is
-encouraged to use the `SciMLBase.AbstractODESolution` directly.
+Unpack a solution (`SciMLBase.AbstractODESolution`) as a [`GeodesicPoint`](@ref), optionally specifying
+the metric under which quantities are transformed. 
+
+If the solution stores any additional parameters (e.g. intensity in radiative transfer), these will be packed 
+into the `aux` field of [`GeodesicPoint`](@ref).
+
+## Example use
+
+```julia
+sol = tracegeodesics(m, x, v)
+point = process_solution(sol)
+```
 """
 function process_solution(_, sol::SciMLBase.AbstractODESolution{T}) where {T}
     @inbounds @views begin
