@@ -35,7 +35,6 @@ import .GradusBase:
     E,
     Lz,
     AbstractMetric,
-    metric_params,
     metric,
     process_solution,
     process_solution_full,

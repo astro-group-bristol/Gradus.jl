@@ -30,7 +30,6 @@ export AbstractMetric,
     AbstractCoordinates,
     BoyerLindquist,
     AbstractStaticAxisSymmetric,
-    metric_params,
     metric,
     process_solution,
     process_solution_full

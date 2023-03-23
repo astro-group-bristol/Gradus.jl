@@ -74,7 +74,6 @@ Gradus.Vθ
 ### Second-Order
 
 ```@docs
-AbstractMetric2ndOrder
 metric_components
 AbstractStaticAxisSymmetric
 ```

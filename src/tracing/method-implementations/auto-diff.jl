@@ -1,5 +1,5 @@
 """
-    AbstractStaticAxisSymmetric{T} <: AbstractMetric2ndOrder{T}
+    AbstractStaticAxisSymmetric{T}
 
 Specialisation for static, axis-symmetric metrics. Here, the metric is of the form
 ```math
@@ -281,4 +281,4 @@ function metric(m::AbstractStaticAxisSymmetric, u)
     ]
 end
 
-export AbstractMetric2ndOrder, AbstractStaticAxisSymmetric
+export AbstractStaticAxisSymmetric
