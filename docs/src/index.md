@@ -9,7 +9,9 @@
 
 Spacetime generic, general relativistic ray-tracing (GRRT) in Julia.
 
+```@raw html
 <p align="center"> <i> This package is in development and subject to rapid breaking changes, with documentation updates lagging behind features.</i> </p>
+```
 
 ## About
 

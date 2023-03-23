@@ -1,4 +1,4 @@
-# Available metrics
+# Catalogue of metrics
 
 ```@meta
 CurrentModule = Gradus
@@ -12,11 +12,10 @@ Modules = [Gradus]
 Order = [:type]
 ```
 
-
 !!! note
-    To implement your own custom metrics, please see [Implementing a new metric](@ref).
+    To implement your own custom metrics, please see [Implementing a new metric](@ref). If you have a complex metric, please open an issue requesting for it to be added.
 
-## Catalogue of spacetimes
+## Currently available metrics
 
 ```@autodocs
 Modules = [Gradus]

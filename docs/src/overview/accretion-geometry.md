@@ -26,7 +26,7 @@ AbstractThickAccretionDisc
 cross_section
 ```
 
-### Pre-defined discs
+### Available accretion geometry
 
 ```@docs
 GeometricThinDisc
