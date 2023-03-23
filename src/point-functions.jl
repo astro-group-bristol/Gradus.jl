@@ -13,13 +13,13 @@ images with values, e.g. colouring redshift.
 
 Point functions may be instantiated by wrapping a function with the following signature
 ```julia
-function func(m::AbstractMetricParameters{T}, gp::AbstractGeodesicPoint, max_time::T; kwargs...)::T where {T}
+function func(m::AbstractMetric{T}, gp::AbstractGeodesicPoint, max_time::T; kwargs...)::T where {T}
     # ...
 end
 
 pf = PointFunction(func)
 ```
-- The `AbstractMetricParameters` argument may be used to dispatch for different metrics.
+- The `AbstractMetric` argument may be used to dispatch for different metrics.
 - `gp` is an [`GradusBase.AbstractGeodesicPoint`](@ref) corresponding to a given geodesic.
 - The `max_time` parameter is the maximum integration time used to integrate the geodesics. This may be useful when trying to determine whether a geodesic terminated early or not.
 
@@ -56,7 +56,7 @@ $(FIELDS)
 
 Point functions used to filter geodesics. They may be constructed with
 ```julia
-function func(m::AbstractMetricParameters{T}, gp::AbstractGeodesicPoint, max_time::T; kwargs...)::Bool where {T}
+function func(m::AbstractMetric{T}, gp::AbstractGeodesicPoint, max_time::T; kwargs...)::Bool where {T}
     # ... return Bool
 end
 
@@ -86,7 +86,7 @@ end
 FilterPointFunction(f) = FilterPointFunction(f, NaN)
 
 @inline function (pf::AbstractPointFunction)(
-    m::AbstractMetricParameters{T},
+    m::AbstractMetric{T},
     gp::GradusBase.AbstractGeodesicPoint{T},
     max_time;
     kwargs...,

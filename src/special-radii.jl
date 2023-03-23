@@ -8,9 +8,9 @@ Innermost stable circular orbit (ISCO), defined by
 Uses analytic solutions if known for that metric, else uses a root finder to calculate
 the radius at which the above condition is met.
 """
-isco(m::AbstractMetricParameters) = error("Not implemented for $(typeof(m)).")
+isco(m::AbstractMetric) = error("Not implemented for $(typeof(m)).")
 
-function isco(m::AbstractStaticAxisSymmetricParameters, lower_bound, upper_bound; kwargs...)
+function isco(m::AbstractStaticAxisSymmetric, lower_bound, upper_bound; kwargs...)
     if lower_bound == upper_bound
         error(
             "No boundaries for minimization could be determined. It is likely this configuration does not have an ISCO solution.",
@@ -23,7 +23,7 @@ function isco(m::AbstractStaticAxisSymmetricParameters, lower_bound, upper_bound
 end
 
 function isco(
-    m::AbstractStaticAxisSymmetricParameters{T};
+    m::AbstractStaticAxisSymmetric{T};
     max_upper_bound = T(100),
     step = T(0.005),
     kwargs...,
@@ -42,7 +42,7 @@ calculates ``E`` with [`CircularOrbits.energy`](@ref), where `r` steps from `upp
 Returns `T(0.0)` if no such radius found.
 """
 function find_isco_bounds(
-    m::AbstractStaticAxisSymmetricParameters{T},
+    m::AbstractStaticAxisSymmetric{T},
     max_upper_bound,
     step;
     kwargs...,
@@ -66,7 +66,7 @@ Photon orbit radius, defined as the radius for which
     \\frac{E}{\\mu} \\rightarrow \\infty .
 ```
 """
-photon_orbit(m::AbstractMetricParameters) = error("Not implemented for $(typeof(m)).")
+photon_orbit(m::AbstractMetric) = error("Not implemented for $(typeof(m)).")
 
 """
     $(TYPEDSIGNATURES)
@@ -76,11 +76,10 @@ Marginally bound orbit
     \\frac{E}{\\mu} = 1.
 ```
 """
-marginally_bound_orbit(m::AbstractMetricParameters) =
-    error("Not implemented for $(typeof(m)).")
+marginally_bound_orbit(m::AbstractMetric) = error("Not implemented for $(typeof(m)).")
 
 """
-    event_horizon(m::AbstractMetricParameters; select = last, resolution = 100, θε = 1e-7, rmax = 5.0)
+    event_horizon(m::AbstractMetric; select = last, resolution = 100, θε = 1e-7, rmax = 5.0)
 
 Event horizon radius, often equivalent to [`GradusBase.inner_radius`](@ref), however remains
 distinct, such that the latter may still be an arbitrary chart cutoff.
@@ -98,8 +97,7 @@ that the metric describes a naked singularity.
 Often the equation will have multiple roots, in which case the keyword argument `select` may be
 assigned to select the desired root.
 """
-event_horizon(m::AbstractMetricParameters; kwargs...) =
-    error("Not implemented for $(typeof(m)).")
+event_horizon(m::AbstractMetric; kwargs...) = error("Not implemented for $(typeof(m)).")
 
 function _event_horizon_condition(m, r, θ)
     g = metric_components(m, (r, θ))
@@ -108,7 +106,7 @@ function _event_horizon_condition(m, r, θ)
 end
 
 function _solve_radius_condition(
-    m::AbstractStaticAxisSymmetricParameters{T},
+    m::AbstractStaticAxisSymmetric{T},
     condition_function;
     select = maximum,
     resolution::Int = 100,
@@ -129,12 +127,12 @@ function _solve_radius_condition(
     rs, θs
 end
 
-function event_horizon(m::AbstractStaticAxisSymmetricParameters; kwargs...)
+function event_horizon(m::AbstractStaticAxisSymmetric; kwargs...)
     _solve_radius_condition(m, _event_horizon_condition; kwargs...)
 end
 
 function is_naked_singularity(
-    m::AbstractStaticAxisSymmetricParameters{T};
+    m::AbstractStaticAxisSymmetric{T};
     resolution::Int = 100,
     θε::T = T(1e-7),
     rmax = 5.0,
@@ -151,7 +149,7 @@ function _ergosphere_condition(m, r, θ)
     g[1]
 end
 
-function ergosphere(m::AbstractStaticAxisSymmetricParameters; kwargs...)
+function ergosphere(m::AbstractStaticAxisSymmetric; kwargs...)
     _solve_radius_condition(m, _ergosphere_condition; init = 1.0, kwargs...)
 end
 

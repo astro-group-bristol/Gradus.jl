@@ -27,3 +27,5 @@ where the dot refers to the derivative with respect to ``\lambda``. In general, 
 ```@docs
 Gradus.constrain_time
 ```
+
+## Using callbacks

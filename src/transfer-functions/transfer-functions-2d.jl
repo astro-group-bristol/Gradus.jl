@@ -39,7 +39,7 @@ function bin_and_interpolate(
 end
 
 function source_to_disc(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     model::AbstractCoronaModel,
     d::AbstractAccretionGeometry,
     max_t;
@@ -65,7 +65,7 @@ function source_to_disc(
 end
 
 function observer_to_disc(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     u,
     plane::AbstractImagePlane,
     d::AbstractAccretionGeometry,
@@ -86,12 +86,7 @@ function observer_to_disc(
     points
 end
 
-function lagtransfer(
-    m::AbstractMetricParameters,
-    u,
-    d::AbstractAccretionGeometry;
-    kwargs...,
-)
+function lagtransfer(m::AbstractMetric, u, d::AbstractAccretionGeometry; kwargs...)
     model = LampPostModel(h = 10.0, θ = deg2rad(0.0001))
     plane = PolarPlane(GeometricGrid(); Nr = 800, Nθ = 800, r_max = 250.0)
     lagtransfer(model, m, u, plane, d; kwargs...)
@@ -99,7 +94,7 @@ end
 
 function lagtransfer(
     model::AbstractCoronaModel,
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     u,
     plane::AbstractImagePlane,
     d::AbstractAccretionGeometry;

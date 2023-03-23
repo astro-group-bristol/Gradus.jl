@@ -1,36 +1,34 @@
+abstract type AbstractCoordinates end
+struct BoyerLindquist{C} <: AbstractCoordinates end
+
 """
-    abstract type AbstractMetricParameters{T} end
+    abstract type AbstractMetric{T} end
 
 Abstract type used to dispatch different geodesic problems.
 """
-abstract type AbstractMetricParameters{T} end
+abstract type AbstractMetric{T,C} end
 
+Base.length(::AbstractMetric) = 1
+Base.iterate(m::AbstractMetric) = (m, nothing)
+Base.iterate(::AbstractMetric, ::Nothing) = nothing
 
-# contains the full metric components (this type needed for DiffGeoSymbolics)
-abstract type AbstractMetric{T} <: AbstractMatrix{T} end
-
-metric_params(m::AbstractMetric{T}) where {T} =
-    error("Not implemented for metric $(typeof(m))")
-
-Base.length(::AbstractMetricParameters) = 1
-Base.iterate(m::AbstractMetricParameters) = (m, nothing)
-Base.iterate(::AbstractMetricParameters, ::Nothing) = nothing
+# some utility types
+abstract type AbstractStaticAxisSymmetric{T} <: AbstractMetric{T,BoyerLindquist{(:r, :θ)}} end
 
 """
-    metric_components(m::AbstractMetricParameters{T}, x)
+    metric_components(m::AbstractMetric{T}, x)
 
 Return a tuple with each non-zero metric component for the metric described by `m` at position
 `x`. Note that the position need not be a four-vector, and for specific implementations may
 only be a subset of the total manifold coordinates. See specific implementations for subtypes of
-[`AbstractMetricParameters`](@ref) for details.
+[`AbstractMetric`](@ref) for details.
 """
-metric_components(m::AbstractMetricParameters, x) =
-    error("Not implemented for metric $(typeof(m))")
-inverse_metric_components(m::AbstractMetricParameters, x) =
+metric_components(m::AbstractMetric, x) = error("Not implemented for metric $(typeof(m))")
+inverse_metric_components(m::AbstractMetric, x) =
     error("Not implemented for metric $(typeof(m))")
 
 """
-    geodesic_equation(m::AbstractMetricParameters, x, v)
+    geodesic_equation(m::AbstractMetric, x, v)
 
 Calculate the four-acceleration of the geodesic equation for a spacetime given by the metric `m`,
 four-position `x` and four-velocity `v`.
@@ -52,11 +50,11 @@ with tangential velocity ``v^\\nu = \\text{d} x / \\text{d} \\lambda`` due to th
 where ``\\Gamma^{\\mu}_{\\phantom{\\mu}\\nu\\sigma}`` are the Christoffel symbols (of the second kind), and ``\\lambda`` is an affine parameter
 that parameterizes the solution.
 """
-geodesic_equation(m::AbstractMetricParameters, x, v) =
+geodesic_equation(m::AbstractMetric, x, v) =
     error("Not implemented for metric parameters $(typeof(m))")
 
 """
-    constrain(m::AbstractMetricParameters, x, v; μ=0)
+    constrain(m::AbstractMetric, x, v; μ=0)
 
 Calculate the time component ``v^t`` of a velocity vector `v`, which would constrain the vector at a position `x` as a 
 geodesic with invariant mass `μ`.
@@ -73,34 +71,33 @@ where ``\\mu^2`` is the invariant mass of the particle. This furthermore permits
 - `μ > 0.0`: time-like geodesic
 - `μ < 0.0`: space-like geodesic
 """
-constrain(m::AbstractMetricParameters{T}, x, v; μ::T = 0.0) where {T} =
+constrain(m::AbstractMetric{T}, x, v; μ::T = 0.0) where {T} =
     error("Not implemented for metric parameters $(typeof(m))")
 
 """
-    inner_radius(m::AbstractMetricParameters{T})
+    inner_radius(m::AbstractMetric{T})
 
 Return the innermost valid coordinate relative to the origin, for use in geodesic tracing.
 
 This usually represents some property of the metric, e.g. event horizon radius in Kerr/Schwarzschild metrics, or
 throat diameter in worm hole metrics.
 """
-inner_radius(::AbstractMetricParameters{T}) where {T} = convert(T, 0.0)
+inner_radius(::AbstractMetric{T}) where {T} = convert(T, 0.0)
 
 """
-    metric_type(m::AbstractMetricParameters{T})
+    metric_type(m::AbstractMetric{T})
 
 Return the [`AbstractMetric`](@ref) type associated with the metric parameters `m`.
 """
-metric_type(m::AbstractMetricParameters) =
-    error("Not implemented for metric parameters $(typeof(m))")
+metric_type(m::AbstractMetric) = error("Not implemented for metric parameters $(typeof(m))")
 
 
 """
-    metric(m::AbstractMetricParameters{T}, u)
+    metric(m::AbstractMetric{T}, u)
 
-Numerically evaluate the corresponding metric for [`AbstractMetricParameters`](@ref), given parameter values `m`
+Numerically evaluate the corresponding metric for [`AbstractMetric`](@ref), given parameter values `m`
 and some point `u`.
 """
-metric(m::AbstractMetricParameters, u) = error("Not implemented for metric $(typeof(m))")
+metric(m::AbstractMetric, u) = error("Not implemented for metric $(typeof(m))")
 
-restrict_ensemble(::AbstractMetricParameters, ensemble) = ensemble
+restrict_ensemble(::AbstractMetric, ensemble) = ensemble

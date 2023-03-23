@@ -1,6 +1,6 @@
 # vectors of vectors 
 function constrain_all(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     us::AbstractArray{<:StaticVector},
     vs::AbstractArray{<:StaticVector},
     μ,
@@ -12,7 +12,7 @@ function constrain_all(
 end
 
 @inline function constrain_all(
-    m::AbstractMetricParameters{T},
+    m::AbstractMetric{T},
     u::StaticVector{S,T},
     v::StaticVector{S,T},
     μ,
@@ -25,6 +25,6 @@ end
     @inbounds SVector{S,T}(constrain(m, u, v, μ = μ), v[2], v[3], v[4])
 end
 
-function wrap_constraint(m::AbstractMetricParameters, position, velfunc::Function, μ)
+function wrap_constraint(m::AbstractMetric, position, velfunc::Function, μ)
     (i) -> constrain_all(m, position, velfunc(i), μ)
 end

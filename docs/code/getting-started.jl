@@ -1,6 +1,10 @@
+DIRR = @__DIR__() * "/../src/figs/"
+
+# ---------------------------------------------------------
+
 using Gradus
 
-struct Schwarzschild{T} <: AbstractStaticAxisSymmetricParameters{T}
+struct Schwarzschild{T} <: AbstractStaticAxisSymmetric{T}
     M::T
 end
 
@@ -118,8 +122,8 @@ heatmap(α, β, image, aspect_ratio = 1)
 
 function cross_section(x)
     # centered circle on 12 rg
-    center = 15
-    radius = 4
+    center = 8
+    radius = 3
 
     if (x < center - radius) || (radius + center < x)
         zero(x)
@@ -130,12 +134,13 @@ function cross_section(x)
 end
 
 # preview the cross section over a sample range
-sample = collect(range(0.0, 30.0, 300))
+sample = collect(range(0.0, 20.0, 300))
 y = cross_section.(sample)
 
-p = plot(sample, y, xlabel = "r", ylabel = "height", aspect_ratio = 1)
+plot(sample, y, xlabel = "r", ylabel = "height", aspect_ratio = 1)
 
 
+savefig(DIRR * "getting-started-5-cross-section.svg")
 # ---------------------------------------------------------
 
 d = ThickDisc(x -> cross_section(x[2]))
@@ -147,7 +152,7 @@ pf_geometry = time_coord ∘ ConstPointFunctions.filter_intersected
 # ---------------------------------------------------------
 
 # change inclination
-x = SVector(0.0, 1000.0, deg2rad(70), 0.0)
+x = SVector(0.0, 1000.0, deg2rad(75), 0.0)
 
 α, β, image = rendergeodesics(
     m,
@@ -166,6 +171,8 @@ x = SVector(0.0, 1000.0, deg2rad(70), 0.0)
 )
 
 heatmap(α, β, image, aspect_ratio = 1)
+
+savefig(DIRR * "getting-started-6-weird-disc-render.png")
 # ---------------------------------------------------------
 
 redshift = ConstPointFunctions.redshift(m, x)
@@ -188,6 +195,8 @@ redshift_geometry = redshift ∘ ConstPointFunctions.filter_intersected
 )
 
 heatmap(α, β, image, aspect_ratio = 1)
+
+savefig(DIRR * "getting-started-7-weird-redshift.png")
 # --------------------------------------
 
 j_m = JohannsenMetric(M = 1.0, a = 0.7, α13 = 2.0, ϵ3 = 1.0)
@@ -211,56 +220,56 @@ j_redshift_geometry = j_redshift ∘ ConstPointFunctions.filter_intersected
     verbose = true,
 )
 
-p = heatmap(α, β, image, aspect_ratio = 1)
+heatmap(α, β, image, aspect_ratio = 1)
 
+savefig(DIRR * "getting-started-8-jm-weird-redshift.png")
 # ---------------------------------------------------------
 
 # define custom bins for g
 bins = collect(range(0.1, 1.4, 200))
 
 # define the plane to perform the binning over
-plane = PolarPlane(GeometricGrid(); Nr = 700, Nθ = 1300, r_max = 50.0)
+plane = PolarPlane(GeometricGrid(); Nr = 1000, Nθ = 1000, r_max = 50.0)
 
 # ---------------------------------------------------------
 
 p = plot(PolarPlane(GeometricGrid(); Nr = 10, Nθ = 20, r_max = 50.0))
 
 # ---------------------------------------------------------
-_, f = lineprofile(
-    j_m,
-    x,
-    d,
-    algorithm = BinnedLineProfile(),
-    # no false images
-    callback = domain_upper_hemisphere(),
-    verbose = true,
-    bins = bins,
-    plane = plane,
-)
+
+function calculate_line_profile(m, x, d, bins, plane)
+    _, f = lineprofile(
+        m,
+        x,
+        d,
+        algorithm = BinnedLineProfile(),
+        # no false images
+        callback = domain_upper_hemisphere(),
+        verbose = true,
+        bins = bins,
+        plane = plane,
+    )
+    return f
+end
+
+# ---------------------------------------------------------
+
 
 # geometric thin disc in the equitorial plane
-d_thin = GeometricThinDisc(Gradus.isco(j_m), 200.0, π / 2)
+d_j_thin = GeometricThinDisc(Gradus.isco(j_m), 200.0, π / 2)
+# and for the schwarzschild metric
+d_s_thin = GeometricThinDisc(Gradus.isco(m), 200.0, π / 2)
 
-_, f_thin = lineprofile(
-    j_m,
-    x,
-    # new disc
-    d_thin,
-    algorithm = BinnedLineProfile(),
-    callback = domain_upper_hemisphere(),
-    verbose = true,
-    bins = bins,
-    plane = plane,
-)
+f_j_thick_disc = calculate_line_profile(j_m, x, d, bins, plane)
+f_s_thick_disc = calculate_line_profile(m, x, d, bins, plane)
+f_j_thin_disc = calculate_line_profile(j_m, x, d_j_thin, bins, plane)
+f_s_thin_disc = calculate_line_profile(m, x, d_s_thin, bins, plane)
 
-p = plot(bins, f, label = "thick")
-plot!(bins, f_thin, label = "thin")
+plot(bins, f_j_thick_disc, label = "Johannsen[thick]")
+plot!(bins, f_s_thick_disc, label = "Schwarzschild[thick]")
+plot!(bins, f_j_thin_disc, label = "Johannsen[thin]")
+plot!(bins, f_s_thin_disc, label = "Schwarzschild[thin]")
 
 
-d_thin2 = GeometricThinDisc(0.0, 400.0, π / 2)
-g, kk = lineprofile(m, x, d_thin2, verbose = true)
-g2, kk2 = lineprofile(m, x, d_thin2, verbose = true, algorithm = BinnedLineProfile())
-plot(g, kk)
-plot!(g2, kk2)
-
+savefig(DIRR * "getting-started-10-line-profiles.svg")
 # ---------------------------------------------------------

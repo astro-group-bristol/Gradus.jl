@@ -51,7 +51,7 @@ end
 end
 
 function cunningham_transfer_function(
-    m::AbstractMetricParameters{T},
+    m::AbstractMetric{T},
     u,
     d,
     rₑ;
@@ -132,7 +132,7 @@ function interpolate_extremal(y, x, x0)
 end
 
 function interpolated_transfer_branches(
-    m::AbstractMetricParameters{T},
+    m::AbstractMetric{T},
     u,
     d,
     radii;

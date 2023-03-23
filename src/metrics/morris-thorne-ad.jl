@@ -17,13 +17,13 @@ end # module
 
 # new structure for our spacetime
 """
-    struct MorrisThorneWormhole{T} <: AbstractStaticAxisSymmetricParameters{T}
+    struct MorrisThorneWormhole{T} <: AbstractStaticAxisSymmetric{T}
 
 Morris-Thorne wormhole metric.
 
 $(FIELDS)
 """
-@with_kw struct MorrisThorneWormhole{T} <: AbstractStaticAxisSymmetricParameters{T}
+@with_kw struct MorrisThorneWormhole{T} <: AbstractStaticAxisSymmetric{T}
     @deftype T
     "Throat size."
     b = 1.0

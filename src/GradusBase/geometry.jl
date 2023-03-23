@@ -1,16 +1,16 @@
-function vector_to_local_sky(m::AbstractMetricParameters, u, θ, ϕ)
+function vector_to_local_sky(m::AbstractMetric, u, θ, ϕ)
     error("Not implemented for $(typeof(m))")
 end
 
 dotproduct(g::AbstractMatrix, v1, v2) = @tullio r := g[i, j] * v1[i] * v2[j]
 propernorm(g::AbstractMatrix, v) = dotproduct(g, v, v)
-propernorm(m::AbstractMetricParameters, u, v) = propernorm(metric(m, u), v)
+propernorm(m::AbstractMetric, u, v) = propernorm(metric(m, u), v)
 
 """
     mproject(g, v, u)
 
 Project vector `v` onto `u` with metric `g`. Optional first argument may be
-[`AbstractMetricParameters`](@ref) for more optimized methods, which fallback to an einsum.
+[`AbstractMetric`](@ref) for more optimized methods, which fallback to an einsum.
 """
 mproject(g, v, u) = dotproduct(g, v, u) / propernorm(g, u)
 
@@ -47,7 +47,7 @@ end
     (vt, vr, vθ, vϕ)
 end
 
-tetradframe(m::AbstractMetricParameters, u, v) = tetradframe(metric(m, u), v)
+tetradframe(m::AbstractMetric, u, v) = tetradframe(metric(m, u), v)
 
 # TODO: this presupposes static and axis symmetric
 # tetrad with latin indices down: frame
@@ -56,7 +56,7 @@ function lnrframe(g::AbstractMatrix)
     v = @SVector [1.0, 0.0, 0.0, ω]
     tetradframe(g, v)
 end
-lnrframe(m::AbstractMetricParameters, u) = lnrframe(metric(m, u))
+lnrframe(m::AbstractMetric, u) = lnrframe(metric(m, u))
 
 # tetrad with latin indices up: basis
 function lnrbasis(g::AbstractMatrix)
@@ -66,10 +66,10 @@ function lnrbasis(g::AbstractMatrix)
     # rearrange
     (vt, vr, vθ, vϕ)
 end
-lnrbasis(m::AbstractMetricParameters, u) = lnrbasis(metric(m, u))
+lnrbasis(m::AbstractMetric, u) = lnrbasis(metric(m, u))
 
 lowerindices(g::AbstractMatrix, v) = g * v
-lowerindices(m::AbstractMetricParameters, u, v) = lowerindices(metric(m, u), v)
+lowerindices(m::AbstractMetric, u, v) = lowerindices(metric(m, u), v)
 
 raiseindices(ginv::AbstractMatrix, v) = ginv * v
-raiseindices(m::AbstractMetricParameters, u, v) = raiseindices(inv(metric(m, u)), v)
+raiseindices(m::AbstractMetric, u, v) = raiseindices(inv(metric(m, u)), v)

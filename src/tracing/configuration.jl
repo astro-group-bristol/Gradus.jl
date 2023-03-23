@@ -26,7 +26,7 @@ struct TracingConfiguration{
     reltol::T
     # constructor
     function TracingConfiguration(
-        m::AbstractMetricParameters{T},
+        m::AbstractMetric{T},
         position,
         velocity::V,
         geometry,
@@ -79,7 +79,7 @@ struct TracingConfiguration{
 end
 
 @inline function _tracing_configuration(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     position,
     velocity,
     geometry,
@@ -115,7 +115,7 @@ end
 
 @inline function tracing_configuration(
     ::AbstractTraceParameters,
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     position,
     velocity,
     λs;

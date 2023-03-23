@@ -341,7 +341,7 @@ end # module
 A first-order implementation of [`KerrMetric`](@ref).
 $(FIELDS)
 """
-@with_kw struct KerrSpacetimeFirstOrder{T} <: AbstractFirstOrderMetricParams{T}
+@with_kw struct KerrSpacetimeFirstOrder{T} <: AbstractFirstOrderMetric{T}
     @deftype T
     "Black hole mass."
     M = 1.0
@@ -370,7 +370,12 @@ function Vθ(m::KerrSpacetimeFirstOrder{T}, u, p) where {T}
     __BoyerLindquistFO.Vθ(m.E, L, Q, m.a, u[3])
 end
 
-function impact_parameters_to_vel(m::KerrSpacetimeFirstOrder{T}, u, α, β) where {T}
+function impact_parameters_to_three_velocity(
+    m::KerrSpacetimeFirstOrder{T},
+    u,
+    α,
+    β,
+) where {T}
     sinΦ, sinΨ = __BoyerLindquistFO.sinΦsinΨ(m.M, u[2], m.a, u[3], α, β)
     (β < 0.0 ? 1.0 : -1.0, sinΦ, sinΨ)
 end

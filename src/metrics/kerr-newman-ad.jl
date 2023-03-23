@@ -35,9 +35,9 @@ end
 end # module
 
 """
-    struct KerrNewmanMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
+    struct KerrNewmanMetric{T} <: AbstractStaticAxisSymmetric{T}
 """
-struct KerrNewmanMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
+struct KerrNewmanMetric{T} <: AbstractStaticAxisSymmetric{T}
     "Black hole mass."
     M::T
     "Black hole spin."
