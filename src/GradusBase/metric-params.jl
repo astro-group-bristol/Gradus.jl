@@ -5,13 +5,6 @@ Abstract type used to dispatch different geodesic problems.
 """
 abstract type AbstractMetricParameters{T} end
 
-
-# contains the full metric components (this type needed for DiffGeoSymbolics)
-abstract type AbstractMetric{T} <: AbstractMatrix{T} end
-
-metric_params(m::AbstractMetric{T}) where {T} =
-    error("Not implemented for metric $(typeof(m))")
-
 Base.length(::AbstractMetricParameters) = 1
 Base.iterate(m::AbstractMetricParameters) = (m, nothing)
 Base.iterate(::AbstractMetricParameters, ::Nothing) = nothing
