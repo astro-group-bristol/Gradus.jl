@@ -1,6 +1,6 @@
 
 
-function radiative_transfer(m::AbstractMetricParameters, x, k, geometry, I, ν, invν3)
+function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν, invν3)
     a_ν, j_ν, u = covariant_absorption_emission_velocity(m, x, ν, geometry)
     g = metric(m, x)
     # cache inv(ν)^3 to avoid costly division
@@ -9,7 +9,7 @@ function radiative_transfer(m::AbstractMetricParameters, x, k, geometry, I, ν, 
 end
 
 function covariant_absorption_emission_velocity(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     x,
     ν,
     ::AbstractAccretionGeometry,
@@ -56,7 +56,7 @@ end
 
 function radiative_transfer_ode_problem(
     trace::TraceRadiativeTransfer,
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     pos,
     vel,
     time_domain,

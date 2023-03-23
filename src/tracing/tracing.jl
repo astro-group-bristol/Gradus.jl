@@ -13,17 +13,17 @@ end
 
 """
     tracegeodesics(
-        m::AbstractMetricParameters,
+        m::AbstractMetric,
         x, v, [disc], λ_domain;
         kwargs...
     )
     tracegeodesics(
-        m::AbstractMetricParameters,
+        m::AbstractMetric,
         x, p::AbstractImagePlane, [disc], λ_domain;
         kwargs...
     )
     tracegeodesics(
-        m::AbstractMetricParameters,
+        m::AbstractMetric,
         model::AbstractCoronaModel, [disc], λ_domain;
         kwargs...
     )
@@ -59,7 +59,7 @@ The possible keyword arguments are
 with `solver_opts` being forwarded to the [SciML `solve` function](https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/#solver_options).
 """
 function tracegeodesics(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     args...;
     μ = 0.0,
     q = 0.0,
@@ -70,7 +70,7 @@ function tracegeodesics(
 end
 function tracegeodesics(
     trace::AbstractTraceParameters,
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     args...;
     kwargs...,
 )
@@ -212,7 +212,7 @@ end
 end
 
 @inline function _init_integrator(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     args...;
     μ = 0.0,
     q = 0.0,

@@ -1,6 +1,6 @@
 module RedshiftFunctions
 import ..Gradus
-import ..Gradus: __BoyerLindquistFO, AbstractMetricParameters, KerrMetric, metric
+import ..Gradus: __BoyerLindquistFO, AbstractMetric, KerrMetric, metric
 using StaticArrays
 using Tullio: @tullio
 
@@ -241,7 +241,7 @@ function _redshift_guard(
 ) where {T}
     RedshiftFunctions.redshift_function(m, gp.x, gp.p, gp.λ_max)
 end
-function _redshift_guard(m::AbstractMetricParameters, gp, max_time)
+function _redshift_guard(m::AbstractMetric, gp, max_time)
     RedshiftFunctions.redshift_function(m, gp.x, gp.v)
 end
 
@@ -285,7 +285,7 @@ function interpolate_redshift(plunging_interpolation, u)
     PointFunction(closure)
 end
 
-interpolate_redshift(m::AbstractMetricParameters, u; kwargs...) =
+interpolate_redshift(m::AbstractMetric, u; kwargs...) =
     interpolate_redshift(interpolate_plunging_velocities(m; kwargs...), u)
 
 export RedshiftFunctions, interpolate_redshift

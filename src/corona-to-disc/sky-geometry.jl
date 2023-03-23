@@ -68,13 +68,7 @@ function _cart_local_direction(θ, ϕ)
     @SVector [sin(θ) * cos(ϕ), sin(θ) * sin(ϕ), cos(θ)]
 end
 
-@inbounds function sky_angles_to_velocity(
-    m::AbstractMetricParameters{T},
-    u,
-    v_source,
-    θ,
-    ϕ,
-) where {T}
+@inbounds function sky_angles_to_velocity(m::AbstractMetric{T}, u, v_source, θ, ϕ) where {T}
     # multiply by -1 for consitency with LowerHemisphere()
     hat = -1 * _cart_local_direction(θ, ϕ)
 

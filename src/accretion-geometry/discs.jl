@@ -133,7 +133,7 @@ end
 """
     ShakuraSunyaev{T} <: AbstractThickAccretionDisc{T}
     ShakuraSunyaev(
-        m::AbstractMetricParameters;
+        m::AbstractMetric;
         eddington_ratio = 0.3,
         η = nothing,
         contra_rotating = false,
@@ -170,7 +170,7 @@ end
 end
 
 function ShakuraSunyaev(
-    m::AbstractMetricParameters{T};
+    m::AbstractMetric{T};
     eddington_ratio = 0.3,
     η = nothing,
     contra_rotating = false,

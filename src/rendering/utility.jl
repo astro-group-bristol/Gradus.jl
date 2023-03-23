@@ -8,29 +8,18 @@ Calculates initial four-velocity vectors from impact parameters ``\\alpha`` and
 respectively, whereas ``\\beta`` is a single ``T`` value, such that a variety of geodesics
 in the same plane may be easily traced.
 """
-function calculate_velocities(m::AbstractMetricParameters, init_pos, α_generator, β::Number)
+function calculate_velocities(m::AbstractMetric, init_pos, α_generator, β::Number)
     [map_impact_parameters(m, init_pos, α, β) for α in α_generator]
 end
 
-function calculate_velocities(
-    m::AbstractMetricParameters,
-    init_pos,
-    α_genetator,
-    β_generator,
-)
+function calculate_velocities(m::AbstractMetric, init_pos, α_genetator, β_generator)
     [map_impact_parameters(m, init_pos, α, β) for α in α_genetator, β in β_generator]
 end
 
 """
 In-place specialisation, writing the four-velocities into `vs`.
 """
-function calculate_velocities!(
-    vs,
-    m::AbstractMetricParameters,
-    init_pos,
-    α_generator,
-    β::Number,
-)
+function calculate_velocities!(vs, m::AbstractMetric, init_pos, α_generator, β::Number)
     for (i, α) in enumerate(α_generator)
         vs[i] = map_impact_parameters(m, init_pos, α, β)
     end

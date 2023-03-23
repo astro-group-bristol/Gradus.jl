@@ -1,15 +1,15 @@
 # todo: this should take into account position
-function source_velocity(::AbstractMetricParameters, model::AbstractCoronaModel)
+function source_velocity(::AbstractMetric, model::AbstractCoronaModel)
     error("Not implemented for $(typeof(model)).")
 end
 
-function sample_position(::AbstractMetricParameters, model::AbstractCoronaModel, N)
+function sample_position(::AbstractMetric, model::AbstractCoronaModel, N)
     error("Not implemented for $(typeof(model)).")
 end
 
 """
     sample_velocity(
-        m::AbstractMetricParameters, 
+        m::AbstractMetric, 
         model::AbstractCoronaModel, 
         sampler::AbstractDirectionSampler, 
         us, 
@@ -27,7 +27,7 @@ transformation to spherical polar).
 - Use this tetrad to map the local vector to the global coordinates.
 """
 function sample_velocity(
-    m::AbstractMetricParameters{T},
+    m::AbstractMetric{T},
     model::AbstractCoronaModel{T},
     sampler::AbstractDirectionSampler,
     us,
@@ -52,16 +52,12 @@ end
     ϕ = 0.0
 end
 
-function sample_position(
-    ::AbstractMetricParameters{T},
-    model::LampPostModel{T},
-    N,
-) where {T}
+function sample_position(::AbstractMetric{T}, model::LampPostModel{T}, N) where {T}
     u = @SVector [T(0.0), model.h, model.θ, model.ϕ]
     fill(u, N)
 end
 
-function source_velocity(m::AbstractMetricParameters, model::LampPostModel)
+function source_velocity(m::AbstractMetric, model::LampPostModel)
     # stationary source
     rθ = @SVector[model.h, model.θ]
     gcomp = metric_components(m, rθ)

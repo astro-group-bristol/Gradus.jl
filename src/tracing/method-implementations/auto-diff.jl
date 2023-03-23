@@ -1,12 +1,12 @@
 # for use with static, axis-symmetric metrics
 # create new abstract type for easy re-definition
 """
-    AbstractAutoDiffMetricParams{T} <: AbstractMetricParameters{T}
+    AbstractAutoDiffMetricParams{T} <: AbstractMetric{T}
 
 Abstract type for metrics using the 2nd-order integration method, with the automatic
 differentiation backend.
 """
-abstract type AbstractAutoDiffMetricParams{T} <: AbstractMetricParameters{T} end
+abstract type AbstractAutoDiffMetricParams{T} <: AbstractMetric{T} end
 
 """
     AbstractStaticAxisSymmetricParameters{T} <: AbstractAutoDiffMetricParams{T}

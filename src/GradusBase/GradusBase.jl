@@ -26,12 +26,11 @@ include("geodesic-solutions.jl")
 include("geometry.jl")
 include("physical-quantities.jl")
 
-export AbstractMetricParameters,
-    metric_params, metric, process_solution, process_solution_full
+export AbstractMetric, metric_params, metric, process_solution, process_solution_full
 GeodesicPoint,
 AbstractGeodesicPoint,
 vector_to_local_sky,
-AbstractMetricParameters,
+AbstractMetric,
 geodesic_equation,
 constrain,
 inner_radius,

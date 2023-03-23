@@ -20,5 +20,5 @@ Order = [:type]
 
 ```@autodocs
 Modules = [Gradus]
-Filter = t -> typeof(t) === UnionAll && t <: Gradus.AbstractMetricParameters
+Filter = t -> typeof(t) === UnionAll && t <: Gradus.AbstractMetric
 ```

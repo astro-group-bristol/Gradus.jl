@@ -2,7 +2,7 @@ module __PolishDoughnut
 
 import Gradus:
     CircularOrbits,
-    AbstractMetricParameters,
+    AbstractMetric,
     __BoyerLindquistAD,
     KerrMetric,
     inverse_metric_components,
@@ -12,13 +12,13 @@ import OrdinaryDiffEq: solve, Tsit5, DiscreteCallback, ODEProblem, terminate!
 import StaticArrays: SVector
 
 # modified Fuerst & Wu (2004, 2007)
-function Ω(m::AbstractMetricParameters, x, rₖ, n)
+function Ω(m::AbstractMetric, x, rₖ, n)
     rsinθ = x[1] * sin(x[2])
     xprime = SVector(rsinθ, π / 2)
     CircularOrbits.Ω(m, xprime) * (rₖ / (rsinθ))^n
 end
 
-function orbital_energy(m::AbstractMetricParameters, x, rₖ, n)
+function orbital_energy(m::AbstractMetric, x, rₖ, n)
     𝛺 = Ω(m, x, rₖ, n)
     ut_uϕ = CircularOrbits.ut_uϕ(𝛺, inverse_metric_components(m, x))
     CircularOrbits.energy(m, x, ut_uϕ)
@@ -58,7 +58,7 @@ function innermost_radius(m, rₖ, n; init_r = 5.0)
 end
 
 function isobar(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     inner_radius,
     rₖ,
     n;
@@ -104,13 +104,7 @@ struct PolishDoughnut{T,F} <: AbstractThickAccretionDisc{T}
     f::F
 end
 
-function PolishDoughnut(
-    m::AbstractMetricParameters;
-    rₖ = 12.0,
-    n = 0.21,
-    init_r = 5.0,
-    kwargs...,
-)
+function PolishDoughnut(m::AbstractMetric; rₖ = 12.0, n = 0.21, init_r = 5.0, kwargs...)
     inner_radius = __PolishDoughnut.innermost_radius(m, rₖ, n; init_r = init_r)
     r, z = __PolishDoughnut.isobar(m, inner_radius, rₖ, n; kwargs...)
     # interpolate cross section

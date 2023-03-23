@@ -100,7 +100,7 @@ function image_plane(plane::CartesianPlane, u)
 end
 
 # @inline function tracing_configuration(
-#     m::AbstractMetricParameters,
+#     m::AbstractMetric,
 #     position,
 #     plane::AbstractImagePlane,
 #     args...;
@@ -119,12 +119,7 @@ end
 #     )
 # end
 
-function promote_velfunc(
-    m::AbstractMetricParameters,
-    position,
-    plane::AbstractImagePlane,
-    _unused,
-)
+function promote_velfunc(m::AbstractMetric, position, plane::AbstractImagePlane, _unused)
     αs, βs = impact_parameters(plane, position)
     velfunc(i) = map_impact_parameters(m, position, αs[i], βs[i])
     velfunc, trajectory_count(plane)

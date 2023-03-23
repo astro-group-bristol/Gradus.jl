@@ -122,7 +122,7 @@ Unpacks each point in the solution, similar to [`process_solution`](@ref) but re
 array of [`GeodesicPoint`](@ref).
 """
 function process_solution_full(
-    _::AbstractMetricParameters{T},
+    _::AbstractMetric{T},
     sol::SciMLBase.AbstractODESolution{T},
 ) where {T}
     us, ts, _ = unpack_solution(sol)

@@ -1,6 +1,6 @@
 function geodesic_ode_problem(
     ::TraceGeodesic,
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     pos,
     vel,
     time_domain,
@@ -41,7 +41,7 @@ wrap_arguments(config, f, μ) =
     wrap_arguments(config.metric, config.position, config.velocity, f, μ)
 
 function wrap_arguments(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     init_pos::U,
     init_vel::V,
     _problem_func,

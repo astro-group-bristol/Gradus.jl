@@ -101,7 +101,7 @@ function Base.show(io::IO, vdp::VoronoiDiscProfile{D}) where {D}
 end
 
 function VoronoiDiscProfile(
-    m::AbstractMetricParameters{T},
+    m::AbstractMetric{T},
     d::AbstractAccretionDisc{T},
     endpoints::AbstractVector{<:GeodesicPoint{T}};
     padding = 1,
@@ -128,7 +128,7 @@ function VoronoiDiscProfile(
 end
 
 function VoronoiDiscProfile(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     d::AbstractAccretionDisc,
     sols::AbstractArray{S},
 ) where {S<:SciMLBase.AbstractODESolution}
@@ -136,7 +136,7 @@ function VoronoiDiscProfile(
 end
 
 function VoronoiDiscProfile(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     d::AbstractAccretionDisc,
     simsols::SciMLBase.EnsembleSolution,
 )
@@ -178,7 +178,7 @@ end
 
 getareas(vdp::VoronoiDiscProfile) = getarea.(vdp.polys)
 
-function getproperarea(poly::AbstractArray, m::AbstractMetricParameters)
+function getproperarea(poly::AbstractArray, m::AbstractMetric)
     A = getarea(poly)
     c = getbarycenter(poly)
     # get value of metric at the radius of the polygon's barycenter, and in the equitorial plane
@@ -187,7 +187,7 @@ function getproperarea(poly::AbstractArray, m::AbstractMetricParameters)
     sqrt(m_params[2] * m_params[4]) * A
 end
 
-getproperarea(vdp::VoronoiDiscProfile, m::AbstractMetricParameters) =
+getproperarea(vdp::VoronoiDiscProfile, m::AbstractMetric) =
     map(p -> getproperarea(p, m), vdp.polys)
 
 function unpack_polys(
@@ -218,17 +218,13 @@ function getbarycenter(poly)
 end
 
 """
-    cutchart!(polys, m::AbstractMetricParameters{T}, d::AbstractAccretionDisc{T})
+    cutchart!(polys, m::AbstractMetric{T}, d::AbstractAccretionDisc{T})
 
 Trims each polygon in `polys` to match the chart of the disc. Walks the edges of each
 polygon until some intersection ``A`` is found. Continues walking until a second intersection
 ``B`` is found, and then interpolates an arc between ``A`` and ``B``.
 """
-function cutchart!(
-    polys,
-    m::AbstractMetricParameters{T},
-    d::AbstractAccretionDisc{T},
-) where {T}
+function cutchart!(polys, m::AbstractMetric{T}, d::AbstractAccretionDisc{T}) where {T}
     rs = inner_radius(m)
     inside_radius = rs < d.inner_radius ? d.inner_radius : rs
     outside_radius = d.outer_radius
@@ -318,7 +314,7 @@ end
 
 # bootstrap tracing functions
 function tracegeodesics(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     model::AbstractCoronaModel,
     time_domain::NTuple{2},
     n_samples = 1024,
@@ -330,7 +326,7 @@ function tracegeodesics(
     tracegeodesics(m, us, vs, time_domain; kwargs...)
 end
 function tracegeodesics(
-    m::AbstractMetricParameters,
+    m::AbstractMetric,
     model::AbstractCoronaModel,
     d::AbstractAccretionGeometry,
     time_domain::NTuple{2},
