@@ -239,10 +239,10 @@ p = plot(PolarPlane(GeometricGrid(); Nr = 10, Nθ = 20, r_max = 50.0))
 
 function calculate_line_profile(m, x, d, bins, plane)
     _, f = lineprofile(
-        m, 
-        x, 
-        d, 
-        algorithm = BinnedLineProfile(), 
+        m,
+        x,
+        d,
+        algorithm = BinnedLineProfile(),
         # no false images
         callback = domain_upper_hemisphere(),
         verbose = true,
