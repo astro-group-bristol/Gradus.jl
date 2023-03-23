@@ -341,7 +341,7 @@ end # module
 A first-order implementation of [`KerrMetric`](@ref).
 $(FIELDS)
 """
-@with_kw struct KerrSpacetimeFirstOrder{T} <: AbstractFirstOrderMetricParams{T}
+@with_kw struct KerrSpacetimeFirstOrder{T} <: AbstractFirstOrderMetric{T}
     @deftype T
     "Black hole mass."
     M = 1.0

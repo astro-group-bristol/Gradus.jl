@@ -30,7 +30,7 @@ end # module
 
 # new structure for our spacetime
 """
-    struct KerrMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
+    struct KerrMetric{T} <: AbstractStaticAxisSymmetric{T}
 
 The Kerr metric in Boyer-Lindquist coordinates, describing a black hole with mass ``M`` and
 angular spin ``a``:
@@ -56,7 +56,7 @@ where
 ## Parameters
 $(FIELDS)
 """
-@with_kw struct KerrMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
+@with_kw struct KerrMetric{T} <: AbstractStaticAxisSymmetric{T}
     @deftype T
     "Black hole mass."
     M = 1.0

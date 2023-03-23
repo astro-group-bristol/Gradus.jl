@@ -47,12 +47,12 @@ end
 end # module
 
 """
-    struct DilatonAxion{T} <: AbstractStaticAxisSymmetricParameters{T}
+    struct DilatonAxion{T} <: AbstractStaticAxisSymmetric{T}
 
 Einstein-Maxwell-Dilaton-Axion metric.
 $(FIELDS)
 """
-@with_kw struct DilatonAxion{T} <: AbstractStaticAxisSymmetricParameters{T}
+@with_kw struct DilatonAxion{T} <: AbstractStaticAxisSymmetric{T}
     @deftype T
     "Singularity mass."
     M = 1.0

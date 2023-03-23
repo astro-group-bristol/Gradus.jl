@@ -1,5 +1,5 @@
 """
-    AbstractFirstOrderMetricParams{T} <: AbstractMetric{T}
+    AbstractFirstOrderMetric{T} <: AbstractMetric{T}
 
 Abstract type for metrics using the 1st-order integration method. The 1st-order methods
 reuse the velocity vector as a parameter vector, where only element `vel[2]` and `vel[3]`
@@ -14,12 +14,9 @@ Require implementation of
 - [`Vθ`](@ref)
 - [`impact_parameters_to_vel`](@ref)
 """
-abstract type AbstractFirstOrderMetricParams{T} <: AbstractMetric{T} end
+abstract type AbstractFirstOrderMetric{T} <: AbstractMetric{T,BoyerLindquist{(:r, :θ)}} end
 
-function restrict_ensemble(
-    ::AbstractFirstOrderMetricParams,
-    ensemble::EnsembleEndpointThreads,
-)
+function restrict_ensemble(::AbstractFirstOrderMetric, ensemble::EnsembleEndpointThreads)
     @warn "First order methods do not support `EnsembleEndpointThreads`. Automatically switching to `EnsembleThreads`"
     EnsembleThreads()
 end
@@ -44,7 +41,7 @@ end
 end
 
 @inbounds function process_solution(
-    m::AbstractFirstOrderMetricParams{T},
+    m::AbstractFirstOrderMetric{T},
     sol::SciMLBase.AbstractODESolution{T},
 ) where {T}
     us, ts, p = unpack_solution(sol)
@@ -71,7 +68,7 @@ end
     )
 end
 
-function metric_callback(m::AbstractFirstOrderMetricParams, chart::AbstractChart)
+function metric_callback(m::AbstractFirstOrderMetric, chart::AbstractChart)
     (
         chart_callback(chart),
         DiscreteCallback(radial_negative_check(m), flip_radial_sign!),
@@ -85,8 +82,7 @@ end
 Calculate the four-velocity at a point `u`, given a set of metric parameters and the constants
 of motion in `p`.
 """
-four_velocity(u, m::AbstractFirstOrderMetricParams, p) =
-    error("Not implmented for $(typeof(m)).")
+four_velocity(u, m::AbstractFirstOrderMetric, p) = error("Not implmented for $(typeof(m)).")
 
 mutable struct FirstOrderIntegrationParameters{T} <: AbstractIntegrationParameters
     L::T
@@ -114,7 +110,7 @@ end
 
 function geodesic_ode_problem(
     ::TraceGeodesic,
-    m::AbstractFirstOrderMetricParams{T},
+    m::AbstractFirstOrderMetric{T},
     pos::StaticVector{S,T},
     vel::StaticVector{S,T},
     time_domain,
@@ -139,14 +135,14 @@ convert_velocity_type(u::AbstractVector{T}, v) where {T} = convert(typeof(u), co
 
 Effective potential in the radial direction. Used only to track sign changes.
 """
-Vr(m::AbstractFirstOrderMetricParams{T}, u, p) where {T} =
+Vr(m::AbstractFirstOrderMetric{T}, u, p) where {T} =
     error("Not implmented for $(typeof(m)).")
 """
     $(TYPEDSIGNATURES)
 
 Effective potential in the angular direction. Used only to track sign changes.
 """
-Vθ(m::AbstractFirstOrderMetricParams{T}, u, p) where {T} =
+Vθ(m::AbstractFirstOrderMetric{T}, u, p) where {T} =
     error("Not implmented for $(typeof(m)).")
 
 """
@@ -155,7 +151,7 @@ Vθ(m::AbstractFirstOrderMetricParams{T}, u, p) where {T} =
 Calculate constants of motion ``L`` and ``Q``, given a set of metric parameters,
 the geodesic position, and the `param` vector.
 """
-calc_lq(m::AbstractFirstOrderMetricParams{T}, pos, param) where {T} =
+calc_lq(m::AbstractFirstOrderMetric{T}, pos, param) where {T} =
     error("Not implmented for $(typeof(m)).")
 
 function flip_radial_sign!(integrator)
@@ -168,12 +164,12 @@ function flip_angular_sign!(integrator)
     integrator.p.changes[2] = integrator.t[end]
 end
 
-function radial_negative_check(m::AbstractFirstOrderMetricParams{T}) where {T}
+function radial_negative_check(m::AbstractFirstOrderMetric{T}) where {T}
     (u, λ, integrator) -> Vr(m, u, integrator.p) < 0
 end
 
-function angular_negative_check(m::AbstractFirstOrderMetricParams{T}) where {T}
+function angular_negative_check(m::AbstractFirstOrderMetric{T}) where {T}
     (u, λ, integrator) -> Vθ(m, u, integrator.p) < 0
 end
 
-export AbstractFirstOrderMetricParams, FirstOrderGeodesicPoint
+export AbstractFirstOrderMetric, FirstOrderGeodesicPoint

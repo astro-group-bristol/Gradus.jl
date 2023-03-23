@@ -29,6 +29,9 @@ import GeometryBasics
 
 include("GradusBase/GradusBase.jl")
 import .GradusBase:
+    AbstractCoordinates,
+    AbstractStaticAxisSymmetric,
+    BoyerLindquist,
     E,
     Lz,
     AbstractMetric,
@@ -61,6 +64,9 @@ import .GradusBase:
     restrict_ensemble
 
 export AbstractMetric,
+    AbstractStaticAxisSymmetric,
+    BoyerLindquist,
+    AbstractCoordinates,
     process_solution,
     process_solution_full,
     GeodesicPoint,

@@ -21,7 +21,7 @@ Let's pick the [Schwarzschild spacetime](https://en.wikipedia.org/wiki/Schwarzsc
 ```julia
 using Gradus
 
-struct Schwarzschild{T} <: AbstractStaticAxisSymmetricParameters{T}
+struct Schwarzschild{T} <: AbstractStaticAxisSymmetric{T}
     M::T
 end
 
@@ -44,12 +44,12 @@ Gradus.inner_radius(m::Schwarzschild) = 2 * m.M
 Going through this line by line:
 
 ```julia
-struct Schwarzschild{T} <: AbstractStaticAxisSymmetricParameters{T}
+struct Schwarzschild{T} <: AbstractStaticAxisSymmetric{T}
     M::T
 end
 ```
 
-- First we define a `struct` that will hold the quantities parameterizing our spacetime. In this case, just the mass $M$. We declare our struct to be a _subtype_ of `AbstractStaticAxisSymmetricParameters` since we know our metric will be static (no time dependence) and axis-symmetric (no $\phi$ dependence). This describes the more general [Petrov type D](https://en.wikipedia.org/wiki/Petrov_classification) class of spacetimes, and allows Gradus.jl to make a number of simplifying assumptions under the hood about how this spacetime will behave. The `T` parameter is the number type of this metric, and dictates the precision of all numerics in the trace. Therefore, if `M` is a `Float32`, Gradus.jl will raise errors if you attempt 64-bit floating point operations when tracing. This is _by design_, since many GPU architectures prefer `Float32` for speed, especially when precision is less important, and throwing errors is preferable to debugging type coercions. 
+- First we define a `struct` that will hold the quantities parameterizing our spacetime. In this case, just the mass $M$. We declare our struct to be a _subtype_ of `AbstractStaticAxisSymmetric` since we know our metric will be static (no time dependence) and axis-symmetric (no $\phi$ dependence). This describes the more general [Petrov type D](https://en.wikipedia.org/wiki/Petrov_classification) class of spacetimes, and allows Gradus.jl to make a number of simplifying assumptions under the hood about how this spacetime will behave. The `T` parameter is the number type of this metric, and dictates the precision of all numerics in the trace. Therefore, if `M` is a `Float32`, Gradus.jl will raise errors if you attempt 64-bit floating point operations when tracing. This is _by design_, since many GPU architectures prefer `Float32` for speed, especially when precision is less important, and throwing errors is preferable to debugging type coercions. 
 
 ```julia
 function Gradus.metric_components(m::Schwarzschild, x)

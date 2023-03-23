@@ -22,7 +22,7 @@ end
 
 end # module
 
-struct BumblebeeMetric{T} <: AbstractStaticAxisSymmetricParameters{T}
+struct BumblebeeMetric{T} <: AbstractStaticAxisSymmetric{T}
     "Black hole mass."
     M::T
     "Black hole spin."

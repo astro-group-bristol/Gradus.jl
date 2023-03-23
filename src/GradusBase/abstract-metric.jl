@@ -1,13 +1,19 @@
+abstract type AbstractCoordinates end
+struct BoyerLindquist{C} <: AbstractCoordinates end
+
 """
     abstract type AbstractMetric{T} end
 
 Abstract type used to dispatch different geodesic problems.
 """
-abstract type AbstractMetric{T} end
+abstract type AbstractMetric{T,C} end
 
 Base.length(::AbstractMetric) = 1
 Base.iterate(m::AbstractMetric) = (m, nothing)
 Base.iterate(::AbstractMetric, ::Nothing) = nothing
+
+# some utility types
+abstract type AbstractStaticAxisSymmetric{T} <: AbstractMetric{T,BoyerLindquist{(:r, :θ)}} end
 
 """
     metric_components(m::AbstractMetric{T}, x)

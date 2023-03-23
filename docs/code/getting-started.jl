@@ -1,6 +1,6 @@
 using Gradus
 
-struct Schwarzschild{T} <: AbstractStaticAxisSymmetricParameters{T}
+struct Schwarzschild{T} <: AbstractStaticAxisSymmetric{T}
     M::T
 end
 
