@@ -36,7 +36,7 @@ function Gradus.cross_section(d::TopHatDisc, u)
 end
 ```
 """
-cross_section(d::AbstractThickAccretionDisc, u4) =
+cross_section(d::AbstractThickAccretionDisc, x4) =
     error("Not implemented for $(typeof(d)).")
 r_cross_section(d::AbstractThickAccretionDisc, r::Number) =
     cross_section(d, SVector(0.0, r, π / 2, 0.0))
@@ -57,8 +57,8 @@ being perpendicular to the spin axis.
     inclination::T
 end
 
-@fastmath function distance_to_disc(d::GeometricThinDisc{T}, u4; gtol) where {T}
-    p = @inbounds let r = u4[2], θ = u4[3], ϕ = u4[4]
+@fastmath function distance_to_disc(d::GeometricThinDisc{T}, x4; gtol) where {T}
+    p = @inbounds let r = x4[2], θ = x4[3], ϕ = x4[4]
         if r < d.inner_radius || r > d.outer_radius
             return 1.0
         end
@@ -68,7 +68,7 @@ end
     n = @SVector [T(0.0), cos(d.inclination), sin(d.inclination)]
     # project u into normal vector n
     k = p ⋅ n
-    abs(k) - (gtol * u4[2])
+    abs(k) - (gtol * x4[2])
 end
 
 """
@@ -116,16 +116,16 @@ function ThickDisc(cross_section::F, parameters::P) where {F,P}
     ThickDisc{Float64,F,P}(cross_section, parameters)
 end
 
-cross_section(d::ThickDisc, u4) = d.f(u4, d.params...)
-cross_section(d::ThickDisc{T,F,Nothing}, u4) where {T,F} = d.f(u4)
+cross_section(d::ThickDisc, x4) = d.f(x4, d.params...)
+cross_section(d::ThickDisc{T,F,Nothing}, x4) where {T,F} = d.f(x4)
 
-function distance_to_disc(d::AbstractThickAccretionDisc, u4; gtol)
-    height = cross_section(d, u4)
+function distance_to_disc(d::AbstractThickAccretionDisc, x4; gtol)
+    height = cross_section(d, x4)
     if height <= 0.0
         return 1.0
     end
-    z = @inbounds u4[2] * cos(u4[3])
-    abs(z) - height - (gtol * u4[2])
+    z = @inbounds x4[2] * cos(x4[3])
+    abs(z) - height - (gtol * x4[2])
 end
 
 # common thick disc models
@@ -188,5 +188,49 @@ function ShakuraSunyaev(
     ShakuraSunyaev(T(eddington_ratio), 1.0, radiative_efficiency, r_isco)
 end
 
+struct EllipticalDisc{T} <: AbstractAccretionDisc{T}
+    inner_radius::T
+    semi_major::T
+    semi_minor::T
+end
+
+function distance_to_disc(d::EllipticalDisc, x4; gtol)
+    if d.semi_major < x4[2] || x4[2] < d.inner_radius
+        return 1.0
+    end
+    # equation of ellipse
+    y = √((1 - (x4[2] / d.semi_major)^2) * d.semi_minor^2)
+    # check height less than y with tolerance
+    h = abs(x4[2] * cos(x4[3]))
+    h - y - (gtol * x4[2])
+end
+
+struct PrecessingDisc{T,D} <: AbstractAccretionDisc{T}
+    disc::D
+    β::T
+    γ::T
+    R::SMatrix{3,3,T,9}
+end
+
+function PrecessingDisc(disc, β, γ)
+    Rx = SMatrix{3,3}(1, 0, 0, 0, cos(-β), -sin(-β), 0, sin(-β), cos(-β))
+    R = Rx
+    PrecessingDisc(disc, β, γ, R)
+end
+
+function distance_to_disc(d::PrecessingDisc, x4; gtol)
+    x = let θ = x4[3]
+        ϕ = x4[4] - d.γ
+        d.R * SVector(sin(θ) * sin(ϕ), sin(θ) * cos(ϕ), cos(θ))
+    end
+    x4prime = SVector(x4[1], x4[2], atan(√(x[1]^2 + x[2]^2), x[3]), atan(x[2], x[1]))
+    distance_to_disc(d.disc, x4prime; gtol)
+end
+
 export AbstractThickAccretionDisc,
-    ThickDisc, ShakuraSunyaev, GeometricThinDisc, cross_section
+    ThickDisc,
+    ShakuraSunyaev,
+    GeometricThinDisc,
+    cross_section,
+    PrecessingDisc,
+    EllipticalDisc
