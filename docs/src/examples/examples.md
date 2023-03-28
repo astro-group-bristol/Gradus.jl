@@ -185,7 +185,7 @@ d = GeometricThinDisc(0.0, 1000.0, π / 2)
 # specify coronal geometry
 model = LampPostModel(h = 10.0)
 # gridding for the photon plane
-plane = PolarPlane(GeometricGrid(); Nr = 1200, Nθ = 1200)
+plane = PolarPlane(GeometricGrid(); Nr = 1800, Nθ = 1800)
 
 # integrate source to disc and observer to disc
 tf = @time lagtransfer(
@@ -201,9 +201,9 @@ tf = @time lagtransfer(
 
 # bin into a 2d grid, returning the time and energy axis, 
 # and the flux in each bin
-t, E, f = binflux(tf, N_E = 900, N_t = 900)
+t, E, f = binflux(tf, N_E = 1500, N_t = 1500)
 
-# log data for visualisation purposes
+# take the log for visualisation purposes
 I = f .> 0
 f[I] .= log.(f[I])
 
