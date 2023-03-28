@@ -175,6 +175,85 @@ plot(energy, flux, legend=false)
 
 ![](./example-line-profile.svg)
 
+## Reverberation transfer functions
+
+```julia
+m = KerrMetric(1.0, 0.998)
+u = SVector(0.0, 1000.0, deg2rad(60), 0.0)
+d = GeometricThinDisc(0.0, 1000.0, π / 2)
+
+# specify coronal geometry
+model = LampPostModel(h = 10.0)
+# gridding for the photon plane
+plane = PolarPlane(GeometricGrid(); Nr = 1200, Nθ = 1200)
+
+# integrate source to disc and observer to disc
+tf = @time lagtransfer(
+    model,
+    m,
+    u,
+    plane,
+    d,
+    callback = domain_upper_hemisphere(),
+    n_samples = 100_000,
+    verbose = true,
+)
+
+# bin into a 2d grid, returning the time and energy axis, 
+# and the flux in each bin
+t, E, f = binflux(tf, N_E = 900, N_t = 900)
+
+# log data for visualisation purposes
+I = f .> 0
+f[I] .= log.(f[I])
+
+p = heatmap(
+    t,
+    E,
+    f,
+    xlabel = "Time (GM/c^3)",
+    ylabel = "Energy (keV)",
+    xrange = [0, 150],
+    yrange = [0, 9],
+    clims = (-20, -1),
+)
+```
+
+![](./example-reverb-tf.png)
+
+## Covariant radiative transfer
+
+```julia
+# metric and metric parameters
+m = KerrMetric(M = 1.0, a = 1.0)
+# observer position
+u = SVector(0.0, 1000.0, deg2rad(80), 0.0)
+# accretion disc
+d = PolishDoughnut(m)
+
+# define point function which reads the auxillary variable
+# which is contextually the intensity
+pf = PointFunction((m, gp, t) -> gp.aux)
+
+a, b, img = @time rendergeodesics(
+    m,
+    u,
+    d,
+    # maximum integration time
+    2000.0,
+    fov = 10.0,
+    image_width = 600,
+    image_height = 500,
+    verbose = true,
+    pf = pf,
+    trace = Gradus.TraceRadiativeTransfer(),
+)
+
+heatmap(a, b, img, aspect_ratio = 1, xlabel = "α", ylabel = "β")
+```
+
+![](./example-covariant-radiative-transfer.png)
+
 ## Interpolating redshifts
 
 In cases where no analytic redshift solution is known, we can instead interpolate a numeric approximation. For example, interpolating the plunging region velocities and using the analytic solution for general static, axis symmetric metrics outside of the ISCO can be achieved with:

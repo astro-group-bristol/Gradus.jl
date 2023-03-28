@@ -311,13 +311,57 @@ function ex_lineprofile()
     savefig(p, "example-line-profile.svg")
 end
 
-ex_tracing()
-ex_redshift()
-ex_interpolating()
-ex_circular_orbits()
-ex_isco()
-ex_horizon()
-ex_transfer_functions()
-ex_concentric_rings()
-ex_doughnut()
-ex_lineprofile()
+function ex_2d_transfer()
+    m = KerrMetric(1.0, 0.998)
+    u = SVector(0.0, 1000.0, deg2rad(60), 0.0)
+    d = GeometricThinDisc(0.0, 1000.0, π / 2)
+    
+    # specify coronal geometry
+    model = LampPostModel(h = 10.0)
+    # gridding for the photon plane
+    plane = PolarPlane(GeometricGrid(); Nr = 1200, Nθ = 1200)
+
+    # integrate source to disc and observer to disc
+    tf = @time lagtransfer(
+        model,
+        m,
+        u,
+        plane,
+        d,
+        callback = domain_upper_hemisphere(),
+        n_samples = 100_000,
+        verbose = true,
+    )
+
+    # bin into a 2d grid, returning the time and energy axis, 
+    # and the flux in each bin
+    t, E, f = binflux(tf, N_E = 900, N_t = 900)
+
+    # log data for visualisation purposes
+    I = f .> 0
+    f[I] .= log.(f[I])
+    p = heatmap(
+        t,
+        E,
+        f,
+        xlabel = "Time (GM/c^3)",
+        ylabel = "Energy (keV)",
+        xrange = [0, 150],
+        yrange = [0, 9],
+        clims = (-20, -1),
+    )
+    # savefig(p, "example-line-profile.svg")
+end
+
+ex_2d_transfer()
+
+# ex_tracing()
+# ex_redshift()
+# ex_interpolating()
+# ex_circular_orbits()
+# ex_isco()
+# ex_horizon()
+# ex_transfer_functions()
+# ex_concentric_rings()
+# ex_doughnut()
+# ex_lineprofile()
