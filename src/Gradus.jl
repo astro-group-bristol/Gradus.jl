@@ -182,6 +182,7 @@ include("accretion-geometry/geometry.jl")
 include("accretion-geometry/intersections.jl")
 include("accretion-geometry/discs.jl")
 include("accretion-geometry/meshes.jl")
+include("accretion-geometry/composite.jl")
 include("accretion-geometry/bootstrap.jl")
 
 include("transfer-functions/types.jl")

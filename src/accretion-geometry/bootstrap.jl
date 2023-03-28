@@ -53,6 +53,21 @@ function geometry_collision_callback(
     )
 end
 
+function geometry_collision_callback(
+    cg::CompositeGeometry{T},
+    ::AbstractTraceParameters;
+    gtol,
+    interp_points = 8,
+) where {T}
+    map(cg.geometry) do g
+        ContinuousCallback(
+            (u, λ, integrator) -> distance_to_disc(g, u; gtol = gtol),
+            terminate_with_status!(StatusCodes.IntersectedWithGeometry),
+            interp_points = interp_points,
+            save_positions = (true, false),
+        )
+    end
+end
 
 function intersected_with_geometry(gps::AbstractArray{<:AbstractGeodesicPoint}, limiter)
     [(i.status == StatusCodes.IntersectedWithGeometry) && limiter(i.x) for i in gps]
