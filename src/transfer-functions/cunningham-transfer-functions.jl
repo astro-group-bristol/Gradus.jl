@@ -2,35 +2,48 @@ function _make_sorted_interpolation(g, f)
     I = sortperm(g)
     _g = @inbounds g[I]
     _f = @inbounds f[I]
+    # shift the extrema
+    # todo: interpolate f -> g to find better estimate of what f should be at extrema
+    _g[1] = zero(eltype(_g))
+    _g[end] = one(eltype(_g))
     DataInterpolations.LinearInterpolation(_f, _g)
 end
 
 function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
-    upper_f = T[]
-    lower_f = T[]
-    upper_g✶ = T[]
-    lower_g✶ = T[]
-    N = (length(ctf.f) ÷ 2) + 1
-    sizehint!(upper_f, N)
-    sizehint!(lower_f, N)
-    sizehint!(upper_g✶, N)
-    sizehint!(lower_g✶, N)
+    # first things first we want to pull out the extremal
+    # as these values are mutual to both branches, and cap off the
+    # extrema. this way we avoid any accidental linear extrapolation
+    # which might occur if N is small
 
-    decreasing = true
-    g✶previous = 0.0
-    for (i, g✶) in enumerate(ctf.g✶)
-        decreasing = g✶previous > g✶
-        if decreasing
-            push!(lower_f, ctf.f[i])
-            push!(lower_g✶, g✶)
-        else
-            push!(upper_f, ctf.f[i])
-            push!(upper_g✶, g✶)
-        end
-        g✶previous = g✶
+    _, imin = findmin(ctf.g✶)
+    _, imax = findmax(ctf.g✶)
+    i1, i2 = imax > imin ? (imin, imax) : (imax, imin)
+    
+    # branch sizes, with duplicate extrema
+    N1 = i2 - i1 + 1
+    N2 = length(ctf.f) - N1 + 2
+    # allocate branches
+    branch1_f = zeros(T, N1)
+    branch2_f = zeros(T, N2)
+    branch1_g✶ = zeros(T, N1)
+    branch2_g✶ = zeros(T, N2)
+
+    for (i, j) in enumerate(i1:i2)
+        branch1_f[i] = ctf.f[j]
+        branch1_g✶[i] = ctf.g✶[j]
+    end
+    for (i, j) in enumerate(Iterators.flatten((1:i1, i2:length(ctf.f))))
+        branch2_f[i] = ctf.f[j]
+        branch2_g✶[i] = ctf.g✶[j]
     end
 
-    (lower_g✶, lower_f, upper_g✶, upper_f)
+    # determine which is the upper branch
+    # return:  (lower_g✶, lower_f, upper_g✶, upper_f)
+    if branch1_f[2] > branch1_f[1]
+        branch2_g✶, branch2_f, branch1_g✶, branch1_f
+    else
+        branch1_g✶, branch1_f, branch2_g✶, branch2_f
+    end
 end
 
 function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where {T}
@@ -46,9 +59,8 @@ function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where
     )
 end
 
-@muladd function _calculate_transfer_function(rₑ, g, g✶, J)
+_calculate_transfer_function(rₑ, g, g✶, J) =
     @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
-end
 
 function cunningham_transfer_function(
     m::AbstractMetric{T},
@@ -63,12 +75,13 @@ function cunningham_transfer_function(
     N = 80,
     tracer_kwargs...,
 ) where {T}
+    # add 2 for extremal g✶ we calculate
+    # Nextrema_solving = fld(N, 4)
+    # Ndirect = N - 2 * (Nextrema_solving)
     Js = zeros(T, N)
     gs = zeros(T, N)
 
-    θs = range(π / 2, 2π + π / 2, N)
-    @inbounds for i in eachindex(θs)
-        θ = θs[i]
+    function _workhorse(θ)
         r, gp = find_offset_for_radius(
             m,
             u,
@@ -85,9 +98,9 @@ function cunningham_transfer_function(
         end
         α = r * cos(θ)
         β = r * sin(θ)
-        g = redshift_pf(m, gp, max_time)
-        gs[i] = g
-        Js[i] = jacobian_∂αβ_∂gr(
+        # use underscores to avoid possible boxing
+        _g = redshift_pf(m, gp, max_time)
+        _J = jacobian_∂αβ_∂gr(
             m,
             u,
             d,
@@ -98,9 +111,29 @@ function cunningham_transfer_function(
             redshift_pf = redshift_pf,
             tracer_kwargs...,
         )
+        (_g, _J)
+    end 
+    
+    # sample so that the expected minima and maxima (π and 2π)
+    # are in the middle of the domain, so that we can find the minima
+    # and maxima via interpolation
+    θs = range(π / 2, 2π + π / 2, N) |> collect
+    @inbounds for i in eachindex(θs)
+        θ = θs[i]
+        g, J = _workhorse(θ)
+        gs[i] = g
+        Js[i] = J
     end
+    
+    # todo: maybe use a basic binary search optimization here to find
+    # the extremal g using the ray tracer within N steps, instead of
+    # relying on an interpolation to find it?
+    # maybe even dispatch for different methods until one proves itself
+    # superior
 
-    gmin, gmax = infer_extremal(gs, θs, π, 2π)
+    # gmin, gmax = _search_extremal!(gs, Js, _workhorse, θs, Ndirect, Nextrema_solving)
+    (gmin, gmax), _ = infer_extremal(gs, θs, π, 2π)
+    
     # convert from ∂g to ∂g✶
     @. Js = (gmax - gmin) * Js
     @inbounds for i in eachindex(Js)
@@ -114,13 +147,45 @@ function cunningham_transfer_function(
     CunninghamTransferFunction(gs, Js, gmin, gmax, rₑ)
 end
 
+# currently unused: find gmin and gmax via GoldenSection
+# storing all attempts in gs and Js
+function _search_extremal!(gs, Js, f, θs, offset, N)
+    jmin = offset
+    function _min_searcher(θ)
+        @assert jmin <= N + offset
+        g, Js[jmin] = f(θ) 
+        gs[jmin] = g
+        jmin + 1
+        g
+    end
+
+    jmax = offset + N
+    function _max_searcher(θ)
+        @assert jmax <= 2N + offset
+        g, Js[jmax] = f(θ) 
+        gs[jmax] = g
+        jmax + 1
+        # invert 
+        -g
+    end
+
+    _, imin = findmin(@view(gs[1:offset]))
+    _, imax = findmax(@view(gs[1:offset]))
+
+    # stride either side of our best guess so far
+    res_min = Optim.optimize(_min_searcher, θs[imin - 1], θs[imin + 1], GoldenSection(), iterations=N)
+    res_max = Optim.optimize(_max_searcher, θs[imax - 1], θs[imax + 1], GoldenSection(), iterations=N)
+    # unpack result, remembering that maximum is inverted
+    Optim.minimum(res_min), -Optim.minimum(res_max)
+end
+
 function infer_extremal(y, x, x0, x1)
-    _, y0 = interpolate_extremal(y, x, x0)
-    _, y1 = interpolate_extremal(y, x, x1)
+    x0, y0 = interpolate_extremal(y, x, x0)
+    x1, y1 = interpolate_extremal(y, x, x1)
     if y0 > y1
-        return y1, y0
+        return (y1, y0), (x1, x0)
     else
-        return y0, y1
+        return (y0, y1), (x0, x1)
     end
 end
 

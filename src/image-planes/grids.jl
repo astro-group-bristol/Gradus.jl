@@ -41,6 +41,16 @@ function _sin_grid(min, max, N)
     (((sin(p) + 1) / 2) * (max - min) + min for p in range(-π / 2, π / 2, N))
 end
 
+struct CosGrid <: AbstractImpactParameterGrid end
+
+function (grid::CosGrid)(min, max, N)
+    _cos_grid(min, max, N)
+end
+
+function _cos_grid(min, max, N)
+    ((cos(x - π/2) + x) / (4π) * (max - min) + min for x in range(0, 4π, N))
+end
+
 struct LogisticGrid{T} <: AbstractImpactParameterGrid
     k::T
 end
