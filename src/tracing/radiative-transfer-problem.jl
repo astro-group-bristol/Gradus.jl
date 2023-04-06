@@ -113,6 +113,3 @@ function assemble_tracing_problem(
     end
     wrap_arguments(config, _problem_builder, trace.μ)
 end
-
-# how do we get our additional values out
-unpack_auxillary(trace::TraceRadiativeTransfer, u::SVector{9}) = u[9] 

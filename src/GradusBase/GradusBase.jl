@@ -29,7 +29,6 @@ include("physical-quantities.jl")
 export AbstractMetric,
     AbstractCoordinates,
     AbstractTrace,
-    unpack_auxillary,
     BoyerLindquist,
     AbstractStaticAxisSymmetric,
     metric,

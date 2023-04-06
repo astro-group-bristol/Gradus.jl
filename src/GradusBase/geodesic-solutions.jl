@@ -103,7 +103,7 @@ sol = tracegeodesics(m, x, v)
 point = unpack_solution(sol)
 ```
 """
-function unpack_solution(::AbstractMetric, ::AbstractTrace, sol::SciMLBase.AbstractODESolution{T}) where {T}
+function unpack_solution(::AbstractMetric, sol::SciMLBase.AbstractODESolution{T}) where {T}
     @inbounds @views begin
         us, ts, _ = unpack_solution(sol)
 
@@ -116,11 +116,7 @@ function unpack_solution(::AbstractMetric, ::AbstractTrace, sol::SciMLBase.Abstr
         t = ts[end]
 
         # get the auxillary values if we have any
-        aux = if eltype(us) <: SVector{8}
-            nothing
-        else
-            unpack_auxillary(us[end])
-        end
+        aux = unpack_auxillary(trace, us[end])
 
         GeodesicPoint(
             sol.prob.p.status,
@@ -135,13 +131,10 @@ function unpack_solution(::AbstractMetric, ::AbstractTrace, sol::SciMLBase.Abstr
     end
 end
 
-"""
-    unpack_auxillary
-
-Unpack any auxillary parameters that may have been added to the geodesic problem.
-"""
-function unpack_auxillary(trace::AbstractTrace, u)
-    error("Not implemented for $(typeof(trace)).")
+unpack_auxillary(::SVector{8}) = nothing
+function unpack_auxillary(u::SVector{N}) where {N} 
+    @assert N > 8
+    @views u[9:end]
 end
 
 """

@@ -50,7 +50,6 @@ import .GradusBase:
     metric_components,
     inverse_metric_components,
     unpack_solution,
-    unpack_auxillary,
     dotproduct,
     propernorm,
     tetradframe,
