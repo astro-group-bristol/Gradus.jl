@@ -105,7 +105,7 @@ point = unpack_solution(sol)
 """
 function unpack_solution(::AbstractMetric, sol::SciMLBase.AbstractODESolution{T}) where {T}
     @inbounds @views begin
-        us, ts, _ = unpack_solution(sol)
+        us, ts, _ = extract_fields(sol)
 
         x_init = SVector{4,T}(us[1][1:4])
         v_init = SVector{4,T}(us[1][5:8])
@@ -116,7 +116,7 @@ function unpack_solution(::AbstractMetric, sol::SciMLBase.AbstractODESolution{T}
         t = ts[end]
 
         # get the auxillary values if we have any
-        aux = unpack_auxillary(trace, us[end])
+        aux = unpack_auxillary(us[end])
 
         GeodesicPoint(
             sol.prob.p.status,
@@ -137,6 +137,13 @@ function unpack_auxillary(u::SVector{N}) where {N}
     @views u[9:end]
 end
 
+function extract_fields(sol)
+    u = sol.u 
+    p = sol.prob.p
+    t = sol.t
+    (u, t, p)
+end
+
 """
     unpack_solution_full
 
@@ -147,7 +154,7 @@ function unpack_solution_full(
     _::AbstractMetric{T},
     sol::SciMLBase.AbstractODESolution{T},
 ) where {T}
-    us, ts, _ = unpack_solution(sol)
+    us, ts, _ = extract_fields(sol)
     @inbounds @views begin
         u_start = SVector{4,T}(us[1][1:4])
         v_start = SVector{4,T}(us[1][5:8])
