@@ -3,6 +3,7 @@ push!(LOAD_PATH, "src")
 using Documenter
 using Gradus
 
+
 makedocs(
     modules = [Gradus],
     clean = true,
