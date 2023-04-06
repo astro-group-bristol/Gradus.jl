@@ -231,7 +231,7 @@ u = SVector(0.0, 1000.0, deg2rad(80), 0.0)
 # accretion disc
 d = PolishDoughnut(m)
 
-# define point function which reads the auxillary variable
+# define point function which reads the auxiliary variable
 # which is contextually the intensity
 pf = PointFunction((m, gp, t) -> gp.aux)
 
