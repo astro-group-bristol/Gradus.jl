@@ -20,6 +20,7 @@ makedocs(
         ],
         "Advanced" => [
             "Geodesic integration" => "overview/geodesic-integration.md",
+            "Custom tracing" => "internals/custom-traces.md",
             "Parallelism and ensembles" => "internals/parallelism.md",
             "Special radii" => "internals/special-radii.md",
         ],

@@ -68,12 +68,7 @@ function tracegeodesics(
 )
     tracegeodesics(trace, m, args...; kwargs...)
 end
-function tracegeodesics(
-    trace::AbstractTrace,
-    m::AbstractMetric,
-    args...;
-    kwargs...,
-)
+function tracegeodesics(trace::AbstractTrace, m::AbstractMetric, args...; kwargs...)
     config, solver_opts = tracing_configuration(trace, m, args...; kwargs...)
     problem = assemble_tracing_problem(trace, config)
     solve_tracing_problem(problem, config; solver_opts...)

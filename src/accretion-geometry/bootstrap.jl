@@ -31,11 +31,7 @@ function callback(u, λ, integrator)::Bool
 end
 ```
 """
-function geometry_collision_callback(
-    g::AbstractAccretionGeometry,
-    ::AbstractTrace;
-    gtol,
-)
+function geometry_collision_callback(g::AbstractAccretionGeometry, ::AbstractTrace; gtol)
     DiscreteCallback(
         (u, λ, integrator) ->
             intersects_geometry(g, line_element(u, integrator), integrator),

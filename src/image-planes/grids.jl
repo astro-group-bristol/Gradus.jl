@@ -48,7 +48,7 @@ function (grid::CosGrid)(min, max, N)
 end
 
 function _cos_grid(min, max, N)
-    ((cos(x - π/2) + x) / (4π) * (max - min) + min for x in range(0, 4π, N))
+    ((cos(x - π / 2) + x) / (4π) * (max - min) + min for x in range(0, 4π, N))
 end
 
 struct LogisticGrid{T} <: AbstractImpactParameterGrid

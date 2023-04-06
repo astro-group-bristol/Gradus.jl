@@ -63,9 +63,7 @@ function radiative_transfer_ode_problem(
 )
     invν3 = inv(trace.ν)^3
     function f(u::SVector{9,T}, p, λ) where {T}
-        @inbounds let x = SVector{4,T}(@view(u[1:4])),
-            k = SVector{4,T}(@view(u[5:8])),
-            I = u[9]
+        @inbounds let x = SVector{4,T}(u[1:4]), k = SVector{4,T}(u[5:8]), I = u[9]
 
             dk = SVector{4,T}(geodesic_equation(m, x, k))
             dI = if p.within_geometry
@@ -76,7 +74,7 @@ function radiative_transfer_ode_problem(
             vcat(k, dk, SVector(dI))
         end
     end
-    
+
     # add our new quantity that we want to trace
     u_init = vcat(pos, vel, SVector(0.0))
     ODEProblem{false}(

@@ -118,27 +118,18 @@ function unpack_solution(::AbstractMetric, sol::SciMLBase.AbstractODESolution{T}
         # get the auxillary values if we have any
         aux = unpack_auxillary(us[end])
 
-        GeodesicPoint(
-            sol.prob.p.status,
-            t_init,
-            t,
-            x_init,
-            x,
-            v_init,
-            v,
-            aux,
-        )
+        GeodesicPoint(sol.prob.p.status, t_init, t, x_init, x, v_init, v, aux)
     end
 end
 
 unpack_auxillary(::SVector{8}) = nothing
-function unpack_auxillary(u::SVector{N}) where {N} 
+function unpack_auxillary(u::SVector{N,T}) where {N,T}
     @assert N > 8
-    @views u[9:end]
+    SVector{N - 8,T}(u[9:end])
 end
 
 function extract_fields(sol)
-    u = sol.u 
+    u = sol.u
     p = sol.prob.p
     t = sol.t
     (u, t, p)

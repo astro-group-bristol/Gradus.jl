@@ -18,7 +18,7 @@ function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
     _, imin = findmin(ctf.g✶)
     _, imax = findmax(ctf.g✶)
     i1, i2 = imax > imin ? (imin, imax) : (imax, imin)
-    
+
     # branch sizes, with duplicate extrema
     N1 = i2 - i1 + 1
     N2 = length(ctf.f) - N1 + 2
@@ -59,8 +59,7 @@ function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where
     )
 end
 
-_calculate_transfer_function(rₑ, g, g✶, J) =
-    @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
+_calculate_transfer_function(rₑ, g, g✶, J) = @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
 
 function cunningham_transfer_function(
     m::AbstractMetric{T},
@@ -112,8 +111,8 @@ function cunningham_transfer_function(
             tracer_kwargs...,
         )
         (_g, _J)
-    end 
-    
+    end
+
     # sample so that the expected minima and maxima (π and 2π)
     # are in the middle of the domain, so that we can find the minima
     # and maxima via interpolation
@@ -124,7 +123,7 @@ function cunningham_transfer_function(
         gs[i] = g
         Js[i] = J
     end
-    
+
     # todo: maybe use a basic binary search optimization here to find
     # the extremal g using the ray tracer within N steps, instead of
     # relying on an interpolation to find it?
@@ -133,7 +132,7 @@ function cunningham_transfer_function(
 
     # gmin, gmax = _search_extremal!(gs, Js, _workhorse, θs, Ndirect, Nextrema_solving)
     (gmin, gmax), _ = infer_extremal(gs, θs, π, 2π)
-    
+
     # convert from ∂g to ∂g✶
     @. Js = (gmax - gmin) * Js
     @inbounds for i in eachindex(Js)
@@ -153,7 +152,7 @@ function _search_extremal!(gs, Js, f, θs, offset, N)
     jmin = offset
     function _min_searcher(θ)
         @assert jmin <= N + offset
-        g, Js[jmin] = f(θ) 
+        g, Js[jmin] = f(θ)
         gs[jmin] = g
         jmin + 1
         g
@@ -162,7 +161,7 @@ function _search_extremal!(gs, Js, f, θs, offset, N)
     jmax = offset + N
     function _max_searcher(θ)
         @assert jmax <= 2N + offset
-        g, Js[jmax] = f(θ) 
+        g, Js[jmax] = f(θ)
         gs[jmax] = g
         jmax + 1
         # invert 
@@ -173,8 +172,20 @@ function _search_extremal!(gs, Js, f, θs, offset, N)
     _, imax = findmax(@view(gs[1:offset]))
 
     # stride either side of our best guess so far
-    res_min = Optim.optimize(_min_searcher, θs[imin - 1], θs[imin + 1], GoldenSection(), iterations=N)
-    res_max = Optim.optimize(_max_searcher, θs[imax - 1], θs[imax + 1], GoldenSection(), iterations=N)
+    res_min = Optim.optimize(
+        _min_searcher,
+        θs[imin-1],
+        θs[imin+1],
+        GoldenSection(),
+        iterations = N,
+    )
+    res_max = Optim.optimize(
+        _max_searcher,
+        θs[imax-1],
+        θs[imax+1],
+        GoldenSection(),
+        iterations = N,
+    )
     # unpack result, remembering that maximum is inverted
     Optim.minimum(res_min), -Optim.minimum(res_max)
 end
