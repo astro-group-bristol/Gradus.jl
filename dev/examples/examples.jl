@@ -315,7 +315,7 @@ function ex_2d_transfer()
     m = KerrMetric(1.0, 0.998)
     u = SVector(0.0, 1000.0, deg2rad(60), 0.0)
     d = GeometricThinDisc(0.0, 1000.0, π / 2)
-    
+
     # specify coronal geometry
     model = LampPostModel(h = 10.0)
     # gridding for the photon plane
