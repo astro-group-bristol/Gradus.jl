@@ -30,14 +30,15 @@ import GeometryBasics
 include("GradusBase/GradusBase.jl")
 import .GradusBase:
     AbstractCoordinates,
+    AbstractTrace,
     AbstractStaticAxisSymmetric,
     BoyerLindquist,
     E,
     Lz,
     AbstractMetric,
     metric,
-    process_solution,
-    process_solution_full,
+    unpack_solution,
+    unpack_solution_full,
     GeodesicPoint,
     AbstractGeodesicPoint,
     vector_to_local_sky,
@@ -49,6 +50,7 @@ import .GradusBase:
     metric_components,
     inverse_metric_components,
     unpack_solution,
+    unpack_auxillary,
     dotproduct,
     propernorm,
     tetradframe,
@@ -63,11 +65,12 @@ import .GradusBase:
     restrict_ensemble
 
 export AbstractMetric,
+    AbstractTrace,
     AbstractStaticAxisSymmetric,
     BoyerLindquist,
     AbstractCoordinates,
-    process_solution,
-    process_solution_full,
+    unpack_solution,
+    unpack_solution_full,
     GeodesicPoint,
     AbstractGeodesicPoint,
     AbstractMetric,
@@ -143,8 +146,6 @@ abstract type AbstractDiscProfile end
 abstract type AbstractCoronaModel{T} end
 
 abstract type AbstractDirectionSampler{SkyDomain,Generator} end
-
-abstract type AbstractTraceParameters end
 
 struct EnsembleEndpointThreads end
 

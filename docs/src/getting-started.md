@@ -187,7 +187,7 @@ sols = tracegeodesics(m, xs, vs, λ_max, save_on = false)
 To help us process the solutions, Gradus.jl exports a number of utility functions. There is one in specific we will want to use:
 
 ```@docs
-process_solution
+unpack_solution
 ``` 
  
 The [`GeodesicPoint`](@ref) struct contains everything we might want to know about the start and endpoint of a geodesic solution, including four-velocities and the nature of the termination (fell into the black hole, went to infinity, collided with some geometry, etc.). 
@@ -195,7 +195,7 @@ The [`GeodesicPoint`](@ref) struct contains everything we might want to know abo
 We can easily filter those geodesic that fell into the black hole, and extract their final coordinate times $x^t({\lambda_\text{final}})$:
 
 ```julia
-points = process_solution.(sols.u)
+points = unpack_solution.(sols.u)
 # reshape into the same dimensions as the image
 points = reshape(points, (100, 100))
 

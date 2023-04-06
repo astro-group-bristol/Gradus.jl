@@ -1,3 +1,17 @@
+"""
+    AbstractTrace
+
+Parameters that are constant throughout the integration (e.g. mass or frequency) for any
+number of geodesics. Also used to dispatch different tracing problems.
+"""
+abstract type AbstractTrace end
+
+"""
+    AbstractIntegrationParameters
+
+Parameters that are made available at each step of the integration, that need not be constant.
+For example, the turning points or withing-geometry flags.
+"""
 abstract type AbstractIntegrationParameters end
 
 update_integration_parameters!(
@@ -62,15 +76,6 @@ function Base.show(io::IO, gp::GeodesicPoint)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", gp::GeodesicPoint)
-    # text = """GeodesicPoint:
-    #   . status : $(gp.status)
-    #   . λ_min  : $(gp.λ_min)
-    #   . λ_max  : $(gp.λ_max)
-    #   . x_init : $(gp.x_init)
-    #   . v_init : $(gp.v_init)
-    #   . x      : $(gp.x)
-    #   . v      : $(gp.v)
-    # """
     text =
         "GeodesicPoint:\n" * join(
             (
@@ -83,7 +88,7 @@ function Base.show(io::IO, ::MIME"text/plain", gp::GeodesicPoint)
 end
 
 """
-    process_solution([m], sol)
+    unpack_solution([m], sol)
 
 Unpack a solution (`SciMLBase.AbstractODESolution`) as a [`GeodesicPoint`](@ref), optionally specifying
 the metric under which quantities are transformed. 
@@ -95,41 +100,57 @@ into the `aux` field of [`GeodesicPoint`](@ref).
 
 ```julia
 sol = tracegeodesics(m, x, v)
-point = process_solution(sol)
+point = unpack_solution(sol)
 ```
 """
-function process_solution(_, sol::SciMLBase.AbstractODESolution{T}) where {T}
+function unpack_solution(::AbstractMetric, ::AbstractTrace, sol::SciMLBase.AbstractODESolution{T}) where {T}
     @inbounds @views begin
         us, ts, _ = unpack_solution(sol)
 
-        u_start = SVector{4,T}(us[1][1:4])
-        v_start = SVector{4,T}(us[1][5:8])
-        t_start = ts[1]
+        x_init = SVector{4,T}(us[1][1:4])
+        v_init = SVector{4,T}(us[1][5:8])
+        t_init = ts[1]
 
-        u_end = SVector{4,T}(us[end][1:4])
-        v_end = SVector{4,T}(us[end][5:8])
-        t_end = ts[end]
+        x = SVector{4,T}(us[end][1:4])
+        v = SVector{4,T}(us[end][5:8])
+        t = ts[end]
+
+        # get the auxillary values if we have any
+        aux = if eltype(us) <: SVector{8}
+            nothing
+        else
+            unpack_auxillary(us[end])
+        end
 
         GeodesicPoint(
             sol.prob.p.status,
-            t_start,
-            t_end,
-            u_start,
-            u_end,
-            v_start,
-            v_end,
-            eltype(us) <: SVector{9} ? us[end][9] : nothing,
+            t_init,
+            t,
+            x_init,
+            x,
+            v_init,
+            v,
+            aux,
         )
     end
 end
 
 """
-    $(TYPEDSIGNATURES)
+    unpack_auxillary
 
-Unpacks each point in the solution, similar to [`process_solution`](@ref) but returns an
+Unpack any auxillary parameters that may have been added to the geodesic problem.
+"""
+function unpack_auxillary(trace::AbstractTrace, u)
+    error("Not implemented for $(typeof(trace)).")
+end
+
+"""
+    unpack_solution_full
+
+Unpacks each point in the solution, similar to [`unpack_solution`](@ref) but returns an
 array of [`GeodesicPoint`](@ref).
 """
-function process_solution_full(
+function unpack_solution_full(
     _::AbstractMetric{T},
     sol::SciMLBase.AbstractODESolution{T},
 ) where {T}
@@ -147,17 +168,6 @@ function process_solution_full(
     end
 end
 
-process_solution(gp::AbstractGeodesicPoint) = gp
-process_solution(sol::SciMLBase.AbstractODESolution) = process_solution(sol.prob.f.f.m, sol)
-
-# TODO: GeodesicPath structure for the full geodesic path
-# do we want to support this?
-
-function unpack_solution(sol::SciMLBase.AbstractODESolution)
-    u = sol.u
-    p = sol.prob.p
-    t = sol.t
-    (u, t, p)
-end
-
+unpack_solution(gp::AbstractGeodesicPoint) = gp
+unpack_solution(sol::SciMLBase.AbstractODESolution) = unpack_solution(sol.prob.f.f.m, sol)
 unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution) = map(unpack_solution, simsol.u)

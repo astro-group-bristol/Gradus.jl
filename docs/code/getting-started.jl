@@ -69,7 +69,7 @@ sols = tracegeodesics(m, xs, vs, 2000.0, save_on = false)
 
 # ---------------------------------------------------------
 
-points = process_solution.(sols.u)
+points = unpack_solution.(sols.u)
 # reshape into the same dimensions as the image
 points = reshape(points, (100, 100))
 

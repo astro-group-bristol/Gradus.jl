@@ -40,7 +40,7 @@ end
     p::P
 end
 
-@inbounds function process_solution(
+@inbounds function unpack_solution(
     m::AbstractFirstOrderMetric{T},
     sol::SciMLBase.AbstractODESolution{T},
 ) where {T}

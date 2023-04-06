@@ -28,11 +28,13 @@ include("physical-quantities.jl")
 
 export AbstractMetric,
     AbstractCoordinates,
+    AbstractTrace,
+    unpack_auxillary,
     BoyerLindquist,
     AbstractStaticAxisSymmetric,
     metric,
-    process_solution,
-    process_solution_full
+    unpack_solution,
+    unpack_solution_full
 GeodesicPoint,
 AbstractGeodesicPoint,
 vector_to_local_sky,

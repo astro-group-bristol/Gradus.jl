@@ -1,10 +1,10 @@
-struct TraceGeodesic{T} <: AbstractTraceParameters
+struct TraceGeodesic{T} <: AbstractTrace
     μ::T
     q::T
     TraceGeodesic(; μ = 0.0, q = 0.0) = new{typeof(μ)}(μ, q)
 end
 
-struct TraceRadiativeTransfer{T} <: AbstractTraceParameters
+struct TraceRadiativeTransfer{T} <: AbstractTrace
     μ::T
     q::T
     ν::T
@@ -69,7 +69,7 @@ function tracegeodesics(
     tracegeodesics(trace, m, args...; kwargs...)
 end
 function tracegeodesics(
-    trace::AbstractTraceParameters,
+    trace::AbstractTrace,
     m::AbstractMetric,
     args...;
     kwargs...,
@@ -238,7 +238,7 @@ end
     if !isnothing(p)
         integrator.p = update_integration_parameters!(integrator.sol.prob.p, p)
     end
-    process_solution(solve!(integrator))
+    unpack_solution(solve!(integrator))
 end
 
 export tracegeodesics

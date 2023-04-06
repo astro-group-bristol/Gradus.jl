@@ -1,5 +1,3 @@
-
-
 function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν, invν3)
     a_ν, j_ν, u = covariant_absorption_emission_velocity(m, x, ν, geometry)
     g = metric(m, x)
@@ -78,7 +76,8 @@ function radiative_transfer_ode_problem(
             vcat(k, dk, SVector(dI))
         end
     end
-
+    
+    # add our new quantity that we want to trace
     u_init = vcat(pos, vel, SVector(0.0))
     ODEProblem{false}(
         f,
@@ -114,3 +113,6 @@ function assemble_tracing_problem(
     end
     wrap_arguments(config, _problem_builder, trace.μ)
 end
+
+# how do we get our additional values out
+unpack_auxillary(trace::TraceRadiativeTransfer, u::SVector{9}) = u[9] 

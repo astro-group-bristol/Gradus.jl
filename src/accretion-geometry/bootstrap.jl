@@ -1,5 +1,5 @@
 @inline function tracing_configuration(
-    trace::AbstractTraceParameters,
+    trace::AbstractTrace,
     m::AbstractMetric,
     position,
     velocity,
@@ -33,7 +33,7 @@ end
 """
 function geometry_collision_callback(
     g::AbstractAccretionGeometry,
-    ::AbstractTraceParameters;
+    ::AbstractTrace;
     gtol,
 )
     DiscreteCallback(
@@ -45,7 +45,7 @@ end
 
 function geometry_collision_callback(
     g::AbstractAccretionDisc{T},
-    ::AbstractTraceParameters;
+    ::AbstractTrace;
     gtol,
     interp_points = 8,
 ) where {T}

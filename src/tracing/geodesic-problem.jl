@@ -9,7 +9,6 @@ function geodesic_ode_problem(
     function f(u::SVector{8,T}, p, λ) where {T}
         @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
             dv = SVector{4,T}(geodesic_equation(m, x, v))
-            # SVector{8}(v[1], v[2], v[3], v[4], dv[1], dv[2], dv[3], dv[4])
             vcat(v, dv)
         end
     end
@@ -25,7 +24,7 @@ function geodesic_ode_problem(
 end
 
 function assemble_tracing_problem(
-    trace::AbstractTraceParameters,
+    trace::AbstractTrace,
     config::TracingConfiguration,
 )
     # create the callback set for the problem
