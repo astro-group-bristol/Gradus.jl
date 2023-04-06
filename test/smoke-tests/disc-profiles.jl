@@ -20,7 +20,7 @@ using StaticArrays
 
         intersected_simsols =
             filter(i -> i.prob.p.status == StatusCodes.IntersectedWithGeometry, simsols.u)
-        sd_endpoints = map(sol -> process_solution(m, sol), intersected_simsols)
+        sd_endpoints = map(sol -> unpack_solution(m, sol), intersected_simsols)
 
         # test ensemble solution constructor
         vdp1 = VoronoiDiscProfile(m, d, simsols)

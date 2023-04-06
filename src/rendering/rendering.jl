@@ -80,7 +80,7 @@ end
 
 function render_into_image!(
     image,
-    trace::AbstractTraceParameters,
+    trace::AbstractTrace,
     config::TracingConfiguration;
     pf = PointFunction((m, gp, λ_max) -> gp.λ_max) ∘
          FilterPointFunction((m, gp, λ_max; kwargs...) -> gp.λ_max < λ_max, NaN),
@@ -99,7 +99,7 @@ function apply_to_image!(m::AbstractMetric, image, points, pf, max_time)
 end
 
 function __prerendergeodesics(
-    trace::AbstractTraceParameters,
+    trace::AbstractTrace,
     config::TracingConfiguration,
     ::SolutionCache;
     image_height,
@@ -111,7 +111,7 @@ function __prerendergeodesics(
 end
 
 function __prerendergeodesics(
-    trace::AbstractTraceParameters,
+    trace::AbstractTrace,
     config::TracingConfiguration,
     ::EndpointCache;
     image_height,
@@ -148,7 +148,7 @@ function _render_velocity_function(
 end
 
 function __render_geodesics(
-    trace::AbstractTraceParameters,
+    trace::AbstractTrace,
     config::TracingConfiguration;
     verbose = false,
     solver_opts...,
@@ -171,7 +171,7 @@ end
 
 sol_or_points_to_points(points::AbstractArray{<:AbstractGeodesicPoint}) = points
 
-sol_or_points_to_points(sols::AbstractArray) = map(process_solution, sols)
+sol_or_points_to_points(sols::AbstractArray) = map(unpack_solution, sols)
 
 sol_or_points_to_points(sol::SciMLBase.EnsembleSolution) = sol_or_points_to_points(sol.u)
 

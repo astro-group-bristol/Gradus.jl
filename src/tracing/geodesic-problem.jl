@@ -1,3 +1,51 @@
+"""
+    geodesic_ode_problem(
+        trace::AbstractTrace,
+        m::AbstractMetric,
+        pos, 
+        vel,
+        time_domain::Tuple,
+        callback
+    )
+
+Returns an `OrdinaryDiffEq.ODEProblem{false}`, specifying the ODE problem to be solved. 
+The precise problem depends on the [`AbstractTrace`](@ref) and [`AbstractMetric`](@ref) defined.
+
+May be overwritten to more easily define a new tracing problem. The standard geodesic equation implemention looks like:
+
+```julia
+function geodesic_ode_problem(
+    ::TraceGeodesic,
+    m::AbstractMetric,
+    pos,
+    vel,
+    time_domain,
+    callback,
+)
+    function f(u::SVector{8,T}, p, λ) where {T}
+        @inbounds let x = SVector{4,T}(@view(u[1:4])), 
+            v = SVector{4,T}(@view(u[5:8]))
+            dv = SVector{4,T}(geodesic_equation(m, x, v))
+            # modify the differential equation here
+            vcat(v, dv)
+        end
+    end
+    
+    # add additional parameters here
+    u_init = vcat(pos, vel)
+    ODEProblem{false}(
+        f,
+        u_init,
+        time_domain,
+        # specify parameters needed by `f` here
+        IntegrationParameters(StatusCodes.NoStatus);
+        callback = callback,
+    )
+end
+```
+
+See also [`TraceGeodesic`](@ref) and [`TraceRadiativeTransfer`](@ref).
+"""
 function geodesic_ode_problem(
     ::TraceGeodesic,
     m::AbstractMetric,
@@ -9,7 +57,6 @@ function geodesic_ode_problem(
     function f(u::SVector{8,T}, p, λ) where {T}
         @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
             dv = SVector{4,T}(geodesic_equation(m, x, v))
-            # SVector{8}(v[1], v[2], v[3], v[4], dv[1], dv[2], dv[3], dv[4])
             vcat(v, dv)
         end
     end
@@ -24,10 +71,22 @@ function geodesic_ode_problem(
     )
 end
 
-function assemble_tracing_problem(
-    trace::AbstractTraceParameters,
-    config::TracingConfiguration,
-)
+
+"""
+    assemble_tracing_problem(trace::AbstractTrace, config::TracingConfiguration)
+
+Merges callbacks, defines an ODE builder through (a variation of) [`geodesic_ode_problem`](@ref),
+and wraps the ODE problem depending on the input argument types. 
+
+This function need only be overwritten if the [`AbstractTrace`](@ref) requires fine control
+or non-standard arguments when building the ODE. See, e.g., the [`TraceRadiativeTransfer`](@ref)
+implementation.
+
+For merging the callbacks, use [`create_callback_set`](@ref).
+
+For wrapping arguments, use the utility function [`wrap_arguments`](@ref).
+"""
+function assemble_tracing_problem(trace::AbstractTrace, config::TracingConfiguration)
     # create the callback set for the problem
     cbs = create_callback_set(config.metric, config.callback, config.chart)
     # wrap a function that can build the ODE problems

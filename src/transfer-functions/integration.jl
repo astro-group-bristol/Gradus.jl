@@ -105,7 +105,7 @@ function integrate_drdg✶(
     g_grid_view = @views g_grid[1:end-1]
 
     # build fine radial grid for trapezoidal integration
-    fine_rₑ_grid = Grids._inverse_grid(minrₑ, maxrₑ, 1000) |> collect
+    fine_rₑ_grid = Grids._inverse_grid(minrₑ, maxrₑ, 3000) |> collect
     segbuf = alloc_segbuf(Float64)
     @inbounds for (i, rₑ) in enumerate(fine_rₑ_grid)
         gmin = gmin_interp(rₑ)

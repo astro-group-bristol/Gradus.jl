@@ -40,11 +40,11 @@ end
     p::P
 end
 
-@inbounds function process_solution(
+@inbounds function unpack_solution(
     m::AbstractFirstOrderMetric{T},
     sol::SciMLBase.AbstractODESolution{T},
 ) where {T}
-    us, ts, p = unpack_solution(sol)
+    us, ts, p = GradusBase.extract_fields(sol)
 
     @inbounds @views begin
         u_start = SVector{4,T}(us[1][1:4])

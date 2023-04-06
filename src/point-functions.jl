@@ -96,7 +96,7 @@ end
 
 @inline function apply(pf::AbstractPointFunction, rc::SolutionRenderCache; kwargs...)
     _threaded_map(
-        sol -> pf.f(rc.m, process_solution(m, sol), rc.max_time; kwargs...),
+        sol -> pf.f(rc.m, unpack_solution(m, sol), rc.max_time; kwargs...),
         rc.geodesics,
     )
 end
