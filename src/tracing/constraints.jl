@@ -12,8 +12,8 @@ function constrain_all(
 end
 
 @inline function constrain_all(
-    m::AbstractMetric{T},
-    u::StaticVector{S,T},
+    m::AbstractMetric,
+    u::StaticVector{S},
     v::StaticVector{S,T},
     μ,
 ) where {S,T<:Number}
