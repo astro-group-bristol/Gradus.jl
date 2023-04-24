@@ -112,7 +112,7 @@ function cunningham_transfer_function(
     redshift_pf = ConstPointFunctions.redshift(m, u),
     offset_max = 20.0,
     zero_atol = 1e-7,
-    θ_offset = 0.1,
+    θ_offset = 0.09,
     N = 80,
     tracer_kwargs...,
 ) where {T}
@@ -154,7 +154,7 @@ function cunningham_transfer_function(
     # are in the middle of the domain, so that we can find the minima
     # and maxima via interpolation
     # resample over domains of expected extrema to improve convergence
-    M = (N ÷ 6)
+    M = (N ÷ 4)
     θs =
         Iterators.flatten((
             range(-π / 2, 3π / 2, N - 2 * M),
@@ -162,6 +162,9 @@ function cunningham_transfer_function(
             range(π - θ_offset, π + θ_offset, M),
         )) |> collect
     sort!(θs)
+
+    # avoid coordinate singularity at π / 2
+    @. θs += 1e-6
 
     Js = zeros(T, N)
     gs = zeros(T, N)
