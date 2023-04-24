@@ -129,7 +129,9 @@ function cunningham_transfer_function(
             tracer_kwargs...,
         )
         if isnan(r)
-            error("Transfer function integration failed (rₑ=$rₑ, θ=$θ).")
+            error(
+                "Transfer function integration failed (rₑ=$rₑ, θ=$θ, offset_max = $offset_max).",
+            )
         end
         α = r * cos(θ)
         β = r * sin(θ)
@@ -305,7 +307,7 @@ end
 
 function interpolated_transfer_branches(
     m::AbstractMetric{T},
-    u,
+    x,
     d,
     radii;
     verbose = false,
@@ -319,16 +321,16 @@ function interpolated_transfer_branches(
             # since redshift / jacobian values calculated at large impact parameters
             # seem to be inaccurate? either that or the root finder is up to something
             # but the problems seem to disappear by just keeping everything at low impact
-            u_prob = SVector{4}(u[1], 1000 + 60rₑ, u[3], u[4])
+            x_prob = SVector{4}(x[1], x[2] + (100 + 200 * cos(x[3])) * rₑ, x[3], x[4])
             ctf = cunningham_transfer_function(
                 m,
-                u_prob,
+                x_prob,
                 d,
                 rₑ,
                 ;
-                offset_max = rₑ + 30.0,
-                chart = chart_for_metric(m, 10 * u_prob[2]),
-                max_time = 10 * u_prob[2],
+                offset_max = 0.4rₑ + 20,
+                chart = chart_for_metric(m, 10 * x_prob[2]),
+                max_time = 10 * x_prob[2],
                 kwargs...,
             )
             itp = interpolate_transfer_function(ctf)

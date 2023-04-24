@@ -38,7 +38,7 @@ function find_offset_for_radius(
         r = if gp.status == StatusCodes.IntersectedWithGeometry
             gp.x[2]
         else
-            0.0
+            zero(eltype(gp.x))
         end
         rₑ - r
     end
@@ -49,6 +49,7 @@ function find_offset_for_radius(
         constrain_all(m, u, map_impact_parameters(m, u, α, β), μ)
     end
     # init a reusable integrator
+
     integ = _init_integrator(
         m,
         u,
@@ -59,24 +60,25 @@ function find_offset_for_radius(
         solver_opts...,
     )
 
-    f = r -> begin
+    function f(r)
         if r < 0
-            1000 * one(r)
+            return -1000 * r
         end
         gp = _solve_reinit!(integ, vcat(u, velfunc(r)))
         measure(gp)
     end
 
     # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
-    r0 = Roots.find_zero(f, offset_max * 0.5; atol = zero_atol)
+    r0 = Roots.find_zero(f, offset_max * 0.5, Roots.Order0(); atol = zero_atol)
     if r0 < 0
         error(
             "Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ (offset_max = $offset_max).",
         )
     end
 
+
     gp0 = _solve_reinit!(integ, vcat(u, velfunc(r0)))
-    if !isapprox(measure(gp0), 0.0, atol = 1000 * zero_atol)
+    if !isapprox(measure(gp0), 0.0, atol = 1e4 * zero_atol)
         @warn(
             "Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ (offset_max = $offset_max, measure = $(measure(gp0)))."
         )
