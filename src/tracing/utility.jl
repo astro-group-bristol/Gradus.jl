@@ -8,12 +8,12 @@ end
 Map impact parameters `α` and `β` to a velocity vector at some position `u` in the given metric `m`.
 """
 function map_impact_parameters(
-    m::AbstractMetric{T},
-    x::SVector{S,T},
+    m::AbstractMetric,
+    x::SVector{S},
     α::N,
     β::N,
-) where {S,T,N<:Number}
-    SVector{S,T}(T(0.0), impact_parameters_to_three_velocity(m, x, α, β)...)
+) where {S,N<:Number}
+    SVector{S,N}(zero(N), impact_parameters_to_three_velocity(m, x, α, β)...)
 end
 
 function map_impact_parameters(
@@ -60,13 +60,13 @@ For example, for the Schwarzschild metric with ``M = 1``, the impact parameters 
 tangential to the event horizon (``r_\\text{s} = 2M``) if space were flat. 
 """
 @inline function impact_parameters_to_three_velocity(
-    m::AbstractStaticAxisSymmetric{T},
+    m::AbstractStaticAxisSymmetric,
     x,
-    α,
-    β,
-) where {T}
+    α::N,
+    β::N,
+) where {N}
     mcomp = metric_components(m, @view(x[2:3]))
-    T(-1.0), -β / mcomp[3], -α / √(mcomp[3] * mcomp[4])
+    -one(N), -β / mcomp[3], -α / √(mcomp[3] * mcomp[4])
 end
 
 function faraday_tensor(m::AbstractMetric, x)

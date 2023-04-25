@@ -38,7 +38,7 @@ function find_offset_for_radius(
         r = if gp.status == StatusCodes.IntersectedWithGeometry
             gp.x[2]
         else
-            0.0
+            zero(eltype(gp.x))
         end
         rₑ - r
     end
@@ -49,6 +49,7 @@ function find_offset_for_radius(
         constrain_all(m, u, map_impact_parameters(m, u, α, β), μ)
     end
     # init a reusable integrator
+
     integ = _init_integrator(
         m,
         u,
@@ -59,16 +60,28 @@ function find_offset_for_radius(
         solver_opts...,
     )
 
-    f = r -> begin
+    function f(r)
+        if r < 0
+            return -1000 * r
+        end
         gp = _solve_reinit!(integ, vcat(u, velfunc(r)))
         measure(gp)
     end
 
     # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
-    r0 = Roots.find_zero(f, offset_max / 2; atol = zero_atol)
+    r0 = Roots.find_zero(f, offset_max * 0.5, Roots.Order0(); atol = zero_atol)
+    if r0 < 0
+        error(
+            "Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ (offset_max = $offset_max).",
+        )
+    end
+
 
     gp0 = _solve_reinit!(integ, vcat(u, velfunc(r0)))
-    if !isapprox(measure(gp0), 0.0, atol = 10 * zero_atol)
+    if !isapprox(measure(gp0), 0.0, atol = 1e4 * zero_atol)
+        @warn(
+            "Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ (offset_max = $offset_max, measure = $(measure(gp0)))."
+        )
         return NaN, gp0
     end
     r0, gp0
@@ -149,40 +162,25 @@ function jacobian_∂αβ_∂gr(
     α,
     β,
     max_time;
-    diff_order = 5,
     μ = 0.0,
     redshift_pf = ConstPointFunctions.redshift(m, u),
     solver_opts...,
 )
-    velfunc = (α, β) -> begin
-        constrain_all(m, u, map_impact_parameters(m, u, α, β), μ)
-    end
 
-    # init a reusable integrator
-    integ = _init_integrator(
-        m,
-        u,
-        velfunc(0.0, 0.0),
-        d,
-        (0.0, max_time);
-        save_on = false,
-        solver_opts...,
-    )
+    # these type hints are crucial for forward diff to be type stable
+    function _jacobian_f(x::SVector{2,T})::SVector{2,T} where {T}
+        # use underscores to avoid boxing
+        _α, _β = x
 
-    # map impact parameters to r, g
-    f = ((α, β),) -> begin
-        v = velfunc(α, β)
-        gp = _solve_reinit!(integ, vcat(u, v))
+        v = constrain_all(m, u, map_impact_parameters(m, u, _α, _β), μ)
+        sol = tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, solver_opts...)
+        gp = unpack_solution(sol)
         g = redshift_pf(m, gp, max_time)
-        # return r and g*
-        @SVector [gp.x[2], g]
+        # return disc r and redshift g
+        SVector(gp.x[2], g)
     end
 
-    # choice between FiniteDifferences and FiniteDiff is tricky
-    # since FiniteDiff is so much faster, but seems to yield really bad jacobians
-    # for this specific problem, so instead stenciling with a given order
-    cfdm = FiniteDifferences.central_fdm(diff_order, 1)
-    j = FiniteDifferences.jacobian(cfdm, f, @SVector([α, β])) |> first
+    j = ForwardDiff.jacobian(_jacobian_f, SVector(α, β))
     abs(inv(det(j)))
 end
 

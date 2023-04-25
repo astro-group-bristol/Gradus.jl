@@ -86,7 +86,7 @@ end
 FilterPointFunction(f) = FilterPointFunction(f, NaN)
 
 @inline function (pf::AbstractPointFunction)(
-    m::AbstractMetric{T},
+    m::AbstractMetric,
     gp::GradusBase.AbstractGeodesicPoint{T},
     max_time;
     kwargs...,

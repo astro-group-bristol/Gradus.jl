@@ -1,12 +1,43 @@
-function _make_sorted_interpolation(g, f)
-    I = sortperm(g)
-    _g = @inbounds g[I]
-    _f = @inbounds f[I]
-    # shift the extrema
-    # todo: interpolate f -> g to find better estimate of what f should be at extrema
-    _g[1] = zero(eltype(_g))
-    _g[end] = one(eltype(_g))
-    DataInterpolations.LinearInterpolation(_f, _g)
+function _make_interpolation(g, f)
+    DataInterpolations.LinearInterpolation(f, g)
+end
+
+function _adjust_branch!(g, f, fmin, fmax)
+    g[1] = zero(eltype(g))
+    g[end] = one(eltype(g))
+    f[1] = fmin
+    f[end] = fmax
+end
+
+function _make_sorted_with_adjustments!(g1, f1, g2, f2)
+    I1 = sortperm(g1)
+    I2 = sortperm(g2)
+
+    # sort all in ascending g
+    g1 .= g1[I1]
+    g2 .= g2[I2]
+    f1 .= f1[I1]
+    f2 .= f2[I2]
+
+    # at low inclination angles, the range of g is so tight that the edges are
+    # very problematic due to the g✶ * (1 - g✶) terms, sending the branches to zero
+    # so we use an offset to avoid these that is small enough to not impact results at
+    # high inclination angles
+    H = 0.003
+    J1 = @. (g1 < 1 - H) & (g1 > H)
+    J2 = @. (g2 < 1 - H) & (g2 > H)
+    g1 = g1[J1]
+    g2 = g2[J2]
+    f1 = f1[J1]
+    f2 = f2[J2]
+
+    # find midpoint of endpoints, ignoring the very extremal
+    low_mid = (f1[2] + f2[2]) / 2
+    hi_mid = (f1[end-1] + f2[end-1]) / 2
+
+    _adjust_branch!(g1, f1, low_mid, hi_mid)
+    _adjust_branch!(g2, f2, low_mid, hi_mid)
+    g1, f1, g2, f2
 end
 
 function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
@@ -18,6 +49,10 @@ function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
     _, imin = findmin(ctf.g✶)
     _, imax = findmax(ctf.g✶)
     i1, i2 = imax > imin ? (imin, imax) : (imax, imin)
+
+    if (i1 == i2)
+        error("Resolved same min/max for rₑ = $(ctf.rₑ)")
+    end
 
     # branch sizes, with duplicate extrema
     N1 = i2 - i1 + 1
@@ -48,8 +83,10 @@ end
 
 function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where {T}
     (lower_g✶, lower_f, upper_g✶, upper_f) = splitbranches(ctf)
-    lower_branch = _make_sorted_interpolation(lower_g✶, lower_f)
-    upper_branch = _make_sorted_interpolation(upper_g✶, upper_f)
+    (lower_g✶, lower_f, upper_g✶, upper_f) =
+        _make_sorted_with_adjustments!(lower_g✶, lower_f, upper_g✶, upper_f)
+    lower_branch = _make_interpolation(lower_g✶, lower_f)
+    upper_branch = _make_interpolation(upper_g✶, upper_f)
     InterpolatedCunninghamTransferFunction(
         upper_branch,
         lower_branch,
@@ -59,7 +96,12 @@ function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where
     )
 end
 
-_calculate_transfer_function(rₑ, g, g✶, J) = @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
+function _calculate_transfer_function(rₑ, g, g✶, J)
+    if abs(g✶) > 1
+        error("abs(g✶) > 1 for rₑ = $rₑ (g = $g, g✶ = $g✶, J = $J).")
+    end
+    @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
+end
 
 function cunningham_transfer_function(
     m::AbstractMetric{T},
@@ -67,19 +109,13 @@ function cunningham_transfer_function(
     d,
     rₑ;
     max_time = 2e3,
-    diff_order = 4,
     redshift_pf = ConstPointFunctions.redshift(m, u),
     offset_max = 20.0,
     zero_atol = 1e-7,
+    θ_offset = 0.09,
     N = 80,
     tracer_kwargs...,
 ) where {T}
-    # add 2 for extremal g✶ we calculate
-    # Nextrema_solving = fld(N, 4)
-    # Ndirect = N - 2 * (Nextrema_solving)
-    Js = zeros(T, N)
-    gs = zeros(T, N)
-
     function _workhorse(θ)
         r, gp = find_offset_for_radius(
             m,
@@ -93,7 +129,9 @@ function cunningham_transfer_function(
             tracer_kwargs...,
         )
         if isnan(r)
-            error("Transfer function integration failed (rₑ=$rₑ, θ=$θ).")
+            error(
+                "Transfer function integration failed (rₑ=$rₑ, θ=$θ, offset_max = $offset_max).",
+            )
         end
         α = r * cos(θ)
         β = r * sin(θ)
@@ -106,17 +144,30 @@ function cunningham_transfer_function(
             α,
             β,
             max_time;
-            diff_order = diff_order,
             redshift_pf = redshift_pf,
             tracer_kwargs...,
         )
         (_g, _J)
     end
 
-    # sample so that the expected minima and maxima (π and 2π)
+    # sample so that the expected minima and maxima (0 and π)
     # are in the middle of the domain, so that we can find the minima
     # and maxima via interpolation
-    θs = range(π / 2, 2π + π / 2, N) |> collect
+    # resample over domains of expected extrema to improve convergence
+    M = (N ÷ 4)
+    θs =
+        Iterators.flatten((
+            range(-π / 2, 3π / 2, N - 2 * M),
+            range(-θ_offset, θ_offset, M),
+            range(π - θ_offset, π + θ_offset, M),
+        )) |> collect
+    sort!(θs)
+
+    # avoid coordinate singularity at π / 2
+    @. θs += 1e-6
+
+    Js = zeros(T, N)
+    gs = zeros(T, N)
     @inbounds for i in eachindex(θs)
         θ = θs[i]
         g, J = _workhorse(θ)
@@ -131,7 +182,21 @@ function cunningham_transfer_function(
     # superior
 
     # gmin, gmax = _search_extremal!(gs, Js, _workhorse, θs, Ndirect, Nextrema_solving)
-    (gmin, gmax), _ = infer_extremal(gs, θs, π, 2π)
+
+    # seems to be broken at the moment
+    # _gmin, _gmax = try
+    #     (_a, _b), _ = infer_extremal(gs, θs, 0, π)
+    #     _a, _b
+    # catch e
+    #     if e isa Roots.ConvergenceFailed
+    #         @warn ("Root finder failed to infer minima for rₑ = $rₑ. Using array extremal.")
+    #         extrema(gs)
+    #     else
+    #         throw(e)
+    #     end
+    # end
+    # gmin, gmax = _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
+    gmin, gmax = extrema(gs)
 
     # convert from ∂g to ∂g✶
     @. Js = (gmax - gmin) * Js
@@ -144,6 +209,42 @@ function cunningham_transfer_function(
     end
 
     CunninghamTransferFunction(gs, Js, gmin, gmax, rₑ)
+end
+
+function _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
+    gmin = _gmin
+    gmax = _gmax
+    # sometimes the interpolation seems to fail if there are duplicate knots
+    if isnan(gmin)
+        @warn "gmin is NaN for rₑ = $rₑ (gmin = $gmin, extrema(gs) = $(extrema(gs)). Using extrema."
+        gmin = minimum(gs)
+    end
+    if isnan(gmax)
+        @warn "gmax is NaN for rₑ = $rₑ (gmax = $gmax, extrema(gs) = $(extrema(gs)). Using extrema."
+        gmax = maximum(gs)
+    end
+    if gmin == gmax
+        @warn (
+            "gmin == gmax for rₑ = $rₑ (gmin = gmax = $gmin, extrema(gs) = $(extrema(gs)). Using extrema."
+        )
+        gmin, gmax = extrema(gs)
+        if gmin == gmax
+            error("Cannot use extrema")
+        end
+    end
+    if gmin > minimum(gs)
+        @warn (
+            "Inferred minima > array minimum rₑ = $rₑ (gmin = $gmin, extrema(gs) = $(extrema(gs)). Using minimum."
+        )
+        gmin = minimum(gs)
+    end
+    if gmax < maximum(gs)
+        @warn (
+            "Inferred maximum < array maximum rₑ = $rₑ (gmax = $gmax, extrema(gs) = $(extrema(gs)). Using maximum."
+        )
+        gmax = maximum(gs)
+    end
+    return gmin, gmax
 end
 
 # currently unused: find gmin and gmax via GoldenSection
@@ -209,7 +310,7 @@ end
 
 function interpolated_transfer_branches(
     m::AbstractMetric{T},
-    u,
+    x,
     d,
     radii;
     verbose = false,
@@ -223,16 +324,16 @@ function interpolated_transfer_branches(
             # since redshift / jacobian values calculated at large impact parameters
             # seem to be inaccurate? either that or the root finder is up to something
             # but the problems seem to disappear by just keeping everything at low impact
-            u_prob = SVector{4}(u[1], 1000 + 100rₑ, u[3], u[4])
+            x_prob = SVector{4}(x[1], x[2] + (100 + 200 * cos(x[3])) * rₑ, x[3], x[4])
             ctf = cunningham_transfer_function(
                 m,
-                u_prob,
+                x_prob,
                 d,
                 rₑ,
                 ;
-                offset_max = 3rₑ + 20.0,
-                chart = chart_for_metric(m, 10 * u_prob[2]),
-                max_time = 10 * u_prob[2],
+                offset_max = 0.4rₑ + 20,
+                chart = chart_for_metric(m, 10 * x_prob[2]),
+                max_time = 10 * x_prob[2],
                 kwargs...,
             )
             itp = interpolate_transfer_function(ctf)

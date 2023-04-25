@@ -168,43 +168,12 @@ uᵗ(M, rms, r, a) = γₑ(M, rms) * (1 + 2 * M * (1 + H(M, rms, r, a)) / r)
 regular_pdotu_inv(L, M, r, a, θ) =
     (eⱽ(M, r, a, θ) * √(1 - Vₑ(M, r, a, θ)^2)) / (1 - L * Ωₑ(M, r, a))
 
-@inline function regular_pdotu_inv(m::KerrMetric, u, v)
-    metric_matrix = metric(m, u)
-
-    # TODO: this only works for Kerr
-    disc_norm = (eⱽ(m.M, u[2], m.a, u[3]) * √(1 - Vₑ(m.M, u[2], m.a, u[3])^2))
-
-    u_disc = @SVector [1 / disc_norm, 0, 0, Ωₑ(m.M, u[2], m.a) / disc_norm]
-
-    # use Tullio to do the einsum
-    @tullio g := -metric_matrix[i, j] * u_disc[i] * v[j]
-    1 / g
-end
-
 function plunging_p_dot_u(E, a, M, L, Q, rms, r, sign_r)
     inv(
         uᵗ(M, rms, r, a) - uᶲ(M, rms, r, a) * L -
         sign_r * uʳ(M, rms, r) * __BoyerLindquistFO.Σδr_δλ(E, L, M, Q, r, a) /
         __BoyerLindquistFO.Δ(M, r, a),
     )
-end
-
-function plunging_p_dot_u(m::KerrMetric, u, v, rms)
-    metric_matrix = metric(m, u)
-
-    # reverse signs of the velocity vector
-    # since we're integrating backwards
-    p = @inbounds @SVector [-v[1], v[2], 0, -v[4]]
-
-    u_disc = @inbounds @SVector [
-        uᵗ(m.M, rms, u[2], m.a),
-        uʳ(m.M, rms, u[2]),
-        0,
-        uᶲ(m.M, rms, u[2], m.a),
-    ]
-
-    @tullio g := metric_matrix[i, j] * u_disc[i] * p[j]
-    1 / g
 end
 
 @inline function redshift_function(m::Gradus.KerrSpacetimeFirstOrder, u, p, λ)
@@ -222,13 +191,33 @@ end
     end
 end
 
-@inline function redshift_function(m::KerrMetric, u, v)
+@inline function redshift_function(m::KerrMetric, gp)
     isco = Gradus.isco(m)
-    if u[2] > isco
-        regular_pdotu_inv(m, u, v)
+    # metric matrix at observer
+    g_obs = metric(m, gp.x_init)
+    # fixed stationary observer velocity
+    v_obs = @SVector [1.0, 0.0, 0.0, 0.0]
+
+    r = gp.x[2]
+    v_disc = if r < isco
+        # plunging region
+        @inbounds @SVector [
+            uᵗ(m.M, isco, gp.x[2], m.a),
+            -uʳ(m.M, isco, gp.x[2]),
+            0,
+            uᶲ(m.M, isco, gp.x[2], m.a),
+        ]
     else
-        plunging_p_dot_u(m, u, v, isco)
+        # disc_norm = (eⱽ(m.M, gp.x[2], m.a, gp.x[3]) * √(1 - Vₑ(m.M, gp.x[2], m.a, gp.x[3])^2))
+        # @SVector [1 / disc_norm, 0, 0, Ωₑ(m.M, gp.x[2], m.a) / disc_norm]
+        Gradus.CircularOrbits.fourvelocity(m, gp.x[2])
     end
+
+    # get metric matrix at position on disc
+    g = metric(m, gp.x)
+    @tullio E_disc := -g[i, j] * gp.v[i] * v_disc[j]
+    @tullio E_obs := -g_obs[i, j] * gp.v_init[i] * v_obs[j]
+    E_obs / E_disc
 end
 
 end # module
@@ -242,7 +231,7 @@ function _redshift_guard(
     RedshiftFunctions.redshift_function(m, gp.x, gp.p, gp.λ_max)
 end
 function _redshift_guard(m::AbstractMetric, gp, max_time)
-    RedshiftFunctions.redshift_function(m, gp.x, gp.v)
+    RedshiftFunctions.redshift_function(m, gp)
 end
 
 """
