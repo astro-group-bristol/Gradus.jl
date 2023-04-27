@@ -2,11 +2,9 @@ function _make_interpolation(g, f)
     DataInterpolations.LinearInterpolation(f, g)
 end
 
-function _adjust_branch!(g, f, fmin, fmax)
+function _adjust_extrema!(g)
     g[1] = zero(eltype(g))
     g[end] = one(eltype(g))
-    f[1] = fmin
-    f[end] = fmax
 end
 
 function _make_sorted_with_adjustments!(g1, f1, g2, f2)
@@ -23,7 +21,7 @@ function _make_sorted_with_adjustments!(g1, f1, g2, f2)
     # very problematic due to the g✶ * (1 - g✶) terms, sending the branches to zero
     # so we use an offset to avoid these that is small enough to not impact results at
     # high inclination angles
-    H = 0.003
+    H = 1e-3
     J1 = @. (g1 < 1 - H) & (g1 > H)
     J2 = @. (g2 < 1 - H) & (g2 > H)
     g1 = g1[J1]
@@ -31,12 +29,8 @@ function _make_sorted_with_adjustments!(g1, f1, g2, f2)
     f1 = f1[J1]
     f2 = f2[J2]
 
-    # find midpoint of endpoints, ignoring the very extremal
-    low_mid = (f1[2] + f2[2]) / 2
-    hi_mid = (f1[end-1] + f2[end-1]) / 2
-
-    _adjust_branch!(g1, f1, low_mid, hi_mid)
-    _adjust_branch!(g2, f2, low_mid, hi_mid)
+    _adjust_extrema!(g1)
+    _adjust_extrema!(g2)
     g1, f1, g2, f2
 end
 
@@ -112,7 +106,7 @@ function cunningham_transfer_function(
     redshift_pf = ConstPointFunctions.redshift(m, u),
     offset_max = 20.0,
     zero_atol = 1e-7,
-    θ_offset = 0.09,
+    θ_offset = 0.25,
     N = 80,
     tracer_kwargs...,
 ) where {T}
@@ -164,7 +158,7 @@ function cunningham_transfer_function(
     sort!(θs)
 
     # avoid coordinate singularity at π / 2
-    @. θs += 1e-6
+    @. θs += 1e-4
 
     Js = zeros(T, N)
     gs = zeros(T, N)
@@ -183,20 +177,19 @@ function cunningham_transfer_function(
 
     # gmin, gmax = _search_extremal!(gs, Js, _workhorse, θs, Ndirect, Nextrema_solving)
 
-    # seems to be broken at the moment
-    # _gmin, _gmax = try
-    #     (_a, _b), _ = infer_extremal(gs, θs, 0, π)
-    #     _a, _b
-    # catch e
-    #     if e isa Roots.ConvergenceFailed
-    #         @warn ("Root finder failed to infer minima for rₑ = $rₑ. Using array extremal.")
-    #         extrema(gs)
-    #     else
-    #         throw(e)
-    #     end
-    # end
-    # gmin, gmax = _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
-    gmin, gmax = extrema(gs)
+    # interpolate the extrema
+    _gmin, _gmax = try
+        (_a, _b), _ = infer_extremal(gs, θs, 0, π)
+        _a, _b
+    catch e
+        if e isa Roots.ConvergenceFailed
+            @warn ("Root finder failed to infer minima for rₑ = $rₑ. Using array extremal.")
+            extrema(gs)
+        else
+            throw(e)
+        end
+    end
+    gmin, gmax = _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
 
     # convert from ∂g to ∂g✶
     @. Js = (gmax - gmin) * Js
