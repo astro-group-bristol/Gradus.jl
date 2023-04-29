@@ -138,12 +138,13 @@ function _render_velocity_function(
 )
     y_mid = image_height ÷ 2
     x_mid = image_width ÷ 2
+    xfm = lnr_momentum_to_global_velocity_transform(m, position)
     function velfunc(i)
         Y = i % image_height
         X = i ÷ image_height
         α = x_to_α(X, x_mid, fov)
         β = y_to_β(Y, y_mid, fov)
-        map_impact_parameters(m, position, α, β)
+        xfm(local_momentum(position[2], α, β))
     end
 end
 

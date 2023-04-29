@@ -43,7 +43,7 @@ function geometry_collision_callback(
     g::AbstractAccretionDisc{T},
     ::AbstractTrace;
     gtol,
-    interp_points = 8,
+    interp_points = 12,
 ) where {T}
     ContinuousCallback(
         (u, λ, integrator) -> distance_to_disc(g, u; gtol = gtol),

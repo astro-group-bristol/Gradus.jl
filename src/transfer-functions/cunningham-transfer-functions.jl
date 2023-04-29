@@ -21,7 +21,7 @@ function _make_sorted_with_adjustments!(g1, f1, g2, f2)
     # very problematic due to the g✶ * (1 - g✶) terms, sending the branches to zero
     # so we use an offset to avoid these that is small enough to not impact results at
     # high inclination angles
-    H = 1e-3
+    H = 1e-6
     J1 = @. (g1 < 1 - H) & (g1 > H)
     J2 = @. (g2 < 1 - H) & (g2 > H)
     g1 = g1[J1]
@@ -106,7 +106,7 @@ function cunningham_transfer_function(
     redshift_pf = ConstPointFunctions.redshift(m, u),
     offset_max = 20.0,
     zero_atol = 1e-7,
-    θ_offset = 0.25,
+    θ_offset = 0.4,
     N = 80,
     tracer_kwargs...,
 ) where {T}

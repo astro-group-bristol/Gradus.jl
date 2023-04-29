@@ -50,7 +50,7 @@ end
 
 function chart_for_metric(
     m::AbstractMetric{T},
-    outer_radius = 1200.0;
+    outer_radius = 12000.0;
     closest_approach = 1.01,
 ) where {T}
     chart =
