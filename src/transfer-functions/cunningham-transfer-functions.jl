@@ -186,7 +186,7 @@ function cunningham_transfer_function(
     @. θs = θs[I]
     @. Js = Js[I]
     @. gs = gs[I]
-    
+
     # convert from ∂g to ∂g✶
     @. Js = (gmax - gmin) * Js
 
