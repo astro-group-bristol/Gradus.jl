@@ -98,16 +98,17 @@ function _calculate_transfer_function(rₑ, g, g✶, J)
 end
 
 function cunningham_transfer_function(
-    m::AbstractMetric{T},
+    m::AbstractMetric,
     u,
     d,
-    rₑ;
+    rₑ::T;
     max_time = 2 * u[2],
     redshift_pf = ConstPointFunctions.redshift(m, u),
     offset_max = 0.4rₑ + 10,
     zero_atol = 1e-7,
     θ_offset = 0.6,
     N = 80,
+    N_extrema = 17,
     tracer_kwargs...,
 ) where {T}
     function _workhorse(θ)
@@ -144,56 +145,52 @@ function cunningham_transfer_function(
         (_g, _J)
     end
 
+    M = N + 2 * N_extrema
+    K = N ÷ 5
+
+    θs = zeros(T, M)
+    Js = zeros(T, M)
+    gs = zeros(T, M)
     # sample so that the expected minima and maxima (0 and π)
-    # are in the middle of the domain, so that we can find the minima
-    # and maxima via interpolation
-    # resample over domains of expected extrema to improve convergence
-    M = (N ÷ 5)
-    θs =
-        Iterators.flatten((
-            range(-π / 2, 3π / 2, N - 2 * M),
-            range(-θ_offset, θ_offset, M),
-            range(π - θ_offset, π + θ_offset, M),
-        )) |> collect
-    sort!(θs)
-
-    # avoid coordinate singularity at π / 2
-    @. θs += 1e-4
-
-    Js = zeros(T, N)
-    gs = zeros(T, N)
-    @inbounds for i in eachindex(θs)
-        θ = θs[i]
+    itt = Iterators.flatten((
+        range(0 - 2θ_offset, 0 + 2θ_offset, K),
+        range(-π / 2, 3π / 2, N - 2 * K),
+        range(π - 2θ_offset, π + 2θ_offset, K),
+    ))
+    @inbounds for (i, _θ) in enumerate(itt)
+        # avoid coordinate singularity at π / 2
+        θ = _θ + 1e-4
         g, J = _workhorse(θ)
         gs[i] = g
         Js[i] = J
+        θs[i] = θ
     end
 
-    # todo: maybe use a basic binary search optimization here to find
-    # the extremal g using the ray tracer within N steps, instead of
-    # relying on an interpolation to find it?
-    # maybe even dispatch for different methods until one proves itself
-    # superior
+    _gmin, _gmax = @views _search_extremal!(
+        θs[N+1:end],
+        gs[N+1:end],
+        Js[N+1:end],
+        _workhorse,
+        θ_offset,
+    )
 
-    # gmin, gmax = _search_extremal!(gs, Js, _workhorse, θs, Ndirect, Nextrema_solving)
+    # remove unused 
+    B = findall(==(0), θs)
+    deleteat!(θs, B)
+    deleteat!(gs, B)
+    deleteat!(Js, B)
 
-    # interpolate the extrema
-    _gmin, _gmax = try
-        (_a, _b), _ = infer_extremal(gs, θs, 0, π; offset = θ_offset)
-        _a, _b
-    catch e
-        if e isa Roots.ConvergenceFailed
-            @warn ("Root finder failed to infer minima for rₑ = $rₑ. Using array extremal.")
-            extrema(gs)
-        else
-            throw(e)
-        end
-    end
     gmin, gmax = _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
 
+    I = sortperm(θs)
+    @. θs = θs[I]
+    @. Js = Js[I]
+    @. gs = gs[I]
+    
     # convert from ∂g to ∂g✶
     @. Js = (gmax - gmin) * Js
-    @inbounds for i in eachindex(Js)
+
+    @inbounds for i in eachindex(gs)
         g✶ = g_to_g✶(gs[i], gmin, gmax)
         # Js is now storing f
         Js[i] = _calculate_transfer_function(rₑ, gs[i], g✶, Js[i])
@@ -242,63 +239,46 @@ end
 
 # find gmin and gmax via GoldenSection
 # storing all attempts in gs and Js
-function _search_extremal!(gs, Js, f, θs, offset, N)
-    jmin = offset
-    function _min_searcher(θ)
-        @assert jmin <= N + offset
-        g, Js[jmin] = f(θ)
-        gs[jmin] = g
-        jmin + 1
+function _search_extremal!(θs, gs, Js, f, offset)
+    N = length(θs)
+
+    i::Int = 0
+    function _gmin_finder(θ)
+        if i > N
+            error("i > N: $i > $N")
+        end
+        i += 1
+        if abs(θ) < 1e-4 || abs(abs(θ) - π) < 1e-4
+            θ += 1e-4
+        end
+        g, J = f(θ)
+        θs[i] = θ
+        Js[i] = J
+        gs[i] = g
         g
     end
-
-    jmax = offset + N
-    function _max_searcher(θ)
-        @assert jmax <= 2N + offset
-        g, Js[jmax] = f(θ)
-        gs[jmax] = g
-        jmax + 1
-        # invert 
-        -g
+    function _gmax_finder(θ)
+        -_gmin_finder(θ)
     end
-
-    _, imin = findmin(@view(gs[1:offset]))
-    _, imax = findmax(@view(gs[1:offset]))
 
     # stride either side of our best guess so far
     res_min = Optim.optimize(
-        _min_searcher,
-        θs[imin-1],
-        θs[imin+1],
+        _gmin_finder,
+        0 - offset,
+        0 + offset,
         GoldenSection(),
-        iterations = N,
+        iterations = N ÷ 2 - 1,
     )
     res_max = Optim.optimize(
-        _max_searcher,
-        θs[imax-1],
-        θs[imax+1],
+        _gmax_finder,
+        π - offset,
+        π + offset,
         GoldenSection(),
-        iterations = N,
+        iterations = N ÷ 2 - 1,
     )
+
     # unpack result, remembering that maximum is inverted
     Optim.minimum(res_min), -Optim.minimum(res_max)
-end
-
-function infer_extremal(y, x, x0, x1; offset = 0.4)
-    x0, y0 = interpolate_extremal(y, x, x0; offset = offset)
-    x1, y1 = interpolate_extremal(y, x, x1; offset = offset)
-    if y0 > y1
-        return (y1, y0), (x1, x0)
-    else
-        return (y0, y1), (x0, x1)
-    end
-end
-
-∂(f) = x -> ForwardDiff.derivative(f, x)
-function interpolate_extremal(y, x, x0; offset = 0.4)
-    interp = DataInterpolations.CubicSpline(y, x)
-    x̄ = find_zero(∂(interp), (x0 - offset, x0 + offset), Roots.AlefeldPotraShi())
-    x̄, interp(x̄)
 end
 
 function interpolated_transfer_branches(
