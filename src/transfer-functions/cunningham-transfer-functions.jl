@@ -102,11 +102,11 @@ function cunningham_transfer_function(
     u,
     d,
     rₑ;
-    max_time = 2e3,
+    max_time = 2 * u[2],
     redshift_pf = ConstPointFunctions.redshift(m, u),
-    offset_max = 20.0,
+    offset_max = 0.4rₑ + 10,
     zero_atol = 1e-7,
-    θ_offset = 0.4,
+    θ_offset = 0.6,
     N = 80,
     tracer_kwargs...,
 ) where {T}
@@ -148,7 +148,7 @@ function cunningham_transfer_function(
     # are in the middle of the domain, so that we can find the minima
     # and maxima via interpolation
     # resample over domains of expected extrema to improve convergence
-    M = (N ÷ 4)
+    M = (N ÷ 5)
     θs =
         Iterators.flatten((
             range(-π / 2, 3π / 2, N - 2 * M),
@@ -179,7 +179,7 @@ function cunningham_transfer_function(
 
     # interpolate the extrema
     _gmin, _gmax = try
-        (_a, _b), _ = infer_extremal(gs, θs, 0, π)
+        (_a, _b), _ = infer_extremal(gs, θs, 0, π; offset = θ_offset)
         _a, _b
     catch e
         if e isa Roots.ConvergenceFailed
@@ -240,7 +240,7 @@ function _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
     return gmin, gmax
 end
 
-# currently unused: find gmin and gmax via GoldenSection
+# find gmin and gmax via GoldenSection
 # storing all attempts in gs and Js
 function _search_extremal!(gs, Js, f, θs, offset, N)
     jmin = offset
@@ -284,9 +284,9 @@ function _search_extremal!(gs, Js, f, θs, offset, N)
     Optim.minimum(res_min), -Optim.minimum(res_max)
 end
 
-function infer_extremal(y, x, x0, x1)
-    x0, y0 = interpolate_extremal(y, x, x0)
-    x1, y1 = interpolate_extremal(y, x, x1)
+function infer_extremal(y, x, x0, x1; offset = 0.4)
+    x0, y0 = interpolate_extremal(y, x, x0; offset = offset)
+    x1, y1 = interpolate_extremal(y, x, x1; offset = offset)
     if y0 > y1
         return (y1, y0), (x1, x0)
     else
@@ -295,9 +295,9 @@ function infer_extremal(y, x, x0, x1)
 end
 
 ∂(f) = x -> ForwardDiff.derivative(f, x)
-function interpolate_extremal(y, x, x0)
+function interpolate_extremal(y, x, x0; offset = 0.4)
     interp = DataInterpolations.CubicSpline(y, x)
-    x̄ = find_zero(∂(interp), x0)
+    x̄ = find_zero(∂(interp), (x0 - offset, x0 + offset), Roots.AlefeldPotraShi())
     x̄, interp(x̄)
 end
 
@@ -317,14 +317,13 @@ function interpolated_transfer_branches(
             # since redshift / jacobian values calculated at large impact parameters
             # seem to be inaccurate? either that or the root finder is up to something
             # but the problems seem to disappear by just keeping everything at low impact
-            x_prob = SVector{4}(x[1], x[2] + (100 + 200 * cos(x[3])) * rₑ, x[3], x[4])
+            x_prob = SVector{4}(x[1], x[2], x[3], x[4])
             ctf = cunningham_transfer_function(
                 m,
                 x_prob,
                 d,
                 rₑ,
                 ;
-                offset_max = 0.4rₑ + 20,
                 chart = chart_for_metric(m, 10 * x_prob[2]),
                 max_time = 10 * x_prob[2],
                 kwargs...,
