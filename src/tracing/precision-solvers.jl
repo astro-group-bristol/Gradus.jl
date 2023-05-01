@@ -36,7 +36,7 @@ function find_offset_for_radius(
 )
     measure = gp -> begin
         r = if gp.status == StatusCodes.IntersectedWithGeometry
-            gp.x[2]
+            gp.x[2] * sin(gp.x[3])
         else
             zero(eltype(gp.x))
         end
@@ -78,7 +78,7 @@ function find_offset_for_radius(
 
 
     gp0 = _solve_reinit!(integ, vcat(u, velfunc(r0)))
-    if !isapprox(measure(gp0), 0.0, atol = 1e4 * zero_atol)
+    if !isapprox(measure(gp0), 0.0, atol = 1e-4)
         @warn(
             "Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ (offset_max = $offset_max, measure = $(measure(gp0)))."
         )

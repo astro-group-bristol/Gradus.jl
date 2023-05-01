@@ -351,33 +351,49 @@ $(FIELDS)
     E = 1.0
 end
 
-GradusBase.inner_radius(m::KerrSpacetimeFirstOrder{T}) where {T} = m.M + √(m.M^2 - m.a^2)
-GradusBase.constrain(::KerrSpacetimeFirstOrder{T}, u, v; μ = 0.0) where {T} = v[1]
+GradusBase.inner_radius(m::KerrSpacetimeFirstOrder) = m.M + √(m.M^2 - m.a^2)
+GradusBase.constrain(::KerrSpacetimeFirstOrder, u, v; μ = 0.0) = v[1]
 
-four_velocity(u, m::KerrSpacetimeFirstOrder{T}, p) where {T} =
+four_velocity(u, m::KerrSpacetimeFirstOrder, p) =
     __BoyerLindquistFO.four_velocity(u, m.E, m.M, m.a, p)
-calc_lq(m::KerrSpacetimeFirstOrder{T}, pos, vel) where {T} =
+calc_lq(m::KerrSpacetimeFirstOrder, pos, vel) =
     __BoyerLindquistFO.LQ(m.M, pos[2], m.a, pos[3], vel[3], vel[4])
 
-function Vr(m::KerrSpacetimeFirstOrder{T}, u, p) where {T}
+function Vr(m::KerrSpacetimeFirstOrder, u, p)
     L = p.L
     Q = p.Q
     __BoyerLindquistFO.Vr(m.E, L, m.M, Q, u[2], m.a)
 end
-function Vθ(m::KerrSpacetimeFirstOrder{T}, u, p) where {T}
+function Vθ(m::KerrSpacetimeFirstOrder, u, p)
     L = p.L
     Q = p.Q
     __BoyerLindquistFO.Vθ(m.E, L, Q, m.a, u[3])
 end
 
-function impact_parameters_to_three_velocity(
-    m::KerrSpacetimeFirstOrder{T},
-    u,
-    α,
-    β,
-) where {T}
+function _map_impact_parameters(m::KerrSpacetimeFirstOrder, u, α, β)
     sinΦ, sinΨ = __BoyerLindquistFO.sinΦsinΨ(m.M, u[2], m.a, u[3], α, β)
-    (β < 0.0 ? 1.0 : -1.0, sinΦ, sinΨ)
+    SVector(1, β < 0.0 ? 1.0 : -1.0, sinΦ, sinΨ)
+end
+function _map_impact_parameters(m::KerrSpacetimeFirstOrder, x, iterator)
+    (_map_impact_parameters(m, x, α, β) for (α, β) in iterator)
+end
+
+function _render_velocity_function(
+    m::KerrSpacetimeFirstOrder,
+    position,
+    image_width,
+    image_height,
+    fov,
+)
+    y_mid = image_height ÷ 2
+    x_mid = image_width ÷ 2
+    function velfunc(i)
+        Y = i % image_height
+        X = i ÷ image_height
+        α = x_to_α(X, x_mid, fov)
+        β = y_to_β(Y, y_mid, fov)
+        _map_impact_parameters(m, position, α, β)
+    end
 end
 
 # special radii

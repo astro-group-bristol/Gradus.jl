@@ -22,11 +22,11 @@ function test_tracer(m, u, q; kwargs...)
     fingerprint
 end
 
-@test test_tracer(m, u, 0.0) ≈ 450413.5565857728 rtol = 1e-3
-@test test_tracer(m, u, 1.0) ≈ 263050.89536876464 rtol = 1e-3
-@test test_tracer(m, u, -1.0) ≈ 652669.0871285137 rtol = 1e-3
+@test test_tracer(m, u, 0.0) ≈ 448853.6312965758 rtol = 1e-3
+@test test_tracer(m, u, 1.0) ≈ 263323.2126428741 rtol = 1e-3
+@test test_tracer(m, u, -1.0) ≈ 653341.4649407878 rtol = 1e-3
 
 ensemble = Gradus.EnsembleEndpointThreads()
-@test test_tracer(m, u, 0.0; ensemble = ensemble) ≈ 450413.5565857728 rtol = 1e-3
-@test test_tracer(m, u, 1.0; ensemble = ensemble) ≈ 263050.89536876464 rtol = 1e-3
-@test test_tracer(m, u, -1.0; ensemble = ensemble) ≈ 652669.0871285137 rtol = 1e-3
+@test test_tracer(m, u, 0.0; ensemble = ensemble) ≈ 448853.6312965758 rtol = 1e-3
+@test test_tracer(m, u, 1.0; ensemble = ensemble) ≈ 263323.2126428741 rtol = 1e-3
+@test test_tracer(m, u, -1.0; ensemble = ensemble) ≈ 653341.4649407878 rtol = 1e-3
