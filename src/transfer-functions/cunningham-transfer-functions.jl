@@ -7,7 +7,7 @@ function _adjust_extrema!(g)
     g[end] = one(eltype(g))
 end
 
-function _make_sorted_with_adjustments!(g1, f1, g2, f2)
+function _make_sorted_with_adjustments!(g1, f1, g2, f2; H = 1e-3)
     I1 = sortperm(g1)
     I2 = sortperm(g2)
 
@@ -21,7 +21,6 @@ function _make_sorted_with_adjustments!(g1, f1, g2, f2)
     # very problematic due to the g✶ * (1 - g✶) terms, sending the branches to zero
     # so we use an offset to avoid these that is small enough to not impact results at
     # high inclination angles
-    H = 1e-6
     J1 = @. (g1 < 1 - H) & (g1 > H)
     J2 = @. (g2 < 1 - H) & (g2 > H)
     g1 = g1[J1]
@@ -75,10 +74,10 @@ function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
     end
 end
 
-function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where {T}
+function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}; H = H) where {T}
     (lower_g✶, lower_f, upper_g✶, upper_f) = splitbranches(ctf)
     (lower_g✶, lower_f, upper_g✶, upper_f) =
-        _make_sorted_with_adjustments!(lower_g✶, lower_f, upper_g✶, upper_f)
+        _make_sorted_with_adjustments!(lower_g✶, lower_f, upper_g✶, upper_f; H = H)
     lower_branch = _make_interpolation(lower_g✶, lower_f)
     upper_branch = _make_interpolation(upper_g✶, upper_f)
     InterpolatedCunninghamTransferFunction(
@@ -287,32 +286,27 @@ function interpolated_transfer_branches(
     d,
     radii;
     verbose = false,
+    H = 1e-3,
     kwargs...,
 ) where {T}
     progress_bar = init_progress_bar("Transfer functions:", length(radii), verbose)
     # IILF for calculating the interpolated branches
     𝔉 =
         rₑ -> begin
-            # want to scale the initial position with radius
-            # since redshift / jacobian values calculated at large impact parameters
-            # seem to be inaccurate? either that or the root finder is up to something
-            # but the problems seem to disappear by just keeping everything at low impact
-            x_prob = SVector{4}(x[1], x[2], x[3], x[4])
             ctf = cunningham_transfer_function(
                 m,
-                x_prob,
+                x,
                 d,
                 rₑ,
                 ;
-                chart = chart_for_metric(m, 10 * x_prob[2]),
-                max_time = 10 * x_prob[2],
+                chart = chart_for_metric(m, 10 * x[2]),
+                max_time = 10 * x[2],
                 kwargs...,
             )
-            itp = interpolate_transfer_function(ctf)
+            itp = interpolate_transfer_function(ctf; H = H)
             ProgressMeter.next!(progress_bar)
             itp
         end
-
     # calculate interpolated transfer functions for each emission radius
     _threaded_map(𝔉, radii)
 end

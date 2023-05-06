@@ -68,7 +68,8 @@ end
     n = @SVector [T(0.0), cos(d.inclination), sin(d.inclination)]
     # project u into normal vector n
     k = p ⋅ n
-    abs(k) - (gtol * x4[2])
+    # abs(k) - (gtol * x4[2])
+    k
 end
 
 """
