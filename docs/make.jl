@@ -4,6 +4,7 @@ using Documenter
 using Gradus
 
 
+
 makedocs(
     modules = [Gradus],
     clean = true,
