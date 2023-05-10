@@ -227,6 +227,9 @@ end
     constrain_time(g_comps, v, μ)
 end
 
+const _static_dual_eval = Base.get_extension(ForwardDiff, :ForwardDiffStaticArraysExt).static_dual_eval 
+const _extract_jacobian = Base.get_extension(ForwardDiff, :ForwardDiffStaticArraysExt).extract_jacobian
+
 """
     metric_jacobian(m::AbstractStaticAxisSymmetric{T}, rθ)
 
@@ -248,10 +251,10 @@ but non-allocating.
 function metric_jacobian(m::AbstractStaticAxisSymmetric, rθ)
     f = x -> metric_components(m, x)
     T = typeof(ForwardDiff.Tag(f, eltype(rθ)))
-    ydual = ForwardDiff.ForwardDiffStaticArraysExt.static_dual_eval(T, f, rθ)
+    ydual = _static_dual_eval(T, f, rθ)
     (
         ForwardDiff.value.(T, ydual),
-        ForwardDiff.ForwardDiffStaticArraysExt.extract_jacobian(T, ydual, rθ),
+        _extract_jacobian(T, ydual, rθ),
     )
 end
 
