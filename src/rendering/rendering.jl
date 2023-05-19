@@ -52,6 +52,7 @@ end
 
 function prerendergeodesics(
     m::AbstractMetric,
+    position,
     args...;
     cache = EndpointCache(),
     image_width = 350,
