@@ -7,6 +7,8 @@ end
 
 Calculate the local momentum vector ``\\bar{p}_{(\\mu)}`` corresponding to the impact parameters 
 ``\\alpha`` and ``\\beta`` for an observer located at ``r_\\text{obs}``.
+
+Note, assumes ``\\mu = 0``.
 """
 function local_momentum(r_obs, α, β)
     b = β / r_obs

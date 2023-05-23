@@ -227,8 +227,10 @@ end
     constrain_time(g_comps, v, μ)
 end
 
-const _static_dual_eval = Base.get_extension(ForwardDiff, :ForwardDiffStaticArraysExt).static_dual_eval 
-const _extract_jacobian = Base.get_extension(ForwardDiff, :ForwardDiffStaticArraysExt).extract_jacobian
+const _static_dual_eval =
+    Base.get_extension(ForwardDiff, :ForwardDiffStaticArraysExt).static_dual_eval
+const _extract_jacobian =
+    Base.get_extension(ForwardDiff, :ForwardDiffStaticArraysExt).extract_jacobian
 
 """
     metric_jacobian(m::AbstractStaticAxisSymmetric{T}, rθ)
@@ -252,10 +254,7 @@ function metric_jacobian(m::AbstractStaticAxisSymmetric, rθ)
     f = x -> metric_components(m, x)
     T = typeof(ForwardDiff.Tag(f, eltype(rθ)))
     ydual = _static_dual_eval(T, f, rθ)
-    (
-        ForwardDiff.value.(T, ydual),
-        _extract_jacobian(T, ydual, rθ),
-    )
+    (ForwardDiff.value.(T, ydual), _extract_jacobian(T, ydual, rθ))
 end
 
 @inbounds function geodesic_equation(
