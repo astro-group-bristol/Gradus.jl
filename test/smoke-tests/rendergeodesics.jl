@@ -135,3 +135,44 @@ end
         @test isapprox(e, v; rtol = 0.1)
     end
 end
+
+@testset "prerendergeodesics" begin
+    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
+
+    # last computed 21/01/2023: shrink resolution
+    expected = (
+        8969.1564582409967,
+        8969.15634220181,
+        8977.502920124776,
+        203.621259550736,
+        8969.155411207657,
+        8969.157492589824,
+    )
+    result = map((
+        KerrMetric(),
+        JohannsenMetric(),
+        KerrSpacetimeFirstOrder(),
+        MorrisThorneWormhole(),
+        BumblebeeMetric(),
+        KerrNewmanMetric(),
+    )) do m
+        cache = prerendergeodesics(
+            m,
+            u,
+            200.0,
+            fov = 1.0,
+            image_width = 20,
+            image_height = 20,
+            verbose = false,
+        )
+        pf =
+            PointFunction((m, gp, λ_max) -> gp.λ_max) ∘
+            FilterPointFunction((m, gp, λ_max) -> gp.λ_max < λ_max, NaN)
+        img = apply(pf, cache)
+        image_fingerprint = sum(filter(!isnan, img))
+    end
+    for (e, v) in zip(expected, result)
+        # this tolerance is kind of unacceptably high? todo: investigate why
+        @test isapprox(e, v; rtol = 0.1)
+    end
+end
