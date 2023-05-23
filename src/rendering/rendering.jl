@@ -122,7 +122,7 @@ function __prerendergeodesics(
     sol_or_points = __render_geodesics(trace, config; kwargs...)
     points = sol_or_points_to_points(sol_or_points)
     EndpointRenderCache(
-        config.m,
+        config.metric,
         config.λ_domain[2],
         image_height,
         image_width,
