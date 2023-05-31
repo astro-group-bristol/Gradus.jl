@@ -26,6 +26,7 @@ using Tullio: @tullio
 
 import ForwardDiff
 import GeometryBasics
+import Symbolics
 
 include("GradusBase/GradusBase.jl")
 import .GradusBase:

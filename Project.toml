@@ -24,6 +24,7 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 VoronoiCells = "e3e34ffb-84e9-5012-9490-92c94d0c60a4"
 
