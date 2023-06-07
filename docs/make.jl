@@ -15,14 +15,15 @@ makedocs(
             "Getting started" => "getting-started.md",
             "Problems and solvers" => "problems-and-solvers.md",
             "Point functions" => "overview/point-functions.md",
-            "Catalogue of metrics" => "overview/metrics.md",
             "Accretion geometry" => "overview/accretion-geometry.md",
+        ],
+        "Examples" => "examples/examples.md",
+        "Catalogue of metrics" => [
+            "Available metrics" => "overview/metrics.md",
             "Implementing new metrics" => "internals/custom-metrics.md",
-            "Examples" => "examples/examples.md",
         ],
         "Advanced" => [
             "Geodesic integration" => "overview/geodesic-integration.md",
-            "Custom tracing" => "internals/custom-traces.md",
             "Parallelism and ensembles" => "internals/parallelism.md",
             "Special radii" => "internals/special-radii.md",
         ],

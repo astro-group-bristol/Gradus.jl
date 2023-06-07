@@ -63,10 +63,6 @@ See [GettingStarted](https://astro-group-bristol.github.io/Gradus.jl/dev/getting
 - [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl)
 - [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
 
-<hr>
-
-<p align="center"> Astrophysics Group Bristol </p>
-
 ## About
 
 Gradus.jl is a research tool for calculating geodesic paths in arbitrary space-times. It is currently work-in-progress, and breaking changes are frequent, as the interface is redesigned to match changing use-cases.
@@ -77,3 +73,9 @@ It is part of a larger developing eco-system of codes, created by members of the
 - Dr. Andrew Young (Associate Professor)
 
 For more University of Bristol Astrophysics Group codes, see [our GitHub organisation](https://github.com/astro-group-bristol).
+
+```@raw html
+<hr>
+
+<p align="center"> Astrophysics Group Bristol </p>
+```

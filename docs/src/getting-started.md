@@ -128,7 +128,7 @@ plot_horizon!(m)
 Choosing the initial velocity in this manner lacks interpretation. We can instead use so-called _impact parameters_ $(\alpha, \beta)$. These may be thought of as follows: 
 
 ```@docs
-impact_parameters_to_three_velocity
+map_impact_parameters
 ```
 
 Finally, if you imagine a two dimensional image plane, where $x$ is the horizontal and $y$ the vertical coordinate, the $\alpha$ impact parameter corresponds to that closest approach along the $x$ axis, and $\beta$ along the $y$ axis.
