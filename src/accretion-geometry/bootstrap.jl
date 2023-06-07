@@ -49,7 +49,7 @@ function geometry_collision_callback(
         (u, λ, integrator) -> distance_to_disc(g, u; gtol = gtol),
         terminate_with_status!(StatusCodes.IntersectedWithGeometry),
         interp_points = interp_points,
-        save_positions = (true, false),
+        save_positions = (false, false),
     )
 end
 

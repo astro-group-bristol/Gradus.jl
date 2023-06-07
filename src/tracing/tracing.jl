@@ -1,14 +1,18 @@
 struct TraceGeodesic{T} <: AbstractTrace
     μ::T
     q::T
-    TraceGeodesic(; μ = 0.0, q = 0.0) = new{typeof(μ)}(μ, q)
+    function TraceGeodesic(; μ = 0, q = 0 )
+        new{promote_type(typeof(μ), typeof(q))}(μ, q)
+    end
 end
 
 struct TraceRadiativeTransfer{T} <: AbstractTrace
     μ::T
     q::T
     ν::T
-    TraceRadiativeTransfer(; μ = 0.0, q = 0.0, ν = 1.0) = new{typeof(μ)}(μ, q, ν)
+    function TraceRadiativeTransfer(; μ = 0, q = 0, ν = 0)
+        new{promote_type(typeof(μ), typeof(q), typeof(ν))}(μ, q, ν)
+    end
 end
 
 """
@@ -59,13 +63,13 @@ The possible keyword arguments are
 with `solver_opts` being forwarded to the [SciML `solve` function](https://docs.sciml.ai/DiffEqDocs/stable/basics/common_solver_opts/#solver_options).
 """
 function tracegeodesics(
-    m::AbstractMetric,
+    m::AbstractMetric{T},
     args...;
-    μ = 0.0,
-    q = 0.0,
+    μ = zero(T),
+    q = zero(T),
     trace = TraceGeodesic(; μ = μ, q = q),
     kwargs...,
-)
+   ) where {T}
     tracegeodesics(trace, m, args...; kwargs...)
 end
 function tracegeodesics(trace::AbstractTrace, m::AbstractMetric, args...; kwargs...)
@@ -207,13 +211,13 @@ end
 end
 
 @inline function _init_integrator(
-    m::AbstractMetric,
+        m::AbstractMetric{T},
     args...;
-    μ = 0.0,
-    q = 0.0,
+    μ = zero(T),
+    q = zero(T),
     trace = TraceGeodesic(; μ = μ, q = q),
     kwargs...,
-)
+   ) where {T}
     config, solver_opts = tracing_configuration(trace, m, args...; kwargs...)
     problem = assemble_tracing_problem(trace, config)
     _init_integrator(problem; solver_opts...)
