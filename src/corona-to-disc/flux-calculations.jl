@@ -37,7 +37,7 @@ is calculated via
 ```
 """
 function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, 𝒩, A, x, g)
-    gcomp = metric_components(m, x)    
+    gcomp = metric_components(m, x)
     # account for relativistic effects in area
     A_corrected = A * √(gcomp[2] * gcomp[3])
     # divide by area to get number density

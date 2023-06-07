@@ -187,7 +187,12 @@ Limitations:
     end
 end
 
-@inline function constrain(m::AbstractStaticAxisSymmetric{T}, u, v; μ::T = zero(T)) where {T}
+@inline function constrain(
+    m::AbstractStaticAxisSymmetric{T},
+    u,
+    v;
+    μ::T = zero(T),
+) where {T}
     rθ = (u[2], u[3])
     g_comps = metric_components(m, rθ)
     constrain_time(g_comps, v, μ)

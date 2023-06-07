@@ -1,4 +1,5 @@
-export VoronoiDiscProfile, getareas, getproperarea, getbarycenter, RadialDiscProfile, get_emissivity
+export VoronoiDiscProfile,
+    getareas, getproperarea, getbarycenter, RadialDiscProfile, get_emissivity
 
 # exported interface
 function emitted_flux(profile::AbstractDiscProfile, gps)
@@ -34,7 +35,13 @@ function RadialDiscProfile(tf::LagTransferFunction; kwargs...)
     RadialDiscProfile(tf.metric, tf.model, tf.source_to_disc; kwargs...)
 end
 
-function RadialDiscProfile(m::AbstractMetric, model::AbstractCoronaModel, gps::AbstractVector{<:GeodesicPoint}; grid = InverseGrid(), N = 1000)
+function RadialDiscProfile(
+    m::AbstractMetric,
+    model::AbstractCoronaModel,
+    gps::AbstractVector{<:GeodesicPoint};
+    grid = InverseGrid(),
+    N = 1000,
+)
     radii = map(i -> i.x[2], gps)
     # ensure sorted: let the user sort so that everything is sure to be
     # in order
@@ -56,9 +63,9 @@ function RadialDiscProfile(m::AbstractMetric, model::AbstractCoronaModel, gps::A
         r = i == 1 ? 0 : bins[i-1]
         A = (2π * (R - r))
         # counts now stores emissivity
-        counts[i] = source_to_disc_emissivity(m, counts[i], A, SVector(R, π/2), g(R))
+        counts[i] = source_to_disc_emissivity(m, counts[i], A, SVector(R, π / 2), g(R))
     end
-    
+
     # create interpolations
     t = DataInterpolations.LinearInterpolation(times, radii)
     ε = DataInterpolations.LinearInterpolation(counts, bins)

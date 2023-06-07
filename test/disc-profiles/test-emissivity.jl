@@ -17,7 +17,7 @@ sols = @time tracegeodesics(
 gps = filter(i -> i.status == StatusCodes.IntersectedWithGeometry, unpack_solution(sols))
 
 # ensure error is thrown if not sorted
-@test_throws "" RadialDiscProfile(m, lp, gps; N = 100, grid = Gradus.Grids.GeometricGrid()) 
+@test_throws "" RadialDiscProfile(m, lp, gps; N = 100, grid = Gradus.Grids.GeometricGrid())
 
 sort!(gps; by = i -> i.x[2])
 prof = RadialDiscProfile(m, lp, gps; N = 100, grid = Gradus.Grids.GeometricGrid())
@@ -26,5 +26,3 @@ bins, emiss = get_emissivity(prof)
 
 # get the points and just compute a generic check
 @test sum(emiss) ≈ 2025.04 atol = 1e-2
-
-

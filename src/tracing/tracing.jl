@@ -1,7 +1,7 @@
 struct TraceGeodesic{T} <: AbstractTrace
     μ::T
     q::T
-    function TraceGeodesic(; μ = 0, q = 0 )
+    function TraceGeodesic(; μ = 0, q = 0)
         new{promote_type(typeof(μ), typeof(q))}(μ, q)
     end
 end
@@ -69,7 +69,7 @@ function tracegeodesics(
     q = zero(T),
     trace = TraceGeodesic(; μ = μ, q = q),
     kwargs...,
-   ) where {T}
+) where {T}
     tracegeodesics(trace, m, args...; kwargs...)
 end
 function tracegeodesics(trace::AbstractTrace, m::AbstractMetric, args...; kwargs...)
@@ -211,13 +211,13 @@ end
 end
 
 @inline function _init_integrator(
-        m::AbstractMetric{T},
+    m::AbstractMetric{T},
     args...;
     μ = zero(T),
     q = zero(T),
     trace = TraceGeodesic(; μ = μ, q = q),
     kwargs...,
-   ) where {T}
+) where {T}
     config, solver_opts = tracing_configuration(trace, m, args...; kwargs...)
     problem = assemble_tracing_problem(trace, config)
     _init_integrator(problem; solver_opts...)
