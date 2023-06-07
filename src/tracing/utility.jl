@@ -40,11 +40,20 @@ function lnr_momentum_to_global_velocity_transform(m::AbstractMetric, x)
 end
 
 """
-    map_impact_parameters(m::AbstractMetric{T}, u, α, β)
+    map_impact_parameters(m::AbstractMetric{T}, x, α, β)
 
-Map impact parameters `α` and `β` to a velocity vector at some position `u` in the given metric `m`.
+Map impact parameters `α` and `β` to an (unconstrained) velocity vector at some position `x` in the given metric `m`.
 
-Assumes stationary observer in a locally non-rotating frame (LNRF).
+Assumes stationary observer in a locally non-rotating frame (LNRF), calculating the momenta
+
+```math
+p_{\\mu} = e^{(\\nu)}_{\\phantom{(\\nu)} \\mu} p_{(\\nu)},
+```
+where ``e^{(\\nu)}_{\\phantom{(\\nu)} \\mu}`` is the LNRF. The metric is then used to find the 
+contravariant velocity.
+
+This functions uses [`lnr_momentum_to_global_velocity_transform`](@ref) to calculate the LNRF to
+global frame transformation, and determines the local momenta with [`local_momentum`](@ref).
 
 The impact parameters are interpreted as follows:
 
