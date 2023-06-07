@@ -216,7 +216,7 @@ function make_target_objective(
         end,
         terminate!,
         interp_points = 8,
-        save_positions = (true, false),
+        save_positions = (false, false),
     )
 
     # init a reusable integrator

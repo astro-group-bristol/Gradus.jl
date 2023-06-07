@@ -20,7 +20,7 @@ end
             terminate!(integrator)
         end
     end
-    DiscreteCallback(on_chart, chart_terminate!)
+    DiscreteCallback(on_chart, chart_terminate!, save_positions = (false, false))
 end
 
 struct PoloidalShapeChart{T,F} <: AbstractChart
@@ -50,8 +50,8 @@ end
 
 function chart_for_metric(
     m::AbstractMetric{T},
-    outer_radius = 12000.0;
-    closest_approach = 1.01,
+    outer_radius = T(12000);
+    closest_approach = T(1.01),
 ) where {T}
     chart =
         PolarChart(GradusBase.inner_radius(m) * closest_approach, convert(T, outer_radius))

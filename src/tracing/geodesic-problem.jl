@@ -54,7 +54,7 @@ function geodesic_ode_problem(
     time_domain,
     callback,
 )
-    function f(u::SVector{8,T}, p, λ) where {T}
+    function geodesic_ode_f(u::SVector{8,T}, p, λ) where {T}
         @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
             dv = SVector{4,T}(geodesic_equation(m, x, v))
             vcat(v, dv)
@@ -63,7 +63,7 @@ function geodesic_ode_problem(
 
     u_init = vcat(pos, vel)
     ODEProblem{false}(
-        f,
+        geodesic_ode_f,
         u_init,
         time_domain,
         IntegrationParameters(StatusCodes.NoStatus);

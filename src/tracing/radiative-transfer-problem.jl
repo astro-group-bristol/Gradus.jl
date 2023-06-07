@@ -48,7 +48,7 @@ function geometry_collision_callback(
         _radiative_transfer_geometry_callback,
         _radiate_transfer_geometry_effect!,
         interp_points = interp_points,
-        save_positions = (true, false),
+        save_positions = (false, false),
     )
 end
 

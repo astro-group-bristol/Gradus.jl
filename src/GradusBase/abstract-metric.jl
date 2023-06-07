@@ -82,7 +82,7 @@ Return the innermost valid coordinate relative to the origin, for use in geodesi
 This usually represents some property of the metric, e.g. event horizon radius in Kerr/Schwarzschild metrics, or
 throat diameter in worm hole metrics.
 """
-inner_radius(::AbstractMetric{T}) where {T} = convert(T, 0.0)
+inner_radius(::AbstractMetric{T}) where {T} = zero(T)
 
 """
     metric_type(m::AbstractMetric{T})
