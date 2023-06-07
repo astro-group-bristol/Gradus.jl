@@ -77,7 +77,7 @@ inverse_metric_components(m::AbstractStaticAxisSymmetric, rθ) =
     inverse_metric_components(metric_components(m, rθ))
 
 """
-    $(TYPEDSIGNATURES)
+    compute_geodesic_equation(ginv, j1, j2, v)
 
 Using the inverse metric `ginv`, the Jacobian of the metric for ``r`` and ``\\theta``,
 `j1` and `j2` respectively, and velocity four-vector `v`, calculates the four-acceleration

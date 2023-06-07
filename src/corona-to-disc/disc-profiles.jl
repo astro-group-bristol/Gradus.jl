@@ -1,4 +1,4 @@
-export VoronoiDiscProfile, getareas, getproperarea, getbarycenter, RadialDiscProfile
+export VoronoiDiscProfile, getareas, getproperarea, getbarycenter, RadialDiscProfile, get_emissivity
 
 # exported interface
 function emitted_flux(profile::AbstractDiscProfile, gps)
@@ -30,38 +30,47 @@ function RadialDiscProfile(f, tf::LagTransferFunction)
     end
 end
 
-function RadialDiscProfile(tf::LagTransferFunction; grid = InverseGrid(), N = 1000)
-    let gps = tf.source_to_disc
-        times = map(i -> i.x[1], gps)
-        radii = map(i -> i.x[2], gps)
-        bins = collect(grid(extrema(radii)..., N))
-        t = DataInterpolations.LinearInterpolation(times, radii)
+function RadialDiscProfile(tf::LagTransferFunction; kwargs...)
+    RadialDiscProfile(tf.metric, tf.model, tf.source_to_disc; kwargs...)
+end
 
-        # interpolate the energy ratio over the disc
-        gs = energy_ratio(tf.metric, tf.source_to_disc, tf.model)
-        g = DataInterpolations.LinearInterpolation(gs, radii)
-
-        # count number of photons in each radial bin
-        counts = bucket(radii, bins)
-        for i in eachindex(counts)
-            R = bins[i]
-            r = i == 1 ? 0 : bins[i-1]
-
-            # get components of the metric at the outer radius
-            gcomp = metric_components(tf.metric, SVector(R, π / 2))
-            # divide by area of the annulus to get number density
-            # account for relativistic effects
-            A = (2π * (R - r)) * √(gcomp[2] * gcomp[3])
-            counts[i] = counts[i] / (g(R)^2 * A)
-        end
-        ε = DataInterpolations.LinearInterpolation(counts, bins)
-        # wrap geodesic point wrappers
-        RadialDiscProfile(gp -> ε(gp.x[2]), gp -> t(gp.x[2]) + gp.x[1])
+function RadialDiscProfile(m::AbstractMetric, model::AbstractCoronaModel, gps::AbstractVector{<:GeodesicPoint}; grid = InverseGrid(), N = 1000)
+    radii = map(i -> i.x[2], gps)
+    # ensure sorted: let the user sort so that everything is sure to be
+    # in order
+    if !issorted(radii)
+        error("geodesic points must be sorted by radii: use `sort!(gps; by = i -> i.x[2])`")
     end
+
+    times = map(i -> i.x[1], gps)
+    bins = collect(grid(extrema(radii)..., N))
+
+    # interpolate the energy ratio over the disc
+    gs = energy_ratio(m, gps, model)
+    g = DataInterpolations.LinearInterpolation(gs, radii)
+
+    # count number of photons in each radial bin
+    counts = bucket(radii, bins)
+    areas = map(eachindex(counts)) do i
+        R = bins[i]
+        r = i == 1 ? 0 : bins[i-1]
+        A = (2π * (R - r))
+        # counts now stores emissivity
+        counts[i] = source_to_disc_emissivity(m, counts[i], A, SVector(R, π/2), g(R))
+    end
+    
+    # create interpolations
+    t = DataInterpolations.LinearInterpolation(times, radii)
+    ε = DataInterpolations.LinearInterpolation(counts, bins)
+
+    # wrap geodesic point wrappers
+    RadialDiscProfile(gp -> ε(gp.x[2]), gp -> t(gp.x[2]) + gp.x[1])
 end
 
 emitted_flux(profile::RadialDiscProfile, gps) = map(profile.f, gps)
 delay(profile::RadialDiscProfile, gps) = map(profile.t, gps)
+
+get_emissivity(prof::RadialDiscProfile) = (prof.f.ε.t, prof.f.ε.u)
 
 struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
     disc::D

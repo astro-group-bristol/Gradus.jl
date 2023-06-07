@@ -33,8 +33,7 @@ function (pintrp::PlungingInterpolation)(r)
     vt = pintrp.t(r)
     vr = pintrp.r(r)
     vϕ = pintrp.ϕ(r)
-
-    @SVector [vt, vr, 0.0, vϕ]
+    SVector(vt, vr, 0, vϕ)
 end
 
 function interpolate_plunging_velocities(

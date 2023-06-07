@@ -18,6 +18,32 @@ function lorentz_factor(g::AbstractMatrix, isco_r, u, v)
     end
 end
 
+
+"""
+    source_to_disc_emissivity(m, 𝒩, A, x, g)
+
+Compute the emissivity (in arbitrary units) in the disc element with area `A`, photon
+count `𝒩`, central position `x`, and redshift `g`. Evaluates
+
+```math
+\\varepsilon = \\frac{\\mathscr{N}}{\\tilde{A} g^2},
+```
+
+where ``\\tilde{A}`` is the relativistically corrected area of `A`. The relativistic correction
+is calculated via
+
+```math
+\\tilde{A} = A \\sqrt{g_{\\mu,\\nu}(x)}
+```
+"""
+function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, 𝒩, A, x, g)
+    gcomp = metric_components(m, x)    
+    # account for relativistic effects in area
+    A_corrected = A * √(gcomp[2] * gcomp[3])
+    # divide by area to get number density
+    𝒩 / (g^2 * A_corrected)
+end
+
 function flux_source_to_disc(
     m::AbstractMetric,
     model::AbstractCoronaModel,
@@ -46,7 +72,7 @@ function flux_source_to_disc(
     disc_velocity(r) =
         if r < isco_r
             vtemp = intp(r)
-            @SVector [vtemp[1], -vtemp[2], vtemp[3], vtemp[4]]
+            SVector(vtemp[1], -vtemp[2], vtemp[3], vtemp[4])
         else
             CircularOrbits.fourvelocity(m, r)
         end
