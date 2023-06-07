@@ -1,4 +1,4 @@
-export VoronoiDiscProfile, getareas, getproperarea, getbarycenter, RadialDiscProfile
+export VoronoiDiscProfile, getareas, getproperarea, getbarycenter, RadialDiscProfile, get_emissivity
 
 # exported interface
 function emitted_flux(profile::AbstractDiscProfile, gps)
@@ -39,7 +39,7 @@ function RadialDiscProfile(m::AbstractMetric, model::AbstractCoronaModel, gps::A
     # ensure sorted: let the user sort so that everything is sure to be
     # in order
     if !issorted(radii)
-        error("geodesic points must be sorted by radii: use `sort(gps; by = i -> i.x[2])`")
+        error("geodesic points must be sorted by radii: use `sort!(gps; by = i -> i.x[2])`")
     end
 
     times = map(i -> i.x[1], gps)
@@ -69,6 +69,8 @@ end
 
 emitted_flux(profile::RadialDiscProfile, gps) = map(profile.f, gps)
 delay(profile::RadialDiscProfile, gps) = map(profile.t, gps)
+
+get_emissivity(prof::RadialDiscProfile) = (prof.f.ε.t, prof.f.ε.u)
 
 struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
     disc::D
