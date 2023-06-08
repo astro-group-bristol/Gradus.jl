@@ -191,7 +191,7 @@ end
     m::AbstractStaticAxisSymmetric{T},
     u,
     v;
-    μ::T = zero(T),
+    μ = zero(T),
 ) where {T}
     rθ = (u[2], u[3])
     g_comps = metric_components(m, rθ)

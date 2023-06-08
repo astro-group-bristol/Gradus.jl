@@ -55,17 +55,12 @@ end
 
 function geometry_collision_callback(
     cg::CompositeGeometry{T},
-    ::AbstractTraceParameters;
+    trace::AbstractTrace;
     gtol,
     interp_points = 8,
 ) where {T}
     map(cg.geometry) do g
-        ContinuousCallback(
-            (u, λ, integrator) -> distance_to_disc(g, u; gtol = gtol),
-            terminate_with_status!(StatusCodes.IntersectedWithGeometry),
-            interp_points = interp_points,
-            save_positions = (true, false),
-        )
+        geometry_collision_callback(g, trace; gtol = gtol, interp_points = interp_points)
     end
 end
 
