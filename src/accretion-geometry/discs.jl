@@ -56,6 +56,7 @@ being perpendicular to the spin axis.
     outer_radius::T
     inclination::T
 end
+optical_property(::Type{<:GeometricThinDisc}) = OpticallyThin()
 
 @fastmath function distance_to_disc(d::GeometricThinDisc{T}, x4; gtol) where {T}
     p = @inbounds let r = x4[2], θ = x4[3], ϕ = x4[4]
@@ -205,7 +206,7 @@ function distance_to_disc(d::EllipticalDisc, x4; gtol)
     h - y - (gtol * x4[2])
 end
 
-struct PrecessingDisc{T,D} <: AbstractAccretionDisc{T}
+struct PrecessingDisc{T,D<:AbstractAccretionDisc{T}} <: AbstractAccretionDisc{T}
     disc::D
     β::T
     γ::T

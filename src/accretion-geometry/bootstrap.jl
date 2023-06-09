@@ -36,15 +36,11 @@ function geometry_collision_callback(g::AbstractAccretionGeometry, ::AbstractTra
         (u, λ, integrator) ->
             intersects_geometry(g, line_element(u, integrator), integrator),
         terminate_with_status!(StatusCodes.IntersectedWithGeometry),
+        save_positions = (false, false),
     )
 end
 
-function geometry_collision_callback(
-    g::AbstractAccretionDisc{T},
-    ::AbstractTrace;
-    gtol,
-    interp_points = 12,
-) where {T}
+function _thin_geometry_collision_callback(g::AbstractAccretionDisc; gtol, interp_points = 8)
     ContinuousCallback(
         (u, λ, integrator) -> distance_to_disc(g, u; gtol = gtol),
         terminate_with_status!(StatusCodes.IntersectedWithGeometry),
@@ -53,12 +49,20 @@ function geometry_collision_callback(
     )
 end
 
+geometry_collision_callback(
+    g::AbstractAccretionDisc,
+    ::AbstractTrace;
+    gtol,
+    interp_points = 12,
+) =
+    _thin_geometry_collision_callback(g; gtol = gtol, interp_points = interp_points)
+
 function geometry_collision_callback(
-    cg::CompositeGeometry{T},
+    cg::CompositeGeometry,
     trace::AbstractTrace;
     gtol,
     interp_points = 8,
-) where {T}
+)
     map(cg.geometry) do g
         geometry_collision_callback(g, trace; gtol = gtol, interp_points = interp_points)
     end

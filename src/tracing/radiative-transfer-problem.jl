@@ -30,12 +30,12 @@ function update_integration_parameters!(
     p
 end
 
-function geometry_collision_callback(
-    g::AbstractAccretionDisc{T},
-    ::TraceRadiativeTransfer;
+function _radiative_goemtry_collision_callback(
+    g::AbstractAccretionDisc
+    ;
     gtol,
     interp_points = 8,
-) where {T}
+)
     function _radiative_transfer_geometry_callback(u, λ, integrator)
         dist = distance_to_disc(g, u; gtol = gtol)
         integrator.p.within_geometry ? -dist : dist
@@ -44,12 +44,27 @@ function geometry_collision_callback(
         # flip
         integrator.p.within_geometry = !integrator.p.within_geometry
     end
+
     ContinuousCallback(
         _radiative_transfer_geometry_callback,
         _radiate_transfer_geometry_effect!,
         interp_points = interp_points,
         save_positions = (false, false),
+        repeat_nudge = 1//10,
     )
+end
+
+function geometry_collision_callback(
+    g::AbstractAccretionDisc,
+    ::TraceRadiativeTransfer;
+    gtol,
+    interp_points = 8,
+)
+    # callbacks should only be defined on optically thick geometries
+    if is_optically_thin(g)
+        return _thin_geometry_collision_callback(g; gtol = gtol, interp_points = interp_points) 
+    end
+    _radiative_goemtry_collision_callback(g; gtol = gtol, interp_points = interp_points)
 end
 
 function radiative_transfer_ode_problem(
