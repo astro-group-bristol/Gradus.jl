@@ -124,7 +124,7 @@ procedure.
 """
 abstract type AbstractAccretionGeometry{T} end
 optical_property(::Type{<:AbstractAccretionGeometry}) = OpticallyThick()
-optical_property(::T) where {T <: AbstractAccretionGeometry} = optical_property(T)
+optical_property(::T) where {T<:AbstractAccretionGeometry} = optical_property(T)
 
 is_optically_thin(g::AbstractAccretionGeometry) = optical_property(g) isa OpticallyThin
 

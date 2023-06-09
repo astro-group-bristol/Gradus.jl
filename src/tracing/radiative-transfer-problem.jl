@@ -31,8 +31,7 @@ function update_integration_parameters!(
 end
 
 function _radiative_goemtry_collision_callback(
-    g::AbstractAccretionDisc
-    ;
+    g::AbstractAccretionDisc;
     gtol,
     interp_points = 8,
 )
@@ -50,7 +49,7 @@ function _radiative_goemtry_collision_callback(
         _radiate_transfer_geometry_effect!,
         interp_points = interp_points,
         save_positions = (false, false),
-        repeat_nudge = 1//10,
+        repeat_nudge = 1 // 10,
     )
 end
 
@@ -62,7 +61,11 @@ function geometry_collision_callback(
 )
     # callbacks should only be defined on optically thick geometries
     if is_optically_thin(g)
-        return _thin_geometry_collision_callback(g; gtol = gtol, interp_points = interp_points) 
+        return _thin_geometry_collision_callback(
+            g;
+            gtol = gtol,
+            interp_points = interp_points,
+        )
     end
     _radiative_goemtry_collision_callback(g; gtol = gtol, interp_points = interp_points)
 end
