@@ -105,6 +105,10 @@ abstract type AbstractRenderCache{M,T} end
 abstract type AbstractSkyDomain end
 abstract type AbstractGenerator end
 
+abstract type AbstractOpticalProperty end
+struct OpticallyThin <: AbstractOpticalProperty end
+struct OpticallyThick <: AbstractOpticalProperty end
+
 """
     abstract type AbstractAccretionGeometry{T}
 
@@ -119,6 +123,10 @@ Geometry intersection calculations are performed by strapping discrete callbacks
 procedure.
 """
 abstract type AbstractAccretionGeometry{T} end
+optical_property(::Type{<:AbstractAccretionGeometry}) = OpticallyThick()
+optical_property(::T) where {T<:AbstractAccretionGeometry} = optical_property(T)
+
+is_optically_thin(g::AbstractAccretionGeometry) = optical_property(g) isa OpticallyThin
 
 """
     abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T}
@@ -182,6 +190,7 @@ include("accretion-geometry/geometry.jl")
 include("accretion-geometry/intersections.jl")
 include("accretion-geometry/discs.jl")
 include("accretion-geometry/meshes.jl")
+include("accretion-geometry/composite.jl")
 include("accretion-geometry/bootstrap.jl")
 
 include("transfer-functions/types.jl")

@@ -10,7 +10,7 @@ struct TraceRadiativeTransfer{T} <: AbstractTrace
     μ::T
     q::T
     ν::T
-    function TraceRadiativeTransfer(; μ = 0, q = 0, ν = 0)
+    function TraceRadiativeTransfer(; μ = 0, q = 0, ν = 1)
         new{promote_type(typeof(μ), typeof(q), typeof(ν))}(μ, q, ν)
     end
 end
@@ -159,7 +159,7 @@ end
     pf = problem.prob_func
     # init one integrator for each thread
     integrators = map(
-        i -> _init_integrator(
+        _ -> _init_integrator(
             pf(problem.prob, 1, 0),
             ;
             solver = config.solver,
@@ -223,6 +223,7 @@ end
     _init_integrator(problem; solver_opts...)
 end
 
+
 @inline function _solve_reinit!(integrator, u0, p = nothing)
     reinit!(
         integrator,
@@ -237,7 +238,8 @@ end
     if !isnothing(p)
         integrator.p = update_integration_parameters!(integrator.sol.prob.p, p)
     end
-    unpack_solution(solve!(integrator))
+    sol = unpack_solution(solve!(integrator))
+    return sol
 end
 
 export tracegeodesics
