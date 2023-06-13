@@ -6,6 +6,10 @@ struct CompositeGeometry{T,G} <: AbstractAccretionGeometry{T}
     end
 end
 
+function CompositeGeometry()
+    error("Must provide at least one disc as argument to constructor")
+end
+
 function Base.show(io::IO, ::MIME"text/plain", cg::CompositeGeometry)
     buf = IOBuffer()
     println(buf, "CompositeGeometry:")
