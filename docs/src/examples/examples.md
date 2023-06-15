@@ -233,7 +233,7 @@ d = PolishDoughnut(m)
 
 # define point function which reads the auxiliary variable
 # which is contextually the intensity
-pf = PointFunction((m, gp, t) -> gp.aux)
+pf = PointFunction((m, gp, t) -> gp.aux[1])
 
 a, b, img = @time rendergeodesics(
     m,
