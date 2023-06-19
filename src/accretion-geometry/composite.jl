@@ -18,3 +18,5 @@ function Base.show(io::IO, ::MIME"text/plain", cg::CompositeGeometry)
     end
     print(io, String(take!(buf)))
 end
+
+Base.:∘(d1::AbstractAccretionGeometry, d2::AbstractAccretionGeometry) = CompositeGeometry(d1, d2)
