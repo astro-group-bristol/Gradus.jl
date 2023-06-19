@@ -10,11 +10,14 @@ function covariant_absorption_emission_velocity(
     m::AbstractMetric,
     x,
     ν,
-    ::AbstractAccretionGeometry,
+    d::AbstractAccretionGeometry,
 )
     u = CircularOrbits.fourvelocity(m, x[2])
-    (0.1, 0.2, u)
+    (absorption_coefficient(m, d, x, ν), emissivity_coefficient(m, d, x, ν), u)
 end
+
+absorption_coefficient(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν) = 0.0
+emissivity_coefficient(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν) = 0.0
 
 mutable struct RadiativeTransferIntegrationParameters <: AbstractIntegrationParameters
     status::StatusCodes.T
