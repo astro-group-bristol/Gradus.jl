@@ -197,12 +197,12 @@ include("orbits/circular-orbits.jl")
 include("orbits/orbit-discovery.jl")
 include("orbits/orbit-interpolations.jl")
 
-include("accretion-geometry/geometry.jl")
-include("accretion-geometry/intersections.jl")
-include("accretion-geometry/discs.jl")
-include("accretion-geometry/meshes.jl")
-include("accretion-geometry/composite.jl")
-include("accretion-geometry/bootstrap.jl")
+include("geometry/geometry.jl")
+include("geometry/intersections.jl")
+include("geometry/discs.jl")
+include("geometry/meshes.jl")
+include("geometry/composite.jl")
+include("geometry/bootstrap.jl")
 
 include("transfer-functions/types.jl")
 include("transfer-functions/cunningham-transfer-functions.jl")
@@ -230,7 +230,7 @@ include("redshift.jl")
 include("const-point-functions.jl")
 
 include("line-profiles.jl")
-include("accretion-geometry/polish-doughnut.jl")
+include("geometry/polish-doughnut.jl")
 
 include("plotting-recipes.jl")
 
