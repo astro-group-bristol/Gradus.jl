@@ -1,14 +1,12 @@
-
-struct CompositeGeometry{T,G} <: AbstractAccretionGeometry{T}
-    geometry::G
-    function CompositeGeometry(g::Vararg{<:AbstractAccretionGeometry{T}}) where {T}
-        new{T,typeof(g)}(g)
-    end
-end
-
 function CompositeGeometry()
     error("Must provide at least one disc as argument to constructor")
 end
+
+function CompositeGeometry(g::Vararg{<:AbstractAccretionGeometry{T}}) where {T}
+    CompositeGeometry{T,typeof(g)}(g)
+end
+
+Base.length(cg::CompositeGeometry) = length(cg.geometry)
 
 function Base.show(io::IO, ::MIME"text/plain", cg::CompositeGeometry)
     buf = IOBuffer()
@@ -18,3 +16,6 @@ function Base.show(io::IO, ::MIME"text/plain", cg::CompositeGeometry)
     end
     print(io, String(take!(buf)))
 end
+
+Base.:∘(d1::AbstractAccretionGeometry, d2::AbstractAccretionGeometry) =
+    CompositeGeometry(d1, d2)

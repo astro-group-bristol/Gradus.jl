@@ -10,8 +10,9 @@ struct TraceRadiativeTransfer{T} <: AbstractTrace
     μ::T
     q::T
     ν::T
-    function TraceRadiativeTransfer(; μ = 0, q = 0, ν = 1)
-        new{promote_type(typeof(μ), typeof(q), typeof(ν))}(μ, q, ν)
+    I₀::T
+    function TraceRadiativeTransfer(; μ = 0, q = 0, ν = 1, I₀ = 1.0)
+        new{promote_type(typeof(μ), typeof(q), typeof(ν), typeof(I₀))}(μ, q, ν, I₀)
     end
 end
 

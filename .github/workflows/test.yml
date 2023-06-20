@@ -13,6 +13,10 @@ on:
     paths:
       - 'src/**.jl'
       - 'test/**.jl'
+  concurrency:
+    # cancels when a PR gets updated
+    group: ${{ github.head_ref || github.run_id }}-${{ github.actor }}
+    cancel-in-progress: true
 
 jobs:
 
@@ -30,22 +34,12 @@ jobs:
         with:
           version: ${{ matrix.julia-version }}
       - uses: julia-actions/cache@v1
-      # - uses: actions/cache@v1
-      #   env:
-      #     cache-name: cache-artifacts
-      #   with:
-      #     path: ~/.julia/artifacts
-      #     key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-test-${{ env.cache-name }}-
-      #       ${{ runner.os }}-test-
-      #       ${{ runner.os }}-
       - run: julia -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/astro-group-bristol/AstroRegistry/"))'
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
         with:
           directories: src
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
         with:
           files: lcov.info 
