@@ -25,9 +25,14 @@ end
 absorption_coefficient(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν) = 0.0
 emissivity_coefficient(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν) = 0.0
 
-mutable struct RadiativeTransferIntegrationParameters <: AbstractIntegrationParameters
+mutable struct RadiativeTransferIntegrationParameters{V} <: AbstractIntegrationParameters
     status::StatusCodes.T
-    within_geometry::Bool
+    within_geometry::V
+end
+
+function _radiative_transfer_integration_parameters(status::StatusCodes.T, N::Int)
+    within_geometry = fill(false, N)
+    RadiativeTransferIntegrationParameters(status, within_geometry)
 end
 
 function update_integration_parameters!(
@@ -35,48 +40,69 @@ function update_integration_parameters!(
     new::RadiativeTransferIntegrationParameters,
 )
     p.status = new.status
-    p.within_geometry = new.within_geometry
+    p.within_geometry .= new.within_geometry
     p
 end
 
-function _radiative_goemtry_collision_callback(
-    g::AbstractAccretionDisc;
-    gtol,
-    interp_points = 8,
-)
-    function _radiative_transfer_geometry_callback(u, λ, integrator)
-        dist = distance_to_disc(g, u; gtol = gtol)
-        integrator.p.within_geometry ? -dist : dist
+function _intensity_delta(
+    m,
+    x,
+    k::AbstractArray{T},
+    geometry::CompositeGeometry,
+    within,
+    I,
+    ν,
+    invν3,
+    r_isco,
+) where {T}
+    sum(enumerate(geometry.geometry)) do (i, g)
+        if within[i]
+            radiative_transfer(m, x, k, g, I, ν, invν3, r_isco)
+        else
+            zero(T)
+        end
     end
-    function _radiate_transfer_geometry_effect!(integrator)
-        # flip
-        integrator.p.within_geometry = !integrator.p.within_geometry
-    end
-
-    ContinuousCallback(
-        _radiative_transfer_geometry_callback,
-        _radiate_transfer_geometry_effect!,
-        interp_points = interp_points,
-        save_positions = (false, false),
-    )
 end
 
-function geometry_collision_callback(
-    g::AbstractAccretionDisc,
-    ::TraceRadiativeTransfer;
+function _intensity_delta(
+    m,
+    x,
+    k::AbstractArray{T},
+    geometry::AbstractAccretionGeometry,
+    within,
+    I,
+    ν,
+    invν3,
+    r_isco,
+) where {T}
+    if within[1]
+        radiative_transfer(m, x, k, geometry, I, ν, invν3, r_isco)
+    else
+        zero(T)
+    end
+end
+
+function intersection_callbacks(
+    g::AbstractAccretionGeometry,
+    ::TraceRadiativeTransfer,
+    i::Int;
     gtol,
-    interp_points = 8,
 )
     # callbacks should only be defined on optically thick geometries
     if is_optically_thin(g)
-        return _thin_geometry_collision_callback(
-            g;
-            gtol = gtol,
-            interp_points = interp_points,
-        )
-    else
-        return _radiative_goemtry_collision_callback(g; gtol = gtol, interp_points = interp_points)
+        return _intersection_condition(g; gtol = gtol), _intersection_affect(g)
     end
+
+    function _radiative_transfer_condition(u, λ, integrator)
+        dist = distance_to_disc(g, u; gtol = gtol)
+        integrator.p.within_geometry[i] ? -dist : dist
+    end
+    function _radiative_transfer_affect!(integrator)
+        # flip
+        integrator.p.within_geometry[i] = !integrator.p.within_geometry[i]
+    end
+
+    _radiative_transfer_condition, _radiative_transfer_affect!
 end
 
 function radiative_transfer_ode_problem(
@@ -95,11 +121,17 @@ function radiative_transfer_ode_problem(
         @inbounds let x = SVector{4,T}(u[1:4]), k = SVector{4,T}(u[5:8]), I = u[9]
 
             dk = SVector{4,T}(geodesic_equation(m, x, k))
-            dI = if p.within_geometry
-                radiative_transfer(m, x, k, geometry, I, trace.ν, invν3, r_isco)
-            else
-                0.0
-            end
+            dI = _intensity_delta(
+                m,
+                x,
+                k,
+                geometry,
+                p.within_geometry,
+                I,
+                trace.ν,
+                invν3,
+                r_isco,
+            )
             vcat(k, dk, SVector(dI))
         end
     end
@@ -110,7 +142,7 @@ function radiative_transfer_ode_problem(
         f,
         u_init,
         time_domain,
-        RadiativeTransferIntegrationParameters(StatusCodes.NoStatus, false);
+        _radiative_transfer_integration_parameters(StatusCodes.NoStatus, length(geometry));
         callback = callback,
     )
 end

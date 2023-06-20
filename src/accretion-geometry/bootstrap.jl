@@ -40,35 +40,77 @@ function geometry_collision_callback(g::AbstractAccretionGeometry, ::AbstractTra
     )
 end
 
-function _thin_geometry_collision_callback(
-    g::AbstractAccretionDisc;
+function geometry_collision_callback(
+    g::AbstractAccretionDisc,
+    trace::AbstractTrace;
     gtol,
     interp_points = 8,
 )
     ContinuousCallback(
-        (u, λ, integrator) -> distance_to_disc(g, u; gtol = gtol),
-        terminate_with_status!(StatusCodes.IntersectedWithGeometry),
+        intersection_callbacks(g, trace, 1; gtol = gtol)...,
         interp_points = interp_points,
         save_positions = (false, false),
     )
 end
 
-geometry_collision_callback(
-    g::AbstractAccretionDisc,
-    ::AbstractTrace;
-    gtol,
-    interp_points = 12,
-) = _thin_geometry_collision_callback(g; gtol = gtol, interp_points = interp_points)
+function _intersection_condition(g::AbstractAccretionDisc; gtol)
+    function _distance_to_disc_wrapper(u, λ, integrator)
+        distance_to_disc(g, u; gtol = gtol)
+    end
+end
 
+function _intersection_affect(::AbstractAccretionDisc)
+    terminate_with_status!(StatusCodes.IntersectedWithGeometry)
+end
+
+"""
+    intersection_callbacks
+
+Used to control the trace dispatch.
+"""
+function intersection_callbacks(g::AbstractAccretionGeometry, ::AbstractTrace, ::Int; gtol)
+    _intersection_condition(g; gtol = gtol), _intersection_affect(g)
+end
+
+"""
+    geometry_collision_callback(cg::CompositeGeometry, trace::AbstractTrace; kwargs...)
+
+Assemble a `VectorContinuousCallback`.
+"""
 function geometry_collision_callback(
     cg::CompositeGeometry,
     trace::AbstractTrace;
     gtol,
     interp_points = 8,
 )
-    map(cg.geometry) do g
-        geometry_collision_callback(g, trace; gtol = gtol, interp_points = interp_points)
+    # geometry counter so we can associate a unique id with each piece of geometry
+    i = 0
+
+    callbacks = map(cg.geometry) do g
+        i += 1
+        intersection_callbacks(g, trace, i; gtol = gtol)
     end
+
+    function _composite_condition(out, u, t, integ)
+        results = map(callbacks) do f
+            f[1](u, t, integ)
+        end
+
+        for i = 1:length(results)
+            out[i] = results[i]
+        end
+    end
+
+    function _composite_affect!(integ, idx)
+        callbacks[idx][2](integ)
+    end
+
+    VectorContinuousCallback(
+        _composite_condition,
+        _composite_affect!,
+        length(cg.geometry),
+        interp_points = interp_points,
+    )
 end
 
 function intersected_with_geometry(gps::AbstractArray{<:AbstractGeodesicPoint}, limiter)

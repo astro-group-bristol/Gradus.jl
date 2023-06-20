@@ -128,6 +128,8 @@ optical_property(::T) where {T<:AbstractAccretionGeometry} = optical_property(T)
 
 is_optically_thin(g::AbstractAccretionGeometry) = optical_property(g) isa OpticallyThin
 
+Base.length(::AbstractAccretionGeometry) = 1
+
 """
     abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T}
 
@@ -143,6 +145,10 @@ Supertype for axis-symmetric geometry that are specified by a height cross-secti
 required to implement [`cross_section`](@ref).
 """
 abstract type AbstractThickAccretionDisc{T} <: AbstractAccretionDisc{T} end
+
+struct CompositeGeometry{T,G} <: AbstractAccretionGeometry{T}
+    geometry::G
+end
 
 """
     AbstractDiscProfile
