@@ -1,5 +1,5 @@
-function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν, invν3)
-    a_ν, j_ν, u = covariant_absorption_emission_velocity(m, x, ν, geometry)
+function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν, invν3, r_isco)
+    a_ν, j_ν, u = covariant_absorption_emission_velocity(m, x, ν, geometry, r_isco)
     g = metric(m, x)
     # cache inv(ν)^3 to avoid costly division
     k_rev = SVector(k[1], k[2], k[3], -k[4])
@@ -11,8 +11,14 @@ function covariant_absorption_emission_velocity(
     x,
     ν,
     d::AbstractAccretionGeometry,
+    r_isco,
 )
-    u = CircularOrbits.fourvelocity(m, x[2])
+    u = if x[2] > r_isco
+        CircularOrbits.fourvelocity(m, x[2])
+    else
+        CircularOrbits.plunging_fourvelocity(m, x[2])
+    end
+
     (absorption_coefficient(m, d, x, ν), emissivity_coefficient(m, d, x, ν), u)
 end
 
@@ -52,7 +58,6 @@ function _radiative_goemtry_collision_callback(
         _radiate_transfer_geometry_effect!,
         interp_points = interp_points,
         save_positions = (false, false),
-        repeat_nudge = 1 // 10,
     )
 end
 
@@ -69,8 +74,9 @@ function geometry_collision_callback(
             gtol = gtol,
             interp_points = interp_points,
         )
+    else
+        return _radiative_goemtry_collision_callback(g; gtol = gtol, interp_points = interp_points)
     end
-    _radiative_goemtry_collision_callback(g; gtol = gtol, interp_points = interp_points)
 end
 
 function radiative_transfer_ode_problem(
@@ -83,12 +89,14 @@ function radiative_transfer_ode_problem(
     geometry,
 )
     invν3 = inv(trace.ν)^3
+    r_isco = Gradus.isco(m)
+
     function f(u::SVector{9,T}, p, λ) where {T}
         @inbounds let x = SVector{4,T}(u[1:4]), k = SVector{4,T}(u[5:8]), I = u[9]
 
             dk = SVector{4,T}(geodesic_equation(m, x, k))
             dI = if p.within_geometry
-                radiative_transfer(m, x, k, geometry, I, trace.ν, invν3)
+                radiative_transfer(m, x, k, geometry, I, trace.ν, invν3, r_isco)
             else
                 0.0
             end
@@ -97,7 +105,7 @@ function radiative_transfer_ode_problem(
     end
 
     # add our new quantity that we want to trace
-    u_init = vcat(pos, vel, SVector(0.0))
+    u_init = vcat(pos, vel, SVector(trace.I₀))
     ODEProblem{false}(
         f,
         u_init,
