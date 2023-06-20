@@ -13,10 +13,11 @@ on:
     paths:
       - 'src/**.jl'
       - 'test/**.jl'
-  concurrency:
-    # cancels when a PR gets updated
-    group: ${{ github.head_ref || github.run_id }}-${{ github.actor }}
-    cancel-in-progress: true
+
+concurrency:
+  # cancels when a PR gets updated
+  group: ${{ github.head_ref || github.run_id }}-${{ github.actor }}
+  cancel-in-progress: true
 
 jobs:
 
