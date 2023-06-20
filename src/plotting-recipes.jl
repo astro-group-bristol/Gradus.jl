@@ -17,7 +17,7 @@ function _extract_path(sol, n_points; projection = :none, t_span = 100.0)
     else
         x = @. r * cos(ϕ) * sin(θ)
         y = @. r * sin(ϕ) * sin(θ)
-        z = @. r * cos(θ) 
+        z = @. r * cos(θ)
         x, y, z
     end
 end
@@ -46,7 +46,13 @@ end
 end
 
 @userplot Plot_Paths
-@recipe function f(p::Plot_Paths; extent = 20, n_points = 400, projection = :none, t_span = 100.0)
+@recipe function f(
+    p::Plot_Paths;
+    extent = 20,
+    n_points = 400,
+    projection = :none,
+    t_span = 100.0,
+)
     sol = p.args[1]
     projection := projection
     _range = (-extent, extent)
