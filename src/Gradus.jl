@@ -208,12 +208,12 @@ include("transfer-functions/types.jl")
 include("transfer-functions/cunningham-transfer-functions.jl")
 include("transfer-functions/integration.jl")
 
-include("corona-to-disc/sky-geometry.jl")
-include("corona-to-disc/corona-models.jl")
-include("corona-to-disc/disc-profiles.jl")
+include("corona/sky-geometry.jl")
+include("corona/corona-models.jl")
+include("corona/disc-profiles.jl")
 # needs the types from disc profiles so defer include
 include("transfer-functions/transfer-functions-2d.jl")
-include("corona-to-disc/flux-calculations.jl")
+include("corona/flux-calculations.jl")
 
 include("metrics/boyer-lindquist-ad.jl")
 include("metrics/boyer-lindquist-fo.jl")
