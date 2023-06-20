@@ -46,7 +46,7 @@ end
 end
 
 @userplot Plot_Paths
-@recipe function f(p::Plot_Paths; range = (0, 20), n_points = 400, projection = :none)
+@recipe function f(p::Plot_Paths; range = 20, n_points = 400, projection = :none)
     sol = p.args[1]
     projection := projection
     range = (-range, range)
