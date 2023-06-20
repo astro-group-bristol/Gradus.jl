@@ -332,26 +332,12 @@ end
 function tracegeodesics(
     m::AbstractMetric,
     model::AbstractCoronaModel,
-    time_domain::NTuple{2},
+    args...;
     n_samples = 1024,
     sampler = WeierstrassSampler(res = 100.0),
     kwargs...,
 )
     us = sample_position(m, model, n_samples)
     vs = sample_velocity(m, model, sampler, us, n_samples)
-    tracegeodesics(m, us, vs, time_domain; kwargs...)
-end
-function tracegeodesics(
-    m::AbstractMetric,
-    model::AbstractCoronaModel,
-    d::AbstractAccretionGeometry,
-    time_domain::NTuple{2},
-    ;
-    n_samples = 1024,
-    sampler = WeierstrassSampler(res = 100.0),
-    kwargs...,
-)
-    us = sample_position(m, model, n_samples)
-    vs = sample_velocity(m, model, sampler, us, n_samples)
-    tracegeodesics(m, us, vs, d, time_domain; kwargs...)
+    tracegeodesics(m, us, vs, args...; kwargs...)
 end
