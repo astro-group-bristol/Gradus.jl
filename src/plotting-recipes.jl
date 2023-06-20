@@ -1,10 +1,55 @@
 using RecipesBase
 
+function _extract_path(sol, n_points, projection = :none)
+    mid_i = max(1, length(sol.u) ÷ 2)
+
+    start_t = max(sol.t[mid_i] - 100.0, sol.t[1])
+    end_t = min(sol.t[mid_i] + 100.0, sol.t[end])
+
+    t_range = range(start_t, end_t, n_points)
+
+    r = [sol(t)[2] for t in t_range]
+    θ = [sol(t)[3] for t in t_range]
+    ϕ = [sol(t)[4] for t in t_range]
+
+    if projection == :polar
+        r, θ, ϕ
+    else
+        x = @. r * cos(ϕ) * sin(θ)
+        y = @. r * sin(ϕ) * sin(θ)
+        z = @. r * cos(θ) 
+        x, y, z
+    end
+end
+
+@userplot Plot_Paths_3D
+@recipe function f(p::Plot_Paths_3D; range = 20, n_points = 400)
+    sol = p.args[1]
+    range = (-range, range)
+    xlims --> range
+    ylims --> range
+    zlims --> range
+    aspect_ratio --> 1
+
+    itr = if !(typeof(sol) <: SciMLBase.EnsembleSolution)
+        (; u = (sol,))
+    else
+        sol
+    end
+
+    for s in itr.u
+        path = _extract_path(s, n_points, :none)
+        @series begin
+            path
+        end
+    end
+end
+
 @userplot Plot_Paths
 @recipe function f(p::Plot_Paths; range = (0, 20), n_points = 400, projection = :none)
     sol = p.args[1]
     projection := projection
-    range = (-range[2], range[2])
+    range = (-range, range)
     if projection == :polar
         xlims --> range
         ylims --> range
@@ -21,17 +66,11 @@ using RecipesBase
     end
 
     for s in itr.u
-        k = length(s.u) ÷ 2
-        λ_range =
-            Base.range(max(s.t[k] - 100.0, s.t[1]), min(s.t[k] + 100.0, s.t[end]), n_points)
-        r = [s(t)[2] for t in λ_range]
-        ϕ = [s(t)[4] for t in λ_range]
+        path = _extract_path(s, n_points, projection)
         coords = if projection == :polar
-            ϕ, r
+            path[3], path[1]
         else
-            x = @. r * cos(ϕ)
-            y = @. r * sin(ϕ)
-            x, y
+            path[1], path[2]
         end
         @series begin
             coords
