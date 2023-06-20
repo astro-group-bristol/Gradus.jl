@@ -10,7 +10,6 @@ Depth = 3
 ```julia
 using Gradus
 using Plots
-using StaticArrays
 
 m = JohannsenPsaltisMetric(M=1.0, a=0.6, ϵ3=2.0)
 # observer position
@@ -29,22 +28,30 @@ sols = tracegeodesics(
     abstol = 1e-12, reltol = 1e-12
 )
 
-# only use the subset of the solution we're plotting
-trange = range(990, 1035, 5000)
-
-p = plot(projection = :polar, legend = false, range = (0, 10))
-for s in sols
-    r = [s(t)[2] for t in trange]
-    ϕ = [s(t)[4] for t in trange]
-    plot!(p, ϕ, r)
-end
-
-# plot event horizon 
-r0 = inner_radius(m)
-plot!(p, collect(range(0, 2π, 200)), [r0 for _ in 1:200], color = :black, linewidth = 2)
+plot_paths(sols, legend = false, n_points = 2048)
+plot_horizon!(m, lw = 2.0, color = :black)
 ```
 
 ![](./example-tracing.svg)
+
+Alternatively, plotting the 3D paths from e.g. a lamp-post coronal model:
+
+```julia
+m = KerrMetric(a = 0.0)
+
+model = LampPostModel()
+sols = tracegeodesics(
+    m,
+    model,
+    2000.0,
+    n_samples = 64
+)
+
+plot_paths_3d(sols, legend=false, extent = 10, t_span = 100.0)
+plot_horizon_3d!(m)
+```
+
+![](./example-3d-tracing.svg)
 
 ## Shadow
 
