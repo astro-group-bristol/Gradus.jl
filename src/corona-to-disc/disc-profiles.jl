@@ -328,7 +328,7 @@ end
     -1
 end
 
-# bootstrap tracing functions
+# bootstrap tracing function for convenience
 function tracegeodesics(
     m::AbstractMetric,
     model::AbstractCoronaModel,
@@ -337,7 +337,6 @@ function tracegeodesics(
     sampler = WeierstrassSampler(res = 100.0),
     kwargs...,
 )
-    us = sample_position(m, model, n_samples)
-    vs = sample_velocity(m, model, sampler, us, n_samples)
-    tracegeodesics(m, us, vs, args...; kwargs...)
+    xs, vs, _ = sample_position_direction_velocity(m, model, sampler, n_samples)
+    tracegeodesics(m, xs, vs, args...; kwargs...)
 end

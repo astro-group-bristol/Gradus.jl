@@ -157,6 +157,11 @@ Abstract type for binning structures over discs (e.g., radial bins, voronoi).
 """
 abstract type AbstractDiscProfile end
 
+"""
+    AbstractCoronaModel{T,N}
+
+Type `T`.
+"""
 abstract type AbstractCoronaModel{T} end
 
 abstract type AbstractDirectionSampler{SkyDomain,Generator} end

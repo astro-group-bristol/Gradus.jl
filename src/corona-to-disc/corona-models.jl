@@ -1,49 +1,63 @@
-# todo: this should take into account position
-function source_velocity(::AbstractMetric, model::AbstractCoronaModel)
-    error("Not implemented for $(typeof(model)).")
+function sample_position_direction_velocity(m::AbstractMetric, model::AbstractCoronaModel{T}, sampler::AbstractDirectionSampler, N::Int) where {T}
+    xs = Vector{SVector{4,T}}(undef, N)
+    vs = Vector{SVector{4,T}}(undef, N)
+    vs_source = Vector{SVector{4,T}}(undef, N)
+
+    rmin = inner_radius(m)
+    
+    i = 1
+    while (i <= N)
+        x, v = sample_position_velocity(m, model, sampler, i, N)
+        if x[2] < rmin * 1.1
+            # skip those within the event horizon
+            continue
+        end
+
+        xs[i] = x
+        vs_source[i] = v
+        vs[i] = sample_local_velocity(m, sampler, x, v, i, N)
+        i += 1
+    end
+
+    xs, vs, vs_source
 end
 
-function sample_position(::AbstractMetric, model::AbstractCoronaModel, N)
-    error("Not implemented for $(typeof(model)).")
+function sample_position_velocity(::AbstractMetric, model::AbstractCoronaModel, ::AbstractDirectionSampler, i, N,)
+    error("This functions needs to be implemented for $(typeof(model)). See the documentation for this function for instructions.")
 end
 
 """
-    sample_velocity(
-        m::AbstractMetric, 
-        model::AbstractCoronaModel, 
-        sampler::AbstractDirectionSampler, 
-        us, 
-        N
-    )
+function sample_local_velocity(
+    m::AbstractMetric,
+    sampler::AbstractDirectionSampler,
+    x,
+    v,
+    index,
+    N,
+)
 
-Sample `N` initial (un-normalised) velocities in the local coordinates of the `model`, according to
-the [`AbstractDirectionSampler`](@ref) algorithm and domain, given initial 4-vector positions `us`.
+Sample a single initial (un-normalised) velocity vector in the local coordinates of at `x`, according to
+the [`AbstractDirectionSampler`](@ref) algorithm and domain, given an initial 4-vector velocity `v`.
 
 This function is metric generic and is implemented in the following way:
 - Sample angles ``\\alpha`` and ``\\beta`` in the local sky.
 - Map these angles to a spherical polar vector (interally first to Cartesian and then using a Jacobian
 transformation to spherical polar).
-- Calculate the local tetrad given the source velocity at `u = us[i]`.
+- Calculate the tetrad given position and velocity `x` and `v`.
 - Use this tetrad to map the local vector to the global coordinates.
 """
-function sample_velocity(
+function sample_local_velocity(
     m::AbstractMetric{T},
-    model::AbstractCoronaModel{T},
     sampler::AbstractDirectionSampler,
-    us,
+    x,
+    v,
+    index,
     N,
 ) where {T}
-    v_source = source_velocity(m, model)
-    @inbounds map(1:N) do index
-        # todo: sampler should have proper iterator interface
-        i = geti(sampler, index, N)
-        θ, ϕ = sample_angles(sampler, i, N)
-
-        u = us[index]
-        sky_angles_to_velocity(m, u, v_source, θ, ϕ)
-    end
+    i = geti(sampler, index, N)
+    θ, ϕ = sample_angles(sampler, i, N)
+    sky_angles_to_velocity(m, x, v, θ, ϕ)
 end
-
 
 @with_kw struct LampPostModel{T} <: AbstractCoronaModel{T}
     @deftype T
@@ -52,34 +66,11 @@ end
     ϕ = 0.0
 end
 
-function sample_position(::AbstractMetric{T}, model::LampPostModel{T}, N) where {T}
-    u = @SVector [T(0.0), model.h, model.θ, model.ϕ]
-    fill(u, N)
-end
-
-function source_velocity(m::AbstractMetric, model::LampPostModel)
-    # stationary source
-    rθ = @SVector[model.h, model.θ]
-    gcomp = metric_components(m, rθ)
-    inv(√(-gcomp[1])) * @SVector[1.0, 0.0, 0.0, 0.0]
-end
-
-# this function is a placeholder: needs to be able to work
-# for any disc geometry and model type
-function energy_ratio(m, gps, model::LampPostModel)
-    energy_ratio(m, gps, SVector(0.0, model.h, model.θ, 0.0), source_velocity(m, model))
-end
-function energy_ratio(m, gps, u_src, v_src)
-    g_src = metric(m, u_src)
-    map(gps) do gp
-        @tullio e_src := g_src[i, j] * gp.v_init[i] * v_src[j]
-        # at the disc
-        g_disc = metric(m, gp.x)
-        v_disc = CircularOrbits.fourvelocity(m, SVector(gp.x[2], gp.x[3]))
-        @tullio e_disc := g_disc[i, j] * gp.v[i] * v_disc[j]
-        # ratio g = E_source / E_disc
-        e_src / e_disc
-    end
+function sample_position_velocity(m::AbstractMetric, model::LampPostModel{T}, ::AbstractDirectionSampler, i, N) where {T}
+    x = SVector{4, T}(0, model.h, model.θ, model.ϕ)
+    gcomp = metric_components(m, SVector(x[2], x[3]))
+    v = inv(√(-gcomp[1])) * SVector{4, T}(1, 0, 0, 0)
+    x, v
 end
 
 export LampPostModel

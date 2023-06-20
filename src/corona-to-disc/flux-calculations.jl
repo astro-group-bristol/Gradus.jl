@@ -104,6 +104,20 @@ function flux_source_to_disc(
     map(flux, points)
 end
 
+function energy_ratio(m, gps, u_src, v_src)
+    g_src = metric(m, u_src)
+    map(gps) do gp
+        @tullio e_src := g_src[i, j] * gp.v_init[i] * v_src[j]
+        # at the disc
+        g_disc = metric(m, gp.x)
+        v_disc = CircularOrbits.fourvelocity(m, SVector(gp.x[2], gp.x[3]))
+        @tullio e_disc := g_disc[i, j] * gp.v[i] * v_disc[j]
+        # ratio g = E_source / E_disc
+        e_src / e_disc
+    end
+end
+
+
 function flux_source_to_disc(
     m::AbstractMetric,
     model::AbstractCoronaModel,
