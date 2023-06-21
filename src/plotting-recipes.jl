@@ -126,3 +126,13 @@ end
     ylabel --> "β"
     (a, b)
 end
+
+@recipe function f(p::RadialDiscProfile)
+    legend --> false
+    xlabel --> "r (rg)"
+    ylabel --> "ε (arb.)"
+    xscale --> :log10
+    yscale --> :log10
+    
+    p.f.ε.t[2:end-1], p.f.ε.u[2:end-1]
+end
