@@ -32,32 +32,51 @@ struct CoronalEmissivity{T,M,G,C,P,V}
     source_velocity::V
 end
 
-function emissivity_profile(m::AbstractMetric, g::AbstractAccretionGeometry, model::AbstractCoronaModel; 
-    λ_max = 10_000, 
+function emissivity_profile(
+    m::AbstractMetric,
+    g::AbstractAccretionGeometry,
+    model::AbstractCoronaModel;
+    λ_max = 10_000,
     n_samples = 1024,
     sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
     trace = TraceGeodesic(),
     kwargs...,
-    )
+)
 
     xs, vs, source_vels = sample_position_direction_velocity(m, model, sampler, n_samples)
-    gps = tracegeodesics(m, xs, vs, g, λ_max; trace = trace, save_on = false, ensemble=EnsembleEndpointThreads(), callback = domain_upper_hemisphere(), kwargs...)
+    gps = tracegeodesics(
+        m,
+        xs,
+        vs,
+        g,
+        λ_max;
+        trace = trace,
+        save_on = false,
+        ensemble = EnsembleEndpointThreads(),
+        callback = domain_upper_hemisphere(),
+        kwargs...,
+    )
     mask = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
     CoronalEmissivity(trace, m, g, model, gps[mask], source_vels[mask])
 end
 
-function RadialDiscProfile(
-        ce::CoronalEmissivity; kwargs...
-)
+function RadialDiscProfile(ce::CoronalEmissivity; kwargs...)
     J = sortperm(ce.geodesic_points; by = i -> i.x[2])
-    @views RadialDiscProfile(ce.metric, ce.model, ce.geodesic_points[J], ce.source_velocity[J])
+    @views RadialDiscProfile(
+        ce.metric,
+        ce.model,
+        ce.geodesic_points[J],
+        ce.source_velocity[J],
+    )
 end
 
-function RadialDiscProfile(
-        ce::CoronalEmissivity{<:TraceRadiativeTransfer}; kwargs...
-)
+function RadialDiscProfile(ce::CoronalEmissivity{<:TraceRadiativeTransfer}; kwargs...)
     J = sortperm(ce.geodesic_points; by = i -> i.x[2])
-    @views RadialDiscProfile(ce.metric, ce.model, ce.geodesic_points[J], ce.source_velocity[J],
-        [i.aux[1] for i in ce.geodesic_points[J]]
-                            )
+    @views RadialDiscProfile(
+        ce.metric,
+        ce.model,
+        ce.geodesic_points[J],
+        ce.source_velocity[J],
+        [i.aux[1] for i in ce.geodesic_points[J]],
+    )
 end

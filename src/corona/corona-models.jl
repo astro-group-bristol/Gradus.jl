@@ -1,15 +1,20 @@
-function sample_position_direction_velocity(m::AbstractMetric, model::AbstractCoronaModel{T}, sampler::AbstractDirectionSampler, N::Int) where {T}
+function sample_position_direction_velocity(
+    m::AbstractMetric,
+    model::AbstractCoronaModel{T},
+    sampler::AbstractDirectionSampler,
+    N::Int,
+) where {T}
     xs = Vector{SVector{4,T}}(undef, N)
     vs = Vector{SVector{4,T}}(undef, N)
     vs_source = Vector{SVector{4,T}}(undef, N)
 
     rmin = inner_radius(m)
-    Threads.@threads for i in 1:N
+    Threads.@threads for i = 1:N
         x, v = sample_position_velocity(m, model, sampler, i, N)
         while x[2] < rmin * 1.5
             x, v = sample_position_velocity(m, model, sampler, i, N)
         end
-        
+
         # avoid coordinate singularities
         if x[3] < 1e-3
             x = SVector(x[1], x[2], 1e-3, x[4])
@@ -26,12 +31,20 @@ function sample_position_direction_velocity(m::AbstractMetric, model::AbstractCo
     xs, vs, vs_source
 end
 
-function sample_position_velocity(m::AbstractMetric, model::AbstractCoronaModel, ::AbstractDirectionSampler, i, N)
+function sample_position_velocity(
+    m::AbstractMetric,
+    model::AbstractCoronaModel,
+    ::AbstractDirectionSampler,
+    i,
+    N,
+)
     sample_position_velocity(m, model)
 end
 
 function sample_position_velocity(::AbstractMetric, model::AbstractCoronaModel)
-    error("This functions needs to be implemented for $(typeof(model)). See the documentation for this function for instructions.")
+    error(
+        "This functions needs to be implemented for $(typeof(model)). See the documentation for this function for instructions.",
+    )
 end
 
 """
@@ -76,10 +89,16 @@ end
     ϕ = 0.0
 end
 
-function sample_position_velocity(m::AbstractMetric, model::LampPostModel{T}, ::AbstractDirectionSampler, i, N) where {T}
-    x = SVector{4, T}(0, model.h, model.θ, model.ϕ)
+function sample_position_velocity(
+    m::AbstractMetric,
+    model::LampPostModel{T},
+    ::AbstractDirectionSampler,
+    i,
+    N,
+) where {T}
+    x = SVector{4,T}(0, model.h, model.θ, model.ϕ)
     gcomp = metric_components(m, SVector(x[2], x[3]))
-    v = inv(√(-gcomp[1])) * SVector{4, T}(1, 0, 0, 0)
+    v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
     x, v
 end
 

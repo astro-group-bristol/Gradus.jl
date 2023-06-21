@@ -36,7 +36,17 @@ using StaticArrays
 
         # values computed under visual inspection
         # last computed 21/06/23: updated sampling method
-        expected_areas = [75.68214227687605, 114.7677610122124, 166.49995048864642, 263.6075724481634, 700.3226456903473, 739.4256113746189, 645.1547948341391, 478.14652288719276, 358.69318748667644]
+        expected_areas = [
+            75.68214227687605,
+            114.7677610122124,
+            166.49995048864642,
+            263.6075724481634,
+            700.3226456903473,
+            739.4256113746189,
+            645.1547948341391,
+            478.14652288719276,
+            358.69318748667644,
+        ]
 
         @test all(isapprox.(areas1, expected_areas, atol = 1e-3))
         @test all(isapprox.(areas2, expected_areas, atol = 1e-3))

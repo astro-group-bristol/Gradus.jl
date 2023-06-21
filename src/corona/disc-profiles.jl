@@ -43,13 +43,15 @@ function RadialDiscProfile(
     gps::AbstractVector{<:GeodesicPoint},
     source_vels::AbstractVector,
     intensities = nothing;
-    kwargs...
+    kwargs...,
 )
     radii = map(i -> i.x[2], gps)
     # ensure sorted: let the user sort so that everything is sure to be
     # in order
     if !issorted(radii)
-        error("geodesic points (and therefore source velocities) must be sorted by radii: use `sortperm(gps; by = i -> i.x[2])` to get the sorting permutation for both")
+        error(
+            "geodesic points (and therefore source velocities) must be sorted by radii: use `sortperm(gps; by = i -> i.x[2])` to get the sorting permutation for both",
+        )
     end
 
     times = map(i -> i.x[1], gps)
@@ -64,13 +66,13 @@ function RadialDiscProfile(
     times,
     gs,
     intensity,
-    ; 
+    ;
     grid = GeometricGrid(),
     N = 100,
-   ) where {T}
+) where {T}
     bins = collect(grid(extrema(radii)..., N))
 
-    ibucket = Buckets.IndexBucket(Int64, size(radii)) 
+    ibucket = Buckets.IndexBucket(Int64, size(radii))
     bucket!(ibucket, Buckets.Simple(), radii, bins)
     groups = Buckets.unpack_bucket(ibucket)
 
@@ -86,7 +88,7 @@ function RadialDiscProfile(
 
     # interpolate the energy ratio over the disc
     bin_domain = bins[1:end-1]
-    eratios  = DataInterpolations.LinearInterpolation(gs, bin_domain)
+    eratios = DataInterpolations.LinearInterpolation(gs, bin_domain)
 
     for i in eachindex(I)
         R = bins[i]
@@ -356,4 +358,3 @@ end
     end
     -1
 end
-

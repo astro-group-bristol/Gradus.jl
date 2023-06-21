@@ -133,6 +133,6 @@ end
     ylabel --> "ε (arb.)"
     xscale --> :log10
     yscale --> :log10
-    
+
     p.f.ε.t[2:end-1], p.f.ε.u[2:end-1]
 end
