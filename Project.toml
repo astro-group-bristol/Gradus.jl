@@ -30,3 +30,4 @@ VoronoiCells = "e3e34ffb-84e9-5012-9490-92c94d0c60a4"
 
 [compat]
 julia = "1.9"
+Buckets = ">=0.1.10"
