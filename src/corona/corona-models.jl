@@ -4,25 +4,33 @@ function sample_position_direction_velocity(m::AbstractMetric, model::AbstractCo
     vs_source = Vector{SVector{4,T}}(undef, N)
 
     rmin = inner_radius(m)
-    
-    i = 1
-    while (i <= N)
+    Threads.@threads for i in 1:N
         x, v = sample_position_velocity(m, model, sampler, i, N)
-        if x[2] < rmin * 1.1
-            # skip those within the event horizon
-            continue
+        while x[2] < rmin * 1.5
+            x, v = sample_position_velocity(m, model, sampler, i, N)
+        end
+        
+        # avoid coordinate singularities
+        if x[3] < 1e-3
+            x = SVector(x[1], x[2], 1e-3, x[4])
+        end
+        if x[3] > π - 1e-3
+            x = SVector(x[1], x[2], π - 1e-3, x[4])
         end
 
         xs[i] = x
         vs_source[i] = v
         vs[i] = sample_local_velocity(m, sampler, x, v, i, N)
-        i += 1
     end
 
     xs, vs, vs_source
 end
 
-function sample_position_velocity(::AbstractMetric, model::AbstractCoronaModel, ::AbstractDirectionSampler, i, N,)
+function sample_position_velocity(m::AbstractMetric, model::AbstractCoronaModel, ::AbstractDirectionSampler, i, N)
+    sample_position_velocity(m, model)
+end
+
+function sample_position_velocity(::AbstractMetric, model::AbstractCoronaModel)
     error("This functions needs to be implemented for $(typeof(model)). See the documentation for this function for instructions.")
 end
 
@@ -59,6 +67,8 @@ function sample_local_velocity(
     sky_angles_to_velocity(m, x, v, θ, ϕ)
 end
 
+# model implementations
+
 @with_kw struct LampPostModel{T} <: AbstractCoronaModel{T}
     @deftype T
     h = 5.0
@@ -71,6 +81,19 @@ function sample_position_velocity(m::AbstractMetric, model::LampPostModel{T}, ::
     gcomp = metric_components(m, SVector(x[2], x[3]))
     v = inv(√(-gcomp[1])) * SVector{4, T}(1, 0, 0, 0)
     x, v
+end
+
+# bootstrap tracing function for convenience
+function tracegeodesics(
+    m::AbstractMetric,
+    model::AbstractCoronaModel,
+    args...;
+    n_samples = 1024,
+    sampler = WeierstrassSampler(res = 100.0),
+    kwargs...,
+)
+    xs, vs, _ = sample_position_direction_velocity(m, model, sampler, n_samples)
+    tracegeodesics(m, xs, vs, args...; kwargs...)
 end
 
 export LampPostModel
