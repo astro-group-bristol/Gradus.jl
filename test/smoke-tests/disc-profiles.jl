@@ -35,18 +35,9 @@ using StaticArrays
         areas2 = getareas(vdp2)
 
         # values computed under visual inspection
-        # last computed 03/10/22: updated sampling method
-        expected_areas = [
-            75.64302307389167,
-            114.78829414215679,
-            166.581361553731,
-            263.3161757085493,
-            700.3526293678786,
-            739.2923798563061,
-            645.4220326474972,
-            477.8144794927597,
-            359.1850275798407,
-        ]
+        # last computed 21/06/23: updated sampling method
+        expected_areas = [75.68214227687605, 114.7677610122124, 166.49995048864642, 263.6075724481634, 700.3226456903473, 739.4256113746189, 645.1547948341391, 478.14652288719276, 358.69318748667644]
+
         @test all(isapprox.(areas1, expected_areas, atol = 1e-3))
         @test all(isapprox.(areas2, expected_areas, atol = 1e-3))
     end
