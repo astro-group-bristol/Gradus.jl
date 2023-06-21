@@ -164,6 +164,10 @@ Type `T`.
 """
 abstract type AbstractCoronaModel{T} end
 
+Base.length(::AbstractCoronaModel) = 1
+Base.iterate(m::AbstractCoronaModel) = (m, nothing)
+Base.iterate(::AbstractCoronaModel, ::Nothing) = nothing
+
 abstract type AbstractDirectionSampler{SkyDomain,Generator} end
 
 struct EnsembleEndpointThreads end
@@ -214,6 +218,7 @@ include("corona/disc-profiles.jl")
 # needs the types from disc profiles so defer include
 include("transfer-functions/transfer-functions-2d.jl")
 include("corona/flux-calculations.jl")
+include("corona/emissivity.jl")
 
 include("metrics/boyer-lindquist-ad.jl")
 include("metrics/boyer-lindquist-fo.jl")
