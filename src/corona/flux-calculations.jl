@@ -18,32 +18,6 @@ function lorentz_factor(g::AbstractMatrix, isco_r, u, v)
     end
 end
 
-
-"""
-    source_to_disc_emissivity(m, 𝒩, A, x, g)
-
-Compute the emissivity (in arbitrary units) in the disc element with area `A`, photon
-count `𝒩`, central position `x`, and redshift `g`. Evaluates
-
-```math
-\\varepsilon = \\frac{\\mathscr{N}}{\\tilde{A} g^2},
-```
-
-where ``\\tilde{A}`` is the relativistically corrected area of `A`. The relativistic correction
-is calculated via
-
-```math
-\\tilde{A} = A \\sqrt{g_{\\mu,\\nu}(x)}
-```
-"""
-function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, 𝒩, A, x, g)
-    gcomp = metric_components(m, x)
-    # account for relativistic effects in area
-    A_corrected = A * √(gcomp[2] * gcomp[3])
-    # divide by area to get number density
-    𝒩 / (g^2 * A_corrected)
-end
-
 function flux_source_to_disc(
     m::AbstractMetric,
     model::AbstractCoronaModel,
@@ -104,17 +78,15 @@ function flux_source_to_disc(
     map(flux, points)
 end
 
-function energy_ratio(m, gps, u_src, v_src)
-    g_src = metric(m, u_src)
-    map(gps) do gp
-        @tullio e_src := g_src[i, j] * gp.v_init[i] * v_src[j]
-        # at the disc
-        g_disc = metric(m, gp.x)
-        v_disc = CircularOrbits.fourvelocity(m, SVector(gp.x[2], gp.x[3]))
-        @tullio e_disc := g_disc[i, j] * gp.v[i] * v_disc[j]
-        # ratio g = E_source / E_disc
-        e_src / e_disc
-    end
+function energy_ratio(m, gp, v_src)
+    g_src = metric(m, gp.x_init)
+    @tullio e_src := g_src[i, j] * gp.v_init[i] * v_src[j]
+    # at the disc
+    g_disc = metric(m, gp.x)
+    v_disc = CircularOrbits.fourvelocity(m, SVector(gp.x[2], gp.x[3]))
+    @tullio e_disc := g_disc[i, j] * gp.v[i] * v_disc[j]
+    # ratio g = E_source / E_disc
+    e_src / e_disc
 end
 
 

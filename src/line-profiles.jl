@@ -13,6 +13,17 @@ struct BinnedLineProfile <: AbstractLineProfileAlgorithm end
 end
 
 @inline function lineprofile(
+    m::AbstractMetric,
+    u,
+    d::AbstractAccretionGeometry,
+    ep::AbstractDiscProfile;
+    bins = collect(range(0.1, 1.5, 180)),
+    kwargs...,
+)
+    lineprofile(bins, r -> ep.f.ε(r), m, u, d; algorithm = BinnedLineProfile(), kwargs...)
+end
+
+@inline function lineprofile(
     bins,
     ε::Function,
     m::AbstractMetric,

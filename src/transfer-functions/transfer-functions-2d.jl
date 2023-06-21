@@ -86,18 +86,12 @@ function observer_to_disc(
     points
 end
 
-function lagtransfer(m::AbstractMetric, u, d::AbstractAccretionGeometry; kwargs...)
-    model = LampPostModel(h = 10.0, θ = deg2rad(0.0001))
-    plane = PolarPlane(GeometricGrid(); Nr = 800, Nθ = 800, r_max = 250.0)
-    lagtransfer(model, m, u, plane, d; kwargs...)
-end
-
 function lagtransfer(
-    model::AbstractCoronaModel,
     m::AbstractMetric,
     u,
-    plane::AbstractImagePlane,
-    d::AbstractAccretionGeometry;
+    d::AbstractAccretionGeometry,
+    model::AbstractCoronaModel;
+    plane = PolarPlane(GeometricGrid(); Nr = 800, Nθ = 800, r_max = 50.0),
     max_t = 2 * u[2],
     n_samples = 10_000,
     sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
@@ -118,6 +112,7 @@ function lagtransfer(
         sampler = sampler,
         verbose = verbose,
         progress_bar = progress_bar,
+        callback = domain_upper_hemisphere(),
         solver_opts...,
     )
 
@@ -133,6 +128,7 @@ function lagtransfer(
         chart = chart_for_metric(m, 1.1 * u[2]),
         verbose = verbose,
         progress_bar = progress_bar,
+        callback = domain_upper_hemisphere(),
         solver_opts...,
     )
 
@@ -149,12 +145,12 @@ function _interpolate_profile(tf::LagTransferFunction)
     DataInterpolations.LinearInterpolation(times, radii)
 end
 
+
 function binflux(
-    tf::LagTransferFunction;
+    tf::LagTransferFunction,
+    profile::AbstractDiscProfile;
     redshift = ConstPointFunctions.redshift(tf.metric, tf.u),
-    ε = (gp) -> gp.x[2]^(-3),
     E₀ = 6.4,
-    profile = RadialDiscProfile(ε, tf),
     kwargs...,
 )
     t, i_em = delay_flux(profile, tf.observer_to_disc)
@@ -167,7 +163,7 @@ function binflux(
 
     tb, eb, td = bin_transfer_function(t, g * E₀, F; kwargs...)
     # subtract initial time
-    tb .- tf.u[2], eb, td
+    tb .- 0.99 * tf.u[2], eb, td
 end
 
 export bin_transfer_function, lagtransfer, binflux
