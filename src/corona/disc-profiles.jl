@@ -14,6 +14,8 @@ function delay_flux(profile::AbstractDiscProfile, gps)
     (delay(profile, gps), emitted_flux(profile, gps))
 end
 
+# implementations
+
 struct RadialDiscProfile{F,R} <: AbstractDiscProfile
     # geodesic point to flux
     f::F
@@ -38,37 +40,65 @@ end
 function RadialDiscProfile(
     m::AbstractMetric,
     model::AbstractCoronaModel,
-    gps::AbstractVector{<:GeodesicPoint};
-    grid = InverseGrid(),
-    N = 1000,
+    gps::AbstractVector{<:GeodesicPoint},
+    source_vels::AbstractVector,
+    intensities = nothing;
+    kwargs...
 )
     radii = map(i -> i.x[2], gps)
     # ensure sorted: let the user sort so that everything is sure to be
     # in order
     if !issorted(radii)
-        error("geodesic points must be sorted by radii: use `sort!(gps; by = i -> i.x[2])`")
+        error("geodesic points (and therefore source velocities) must be sorted by radii: use `sortperm(gps; by = i -> i.x[2])` to get the sorting permutation for both")
     end
 
     times = map(i -> i.x[1], gps)
+    gs = energy_ratio.(m, gps, source_vels)
+
+    RadialDiscProfile(m, radii, times, gs, intensities; kwargs...)
+end
+
+function RadialDiscProfile(
+    m::AbstractMetric,
+    radii::AbstractArray{T},
+    times,
+    gs,
+    intensity,
+    ; 
+    grid = GeometricGrid(),
+    N = 100,
+   ) where {T}
     bins = collect(grid(extrema(radii)..., N))
 
-    # interpolate the energy ratio over the disc
-    gs = energy_ratio(m, gps, model)
-    g = DataInterpolations.LinearInterpolation(gs, radii)
+    ibucket = Buckets.IndexBucket(Int64, size(radii)) 
+    bucket!(ibucket, Buckets.Simple(), radii, bins)
+    groups = Buckets.unpack_bucket(ibucket)
 
-    # count number of photons in each radial bin
-    counts = bucket(radii, bins)
-    areas = map(eachindex(counts)) do i
+    gs = [@views(mean(gs[g])) for g in groups]
+    ts = [@views(mean(times[g])) for g in groups]
+    I = if isnothing(intensity)
+        # count number of photons in each radial bin
+        @. convert(T, length(groups))
+    else
+        # sum the intensity over the bin
+        [@views(sum(intensity[g])) for g in groups]
+    end
+
+    # interpolate the energy ratio over the disc
+    bin_domain = bins[1:end-1]
+    eratios  = DataInterpolations.LinearInterpolation(gs, bin_domain)
+
+    for i in eachindex(I)
         R = bins[i]
         r = i == 1 ? 0 : bins[i-1]
         A = (2π * (R - r))
-        # counts now stores emissivity
-        counts[i] = source_to_disc_emissivity(m, counts[i], A, SVector(R, π / 2), g(R))
+        # I now stores emissivity
+        I[i] = source_to_disc_emissivity(m, I[i], A, SVector(R, π / 2), eratios(R))
     end
 
     # create interpolations
-    t = DataInterpolations.LinearInterpolation(times, radii)
-    ε = DataInterpolations.LinearInterpolation(counts, bins)
+    t = DataInterpolations.LinearInterpolation(ts, bins)
+    ε = DataInterpolations.LinearInterpolation(I, bins)
 
     # wrap geodesic point wrappers
     RadialDiscProfile(gp -> ε(gp.x[2]), gp -> t(gp.x[2]) + gp.x[1])
@@ -76,7 +106,6 @@ end
 
 emitted_flux(profile::RadialDiscProfile, gps) = map(profile.f, gps)
 delay(profile::RadialDiscProfile, gps) = map(profile.t, gps)
-
 get_emissivity(prof::RadialDiscProfile) = (prof.f.ε.t, prof.f.ε.u)
 
 struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
@@ -328,15 +357,3 @@ end
     -1
 end
 
-# bootstrap tracing function for convenience
-function tracegeodesics(
-    m::AbstractMetric,
-    model::AbstractCoronaModel,
-    args...;
-    n_samples = 1024,
-    sampler = WeierstrassSampler(res = 100.0),
-    kwargs...,
-)
-    xs, vs, _ = sample_position_direction_velocity(m, model, sampler, n_samples)
-    tracegeodesics(m, xs, vs, args...; kwargs...)
-end
