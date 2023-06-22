@@ -196,11 +196,12 @@ plane = PolarPlane(GeometricGrid(); Nr = 1800, Nθ = 1800)
 
 # integrate source to disc and observer to disc
 tf = @time lagtransfer(
-    model,
     m,
     u,
-    plane,
     d,
+    model
+    ;
+    plane = plane,
     callback = domain_upper_hemisphere(),
     n_samples = 100_000,
     verbose = true,
@@ -220,9 +221,9 @@ p = heatmap(
     f,
     xlabel = "Time (GM/c^3)",
     ylabel = "Energy (keV)",
-    xrange = [0, 150],
-    yrange = [0, 9],
-    clims = (-20, -1),
+    xlims = [0, 150],
+    ylims = [0, 9],
+    clims = (-20, 1)
 )
 ```
 
