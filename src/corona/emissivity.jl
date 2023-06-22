@@ -80,3 +80,21 @@ function RadialDiscProfile(ce::CoronalEmissivity{<:TraceRadiativeTransfer}; kwar
         [i.aux[1] for i in ce.geodesic_points[J]],
     )
 end
+
+function RadialDiscProfile(ε, ce::CoronalEmissivity; kwargs...)
+    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
+    radii = @views [i.x[2] for i in ce.geodesic_points[J]]
+    times = @views [i.x[1] for i in ce.geodesic_points[J]]
+
+    t = DataInterpolations.LinearInterpolation(times, radii)
+
+    function _emissivity_wrapper(gp)
+        ε(gp.x[2])
+    end
+
+    function _delay_wrapper(gp)
+        t(gp.x[2]) + gp.x[1]
+    end
+
+    RadialDiscProfile(_emissivity_wrapper, _delay_wrapper)
+end

@@ -38,32 +38,6 @@ function bin_and_interpolate(
     DataInterpolations.LinearInterpolation(y_binned, bins)
 end
 
-function source_to_disc(
-    m::AbstractMetric,
-    model::AbstractCoronaModel,
-    d::AbstractAccretionGeometry,
-    max_t;
-    n_samples = 10_000,
-    sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
-    solver_opts...,
-)
-    all_points = tracegeodesics(
-        m,
-        model,
-        d,
-        (0.0, max_t);
-        n_samples = n_samples,
-        save_on = false,
-        ensemble = EnsembleEndpointThreads(),
-        sampler = sampler,
-        solver_opts...,
-    )
-    points = filter(i -> i.status == StatusCodes.IntersectedWithGeometry, all_points)
-    # sort by radius
-    sort!(points, by = i -> i.x[2])
-    points
-end
-
 function observer_to_disc(
     m::AbstractMetric,
     u,
@@ -103,22 +77,24 @@ function lagtransfer(
         n_samples + trajectory_count(plane),
         verbose,
     )
-    s_to_d = source_to_disc(
+
+    ce = emissivity_profile(
         m,
-        model,
         d,
-        max_t;
+        model;
+        λ_max = max_t,
         n_samples = n_samples,
-        sampler = sampler,
         verbose = verbose,
         progress_bar = progress_bar,
         callback = domain_upper_hemisphere(),
+        sampler = sampler,
         solver_opts...,
     )
 
     if verbose
         progress_bar.desc = "Observer to disc: "
     end
+
     o_to_d = observer_to_disc(
         m,
         u,
@@ -136,25 +112,25 @@ function lagtransfer(
     I = [i.status == StatusCodes.IntersectedWithGeometry for i in o_to_d]
     areas = unnormalized_areas(plane)[I]
 
-    LagTransferFunction(max_t, m, model, u, areas, s_to_d, o_to_d[I])
+    LagTransferFunction(max_t, u, areas, ce, o_to_d[I])
 end
 
-function _interpolate_profile(tf::LagTransferFunction)
-    times = map(i -> i.x[1], tf.source_to_disc)
-    radii = map(i -> i.x[2], tf.source_to_disc)
-    DataInterpolations.LinearInterpolation(times, radii)
+function binflux(tf::LagTransferFunction; kwargs...)
+    profile = RadialDiscProfile(r -> r^-3, tf.emissivity_profile)
+    binflux(tf, profile; kwargs...)
 end
 
 
 function binflux(
     tf::LagTransferFunction,
     profile::AbstractDiscProfile;
-    redshift = ConstPointFunctions.redshift(tf.metric, tf.u),
+    redshift = ConstPointFunctions.redshift(tf.emissivity_profile.metric, tf.x),
     E₀ = 6.4,
     kwargs...,
 )
     t, i_em = delay_flux(profile, tf.observer_to_disc)
-    g = redshift.(tf.metric, tf.observer_to_disc, tf.max_t)
+    @show t
+    g = redshift.(tf.emissivity_profile.metric, tf.observer_to_disc, tf.max_t)
 
     # calculate flux
     f = @. g^3 * i_em * tf.image_plane_areas
@@ -163,7 +139,7 @@ function binflux(
 
     tb, eb, td = bin_transfer_function(t, g * E₀, F; kwargs...)
     # subtract initial time
-    tb .- 0.99 * tf.u[2], eb, td
+    tb .- tf.x[2], eb, td
 end
 
 export bin_transfer_function, lagtransfer, binflux

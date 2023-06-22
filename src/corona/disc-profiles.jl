@@ -23,19 +23,6 @@ struct RadialDiscProfile{F,R} <: AbstractDiscProfile
     t::R
 end
 
-function RadialDiscProfile(f, tf::LagTransferFunction)
-    let gps = tf.source_to_disc
-        times = map(i -> i.x[1], gps)
-        radii = map(i -> i.x[2], gps)
-        t = DataInterpolations.LinearInterpolation(times, radii)
-        # wrap geodesic point wrapper
-        RadialDiscProfile(f, gp -> t(gp.x[2]) + gp.x[1])
-    end
-end
-
-function RadialDiscProfile(tf::LagTransferFunction; kwargs...)
-    RadialDiscProfile(tf.metric, tf.model, tf.source_to_disc; kwargs...)
-end
 
 function RadialDiscProfile(
     m::AbstractMetric,
