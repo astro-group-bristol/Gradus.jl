@@ -130,11 +130,12 @@ plane = PolarPlane(GeometricGrid(); Nr = 1800, Nθ = 1800)
 
 # integrate source to disc and observer to disc
 tf = @time lagtransfer(
-    model,
     m,
     u,
-    plane,
     d,
+    model
+    ;
+    plane = plane,
     callback = domain_upper_hemisphere(),
     n_samples = 100_000,
     verbose = true,
@@ -154,9 +155,9 @@ p = heatmap(
     f,
     xlabel = &quot;Time (GM/c^3)&quot;,
     ylabel = &quot;Energy (keV)&quot;,
-    xrange = [0, 150],
-    yrange = [0, 9],
-    clims = (-20, -1),
+    xlims = [0, 150],
+    ylims = [0, 9],
+    clims = (-20, 1)
 )</code></pre><p><img src="../example-reverb-tf.png" alt/></p><h2 id="Covariant-radiative-transfer"><a class="docs-heading-anchor" href="#Covariant-radiative-transfer">Covariant radiative transfer</a><a id="Covariant-radiative-transfer-1"></a><a class="docs-heading-anchor-permalink" href="#Covariant-radiative-transfer" title="Permalink"></a></h2><pre><code class="language-julia hljs"># metric and metric parameters
 m = KerrMetric(M = 1.0, a = 1.0)
 # observer position
@@ -383,4 +384,4 @@ for r in radii
     α, β = impact_parameters_for_radius(m, u, d, r, N=100)
     plot!(p, α, β)
 end
-p</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../internals/custom-metrics/">« Implementing new metrics</a><a class="docs-footer-nextpage" href="../../overview/geodesic-integration/">Geodesic integration »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 20 June 2023 13:00">Tuesday 20 June 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+p</code></pre><p><img src="../example-concentric.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../internals/custom-metrics/">« Implementing new metrics</a><a class="docs-footer-nextpage" href="../../overview/geodesic-integration/">Geodesic integration »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Thursday 22 June 2023 13:18">Thursday 22 June 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
