@@ -30,16 +30,15 @@ end
 @inline geti(::AbstractDirectionSampler{D,RandomGenerator}, i, N) where {D} =
     rand(Float64) * N
 
-@inline getangle(::AbstractDirectionSampler{D,EvenGenerator}, i) where {D} = 2π * i
-@inline getangle(::AbstractDirectionSampler{D,GoldenSpiralGenerator}, i) where {D} =
+@inline sample_radial(::AbstractDirectionSampler{D,EvenGenerator}, i) where {D} = 2π * i
+@inline sample_radial(::AbstractDirectionSampler{D,GoldenSpiralGenerator}, i) where {D} =
     π * (1 + √5) * i
-@inline getangle(::AbstractDirectionSampler{D,RandomGenerator}, i) where {D} = 2π * i
+@inline sample_radial(::AbstractDirectionSampler{D,RandomGenerator}, i) where {D} = 2π * i
 
 @inline sample_angles(sm::AbstractDirectionSampler, i, N) =
-    (sample_elevation(sm, i / N), mod2pi(getangle(sm, i)))
+    (sample_elevation(sm, i / N), mod2pi(sample_radial(sm, i)))
 @inline sample_angles(sm::WeierstrassSampler, i, N) =
-    (sample_elevation(sm, i), mod2pi(getangle(sm, i)))
-
+    (sample_elevation(sm, i), mod2pi(sample_radial(sm, i)))
 
 sample_elevation(sm::AbstractDirectionSampler, i) =
     error("Not implemented for $(typeof(sm)).")

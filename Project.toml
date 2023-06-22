@@ -1,7 +1,7 @@
 name = "Gradus"
 uuid = "c5b7b928-ea15-451c-ad6f-a331a0f3e4b7"
 authors = ["fjebaker <fergusbkr@gmail.com>"]
-version = "0.4.7"
+version = "0.4.8"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -30,3 +30,4 @@ VoronoiCells = "e3e34ffb-84e9-5012-9490-92c94d0c60a4"
 
 [compat]
 julia = "1.9"
+Buckets = ">=0.1.10"

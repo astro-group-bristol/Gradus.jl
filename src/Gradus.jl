@@ -157,7 +157,16 @@ Abstract type for binning structures over discs (e.g., radial bins, voronoi).
 """
 abstract type AbstractDiscProfile end
 
+"""
+    AbstractCoronaModel{T,N}
+
+Type `T`.
+"""
 abstract type AbstractCoronaModel{T} end
+
+Base.length(::AbstractCoronaModel) = 1
+Base.iterate(m::AbstractCoronaModel) = (m, nothing)
+Base.iterate(::AbstractCoronaModel, ::Nothing) = nothing
 
 abstract type AbstractDirectionSampler{SkyDomain,Generator} end
 
@@ -192,23 +201,24 @@ include("orbits/circular-orbits.jl")
 include("orbits/orbit-discovery.jl")
 include("orbits/orbit-interpolations.jl")
 
-include("accretion-geometry/geometry.jl")
-include("accretion-geometry/intersections.jl")
-include("accretion-geometry/discs.jl")
-include("accretion-geometry/meshes.jl")
-include("accretion-geometry/composite.jl")
-include("accretion-geometry/bootstrap.jl")
+include("geometry/geometry.jl")
+include("geometry/intersections.jl")
+include("geometry/discs.jl")
+include("geometry/meshes.jl")
+include("geometry/composite.jl")
+include("geometry/bootstrap.jl")
 
 include("transfer-functions/types.jl")
 include("transfer-functions/cunningham-transfer-functions.jl")
 include("transfer-functions/integration.jl")
 
-include("corona-to-disc/sky-geometry.jl")
-include("corona-to-disc/corona-models.jl")
-include("corona-to-disc/disc-profiles.jl")
+include("corona/sky-geometry.jl")
+include("corona/corona-models.jl")
+include("corona/disc-profiles.jl")
 # needs the types from disc profiles so defer include
 include("transfer-functions/transfer-functions-2d.jl")
-include("corona-to-disc/flux-calculations.jl")
+include("corona/flux-calculations.jl")
+include("corona/emissivity.jl")
 
 include("metrics/boyer-lindquist-ad.jl")
 include("metrics/boyer-lindquist-fo.jl")
@@ -225,7 +235,7 @@ include("redshift.jl")
 include("const-point-functions.jl")
 
 include("line-profiles.jl")
-include("accretion-geometry/polish-doughnut.jl")
+include("geometry/polish-doughnut.jl")
 
 include("plotting-recipes.jl")
 
