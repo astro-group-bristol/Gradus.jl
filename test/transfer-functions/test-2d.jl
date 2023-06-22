@@ -12,11 +12,11 @@ model = LampPostModel(h = 10.0, θ = deg2rad(0.0001))
 
 # calculate transfer functions
 tf = lagtransfer(
-    model,
     m,
     u,
-    plane,
     d,
+    model;
+    plane = plane,
     callback = domain_upper_hemisphere(),
     n_samples = 100,
     sampler = EvenSampler(domain = BothHemispheres(), generator = GoldenSpiralGenerator()),
@@ -24,8 +24,10 @@ tf = lagtransfer(
 
 # check number of intersection points
 @test length(tf.observer_to_disc) == 311
-@test length(tf.source_to_disc) == 58
+@test length(tf.emissivity_profile.geodesic_points) == 58
 
 # ensure binning works as expected
 t, E, f = binflux(tf, N_t = 100, N_E = 100)
-@test sum(filter(!isnan, f)) ≈ 8.5152 atol = 1e-2
+
+fluxsum = sum(filter(!isnan, f))
+@test fluxsum ≈ 8.5152 atol = 1e-2

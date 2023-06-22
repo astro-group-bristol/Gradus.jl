@@ -48,7 +48,7 @@ using StaticArrays
             358.69318748667644,
         ]
 
-        @test all(isapprox.(areas1, expected_areas, atol = 1e-3))
-        @test all(isapprox.(areas2, expected_areas, atol = 1e-3))
+        @test areas1 ≈ expected_areas atol = 1e-3
+        @test areas2 ≈ expected_areas atol = 1e-3
     end
 end
