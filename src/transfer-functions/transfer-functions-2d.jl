@@ -129,7 +129,6 @@ function binflux(
     kwargs...,
 )
     t, i_em = delay_flux(profile, tf.observer_to_disc)
-    @show t
     g = redshift.(tf.emissivity_profile.metric, tf.observer_to_disc, tf.max_t)
 
     # calculate flux
