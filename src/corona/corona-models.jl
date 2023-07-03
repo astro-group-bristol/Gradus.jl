@@ -11,7 +11,7 @@ function sample_position_direction_velocity(
     rmin = inner_radius(m)
     Threads.@threads for i = 1:N
         x, v = sample_position_velocity(m, model, sampler, i, N)
-        while x[2] < rmin * 1.5
+        while x[2] < rmin * 1.9
             x, v = sample_position_velocity(m, model, sampler, i, N)
         end
 
