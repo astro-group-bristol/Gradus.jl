@@ -73,10 +73,10 @@ end
 
     J = _cart_to_spher_jacobian(u[3], u[4])
     k = J * hat
+    # v = constrain_all(m, u, SVector(0, k[1], k[2], k[3]), 0)
+    v = SVector(0, k[1], k[2], k[3])
 
-    v = @SVector [T(0.0), k[1], k[2], k[3]]
     basis = tetradframe(m, u, v_source)
-
     B = reduce(hcat, basis)
     B * v
 end
