@@ -32,7 +32,7 @@ plot_paths(sols, legend = false, n_points = 2048)
 plot_horizon!(m, lw = 2.0, color = :black)
 ```
 
-![](./example-tracing.svg)
+![](./figures/example-tracing.svg)
 
 Alternatively, plotting the 3D paths from e.g. a lamp-post coronal model:
 
@@ -51,7 +51,7 @@ plot_paths_3d(sols, legend=false, extent = 10, t_span = 100.0)
 plot_horizon_3d!(m)
 ```
 
-![](./example-3d-tracing.svg)
+![](./figures/example-3d-tracing.svg)
 
 ## Shadow
 
@@ -71,9 +71,6 @@ u = SVector(0.0, 1000.0, π / 2, 0.0)
     image_height = 1000,
     fov = 70.0,
     verbose = true,
-    # geodesics can get much closer to the event horizon than 
-    # normal
-    closest_approach = 1.001,
     ensemble = Gradus.EnsembleEndpointThreads(),
 )
 
@@ -90,7 +87,7 @@ p = heatmap(
 contour!(p, α, β, img, color = :red)
 ```
 
-![](./example-shadow.png)
+![](./figures/example-shadow.png)
 
 ## Redshift image
 
@@ -123,13 +120,13 @@ pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersect
     image_width = 700,
     image_height = 240,
     verbose = true,
-    pf = pf
+    pf = pf,
 )
 
 heatmap(α, β, img)
 ```
 
-![](./example-redshift.png)
+![](./figures/example-redshift.png)
 
 ## Redshift line-profile 
 
@@ -150,7 +147,7 @@ lineprof = fit(Histogram, data, x_bins)
 plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)
 ```
 
-![](./example-redshift-histogram.svg)
+![](./figures/example-redshift-histogram.svg)
 
 ## Line profiles
 
@@ -171,7 +168,7 @@ maxrₑ = 50.0
 
 # g grid to do flux integration over
 gs = range(0.0, 1.2, 500)
-_, flux = lineprofile(gs, ε, m, u, d, maxrₑ = maxrₑ)
+_, flux = lineprofile(gs, ε, m, u, d, maxrₑ = maxrₑ, verbose = true)
 
 # transform to observed energy
 energy = gs .* 6.4
@@ -180,7 +177,7 @@ energy = gs .* 6.4
 plot(energy, flux, legend=false)
 ```
 
-![](./example-line-profile.svg)
+![](./figures/example-line-profile.svg)
 
 ## Reverberation transfer functions
 
@@ -227,7 +224,7 @@ p = heatmap(
 )
 ```
 
-![](./example-reverb-tf.png)
+![](./figures/example-reverb-tf.png)
 
 ## Covariant radiative transfer
 
@@ -238,6 +235,9 @@ m = KerrMetric(M = 1.0, a = 1.0)
 u = SVector(0.0, 1000.0, deg2rad(80), 0.0)
 # accretion disc
 d = PolishDoughnut(m)
+
+# set the emissivity
+Gradus.emissivity_coefficient(::AbstractMetric, ::PolishDoughnut, x, ν) = 0.1
 
 # define point function which reads the auxiliary variable
 # which is contextually the intensity
@@ -254,13 +254,13 @@ a, b, img = @time rendergeodesics(
     image_height = 500,
     verbose = true,
     pf = pf,
-    trace = Gradus.TraceRadiativeTransfer(),
+    trace = Gradus.TraceRadiativeTransfer(I₀ = 0),
 )
 
 heatmap(a, b, img, aspect_ratio = 1, xlabel = "α", ylabel = "β")
 ```
 
-![](./example-covariant-radiative-transfer.png)
+![](./figures/example-covariant-radiative-transfer.png)
 
 ## Interpolating redshifts
 
@@ -268,25 +268,24 @@ In cases where no analytic redshift solution is known, we can instead interpolat
 
 ```julia
 using Gradus
-using StaticArrays
 using Plots
 
 # metric and metric parameters
 m = KerrMetric(M=1.0, a=0.4)
 # observer's initial position
-u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
+x = SVector(0.0, 1000.0, deg2rad(85), 0.0)
 # accretion disc
 d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
 
 pl_int = interpolate_plunging_velocities(m)
 
-redshift = interpolate_redshift(pl_int, u)
+redshift = interpolate_redshift(pl_int, x)
 
 pf = redshift ∘ ConstPointFunctions.filter_intersected
 
 α, β, img = rendergeodesics(
     m,
-    u,
+    x,
     d,
     # maximum integration time
     2000.0,
@@ -300,7 +299,10 @@ pf = redshift ∘ ConstPointFunctions.filter_intersected
 heatmap(α, β, img)
 ```
 
-![](./example-interpolated.png)
+![](./figures/example-interpolated.png)
+
+!!! note
+    Note that this interpolation is automatically performed when using [`ConstPointFunctions.redshift(m, x)`](@ref) if no analytic implementation is given.
 
 ## Disc geometries
 
@@ -308,29 +310,28 @@ Gradus makes it easy to define new height cross sections for thick discs:
 
 ```julia
 using Gradus
-using StaticArrays
 using Plots
 
 m = KerrMetric(1.0, 0.0)
-u = @SVector [0.0, 1000.0, deg2rad(85), 0.0]
+x = SVector(0.0, 1000.0, deg2rad(85), 0.0)
 
 # define the disc shape -- return a negative number 
 # where the disc should not be intersected, else the cross 
 # sectional height
-d = ThickDisc() do u
-    r = u[2]
+d = ThickDisc() do x
+    r = x[2]
     if r < 9.0 || r > 11.0
         return -1.0
     else
-        x = r - 10.0
-        sqrt(1 - x^2)
+        h = r - 10.0
+        sqrt(1 - h^2)
     end
 end
 
 # and then render as usual
 α, β, img = rendergeodesics(
     m,
-    u,
+    x,
     d,
     2000.0,
     fov = 18.0,
@@ -343,7 +344,7 @@ end
 heatmap(α, β, img, aspect_ratio=1)
 ```
 
-![](./example-thick-disc-doughnut.png)
+![](./figures/example-thick-disc-doughnut.png)
 
 For more disc on disc geometry, see [`AbstractAccretionDisc`](@ref) and associated sections.
 
@@ -354,7 +355,6 @@ Simple equatorial circular orbits are straight forward to calculate with Gradus.
 ```julia
 using Gradus
 using Plots
-using StaticArrays
 
 m = KerrMetric(M=1.0, a=0.8)
 
@@ -364,19 +364,13 @@ for r in [3.0, 4.0, 5.0, 6.0]
     v = CircularOrbits.fourvelocity(m, r)
     # trace the circular orbit
     path = tracegeodesics(m, @SVector([0.0, r, π/2, 0.0]), v, (0.0, 300.0), μ = 1.0)
-    r = [path(t)[2] for t in range(0.0, 100, 200)]
-    ϕ = [path(t)[4] for t in range(0.0, 100, 200)]
-
-    x = @. r * cos(ϕ)
-    y = @. r * sin(ϕ)
-
-    plot!(p, x, y, label = false)
+    plot_paths!(p, path, extent = 10, legend = false)
 end
 
 p
 ```
 
-![](./example-circular-orbits.svg)
+![](./figures/example-circular-orbits.svg)
 
 ## ISCO
 
@@ -412,7 +406,7 @@ end
 plot!(last.(data), first.(data), color=:black, linestyle=:dash, label="ISCO")
 ```
 
-![](./example-isco.svg)
+![](./figures/example-isco.svg)
 
 ## Event horizons and naked singularities
 
@@ -439,37 +433,42 @@ end
 p
 ```
 
-![](./example-horizon.svg)
+![](./figures/example-horizon.svg)
 
 We can also calculate parameter combinations that lead to naked singularities, and plot the parameter space domains to show exclusion zones:
 
 ```julia
 function calc_exclusion(as, ϵs)
-    regions = [
-        is_naked_singularity(JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = ϵ))
-        for a in as, ϵ in ϵs
-    ]
-
-    map(i -> i ? 1.0 : NaN, regions)
+    regions = zeros(Float64, (length(as), length(ϵs)))
+    Threads.@threads for i in eachindex(as)
+        a = as[i]
+        for (j, ϵ) in enumerate(ϵs)
+            m = JohannsenPsaltisMetric(M = 1.0, a = a, ϵ3 = ϵ)
+            regions[i, j] = if is_naked_singularity(m)
+                NaN
+            else
+                Gradus.isco(m)
+            end
+        end
+    end
+    regions
 end
 
-# define ranges (small in this example as a little computationally intense)
-as = range(0, 1.0, 40)
-ϵs = range(-10, 10, 40)
+as = range(0, 1.0, 100)
+ϵs = range(-10, 10, 100)
 
 img = calc_exclusion(as, ϵs)
 heatmap(
     as, 
     ϵs, 
     img', 
-    color = :black, 
     colorbar = false, 
     xlabel = "a", 
     ylabel = "ϵ"
 )
 ```
 
-![](./example-exclusion.png)
+![](./figures/example-exclusion.png)
 
 ## Cunningham transfer functions
 
@@ -477,7 +476,6 @@ Recreating Fig. 1 and 2 from [Bambi et al. (2017)](https://iopscience.iop.org/ar
 
 ```julia
 using Gradus
-using StaticArrays
 using Plots
 
 m = KerrMetric(M=1.0, a=0.998)
@@ -485,9 +483,9 @@ d = GeometricThinDisc(0.0, 100.0, π/2)
 
 p = plot(legend = false)
 for angle in [3, 35, 50, 65, 74, 85]
-    u = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
+    x = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
     ctf = cunningham_transfer_function(
-        m, u, d, 4.0
+        m, x, d, 4.0
     )
     mask = @. (ctf.g✶ > 0.001) & (ctf.g✶ < 0.999)
     @views plot!(p, ctf.g✶[mask], ctf.f[mask])
@@ -495,19 +493,19 @@ end
 p
 ```
 
-![](./example-bambi-fig1.svg)
+![](./figures/example-bambi-fig1.svg)
 
 And Fig. 2:
 
 ```julia
 # new position vector
-u = @SVector [0.0, 1000.0, deg2rad(30), 0.0]
+x = @SVector [0.0, 1000.0, deg2rad(30), 0.0]
 
 p = plot(legend = false)
 for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
     m = KerrMetric(1.0, a)
     ctf = cunningham_transfer_function(
-        m, u, d, 7.0
+        m, x, d, 7.0
     )
     mask = @. (ctf.g✶ > 0.001) & (ctf.g✶ < 0.999)
     @views plot!(p, ctf.g✶[mask], ctf.f[mask])
@@ -515,7 +513,7 @@ end
 p
 ```
 
-![](./example-bambi-fig2.svg)
+![](./figures/example-bambi-fig2.svg)
 
 ## Concentric rings
 
@@ -549,4 +547,4 @@ end
 p
 ```
 
-![](./example-concentric.svg)
+![](./figures/example-concentric.svg)
