@@ -1,9 +1,9 @@
-function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν, invν3, r_isco)
-    a_ν, j_ν, u = covariant_absorption_emission_velocity(m, x, ν, geometry, r_isco)
+function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν, invν3, r_isco, λ)
+    a_ν, j_ν, u = covariant_absorption_emission_velocity(m, x, ν, geometry, r_isco, λ)
     g = metric(m, x)
-    # cache inv(ν)^3 to avoid costly division
-    k_rev = SVector(k[1], k[2], k[3], -k[4])
-    -(g * k_rev) ⋅ u * (-a_ν * I + j_ν * invν3)
+    k_rev = SVector(-k[1], k[2], k[3], -k[4])
+    u_rev = SVector(-u[1], u[2], u[3], u[4])
+    -(g * k_rev) ⋅ u_rev * (-a_ν * I + j_ν * invν3)
 end
 
 function covariant_absorption_emission_velocity(
@@ -12,6 +12,7 @@ function covariant_absorption_emission_velocity(
     ν,
     d::AbstractAccretionGeometry,
     r_isco,
+    λ
 )
     u = if x[2] > r_isco
         CircularOrbits.fourvelocity(m, x[2])
@@ -30,10 +31,11 @@ mutable struct RadiativeTransferIntegrationParameters{V} <: AbstractIntegrationP
     within_geometry::V
 end
 
-function _radiative_transfer_integration_parameters(status::StatusCodes.T, N::Int)
-    within_geometry = fill(false, N)
+function _radiative_transfer_integration_parameters(status::StatusCodes.T, geometry)
+    within_geometry = map(!is_finite_disc, geometry)
     RadiativeTransferIntegrationParameters(status, within_geometry)
 end
+
 
 function update_integration_parameters!(
     p::RadiativeTransferIntegrationParameters,
@@ -54,10 +56,11 @@ function _intensity_delta(
     ν,
     invν3,
     r_isco,
+    λ
 ) where {T}
     sum(enumerate(geometry.geometry)) do (i, g)
         if within[i]
-            radiative_transfer(m, x, k, g, I, ν, invν3, r_isco)
+            radiative_transfer(m, x, k, g, I, ν, invν3, r_isco, λ)
         else
             zero(T)
         end
@@ -74,9 +77,10 @@ function _intensity_delta(
     ν,
     invν3,
     r_isco,
+    λ
 ) where {T}
     if within[1]
-        radiative_transfer(m, x, k, geometry, I, ν, invν3, r_isco)
+        radiative_transfer(m, x, k, geometry, I, ν, invν3, r_isco, λ)
     else
         zero(T)
     end
@@ -131,6 +135,7 @@ function radiative_transfer_ode_problem(
                 trace.ν,
                 invν3,
                 r_isco,
+                λ
             )
             vcat(k, dk, SVector(dI))
         end
@@ -142,7 +147,7 @@ function radiative_transfer_ode_problem(
         f,
         u_init,
         time_domain,
-        _radiative_transfer_integration_parameters(StatusCodes.NoStatus, length(geometry));
+        _radiative_transfer_integration_parameters(StatusCodes.NoStatus, geometry);
         callback = callback,
     )
 end
