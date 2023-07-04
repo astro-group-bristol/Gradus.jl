@@ -18,9 +18,10 @@ end
     d::AbstractAccretionGeometry,
     ep::AbstractDiscProfile;
     bins = collect(range(0.1, 1.5, 180)),
+    algorithm = BinnedLineProfile(),
     kwargs...,
 )
-    lineprofile(bins, r -> ep.f.ε(r), m, u, d; algorithm = BinnedLineProfile(), kwargs...)
+    lineprofile(bins, r -> ep.f.ε(r), m, u, d; algorithm = algorithm, kwargs...)
 end
 
 @inline function lineprofile(

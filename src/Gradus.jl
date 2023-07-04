@@ -128,7 +128,12 @@ optical_property(::T) where {T<:AbstractAccretionGeometry} = optical_property(T)
 
 is_optically_thin(g::AbstractAccretionGeometry) = optical_property(g) isa OpticallyThin
 
+is_finite_disc(::Type{<:AbstractAccretionGeometry}) = true
+is_finite_disc(::T) where {T<:AbstractAccretionGeometry} = is_finite_disc(T)
+
 Base.length(::AbstractAccretionGeometry) = 1
+Base.iterate(g::AbstractAccretionGeometry) = (g, nothing)
+Base.iterate(::AbstractAccretionGeometry, ::Nothing) = nothing
 
 """
     abstract type AbstractAccretionDisc{T} <: AbstractAccretionGeometry{T}

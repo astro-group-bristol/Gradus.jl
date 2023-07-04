@@ -59,7 +59,7 @@ function RadialDiscProfile(
 ) where {T}
     bins = collect(grid(extrema(radii)..., N))
 
-    ibucket = Buckets.IndexBucket(Int64, size(radii))
+    ibucket = Buckets.IndexBucket(Int, size(radii))
     bucket!(ibucket, Buckets.Simple(), radii, bins)
     groups = Buckets.unpack_bucket(ibucket)
 

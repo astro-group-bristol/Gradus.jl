@@ -18,6 +18,22 @@ function lorentz_factor(g::AbstractMatrix, isco_r, u, v)
     end
 end
 
+function lorentz_factor(m::AbstractMetric, x, v)
+    # frame = GradusBase.lnrframe(m, x)
+    # T = reduce(hcat, frame)
+    
+    # 𝒱 = (T * v)
+    # absV = (𝒱[2]^2 + 𝒱[3]^2 + 𝒱[4]^2) / (𝒱[1]^2)
+
+    # inv(√(1 - absV))
+    frame = GradusBase.lnrbasis(m, x)
+    B = reduce(hcat, frame)
+    denom = B[:, 1] ⋅ v
+
+    𝒱ϕ = (B[:, 4] ⋅ v) / denom
+    inv(√(1 - 𝒱ϕ^2))
+end
+
 function flux_source_to_disc(
     m::AbstractMetric,
     model::AbstractCoronaModel,

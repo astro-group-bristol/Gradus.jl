@@ -8,3 +8,14 @@
     end
     output
 end
+
+function spherical_to_cartesian(v)
+    x = v[1] * cos(v[3]) * sin(v[2])
+    y = v[1] * sin(v[3]) * sin(v[2])
+    z = v[1] * cos(v[2])
+    SVector{3}(x, y, z)
+end
+
+# specialisation for four-vector
+spherical_to_cartesian(v::SVector{4}) = 
+    spherical_to_cartesian(@views(v[2:end]))
