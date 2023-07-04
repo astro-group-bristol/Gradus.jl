@@ -429,3 +429,56 @@ end
 p
 ####################################################################################################
 
+using Gradus
+using Plots
+
+struct HotSpot{T} <: AbstractAccretionDisc{T}
+    radius::T
+    position::SVector{3,T}
+end
+
+# convenience constructor
+HotSpot(R::T, r::T, ϕ::T) where {T} = HotSpot(R, SVector(r, π/2, ϕ))
+
+# we don't have an intersection criteria: instead, the calculations 
+# are treated as if we are always within geometry
+Gradus.is_finite_disc(::Type{<:HotSpot}) = false
+
+function Gradus.covariant_absorption_emission_velocity(
+    m::AbstractMetric,
+    x,
+    ν,
+    hs::HotSpot,
+    r_isco,
+    λ
+)
+    v_disc = CircularOrbits.fourvelocity(m, hs.position[1])
+
+    # use coordinate time, given the disc velocity, to advance the position
+    # as in the slow light regime
+    x_disc = hs.position - SVector(0, 0, v_disc[4] / v_disc[1] * x[1])
+
+    dist = cartesian_squared_distance(m, x_disc, x)
+    ε = exp(-dist / (2 * hs.radius^2))
+    # return absorption, emissivity, disc velocity
+    (zero(eltype(x)), ε, v_disc)
+end
+
+m = KerrMetric(1.0, 0.5)
+x = SVector(0.0, 10_000.0, deg2rad(75), 0.0)
+hs = HotSpot(0.7, Gradus.isco(m) * 1.1, -1.0)
+
+a, b, img = rendergeodesics(
+    m, 
+    x, 
+    hs, 
+    20_000.0, 
+    verbose = true, 
+    fov = 10.0,
+    trace = Gradus.TraceRadiativeTransfer(I₀ = 0.0),
+    pf = PointFunction((m, gp, t) -> gp.aux[1]),
+)
+
+heatmap(a, b, img)
+####################################################################################################
+
