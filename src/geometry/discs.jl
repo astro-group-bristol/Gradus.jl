@@ -6,8 +6,14 @@ when the four vector `u` is distant, zero when `u` is on the surface, and negati
 
 Must return a floating point number.
 """
-distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...) =
-    error("Not implemented for $(typeof(d)).")
+function distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...)
+    if is_finite_disc(d)
+        error("Not implemented for $(typeof(d)).")
+    else
+        1
+    end
+end
+
 
 """
     cross_section(d::AbstractThickAccretionDisc, u)

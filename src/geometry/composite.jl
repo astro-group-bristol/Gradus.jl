@@ -7,6 +7,8 @@ function CompositeGeometry(g::Vararg{<:AbstractAccretionGeometry{T}}) where {T}
 end
 
 Base.length(cg::CompositeGeometry) = length(cg.geometry)
+Base.iterate(cg::CompositeGeometry) = Base.iterate(cg.geometry)
+Base.iterate(cg::CompositeGeometry, i) = Base.iterate(cg.geometry, i)
 
 function Base.show(io::IO, ::MIME"text/plain", cg::CompositeGeometry)
     buf = IOBuffer()
