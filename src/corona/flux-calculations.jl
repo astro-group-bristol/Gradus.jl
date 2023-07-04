@@ -21,7 +21,7 @@ end
 function lorentz_factor(m::AbstractMetric, x, v)
     # frame = GradusBase.lnrframe(m, x)
     # T = reduce(hcat, frame)
-    
+
     # 𝒱 = (T * v)
     # absV = (𝒱[2]^2 + 𝒱[3]^2 + 𝒱[4]^2) / (𝒱[1]^2)
 

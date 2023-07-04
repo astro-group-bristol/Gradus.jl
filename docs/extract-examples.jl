@@ -16,6 +16,6 @@ end
 open(@__DIR__() * "/code/examples.jl", "w") do f
     for code in examples
         write(f, code)
-        write(f, "\n", "#" ^ 100, "\n\n")
+        write(f, "\n", "#"^100, "\n\n")
     end
 end

@@ -133,8 +133,8 @@ end
     ylabel --> "ε (arb.)"
     xscale --> :log10
     yscale --> :log10
-   
-    y = p.f.ε.u[2:end-1] 
+
+    y = p.f.ε.u[2:end-1]
     y = y ./ sum(y)
     y = y ./ minimum(y)
 

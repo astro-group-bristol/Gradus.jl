@@ -89,10 +89,7 @@ end
     ϕ = 0.0
 end
 
-function sample_position_velocity(
-    m::AbstractMetric,
-    model::LampPostModel{T},
-) where {T}
+function sample_position_velocity(m::AbstractMetric, model::LampPostModel{T}) where {T}
     x = SVector{4,T}(0, model.h, model.θ, model.ϕ)
     gcomp = metric_components(m, SVector(x[2], x[3]))
     v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)

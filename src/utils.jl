@@ -17,5 +17,16 @@ function spherical_to_cartesian(v)
 end
 
 # specialisation for four-vector
-spherical_to_cartesian(v::SVector{4}) = 
-    spherical_to_cartesian(@views(v[2:end]))
+spherical_to_cartesian(v::SVector{4}) = spherical_to_cartesian(@views(v[2:end]))
+
+function cartesian_squared_distance(::AbstractMetric, x1, x2)
+    # all metrics are currently in boyer lindquist coords
+    y1 = spherical_to_cartesian(x1)
+    y2 = spherical_to_cartesian(x2)
+    diff = @. (y2 - y1)^2
+    sum(diff)
+end
+
+cartesian_distance(m::AbstractMetric, x1, x2) = √(cartesian_squared_distance(m, x1, x2))
+
+export cartesian_squared_distance, cartesian_distance, spherical_to_cartesian

@@ -12,7 +12,7 @@ function covariant_absorption_emission_velocity(
     ν,
     d::AbstractAccretionGeometry,
     r_isco,
-    λ
+    λ,
 )
     u = if x[2] > r_isco
         CircularOrbits.fourvelocity(m, x[2])
@@ -56,7 +56,7 @@ function _intensity_delta(
     ν,
     invν3,
     r_isco,
-    λ
+    λ,
 ) where {T}
     sum(enumerate(geometry.geometry)) do (i, g)
         if within[i]
@@ -77,7 +77,7 @@ function _intensity_delta(
     ν,
     invν3,
     r_isco,
-    λ
+    λ,
 ) where {T}
     if within[1]
         radiative_transfer(m, x, k, geometry, I, ν, invν3, r_isco, λ)
@@ -135,7 +135,7 @@ function radiative_transfer_ode_problem(
                 trace.ν,
                 invν3,
                 r_isco,
-                λ
+                λ,
             )
             vcat(k, dk, SVector(dI))
         end

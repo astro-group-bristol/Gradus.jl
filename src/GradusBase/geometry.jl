@@ -3,6 +3,7 @@ function vector_to_local_sky(m::AbstractMetric, u, θ, ϕ)
 end
 
 dotproduct(g::AbstractMatrix, v1, v2) = @tullio r := g[i, j] * v1[i] * v2[j]
+dotproduct(m::AbstractMetric, x1, x2) = dotproduct(metric(m, x1), x1, x2)
 propernorm(g::AbstractMatrix, v) = dotproduct(g, v, v)
 propernorm(m::AbstractMetric, u, v) = propernorm(metric(m, u), v)
 
@@ -73,3 +74,5 @@ lowerindices(m::AbstractMetric, u, v) = lowerindices(metric(m, u), v)
 
 raiseindices(ginv::AbstractMatrix, v) = ginv * v
 raiseindices(m::AbstractMetric, u, v) = raiseindices(inv(metric(m, u)), v)
+
+export dotproduct, propernorm
