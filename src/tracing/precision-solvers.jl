@@ -25,7 +25,7 @@ the event horizon.
 function find_offset_for_radius(
     m::AbstractMetric,
     u,
-    d::AbstractAccretionDisc,
+    d::AbstractAccretionGeometry,
     rₑ,
     θₒ;
     zero_atol = 1e-7,
