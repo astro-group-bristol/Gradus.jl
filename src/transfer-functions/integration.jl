@@ -102,6 +102,16 @@ function _normalize(flux::AbstractArray{T}, grid) where {T}
 end
 
 function integrate_lineprofile(
+    prof::RadialDiscProfile,
+    itb::InterpolatingTransferBranches,
+    radii,
+    g_grid;
+    kwargs...,
+)
+    integrate_lineprofile(prof.f.ε, itb, radii, g_grid; kwargs...)
+end
+
+function integrate_lineprofile(
     ε,
     itb::InterpolatingTransferBranches{T},
     radii,
