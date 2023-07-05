@@ -54,4 +54,4 @@ flux = Gradus.integrate_lagtransfer(prof, itb, radii, bins, tbins; t0 = x[2], Nr
 
 fluxsum = sum(flux)
 # normalisation is missing, so number is big
-@test fluxsum ≈ 1965.8446945281482 atol = 1e-2
+@test fluxsum ≈ 1.0 atol = 1e-2
