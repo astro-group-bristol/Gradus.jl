@@ -46,7 +46,7 @@ function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8, segbuf = nothing)
     return lum
 end
 
-function _transform_g✶_to_g(branch)
+function _transform_g✶_to_g(branch, h)
     gmin = branch.gmin
     gmax = branch.gmax
 
@@ -59,10 +59,12 @@ function _transform_g✶_to_g(branch)
         _cunningham_integrand(branch.upper_f(g✶), g, g✶, gmin, gmax)
     end
     function _g_lower_t(g)
-        branch.lower_t(g_to_g✶(g, gmin, gmax))
+        g✶ = max(h, min(1 - h, g_to_g✶(g, gmin, gmax)))
+        branch.lower_t(g✶)
     end
     function _g_upper_t(g)
-        branch.upper_t(g_to_g✶(g, gmin, gmax))
+        g✶ = max(h, min(1 - h, g_to_g✶(g, gmin, gmax)))
+        branch.upper_t(g✶)
     end
 
     _g_lower_f, _g_upper_f, _g_lower_t, _g_upper_t
@@ -115,7 +117,7 @@ function integrate_lineprofile(
 end
 
 function integrate_lagtransfer(
-    profile::RadialDiscProfile,
+    profile,
     itb::InterpolatingTransferBranches{T},
     radii,
     g_grid,
@@ -144,7 +146,7 @@ function _integrate_fluxbin!(
     # build fine radial grid for trapezoidal integration
     @inbounds for (i, rₑ) in enumerate(radii_grid)
         branch = itb(rₑ)
-        F1, F2, _, _ = _transform_g✶_to_g(branch)
+        F1, F2, _, _ = _transform_g✶_to_g(branch, h)
         Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
         # integration weight for this annuli
         θ = Δrₑ * rₑ * ε(rₑ)
@@ -167,7 +169,7 @@ end
 
 function _integrate_fluxbin!(
     flux::AbstractMatrix,
-    profile::RadialDiscProfile,
+    profile,
     itb::InterpolatingTransferBranches{T},
     radii_grid,
     g_grid,
@@ -181,7 +183,7 @@ function _integrate_fluxbin!(
     # build fine radial grid for trapezoidal integration
     @inbounds for (i, rₑ) in enumerate(radii_grid)
         branch = itb(rₑ)
-        F1, F2, T1, T2 = _transform_g✶_to_g(branch)
+        F1, F2, T1, T2 = _transform_g✶_to_g(branch, h)
         Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
 
         # integration weight for this annuli

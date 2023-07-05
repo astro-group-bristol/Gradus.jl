@@ -23,7 +23,6 @@ struct RadialDiscProfile{F,R} <: AbstractDiscProfile
     t::R
 end
 
-
 function RadialDiscProfile(
     m::AbstractMetric,
     model::AbstractCoronaModel,
