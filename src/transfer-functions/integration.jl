@@ -99,7 +99,7 @@ function _normalize(flux::AbstractArray{T}, grid) where {T}
     flux
 end
 
-function integrate_drdg✶(
+function integrate_drdg(
     ε,
     itb::InterpolatingTransferBranches{T},
     radii,
@@ -157,4 +157,4 @@ function integrate_drdg✶(
     _normalize(flux, g_grid)
 end
 
-export integrate_drdg✶, g✶_to_g, g_to_g✶
+export integrate_drdg, g✶_to_g, g_to_g✶
