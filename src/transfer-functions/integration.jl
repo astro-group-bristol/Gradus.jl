@@ -214,8 +214,8 @@ function _integrate_fluxbin!(
             )
 
             # find which bin to dump in
-            t1 = max(T1(glo), T1(ghi)) - t0 + t_source_disc
-            t2 = max(T2(glo), T2(ghi)) - t0 + t_source_disc
+            t1 = 0.5 * (T1(glo) + T1(ghi)) - t0 + t_source_disc
+            t2 = 0.5 * (T2(glo) + T2(ghi)) - t0 + t_source_disc
             i1 = searchsortedfirst(t_grid, t1)
             i2 = searchsortedfirst(t_grid, t2)
 
