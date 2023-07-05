@@ -83,7 +83,14 @@ end
 function interpolate_branches(ctf::CunninghamTransferData{T}) where {T}
     (lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t) = splitbranches(ctf)
     (lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t) =
-        _make_sorted_with_adjustments!(lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t)
+        _make_sorted_with_adjustments!(
+            lower_g✶,
+            lower_f,
+            lower_t,
+            upper_g✶,
+            upper_f,
+            upper_t,
+        )
     lower_branch = _make_interpolation(lower_g✶, lower_f)
     lower_time_branch = _make_interpolation(lower_g✶, lower_t)
     upper_branch = _make_interpolation(upper_g✶, upper_f)

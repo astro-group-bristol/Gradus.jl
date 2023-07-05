@@ -88,7 +88,7 @@ end
 
 function _normalize(flux::AbstractArray{T}, grid) where {T}
     Σflux = zero(T)
-    @inbounds for i in 1:length(grid)-1
+    @inbounds for i = 1:length(grid)-1
         glo = grid[i]
         ghi = grid[i+1]
         ḡ = (ghi + glo)
@@ -115,7 +115,7 @@ function integrate_drdg✶(
 
     # build fine radial grid for trapezoidal integration
     fine_rₑ_grid = Grids._inverse_grid(minrₑ, maxrₑ, 1000) |> collect
-    
+
     # allocate a segbuf for Gauss-Kronrod
     segbuf = alloc_segbuf(Float64)
 
@@ -129,8 +129,26 @@ function integrate_drdg✶(
         for j in eachindex(g_grid_view)
             glo = g_grid[j]
             ghi = g_grid[j+1]
-            f1 = integrate_bin(F1, branch.gmin, branch.gmax, glo, ghi; h = h, segbuf = segbuf) * weight
-            f2 = integrate_bin(F2, branch.gmin, branch.gmax, glo, ghi; h = h, segbuf = segbuf) * weight
+            f1 =
+                integrate_bin(
+                    F1,
+                    branch.gmin,
+                    branch.gmax,
+                    glo,
+                    ghi;
+                    h = h,
+                    segbuf = segbuf,
+                ) * weight
+            f2 =
+                integrate_bin(
+                    F2,
+                    branch.gmin,
+                    branch.gmax,
+                    glo,
+                    ghi;
+                    h = h,
+                    segbuf = segbuf,
+                ) * weight
 
             flux[j] += f1 + f2
         end

@@ -47,10 +47,16 @@ end
 
 # interpolate over radial coordinate
 function (itb::InterpolatingTransferBranches)(r)
-    idx = max(1, min(DataInterpolations.searchsortedlastcorrelated(itb.radii, r, 0), length(itb.radii) - 1)) 
+    idx = max(
+        1,
+        min(
+            DataInterpolations.searchsortedlastcorrelated(itb.radii, r, 0),
+            length(itb.radii) - 1,
+        ),
+    )
     r1, r2 = itb.radii[idx], itb.radii[idx+1]
     # interpolation weight
-    θ = (r - r1)/(r2 - r1)
+    θ = (r - r1) / (r2 - r1)
 
     gmin = _linear_interpolate(itb.gmin, idx, θ)
     gmax = _linear_interpolate(itb.gmax, idx, θ)
