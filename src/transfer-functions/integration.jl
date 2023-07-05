@@ -99,62 +99,133 @@ function _normalize(flux::AbstractArray{T}, grid) where {T}
     flux
 end
 
-function integrate_drdg(
+function integrate_lineprofile(
     ε,
     itb::InterpolatingTransferBranches{T},
     radii,
     g_grid;
-    h = 1e-8,
+    Nr = 1000,
+    kwargs...,
 ) where {T}
     # pre-allocate output
     flux = zeros(T, length(g_grid))
-
-    # init params
-    minrₑ, maxrₑ = extrema(radii)
-    g_grid_view = @views g_grid[1:end-1]
-
-    # build fine radial grid for trapezoidal integration
-    fine_rₑ_grid = Grids._inverse_grid(minrₑ, maxrₑ, 1000) |> collect
-
-    # allocate a segbuf for Gauss-Kronrod
-    segbuf = alloc_segbuf(Float64)
-
-    @inbounds for (i, rₑ) in enumerate(fine_rₑ_grid)
-        branch = itb(rₑ)
-        F1, F2, T1, T2 = _transform_g✶_to_g(branch)
-
-        Δrₑ = _trapezoidal_weight(fine_rₑ_grid, rₑ, i)
-        weight = Δrₑ * rₑ * ε(rₑ)
-
-        for j in eachindex(g_grid_view)
-            glo = g_grid[j]
-            ghi = g_grid[j+1]
-            f1 =
-                integrate_bin(
-                    F1,
-                    branch.gmin,
-                    branch.gmax,
-                    glo,
-                    ghi;
-                    h = h,
-                    segbuf = segbuf,
-                ) * weight
-            f2 =
-                integrate_bin(
-                    F2,
-                    branch.gmin,
-                    branch.gmax,
-                    glo,
-                    ghi;
-                    h = h,
-                    segbuf = segbuf,
-                ) * weight
-
-            flux[j] += f1 + f2
-        end
-    end
-
+    fine_rₑ_grid = Grids._inverse_grid(extrema(radii)..., Nr) |> collect
+    _integrate_fluxbin!(flux, ε, itb, fine_rₑ_grid, g_grid; kwargs...)
     _normalize(flux, g_grid)
 end
 
-export integrate_drdg, g✶_to_g, g_to_g✶
+function integrate_lagtransfer(
+    profile::RadialDiscProfile,
+    itb::InterpolatingTransferBranches{T},
+    radii,
+    g_grid,
+    t_grid;
+    Nr = 1000,
+    kwargs...,
+) where {T}
+    # pre-allocate output
+    flux = zeros(T, (length(g_grid), length(t_grid)))
+    fine_rₑ_grid = Grids._geometric_grid(extrema(radii)..., Nr) |> collect
+    _integrate_fluxbin!(flux, profile, itb, fine_rₑ_grid, g_grid, t_grid; kwargs...)
+    flux
+end
+
+function _integrate_fluxbin!(
+    flux::AbstractVector,
+    ε,
+    itb::InterpolatingTransferBranches{T},
+    radii_grid,
+    g_grid;
+    h = 1e-8,
+    # allocate a segbuf for Gauss-Kronrod
+    segbuf = alloc_segbuf(T),
+) where {T}
+    g_grid_view = @views g_grid[1:end-1]
+    # build fine radial grid for trapezoidal integration
+    @inbounds for (i, rₑ) in enumerate(radii_grid)
+        branch = itb(rₑ)
+        F1, F2, _, _ = _transform_g✶_to_g(branch)
+        Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
+        # integration weight for this annuli
+        θ = Δrₑ * rₑ * ε(rₑ)
+        @inbounds for j in eachindex(g_grid_view)
+            glo = g_grid[j]
+            ghi = g_grid[j+1]
+            f = integrate_bin(
+                g -> F1(g) + F2(g),
+                branch.gmin,
+                branch.gmax,
+                glo,
+                ghi;
+                h = h,
+                segbuf = segbuf,
+            )
+            flux[j] += f * θ
+        end
+    end
+end
+
+function _integrate_fluxbin!(
+    flux::AbstractMatrix,
+    profile::RadialDiscProfile,
+    itb::InterpolatingTransferBranches{T},
+    radii_grid,
+    g_grid,
+    t_grid;
+    h = 1e-8,
+    # allocate a segbuf for Gauss-Kronrod
+    segbuf = alloc_segbuf(T),
+    t0 = 0,
+) where {T}
+    g_grid_view = @views g_grid[1:end-1]
+    # build fine radial grid for trapezoidal integration
+    @inbounds for (i, rₑ) in enumerate(radii_grid)
+        branch = itb(rₑ)
+        F1, F2, T1, T2 = _transform_g✶_to_g(branch)
+        Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
+
+        # integration weight for this annuli
+        θ = Δrₑ * rₑ * profile.f.ε(rₑ)
+        # time delay for this annuli
+        t_source_disc = profile.t.t(rₑ)
+
+        @inbounds for j in eachindex(g_grid_view)
+            glo = g_grid[j]
+            ghi = g_grid[j+1]
+            f1 = integrate_bin(
+                F1,
+                branch.gmin,
+                branch.gmax,
+                glo,
+                ghi;
+                h = h,
+                segbuf = segbuf,
+            )
+            f2 = integrate_bin(
+                F2,
+                branch.gmin,
+                branch.gmax,
+                glo,
+                ghi;
+                h = h,
+                segbuf = segbuf,
+            )
+
+            # find which bin to dump in
+            t1 = max(T1(glo), T1(ghi)) - t0 + t_source_disc
+            t2 = max(T2(glo), T2(ghi)) - t0 + t_source_disc
+            i1 = searchsortedfirst(t_grid, t1)
+            i2 = searchsortedfirst(t_grid, t2)
+
+            imax = lastindex(t_grid)
+            if i1 < imax
+                flux[j, i1] += f1 * θ
+            end
+            if i2 < imax
+                flux[j, i2] += f2 * θ
+            end
+        end
+    end
+end
+
+export integrate_lineprofile, g✶_to_g, g_to_g✶
