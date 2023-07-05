@@ -1,13 +1,10 @@
-function _make_interpolation(g, f)
-    DataInterpolations.LinearInterpolation(f, g)
-end
 
 function _adjust_extrema!(g)
     g[1] = zero(eltype(g))
     g[end] = one(eltype(g))
 end
 
-function _make_sorted_with_adjustments!(g1, f1, g2, f2)
+function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2)
     I1 = sortperm(g1)
     I2 = sortperm(g2)
 
@@ -16,6 +13,8 @@ function _make_sorted_with_adjustments!(g1, f1, g2, f2)
     g2 .= g2[I2]
     f1 .= f1[I1]
     f2 .= f2[I2]
+    t1 .= t1[I1]
+    t2 .= t2[I2]
 
     # at low inclination angles, the range of g is so tight that the edges are
     # very problematic due to the g✶ * (1 - g✶) terms, sending the branches to zero
@@ -28,13 +27,15 @@ function _make_sorted_with_adjustments!(g1, f1, g2, f2)
     g2 = g2[J2]
     f1 = f1[J1]
     f2 = f2[J2]
+    t1 = t1[J1]
+    t2 = t2[J2]
 
     _adjust_extrema!(g1)
     _adjust_extrema!(g2)
-    g1, f1, g2, f2
+    g1, f1, t1, g2, f2, t2
 end
 
-function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
+function splitbranches(ctf::CunninghamTransferData{T}) where {T}
     # first things first we want to pull out the extremal
     # as these values are mutual to both branches, and cap off the
     # extrema. this way we avoid any accidental linear extrapolation
@@ -54,36 +55,51 @@ function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
     # allocate branches
     branch1_f = zeros(T, N1)
     branch2_f = zeros(T, N2)
+    branch1_t = zeros(T, N1)
+    branch2_t = zeros(T, N2)
     branch1_g✶ = zeros(T, N1)
     branch2_g✶ = zeros(T, N2)
 
     for (i, j) in enumerate(i1:i2)
         branch1_f[i] = ctf.f[j]
         branch1_g✶[i] = ctf.g✶[j]
+        branch1_t[i] = ctf.t[j]
     end
     for (i, j) in enumerate(Iterators.flatten((1:i1, i2:length(ctf.f))))
         branch2_f[i] = ctf.f[j]
         branch2_g✶[i] = ctf.g✶[j]
+        branch2_t[i] = ctf.t[j]
     end
 
     # determine which is the upper branch
     # return:  (lower_g✶, lower_f, upper_g✶, upper_f)
     if branch1_f[2] > branch1_f[1]
-        branch2_g✶, branch2_f, branch1_g✶, branch1_f
+        branch2_g✶, branch2_f, branch2_t, branch1_g✶, branch1_f, branch1_t
     else
-        branch1_g✶, branch1_f, branch2_g✶, branch2_f
+        branch1_g✶, branch1_f, branch1_t, branch2_g✶, branch2_f, branch2_t
     end
 end
 
-function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where {T}
-    (lower_g✶, lower_f, upper_g✶, upper_f) = splitbranches(ctf)
-    (lower_g✶, lower_f, upper_g✶, upper_f) =
-        _make_sorted_with_adjustments!(lower_g✶, lower_f, upper_g✶, upper_f)
+function interpolate_branches(ctf::CunninghamTransferData{T}) where {T}
+    (lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t) = splitbranches(ctf)
+    (lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t) =
+        _make_sorted_with_adjustments!(
+            lower_g✶,
+            lower_f,
+            lower_t,
+            upper_g✶,
+            upper_f,
+            upper_t,
+        )
     lower_branch = _make_interpolation(lower_g✶, lower_f)
+    lower_time_branch = _make_interpolation(lower_g✶, lower_t)
     upper_branch = _make_interpolation(upper_g✶, upper_f)
-    InterpolatedCunninghamTransferFunction(
+    upper_time_branch = _make_interpolation(upper_g✶, upper_t)
+    TransferBranches(
         upper_branch,
         lower_branch,
+        upper_time_branch,
+        lower_time_branch,
         ctf.gmin,
         ctf.gmax,
         ctf.rₑ,
@@ -142,7 +158,7 @@ function cunningham_transfer_function(
             redshift_pf = redshift_pf,
             tracer_kwargs...,
         )
-        (_g, _J)
+        (_g, _J, gp.x[1])
     end
 
     M = N + 2 * N_extrema
@@ -151,6 +167,7 @@ function cunningham_transfer_function(
     θs = zeros(T, M)
     Js = zeros(T, M)
     gs = zeros(T, M)
+    ts = zeros(T, M)
     # sample so that the expected minima and maxima (0 and π)
     itt = Iterators.flatten((
         range(0 - 2θ_offset, 0 + 2θ_offset, K),
@@ -160,16 +177,18 @@ function cunningham_transfer_function(
     @inbounds for (i, _θ) in enumerate(itt)
         # avoid coordinate singularity at π / 2
         θ = _θ + 1e-4
-        g, J = _workhorse(θ)
+        g, J, t = _workhorse(θ)
         gs[i] = g
         Js[i] = J
         θs[i] = θ
+        ts[i] = t
     end
 
     _gmin, _gmax = @views _search_extremal!(
         θs[N+1:end],
         gs[N+1:end],
         Js[N+1:end],
+        ts[N+1:end],
         _workhorse,
         θ_offset,
     )
@@ -179,6 +198,7 @@ function cunningham_transfer_function(
     deleteat!(θs, B)
     deleteat!(gs, B)
     deleteat!(Js, B)
+    deleteat!(ts, B)
 
     gmin, gmax = _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
 
@@ -186,6 +206,7 @@ function cunningham_transfer_function(
     @. θs = θs[I]
     @. Js = Js[I]
     @. gs = gs[I]
+    @. ts = ts[I]
 
     # convert from ∂g to ∂g✶
     @. Js = (gmax - gmin) * Js
@@ -198,7 +219,7 @@ function cunningham_transfer_function(
         gs[i] = g✶
     end
 
-    CunninghamTransferFunction(gs, Js, gmin, gmax, rₑ)
+    CunninghamTransferData(gs, Js, ts, gmin, gmax, rₑ)
 end
 
 function _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
@@ -239,7 +260,7 @@ end
 
 # find gmin and gmax via GoldenSection
 # storing all attempts in gs and Js
-function _search_extremal!(θs, gs, Js, f, offset)
+function _search_extremal!(θs, gs, Js, ts, f, offset)
     N = length(θs)
 
     i::Int = 0
@@ -251,10 +272,11 @@ function _search_extremal!(θs, gs, Js, f, offset)
         if abs(θ) < 1e-4 || abs(abs(θ) - π) < 1e-4
             θ += 1e-4
         end
-        g, J = f(θ)
+        g, J, t = f(θ)
         θs[i] = θ
         Js[i] = J
         gs[i] = g
+        ts[i] = t
         g
     end
     function _gmax_finder(θ)
@@ -308,17 +330,18 @@ function interpolated_transfer_branches(
                 max_time = 10 * x_prob[2],
                 kwargs...,
             )
-            itp = interpolate_transfer_function(ctf)
+            itp = interpolate_branches(ctf)
             ProgressMeter.next!(progress_bar)
             itp
         end
 
     # calculate interpolated transfer functions for each emission radius
-    _threaded_map(𝔉, radii)
+    InterpolatingTransferBranches(_threaded_map(𝔉, radii))
 end
 
-export CunninghamTransferFunction,
-    InterpolatedCunninghamTransferFunction,
+export CunninghamTransferData,
+    TransferBranches,
+    InterpolatingTransferBranches,
     splitbranches,
-    interpolate_transfer_function,
+    interpolate_branches,
     cunningham_transfer_function
