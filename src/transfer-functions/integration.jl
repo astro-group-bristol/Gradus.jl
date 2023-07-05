@@ -88,12 +88,10 @@ function _trapezoidal_weight(X, x, i)
     end
 end
 
-function _normalize(flux::AbstractArray{T}, grid) where {T}
+function _normalize(flux::AbstractVector{T}, grid) where {T}
     Σflux = zero(T)
     @inbounds for i = 1:length(grid)-1
-        glo = grid[i]
-        ghi = grid[i+1]
-        ḡ = (ghi + glo)
+        ḡ = (grid[i+1] + grid[i])
         flux[i] = flux[i] / ḡ
         Σflux += flux[i]
     end
@@ -101,8 +99,19 @@ function _normalize(flux::AbstractArray{T}, grid) where {T}
     flux
 end
 
+function _normalize(flux::AbstractMatrix{T}, grid) where {T}
+    Σflux = zero(T)
+    @views @inbounds for i = 1:length(grid)-1
+        ḡ = (grid[i+1] + grid[i])
+        @. flux[i,:] = flux[i,:] / ḡ
+        Σflux += sum(flux[i, :])
+    end
+    @. flux = flux / Σflux
+    flux
+end
+
 function integrate_lineprofile(
-    prof::RadialDiscProfile,
+    prof::AbstractDiscProfile,
     itb::InterpolatingTransferBranches,
     radii,
     g_grid;
@@ -127,7 +136,7 @@ function integrate_lineprofile(
 end
 
 function integrate_lagtransfer(
-    profile,
+    profile::AbstractDiscProfile,
     itb::InterpolatingTransferBranches{T},
     radii,
     g_grid,
@@ -139,7 +148,7 @@ function integrate_lagtransfer(
     flux = zeros(T, (length(g_grid), length(t_grid)))
     fine_rₑ_grid = Grids._geometric_grid(extrema(radii)..., Nr) |> collect
     _integrate_fluxbin!(flux, profile, itb, fine_rₑ_grid, g_grid, t_grid; kwargs...)
-    flux
+    _normalize(flux, g_grid)
 end
 
 function _integrate_fluxbin!(
