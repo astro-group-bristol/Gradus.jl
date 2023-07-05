@@ -1,6 +1,3 @@
-function _make_interpolation(g, f)
-    DataInterpolations.LinearInterpolation(f, g)
-end
 
 function _adjust_extrema!(g)
     g[1] = zero(eltype(g))
@@ -38,7 +35,7 @@ function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2)
     g1, f1, t1, g2, f2, t2
 end
 
-function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
+function splitbranches(ctf::CunninghamTransferData{T}) where {T}
     # first things first we want to pull out the extremal
     # as these values are mutual to both branches, and cap off the
     # extrema. this way we avoid any accidental linear extrapolation
@@ -83,7 +80,7 @@ function splitbranches(ctf::CunninghamTransferFunction{T}) where {T}
     end
 end
 
-function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where {T}
+function interpolate_branches(ctf::CunninghamTransferData{T}) where {T}
     (lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t) = splitbranches(ctf)
     (lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t) =
         _make_sorted_with_adjustments!(lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t)
@@ -91,7 +88,7 @@ function interpolate_transfer_function(ctf::CunninghamTransferFunction{T}) where
     lower_time_branch = _make_interpolation(lower_g✶, lower_t)
     upper_branch = _make_interpolation(upper_g✶, upper_f)
     upper_time_branch = _make_interpolation(upper_g✶, upper_t)
-    InterpolatedCunninghamTransferFunction(
+    TransferBranches(
         upper_branch,
         lower_branch,
         upper_time_branch,
@@ -215,7 +212,7 @@ function cunningham_transfer_function(
         gs[i] = g✶
     end
 
-    CunninghamTransferFunction(gs, Js, ts, gmin, gmax, rₑ)
+    CunninghamTransferData(gs, Js, ts, gmin, gmax, rₑ)
 end
 
 function _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
@@ -326,17 +323,18 @@ function interpolated_transfer_branches(
                 max_time = 10 * x_prob[2],
                 kwargs...,
             )
-            itp = interpolate_transfer_function(ctf)
+            itp = interpolate_branches(ctf)
             ProgressMeter.next!(progress_bar)
             itp
         end
 
     # calculate interpolated transfer functions for each emission radius
-    _threaded_map(𝔉, radii)
+    InterpolatingTransferBranches(_threaded_map(𝔉, radii))
 end
 
-export CunninghamTransferFunction,
-    InterpolatedCunninghamTransferFunction,
+export CunninghamTransferData,
+    TransferBranches,
+    InterpolatingTransferBranches,
     splitbranches,
-    interpolate_transfer_function,
+    interpolate_branches,
     cunningham_transfer_function

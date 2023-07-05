@@ -1,3 +1,6 @@
+function _make_interpolation(x, y)
+    DataInterpolations.LinearInterpolation(y, x)
+end
 
 @inline function _threaded_map(f, itr)
     N = length(itr)

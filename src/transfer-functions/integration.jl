@@ -1,35 +1,13 @@
 g_to_g✶(g, gmin, gmax) = @. (g - gmin) / (gmax - gmin)
 g✶_to_g(g✶, gmin, gmax) = @. (gmax - gmin) * g✶ + gmin
 
-function interpolate_over_radii(itfs, g✶_grid)
-    radii = map(itf -> itf.rₑ, itfs)
-
-    if !issorted(radii)
-        I = sortperm(radii)
-        radii = radii[I]
-        itfs = itfs[I]
-    end
-
-    fr_interp = map(g✶_grid) do g✶
-        f = map(itfs) do itf
-            itf.lower_f(g✶) + itf.upper_f(g✶)
-        end
-        DataInterpolations.LinearInterpolation(f, radii)
-    end
-
-    gmin_interp = DataInterpolations.LinearInterpolation(map(itf -> itf.gmin, itfs), radii)
-    gmax_interp = DataInterpolations.LinearInterpolation(map(itf -> itf.gmax, itfs), radii)
-    fr_interp, gmin_interp, gmax_interp
-end
-
 function integrate_edge(S, lim, lim_g✶, gmin, gmax)
     gh = g✶_to_g(lim_g✶, gmin, gmax)
     a = abs(√gh - √lim)
-
     2 * S(gh) * a
 end
 
-function _cunningham_integrand(f, g, gs, gmin, gmax)
+@fastmath function _cunningham_integrand(f, g, gs, gmin, gmax)
     f * π * (g)^3 / (√(gs * (1 - gs)) * (gmax - gmin))
 end
 
@@ -68,15 +46,26 @@ function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8, segbuf = nothing)
     return lum
 end
 
-function _wrap_cunningham_interpolations(fr_interp, gmin, gmax, r, g✶_grid)
-    f = map(fr_interp) do interp
-        interp(r)
-    end
-    S = DataInterpolations.LinearInterpolation(f, g✶_grid)
-    g -> begin
+function _transform_g✶_to_g(branch)
+    gmin = branch.gmin
+    gmax = branch.gmax
+
+    function _g_lower_f(g)
         g✶ = g_to_g✶(g, gmin, gmax)
-        _cunningham_integrand(S(g✶), g, g✶, gmin, gmax)
+        _cunningham_integrand(branch.lower_f(g✶), g, g✶, gmin, gmax)
     end
+    function _g_upper_f(g)
+        g✶ = g_to_g✶(g, gmin, gmax)
+        _cunningham_integrand(branch.upper_f(g✶), g, g✶, gmin, gmax)
+    end
+    function _g_lower_t(g)
+        branch.lower_t(g_to_g✶(g, gmin, gmax))
+    end
+    function _g_upper_t(g)
+        branch.upper_t(g_to_g✶(g, gmin, gmax))
+    end
+
+    _g_lower_f, _g_upper_f, _g_lower_t, _g_upper_t
 end
 
 function _build_g✶_grid(Ng✶, h)
@@ -87,12 +76,34 @@ function _build_g✶_grid(Ng✶, h)
     end
 end
 
+function _trapezoidal_weight(X, x, i)
+    if i == 1
+        X[i+1] - x
+    elseif i == lastindex(X)
+        x - X[i-1]
+    else
+        X[i+1] - X[i-1]
+    end
+end
+
+function _normalize(flux::AbstractArray{T}, grid) where {T}
+    Σflux = zero(T)
+    @inbounds for i in 1:length(grid)-1
+        glo = grid[i]
+        ghi = grid[i+1]
+        ḡ = (ghi + glo)
+        flux[i] = flux[i] / ḡ
+        Σflux += flux[i]
+    end
+    @. flux = flux / Σflux
+    flux
+end
+
 function integrate_drdg✶(
     ε,
-    itfs::Vector{<:InterpolatedCunninghamTransferFunction{T}},
+    itb::InterpolatingTransferBranches{T},
     radii,
     g_grid;
-    Ng✶ = 10,
     h = 1e-8,
 ) where {T}
     # pre-allocate output
@@ -100,47 +111,32 @@ function integrate_drdg✶(
 
     # init params
     minrₑ, maxrₑ = extrema(radii)
-    g✶_grid = _build_g✶_grid(Ng✶, h)
-    fr_interp, gmin_interp, gmax_interp = interpolate_over_radii(itfs, g✶_grid)
     g_grid_view = @views g_grid[1:end-1]
 
     # build fine radial grid for trapezoidal integration
-    fine_rₑ_grid = Grids._inverse_grid(minrₑ, maxrₑ, 3000) |> collect
+    fine_rₑ_grid = Grids._inverse_grid(minrₑ, maxrₑ, 1000) |> collect
+    
+    # allocate a segbuf for Gauss-Kronrod
     segbuf = alloc_segbuf(Float64)
+
     @inbounds for (i, rₑ) in enumerate(fine_rₑ_grid)
-        gmin = gmin_interp(rₑ)
-        gmax = gmax_interp(rₑ)
-        S = _wrap_cunningham_interpolations(fr_interp, gmin, gmax, rₑ, g✶_grid)
+        branch = itb(rₑ)
+        F1, F2, T1, T2 = _transform_g✶_to_g(branch)
 
-        # trapezoidal integration weight
-        if i == 1
-            Δrₑ = (fine_rₑ_grid[i+1]) - (rₑ)
-        elseif i == lastindex(fine_rₑ_grid)
-            Δrₑ = (rₑ) - (fine_rₑ_grid[i-1])
-        else
-            Δrₑ = (fine_rₑ_grid[i+1]) - (fine_rₑ_grid[i-1])
-        end
-
+        Δrₑ = _trapezoidal_weight(fine_rₑ_grid, rₑ, i)
         weight = Δrₑ * rₑ * ε(rₑ)
 
         for j in eachindex(g_grid_view)
             glo = g_grid[j]
             ghi = g_grid[j+1]
-            flux[j] +=
-                integrate_bin(S, gmin, gmax, glo, ghi; h = h, segbuf = segbuf) * weight
+            f1 = integrate_bin(F1, branch.gmin, branch.gmax, glo, ghi; h = h, segbuf = segbuf) * weight
+            f2 = integrate_bin(F2, branch.gmin, branch.gmax, glo, ghi; h = h, segbuf = segbuf) * weight
+
+            flux[j] += f1 + f2
         end
     end
 
-    Σflux = zero(T)
-    @inbounds for i in eachindex(g_grid_view)
-        glo = g_grid[i]
-        ghi = g_grid[i+1]
-        ḡ = (ghi + glo)
-        flux[i] = flux[i] / ḡ
-        Σflux += flux[i]
-    end
-    @. flux = flux / Σflux
-    flux
+    _normalize(flux, g_grid)
 end
 
 export integrate_drdg✶, g✶_to_g, g_to_g✶

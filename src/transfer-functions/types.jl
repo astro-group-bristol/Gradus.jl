@@ -1,4 +1,4 @@
-struct CunninghamTransferFunction{T}
+struct CunninghamTransferData{T}
     "``g^\\ast`` values."
     g✶::Vector{T}
     "Transfer function data."
@@ -11,14 +11,21 @@ struct CunninghamTransferFunction{T}
     rₑ::T
 end
 
-struct InterpolatedCunninghamTransferFunction{T,U,L}
-    upper_f::U
-    lower_f::L
-    upper_t::L
-    lower_t::U
+struct TransferBranches{T,F}
+    upper_f::F
+    lower_f::F
+    upper_t::F
+    lower_t::F
     gmin::T
     gmax::T
     rₑ::T
+end
+
+struct InterpolatingTransferBranches{T,F}
+    branches::Vector{TransferBranches{T,F}}
+    radii::Vector{T}
+    gmin::Vector{T}
+    gmax::Vector{T}
 end
 
 struct LagTransferFunction{T,X,E,P}

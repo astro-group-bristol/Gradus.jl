@@ -1,3 +1,63 @@
+function InterpolatingTransferBranches(branches)
+    radii = map(branch -> branch.rₑ, branches)
+    if !issorted(radii)
+        I = sortperm(radii)
+        radii = radii[I]
+        _branches = branches[I]
+    else
+        _branches = branches
+    end
+
+    gmin = map(i -> i.gmin, _branches)
+    gmax = map(i -> i.gmax, _branches)
+    InterpolatingTransferBranches(_branches, radii, gmin, gmax)
+end
+
+function Base.show(io::IO, ::MIME"text/plain", itb::InterpolatingTransferBranches)
+    text = """InterpolatingTransferBranches
+      . branches   :  $(length(itb.branches))
+      . rₑ extrema :  $(extrema(itb.radii))"""
+    print(io, text)
+end
+
+@inline function _linear_interpolate(y1, y2, θ)
+    (1 - θ) * y1 + θ * y2
+end
+
+@inline function _linear_interpolate(arr::AbstractVector, idx, θ)
+    _linear_interpolate(arr[idx], arr[idx+1], θ)
+end
+
+function _lazy_interpolate(f1, f2, θ)
+    function _lazy_interpolate_kernel(x)
+        _linear_interpolate(f1(x), f2(x), θ)
+    end
+end
+
+function _lazy_interpolate(branch::Vector{<:TransferBranches}, idx, θ)
+    b1 = branch[idx]
+    b2 = branch[idx+1]
+    (
+        _lazy_interpolate(b1.lower_f, b2.lower_f, θ),
+        _lazy_interpolate(b1.upper_f, b2.upper_f, θ),
+        _lazy_interpolate(b1.lower_t, b2.lower_t, θ),
+        _lazy_interpolate(b1.upper_t, b2.upper_t, θ),
+    )
+end
+
+# interpolate over radial coordinate
+function (itb::InterpolatingTransferBranches)(r)
+    idx = max(1, min(DataInterpolations.searchsortedlastcorrelated(itb.radii, r, 0), length(itb.radii) - 1)) 
+    r1, r2 = itb.radii[idx], itb.radii[idx+1]
+    # interpolation weight
+    θ = (r - r1)/(r2 - r1)
+
+    gmin = _linear_interpolate(itb.gmin, idx, θ)
+    gmax = _linear_interpolate(itb.gmax, idx, θ)
+    upper_f, lower_f, upper_t, lower_t = _lazy_interpolate(itb.branches, idx, θ)
+    TransferBranches(upper_f, lower_f, upper_t, lower_t, gmin, gmax, r)
+end
+
 function bin_transfer_function(
     time_delays,
     energy,
