@@ -103,7 +103,7 @@ function _normalize(flux::AbstractMatrix{T}, grid) where {T}
     Σflux = zero(T)
     @views @inbounds for i = 1:length(grid)-1
         ḡ = (grid[i+1] + grid[i])
-        @. flux[i,:] = flux[i,:] / ḡ
+        @. flux[i, :] = flux[i, :] / ḡ
         Σflux += sum(flux[i, :])
     end
     @. flux = flux / Σflux
