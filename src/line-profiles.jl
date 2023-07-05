@@ -48,13 +48,12 @@ function lineprofile(
     maxrₑ = 50,
     numrₑ = 100,
     verbose = false,
-    Ng✶ = 67,
     h = 2e-8,
     kwargs...,
 )
     radii = Grids._inverse_grid(minrₑ, maxrₑ, numrₑ)
     itfs = interpolated_transfer_branches(m, u, d, radii; verbose = verbose, kwargs...)
-    flux = integrate_drdg✶(ε, itfs, radii, bins; h = h, Ng✶ = Ng✶)
+    flux = integrate_drdg✶(ε, itfs, radii, bins; h = h)
     bins, flux
 end
 
