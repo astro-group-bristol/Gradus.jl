@@ -3,6 +3,8 @@ struct CunninghamTransferFunction{T}
     g✶::Vector{T}
     "Transfer function data."
     f::Vector{T}
+    "Timing data."
+    t::Vector{T}
     gmin::T
     gmax::T
     "Emission radius."
@@ -12,6 +14,8 @@ end
 struct InterpolatedCunninghamTransferFunction{T,U,L}
     upper_f::U
     lower_f::L
+    upper_t::L
+    lower_t::U
     gmin::T
     gmax::T
     rₑ::T
