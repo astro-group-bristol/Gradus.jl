@@ -1,9 +1,20 @@
+# use this everywhere where we need a dot product so it's quick and easy to
+# change the underlying implementation
+@fastmath function _fast_dot(x, y)
+    @assert size(x) == size(y)
+    res = zero(eltype(x))
+    @inbounds for i in eachindex(x)
+        res += x[i] * y[i]
+    end
+    res
+end
+
 function vector_to_local_sky(m::AbstractMetric, u, θ, ϕ)
     error("Not implemented for $(typeof(m))")
 end
 
-dotproduct(g::AbstractMatrix, v1, v2) = @tullio r := g[i, j] * v1[i] * v2[j]
-dotproduct(m::AbstractMetric, x1, x2) = dotproduct(metric(m, x1), x1, x2)
+dotproduct(g::AbstractMatrix, v1, v2) = _fast_dot(g * v1, v2)
+dotproduct(m::AbstractMetric, x, v1, v2) = dotproduct(metric(m, x), v1, v2)
 propernorm(g::AbstractMatrix, v) = dotproduct(g, v, v)
 propernorm(m::AbstractMetric, u, v) = propernorm(metric(m, u), v)
 
@@ -75,4 +86,7 @@ lowerindices(m::AbstractMetric, u, v) = lowerindices(metric(m, u), v)
 raiseindices(ginv::AbstractMatrix, v) = ginv * v
 raiseindices(m::AbstractMetric, u, v) = raiseindices(inv(metric(m, u)), v)
 
-export dotproduct, propernorm
+lnrbasis_matrix(m::AbstractMetric, x) = reduce(hcat, lnrbasis(m, x))
+lnrframe_matrix(m::AbstractMetric, x) = reduce(hcat, lnrframe(m, x))
+
+export dotproduct, propernorm, _fast_dot
