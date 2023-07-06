@@ -19,11 +19,10 @@ function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, 𝒩, A, x, g
     gcomp = metric_components(m, x)
     v = CircularOrbits.fourvelocity(m, x)
     # account for relativistic effects in area
-    # γ = lorentz_factor(m, SVector(0, x[1], x[2], 0), v) 
-    γ = 1.0
-    A_corrected = A * √(gcomp[2] * gcomp[4]) * γ
+    γ = lorentz_factor(m, SVector(0, x[1], x[2], 0), v) 
+    A_corrected = A * √(gcomp[2] * gcomp[4])
     # divide by area to get number density
-    𝒩 / (g^2 * A_corrected)
+    𝒩 / (g^2 * A_corrected * γ)
 end
 
 struct CoronalEmissivity{T,M,G,C,P,V}
