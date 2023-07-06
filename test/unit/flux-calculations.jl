@@ -24,3 +24,30 @@ end
 end
 
 @test γ_gradus ≈ γ_check
+
+# proper area
+
+# using Wikins+Fabian 2012 / Dauser+13 (though there is a typo in Dauser+13)
+# even though their plot is correct
+function area(a, r)
+    A = r^4 + a^2 * r^2 + 2 * a^2 * r
+    B = r^2 - 2 * r + a^2
+    2 * π * √(A / B)
+end
+
+function proper_area(m, x)
+    gcomp = Gradus.metric_components(m, x)
+    det_g = √(gcomp[2] * gcomp[4])
+    2π * det_g
+end
+
+area1 = map(rrange) do r
+    x = SVector(r, π / 2)
+    (2π * r) / proper_area(m, x)
+end
+
+area2 = map(rrange) do r
+    (2π * r) / area(m.a, r)
+end
+
+@test area1 ≈ area2
