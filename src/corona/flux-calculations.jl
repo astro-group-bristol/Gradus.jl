@@ -1,36 +1,36 @@
 """
-    lorentz_factor(g::AbstractMatrix, isco, u, v) 
+    local_velocity(m::AbstractMetric, x, v, component::Int)
 
-Calculate Lorentz factor in LNRF of `u`.
+Compute the component of the velocity `v` in the LNRF given by `component`,
+where in Boyer-Lindquist `(1, 2, 3, 4)` corresponds to `(r, t, θ, ϕ)`.
+
+Evaluates Bardeen+73 (3.9),
+
+```math
+\\mathscr{V}^{(i)} = \\frac{v^\\mu e_\\mu^{(i)}}{v^\\nu e_\\nu^{(t)}}.
+```
 """
-function lorentz_factor(g::AbstractMatrix, isco_r, u, v)
-    frame = Gradus.GradusBase.lnrbasis(g)
-    B = reduce(hcat, frame)
-    denom = B[:, 1] ⋅ v
-
-    𝒱ϕ = (B[:, 4] ⋅ v) / denom
-
-    if u[2] < isco_r
-        𝒱r = (B[:, 2] ⋅ v) / denom
-        inv(√(1 - 𝒱r^2 - 𝒱ϕ^2))
-    else
-        inv(√(1 - 𝒱ϕ^2))
-    end
+function local_velocity(m::AbstractMetric, x, v, component::Int)
+    es = GradusBase.lnrbasis(m, x)
+    𝒱t = _fast_dot(es[1], v)
+    𝒱i = _fast_dot(es[component], v)
+    𝒱i / 𝒱t
 end
 
-function lorentz_factor(m::AbstractMetric, x, v)
-    # frame = GradusBase.lnrframe(m, x)
-    # T = reduce(hcat, frame)
+"""
+    lorentz_factor(m::AbstractMetric, g::AbstractAccretionGeometry, x)
 
-    # 𝒱 = (T * v)
-    # absV = (𝒱[2]^2 + 𝒱[3]^2 + 𝒱[4]^2) / (𝒱[1]^2)
+Calculate the Lorentz factor of a patch of the accretion geometry `g` at
+position `x` via
 
-    # inv(√(1 - absV))
-    frame = GradusBase.lnrbasis(m, x)
-    B = reduce(hcat, frame)
-    denom = B[:, 1] ⋅ v
-
-    𝒱ϕ = (B[:, 4] ⋅ v) / denom
+```math
+\\left( 1 - v^{\\phi}^2 \\right)^{\\frac{-1}{2}}
+```
+"""
+lorentz_factor(m::AbstractMetric, ::AbstractAccretionGeometry, x; kwargs...) =
+    lorentz_factor(m, x, CircularOrbits.fourvelocity(m, x[2]); kwargs...)
+function lorentz_factor(m::AbstractMetric, x, v; component = 4)
+    𝒱ϕ = local_velocity(m, x, v, component)
     inv(√(1 - 𝒱ϕ^2))
 end
 
@@ -85,7 +85,7 @@ function flux_source_to_disc(
         # area element
         dA = inv(√(g_2[2, 2] * g_2[4, 4]))
 
-        γ = lorentz_factor(g_2, isco_r, gp.x, v_disc)
+        γ = lorentz_factor(g_2, gp.x, v_disc)
         f_sd = inv(areas[i] / total_area)
         # total reflected flux 
         g_sd^(1 + α) * E_d^(-α) * dA * f_sd / γ

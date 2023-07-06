@@ -62,7 +62,8 @@ import .GradusBase:
     AbstractIntegrationParameters,
     IntegrationParameters,
     update_integration_parameters!,
-    restrict_ensemble
+    restrict_ensemble,
+    _fast_dot
 
 export AbstractMetric,
     AbstractTrace,
