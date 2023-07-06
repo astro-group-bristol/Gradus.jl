@@ -79,7 +79,10 @@ function RadialDiscProfile(
     for i in eachindex(I)
         R = bins[i]
         r = i == 1 ? 0 : bins[i-1]
-        A = (2π * (R - r))
+
+        # 2π comes from integrating over dϕ
+        dr = R - r
+        A = 2π * dr
         # I now stores emissivity
         I[i] = source_to_disc_emissivity(m, I[i], A, SVector(R, π / 2), eratios(R))
     end

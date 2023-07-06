@@ -238,8 +238,8 @@ end
     compute_geodesic_equation(ginv_comps, jacs[:, 1], jacs[:, 2], v)
 end
 
-function metric(m::AbstractStaticAxisSymmetric, u)
-    rθ = (u[2], u[3])
+function metric(m::AbstractStaticAxisSymmetric, x::SVector{4})
+    rθ = (x[2], x[3])
     comps = metric_components(m, rθ)
     @SMatrix [
         comps[1] 0 0 comps[5]
