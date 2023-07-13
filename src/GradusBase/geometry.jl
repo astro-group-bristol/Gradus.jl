@@ -48,18 +48,22 @@ function gramschmidt(v, basis, g; tol = 4eps(eltype(g)))
 end
 
 # TODO: this presupposes static and axis symmetric
+# this works for LNRF, but needs to work for e.g. ZAMO as well
+# which means we need to reorder the approach depending on the 
+# non-zero components of `v`
 @inline function tetradframe(g::AbstractMatrix{T}, v) where {T}
+    # normalise the vector to unit length
     vt = v ./ √abs(propernorm(g, v))
     # start procedure with ϕ, which has zero for r and θ
     vϕ = gramschmidt(SVector{4,T}(1, 0, 0, 1), (vt,), g)
     # then do r, which has zero for θ
-    vr = gramschmidt(SVector{4,T}(0, 1, 0, 0), (vt, vϕ), g)
+    vr = gramschmidt(SVector{4,T}(1, 1, 0, 1), (vt, vϕ), g)
     # then finally θ
-    vθ = gramschmidt(SVector{4,T}(0, 0, 1, 0), (vt, vϕ, vr), g)
+    vθ = gramschmidt(SVector{4,T}(1, 1, 1, 1), (vt, vϕ, vr), g)
     (vt, vr, vθ, vϕ)
 end
 
-tetradframe(m::AbstractMetric, u, v) = tetradframe(metric(m, u), v)
+tetradframe(m::AbstractMetric, x, v) = tetradframe(metric(m, x), v)
 
 # TODO: this presupposes static and axis symmetric
 # tetrad with latin indices down: frame
