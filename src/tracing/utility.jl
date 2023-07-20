@@ -13,10 +13,10 @@ Note, assumes ``\\mu = 0``.
 function local_momentum(r_obs, α, β)
     b = β / r_obs
     a = α / r_obs
-    prpt = -inv(sqrt(1 + a^2 + b^2))
-    pθpt = b * prpt
-    pϕpt = a * prpt
-    SVector(1, prpt, pθpt, pϕpt)
+    pr_pt = -inv(sqrt(1 + a^2 + b^2))
+    pθ_pt = b * pr_pt
+    pϕ_pt = a * pr_pt
+    SVector(1, pr_pt, pθ_pt, pϕ_pt)
 end
 
 """

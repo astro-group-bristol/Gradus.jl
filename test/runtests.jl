@@ -19,6 +19,10 @@ end
     include("test-special-radii.jl")
 end
 
+@time @testset "corona" verbose = true begin
+    include("unit/coronal-beaming.jl")
+end
+
 @time @testset "integration" verbose = true begin
     include("integration/test-inference.jl")
     include("integration/test-charts.jl")
