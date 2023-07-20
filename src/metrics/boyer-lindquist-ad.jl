@@ -65,9 +65,8 @@ $(FIELDS)
 end
 
 # implementation
-metric_components(m::KerrMetric{T}, rθ) where {T} =
-    __BoyerLindquistAD.metric_components(m.M, m.a, rθ)
-inner_radius(m::KerrMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+metric_components(m::KerrMetric, rθ) = __BoyerLindquistAD.metric_components(m.M, m.a, rθ)
+inner_radius(m::KerrMetric) = m.M + √(m.M^2 - m.a^2)
 
 # additional utilities
 function convert_angles(a, r, θ, ϕ, θ_obs, ϕ_obs)
@@ -81,11 +80,11 @@ function convert_angles(a, r, θ, ϕ, θ_obs, ϕ_obs)
 end
 
 # for disc profile models
-function GradusBase.vector_to_local_sky(m::KerrMetric{T}, u, θ, ϕ) where {T}
+function GradusBase.vector_to_local_sky(m::KerrMetric, u, θ, ϕ)
     convert_angles(m.a, u[2], u[3], u[4], θ, ϕ)
 end
 
 # special radii
-isco(m::KerrMetric{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
+isco(m::KerrMetric) = __BoyerLindquistFO.isco(m.M, m.a)
 
 export KerrMetric
