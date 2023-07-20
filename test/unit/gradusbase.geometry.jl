@@ -31,7 +31,7 @@ for m in all_metrics, r in radii, θ in angles
     m_mat = Gradus.metric(m, u)
     @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
     # ensure it gives minkowski
-    @test isapprox(res, minkowski, atol = 1e-13)
+    @test res ≈ minkowski atol = 1e-13
 end
 
 for m in all_metrics, r in radii, θ in angles
@@ -43,7 +43,7 @@ for m in all_metrics, r in radii, θ in angles
     m_mat = Gradus.metric(m, u)
     @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
     # ensure it gives minkowski
-    @test isapprox(res, minkowski, atol = 1e-13)
+    @test res ≈ minkowski atol = 1e-13
 end
 
 # these test explicity check the LNRF calculations for the known
@@ -77,7 +77,7 @@ for M = 0.2:0.8:2.0, a = -M:0.5:M
         expected = kerr_lnrframe(m, u)
         calculated = numerical_lnrframe(m, u)
 
-        @test isapprox(calculated, expected, atol = 1e-13)
+        @test calculated ≈ expected atol = 1e-13
     end
 end
 
@@ -109,6 +109,6 @@ for M = 0.2:0.8:2.0, a = -M:0.5:M
         expected = kerr_lnrbasis(m, u)
         calculated = numerical_lnrbasis(m, u)
 
-        @test isapprox(calculated, expected, atol = 1e-10)
+        @test calculated ≈ expected atol = 1e-10
     end
 end
