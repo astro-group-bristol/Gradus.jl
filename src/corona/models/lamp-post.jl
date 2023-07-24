@@ -14,6 +14,7 @@ end
 
 # can exploit point source symmetry for certain disc models
 emissivity_profile(
+    ::Nothing,
     m::AbstractMetric,
     d::AbstractAccretionDisc,
     model::LampPostModel;

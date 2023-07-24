@@ -105,8 +105,8 @@ function RadialDiscProfile(
 
         # 2π comes from integrating over dϕ
         dr = R - r
-        A = dr * _proper_area(m, SVector(0, R, π / 2, 0))
-
+        x = SVector(0, R, π / 2, 0)
+        A = dr * _proper_area(m, x)
         # I now stores emissivity
         I[i] = source_to_disc_emissivity(m, I[i], A, x, eratios(R))
     end

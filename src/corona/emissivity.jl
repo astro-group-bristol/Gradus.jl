@@ -9,9 +9,9 @@ count `𝒩`, central position `x`, and redshift `g`. Evaluates
 ```
 """
 function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, 𝒩, A, x, g; Γ = 2)
-    v = CircularOrbits.fourvelocity(m, x)
+    v = CircularOrbits.fourvelocity(m, SVector(x[2], x[3]))
     # account for relativistic effects in area due to lorentz shift
-    γ = lorentz_factor(m, SVector(0, x[1], x[2], 0), v)
+    γ = lorentz_factor(m, x, v)
     # divide by area to get number density
     𝒩 / (g^Γ * A * γ)
 end
@@ -111,7 +111,15 @@ This function assumes axis symmetry, and therefore always interpolates the emiss
 as a function of the radial coordinate on the disc. If non-symmetric profiles are 
 desired, consider using [`VoronoiDiscProfile`](@ref).
 """
+emissivity_profile(
+    m::AbstractMetric,
+    d::AbstractAccretionGeometry,
+    model::AbstractCoronaModel;
+    sampler = nothing,
+    kwargs...,
+) = emissivity_profile(sampler, m, d, model; kwargs...)
 function emissivity_profile(
+    sampler::AbstractDirectionSampler,
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
     model::AbstractCoronaModel;
@@ -119,7 +127,11 @@ function emissivity_profile(
     N = 100,
     kwargs...,
 )
-    RadialDiscProfile(tracecorona(m, d, model; kwargs...); grid = grid, N = N)
+    RadialDiscProfile(
+        tracecorona(m, d, model; sampler = sampler, kwargs...);
+        grid = grid,
+        N = N,
+    )
 end
 
 function _proper_area(m, x::SVector{4})
@@ -138,14 +150,14 @@ function _point_source_symmetric_emissivity_profile(
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
     model::AbstractCoronaModel;
-    N = 100,
+    n_samples = 100,
     λ_max = 10_000.0,
     callback = domain_upper_hemisphere(),
     kwargs...,
 )
-    δs = deg2rad.(range(0.1, 179.9, N))
+    δs = deg2rad.(range(0.1, 179.9, n_samples))
     # we assume a point source
-    x, v = Gradus.sample_position_velocity(m, model)
+    x, v = sample_position_velocity(m, model)
     velfunc = polar_angle_to_velfunc(m, x, v, δs)
     gps = tracegeodesics(
         m,
