@@ -144,7 +144,7 @@ function lagtransfer(
         verbose,
     )
 
-    ce = emissivity_profile(
+    ce = tracecorona(
         m,
         d,
         model;

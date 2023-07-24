@@ -1,31 +1,23 @@
 """
     source_to_disc_emissivity(m, 𝒩, A, x, g)
 
-Compute the emissivity (in arbitrary units) in the disc element with area `A`, photon
+Compute the emissivity (in arbitrary units) in the disc element with proper area `A`, photon
 count `𝒩`, central position `x`, and redshift `g`. Evaluates
 
 ```math
-\\varepsilon = \\frac{\\mathscr{N}}{\\tilde{A} g^2},
-```
-
-where ``\\tilde{A}`` is the relativistically corrected area of `A`. The relativistic correction
-is calculated via
-
-```math
-\\tilde{A} = A \\sqrt{g_{\\mu,\\nu}(x)}
+\\varepsilon = \\frac{\\mathscr{N}}{A g^2}.
 ```
 """
-function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, 𝒩, A, x, g)
-    gcomp = metric_components(m, x)
+function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, 𝒩, A, x, g; Γ = 2)
     v = CircularOrbits.fourvelocity(m, x)
-    # account for relativistic effects in area
+    # account for relativistic effects in area due to lorentz shift
     γ = lorentz_factor(m, SVector(0, x[1], x[2], 0), v)
-    A_corrected = A * √(gcomp[2] * gcomp[4])
     # divide by area to get number density
-    𝒩 / (g^2 * A_corrected * γ)
+    𝒩 / (g^Γ * A * γ)
 end
 
-struct CoronalEmissivity{T,M,G,C,P,V}
+
+struct CoronaGeodesics{T,M,G,C,P,V}
     trace::T
     metric::M
     geometry::G
@@ -34,7 +26,7 @@ struct CoronalEmissivity{T,M,G,C,P,V}
     source_velocity::V
 end
 
-function emissivity_profile(
+function tracecorona(
     m::AbstractMetric,
     g::AbstractAccretionGeometry,
     model::AbstractCoronaModel;
@@ -42,9 +34,9 @@ function emissivity_profile(
     n_samples = 1024,
     sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
     trace = TraceGeodesic(),
+    callback = domain_upper_hemisphere(),
     kwargs...,
 )
-
     xs, vs, source_vels = sample_position_direction_velocity(m, model, sampler, n_samples)
     gps = tracegeodesics(
         m,
@@ -55,14 +47,14 @@ function emissivity_profile(
         trace = trace,
         save_on = false,
         ensemble = EnsembleEndpointThreads(),
-        callback = domain_upper_hemisphere(),
+        callback = callback,
         kwargs...,
     )
     mask = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
-    CoronalEmissivity(trace, m, g, model, gps[mask], source_vels[mask])
+    CoronaGeodesics(trace, m, g, model, gps[mask], source_vels[mask])
 end
 
-function RadialDiscProfile(ce::CoronalEmissivity; kwargs...)
+function RadialDiscProfile(ce::CoronaGeodesics; kwargs...)
     J = sortperm(ce.geodesic_points; by = i -> i.x[2])
     @views RadialDiscProfile(
         ce.metric,
@@ -72,7 +64,7 @@ function RadialDiscProfile(ce::CoronalEmissivity; kwargs...)
     )
 end
 
-function RadialDiscProfile(ce::CoronalEmissivity{<:TraceRadiativeTransfer}; kwargs...)
+function RadialDiscProfile(ce::CoronaGeodesics{<:TraceRadiativeTransfer}; kwargs...)
     J = sortperm(ce.geodesic_points; by = i -> i.x[2])
     @views RadialDiscProfile(
         ce.metric,
@@ -83,7 +75,7 @@ function RadialDiscProfile(ce::CoronalEmissivity{<:TraceRadiativeTransfer}; kwar
     )
 end
 
-function RadialDiscProfile(ε, ce::CoronalEmissivity; kwargs...)
+function RadialDiscProfile(ε, ce::CoronaGeodesics; kwargs...)
     J = sortperm(ce.geodesic_points; by = i -> i.x[2])
     radii = @views [i.x[2] for i in ce.geodesic_points[J]]
     times = @views [i.x[1] for i in ce.geodesic_points[J]]
@@ -101,4 +93,31 @@ function RadialDiscProfile(ε, ce::CoronalEmissivity; kwargs...)
     RadialDiscProfile(_emissivity_wrapper, _delay_wrapper)
 end
 
-export emissivity_profile
+"""
+function emissivity_profile(
+    m::AbstractMetric,
+    d::AbstractAccretionGeometry,
+    model::AbstractCoronaModel;
+    N = 100,
+    kwargs...,
+end
+
+Calculates a [`RadialDiscProfile`](@ref).
+
+This function assumes axis symmetry, and therefore always interpolates the emissivity
+as a function of the radial coordinate on the disc. If non-symmetric profiles are 
+desired, consider using [`VoronoiDiscProfile`](@ref).
+"""
+function emissivity_profile(
+    m::AbstractMetric,
+    d::AbstractAccretionGeometry,
+    model::AbstractCoronaModel;
+    grid = GeometricGrid(),
+    N = 100,
+    kwargs...,
+)
+    RadialDiscProfile(tracecorona(m, d, model; kwargs...); grid = grid, N = N)
+end
+
+
+export emissivity_profile, tracecorona

@@ -33,7 +33,7 @@ fluxsum = sum(filter(!isnan, f))
 
 # test semi-analytic method
 
-ep = @time Gradus.emissivity_profile(
+prof = @time Gradus.emissivity_profile(
     m,
     d,
     model;
@@ -41,7 +41,6 @@ ep = @time Gradus.emissivity_profile(
     callback = domain_upper_hemisphere(),
     sampler = EvenSampler(domain = BothHemispheres(), generator = GoldenSpiralGenerator()),
 )
-prof = RadialDiscProfile(ep)
 
 radii = Gradus.Grids._inverse_grid(Gradus.isco(m), 100.0, 5)
 d = GeometricThinDisc(0.0, 500.0, π / 2)

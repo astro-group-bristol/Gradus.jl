@@ -80,22 +80,6 @@ function sample_local_velocity(
     sky_angles_to_velocity(m, x, v, θ, ϕ)
 end
 
-# model implementations
-
-@with_kw struct LampPostModel{T} <: AbstractCoronaModel{T}
-    @deftype T
-    h = 5.0
-    θ = 0.01
-    ϕ = 0.0
-end
-
-function sample_position_velocity(m::AbstractMetric, model::LampPostModel{T}) where {T}
-    x = SVector{4,T}(0, model.h, model.θ, model.ϕ)
-    gcomp = metric_components(m, SVector(x[2], x[3]))
-    v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
-    x, v
-end
-
 # bootstrap tracing function for convenience
 function tracegeodesics(
     m::AbstractMetric,
@@ -108,5 +92,8 @@ function tracegeodesics(
     xs, vs, _ = sample_position_direction_velocity(m, model, sampler, n_samples)
     tracegeodesics(m, xs, vs, args...; kwargs...)
 end
+
+
+include("models/lamp-post.jl")
 
 export LampPostModel

@@ -46,6 +46,13 @@ function RadialDiscProfile(
     RadialDiscProfile(m, radii, times, gs, intensities; kwargs...)
 end
 
+"""
+The relativistic correction is calculated via
+
+```math
+\\tilde{A} = A \\sqrt{g_{\\mu,\\nu}(x)}
+```
+"""
 function RadialDiscProfile(
     m::AbstractMetric,
     radii::AbstractArray{T},
@@ -80,11 +87,15 @@ function RadialDiscProfile(
         R = bins[i]
         r = i == 1 ? 0 : bins[i-1]
 
+        x = SVector(R, π / 2)
+        gcomp = metric_components(m, x)
+
         # 2π comes from integrating over dϕ
         dr = R - r
-        A = 2π * dr
+        A = 2π * dr * √(gcomp[2] * gcomp[4])
+
         # I now stores emissivity
-        I[i] = source_to_disc_emissivity(m, I[i], A, SVector(R, π / 2), eratios(R))
+        I[i] = source_to_disc_emissivity(m, I[i], A, x, eratios(R))
     end
 
     # create interpolations
