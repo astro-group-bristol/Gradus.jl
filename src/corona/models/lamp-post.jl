@@ -11,3 +11,11 @@ function sample_position_velocity(m::AbstractMetric, model::LampPostModel{T}) wh
     v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
     x, v
 end
+
+# can exploit point source symmetry for certain disc models
+emissivity_profile(
+    m::AbstractMetric,
+    d::AbstractAccretionDisc,
+    model::LampPostModel;
+    kwargs...,
+) = _point_source_symmetric_emissivity_profile(m, d, model; kwargs...)

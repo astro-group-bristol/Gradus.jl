@@ -46,6 +46,22 @@ function RadialDiscProfile(
     RadialDiscProfile(m, radii, times, gs, intensities; kwargs...)
 end
 
+function RadialDiscProfile(rs::AbstractArray, ts::AbstractArray, εs::AbstractArray)
+    # create interpolations
+    t = DataInterpolations.LinearInterpolation(ts, rs)
+    ε = DataInterpolations.LinearInterpolation(εs, rs)
+    # wrap geodesic point wrappers
+    RadialDiscProfile(gp -> ε(gp.x[2]), gp -> t(gp.x[2]) + gp.x[1])
+end
+
+function RadialDiscProfile(rdp::RadialDiscProfile)
+    Base.depwarn(
+        "This function is deprecated. Note that `emissivity_profile` now returns a `RadialDiscProfile`.",
+        :RadialDiscProfile,
+    )
+    rdp
+end
+
 """
 The relativistic correction is calculated via
 
@@ -87,23 +103,15 @@ function RadialDiscProfile(
         R = bins[i]
         r = i == 1 ? 0 : bins[i-1]
 
-        x = SVector(R, π / 2)
-        gcomp = metric_components(m, x)
-
         # 2π comes from integrating over dϕ
         dr = R - r
-        A = 2π * dr * √(gcomp[2] * gcomp[4])
+        A = dr * _proper_area(m, SVector(0, R, π / 2, 0))
 
         # I now stores emissivity
         I[i] = source_to_disc_emissivity(m, I[i], A, x, eratios(R))
     end
 
-    # create interpolations
-    t = DataInterpolations.LinearInterpolation(ts, bins)
-    ε = DataInterpolations.LinearInterpolation(I, bins)
-
-    # wrap geodesic point wrappers
-    RadialDiscProfile(gp -> ε(gp.x[2]), gp -> t(gp.x[2]) + gp.x[1])
+    RadialDiscProfile(bins, ts, I)
 end
 
 emitted_flux(profile::RadialDiscProfile, gps) = map(profile.f, gps)
