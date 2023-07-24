@@ -33,12 +33,11 @@ fluxsum = sum(filter(!isnan, f))
 
 # test semi-analytic method
 
-prof = @time Gradus.emissivity_profile(
+prof = emissivity_profile(
     m,
     d,
     model;
     n_samples = 5_000,
-    callback = domain_upper_hemisphere(),
     sampler = EvenSampler(domain = BothHemispheres(), generator = GoldenSpiralGenerator()),
 )
 
