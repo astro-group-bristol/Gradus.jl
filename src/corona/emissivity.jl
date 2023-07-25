@@ -20,82 +20,6 @@ function source_to_disc_emissivity(δ, g, A, γ; Γ = 2)
     sin(δ) / (g^Γ * A * γ)
 end
 
-struct CoronaGeodesics{T,M,G,C,P,V}
-    trace::T
-    metric::M
-    geometry::G
-    model::C
-    geodesic_points::P
-    source_velocity::V
-end
-
-function tracecorona(
-    m::AbstractMetric,
-    g::AbstractAccretionGeometry,
-    model::AbstractCoronaModel;
-    λ_max = 10_000,
-    n_samples = 1024,
-    sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
-    trace = TraceGeodesic(),
-    callback = domain_upper_hemisphere(),
-    kwargs...,
-)
-    xs, vs, source_vels = sample_position_direction_velocity(m, model, sampler, n_samples)
-    gps = tracegeodesics(
-        m,
-        xs,
-        vs,
-        g,
-        λ_max;
-        trace = trace,
-        save_on = false,
-        ensemble = EnsembleEndpointThreads(),
-        callback = callback,
-        kwargs...,
-    )
-    mask = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
-    CoronaGeodesics(trace, m, g, model, gps[mask], source_vels[mask])
-end
-
-function RadialDiscProfile(ce::CoronaGeodesics; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
-    @views RadialDiscProfile(
-        ce.metric,
-        ce.model,
-        ce.geodesic_points[J],
-        ce.source_velocity[J],
-    )
-end
-
-function RadialDiscProfile(ce::CoronaGeodesics{<:TraceRadiativeTransfer}; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
-    @views RadialDiscProfile(
-        ce.metric,
-        ce.model,
-        ce.geodesic_points[J],
-        ce.source_velocity[J],
-        [i.aux[1] for i in ce.geodesic_points[J]],
-    )
-end
-
-function RadialDiscProfile(ε, ce::CoronaGeodesics; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
-    radii = @views [i.x[2] for i in ce.geodesic_points[J]]
-    times = @views [i.x[1] for i in ce.geodesic_points[J]]
-
-    t = DataInterpolations.LinearInterpolation(times, radii)
-
-    function _emissivity_wrapper(gp)
-        ε(gp.x[2])
-    end
-
-    function _delay_wrapper(gp)
-        t(gp.x[2]) + gp.x[1]
-    end
-
-    RadialDiscProfile(_emissivity_wrapper, _delay_wrapper)
-end
-
 """
 function emissivity_profile(
     m::AbstractMetric,
@@ -133,6 +57,21 @@ function emissivity_profile(
         N = N,
     )
 end
+function emissivity_profile(
+    ::Nothing,
+    m::AbstractMetric,
+    d::AbstractAccretionGeometry,
+    model::AbstractCoronaModel;
+    kwargs...,
+)
+    error(
+        """Not yet implemented for $(Base.typename(typeof(model)).name) with $(Base.typename(typeof(d)).name). 
+        This dispatch is reserved for more sophisticated (rather that just pure Monte-Carlo sampling) 
+        of the emissivity profile, and may not be applicable for all coronal models. Pass the `sampler` kwarg
+        with an `AbstractDirectionSampler` to use the general strategy.
+        """,
+    )
+end
 
 function _proper_area(m, x::SVector{4})
     gcomp = Gradus.metric_components(m, SVector(x[2], x[3]))
@@ -153,9 +92,11 @@ function _point_source_symmetric_emissivity_profile(
     n_samples = 100,
     λ_max = 10_000.0,
     callback = domain_upper_hemisphere(),
+    δmin = 0.1,
+    δmax = 179.9,
     kwargs...,
 )
-    δs = deg2rad.(range(0.1, 179.9, n_samples))
+    δs = deg2rad.(range(δmin, δmax, n_samples))
     # we assume a point source
     x, v = sample_position_velocity(m, model)
     velfunc = polar_angle_to_velfunc(m, x, v, δs)
