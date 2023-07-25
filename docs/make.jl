@@ -24,7 +24,6 @@ makedocs(
             "Implementing new metrics" => "custom-metrics.md",
             "Geodesic integration" => "geodesic-integration.md",
             "Parallelism and ensembles" => "parallelism.md",
-            "Custom tracing" => "custom-traces.md",
             "Special radii" => "special-radii.md",
         ],
         "API" =>

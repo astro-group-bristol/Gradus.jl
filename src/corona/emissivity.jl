@@ -1,35 +1,54 @@
 """
-    source_to_disc_emissivity(m, 𝒩, A, x, g)
+    source_to_disc_emissivity(m, N, A, x, g; Γ = 2)
 
-Compute the emissivity (in arbitrary units) in the disc element with proper area `A`, photon
-count `𝒩`, central position `x`, and redshift `g`. Evaluates
+Compute the emissivity of a disc element with (proper) area `A` at coordinates `x` with metric
+`m`. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
+be specified, along with the ratio of energies `g` (computed with [`energy_ratio`](@ref)) and photon index
+`Γ`.
 
+The mathematical definition is
 ```math
-\\varepsilon = \\frac{\\mathscr{N}}{A g^2}.
+\\varepsilon = \\frac{N}{A g^\\Gamma \\gamma}, 
 ```
+
+where ``\\gamma`` is the Lorentz factor due to the velocity of the local disc frame. The velocity is currently
+always considered to be the Keplerian velocity.
+
+Wilkins & Fabian (2012) and Gonzalez et al. (2017).
 """
-function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, 𝒩, A, x, g; Γ = 2)
+function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, N, A, x, g; Γ = 2)
     v = CircularOrbits.fourvelocity(m, SVector(x[2], x[3]))
     # account for relativistic effects in area due to lorentz shift
     γ = lorentz_factor(m, x, v)
     # divide by area to get number density
-    𝒩 / (g^Γ * A * γ)
+    N / (g^Γ * A * γ)
 end
 
-function source_to_disc_emissivity(δ, g, A, γ; Γ = 2)
+function point_source_equitorial_disc_emissivity(δ, g, A, γ; Γ = 2)
     sin(δ) / (g^Γ * A * γ)
 end
 
 """
-function emissivity_profile(
-    m::AbstractMetric,
-    d::AbstractAccretionGeometry,
-    model::AbstractCoronaModel;
-    N = 100,
-    kwargs...,
-end
+    function emissivity_profile(
+        m::AbstractMetric,
+        d::AbstractAccretionGeometry,
+        model::AbstractCoronaModel;
+        N = 100,
+        kwargs...,
+    end
 
 Calculates a [`RadialDiscProfile`](@ref).
+
+Gradus will attempt to automatically switch to use a better scheme to 
+calculate the emissivity profiles if one is available. If not, the default 
+algorithm is to estimate photon count ``N`` via Monte-Carlo or uniform sampling. 
+The sampling is performed using an [`AbstractDirectionSampler`](@ref), 
+which samples angles on the emitters sky uniformly, along which a geodesic is traced. 
+The effects of the spacetime and the observer's velocity are taken into account 
+by using [`tetradframe`](@ref) and making the corresponding coordinate transformation 
+for local to global coordinates.
+
+In this case, [`tracecorona`](@ref) is used, and the emissivity calculated using [`source_to_disc_emissivity`](@ref).
 
 This function assumes axis symmetry, and therefore always interpolates the emissivity
 as a function of the radial coordinate on the disc. If non-symmetric profiles are 
@@ -144,7 +163,7 @@ function _point_source_emissivity(
     Δr = diff(r)
     @. A = A * Δr
     r = r[1:end-1]
-    ε = source_to_disc_emissivity.(@views(δs[1:end-1]), gs, A, γ)
+    ε = point_source_equitorial_disc_emissivity.(@views(δs[1:end-1]), gs, A, γ)
     r, ε
 end
 
