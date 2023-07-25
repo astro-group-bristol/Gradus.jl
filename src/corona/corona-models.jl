@@ -80,22 +80,6 @@ function sample_local_velocity(
     sky_angles_to_velocity(m, x, v, θ, ϕ)
 end
 
-# model implementations
-
-@with_kw struct LampPostModel{T} <: AbstractCoronaModel{T}
-    @deftype T
-    h = 5.0
-    θ = 0.01
-    ϕ = 0.0
-end
-
-function sample_position_velocity(m::AbstractMetric, model::LampPostModel{T}) where {T}
-    x = SVector{4,T}(0, model.h, model.θ, model.ϕ)
-    gcomp = metric_components(m, SVector(x[2], x[3]))
-    v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
-    x, v
-end
-
 # bootstrap tracing function for convenience
 function tracegeodesics(
     m::AbstractMetric,
@@ -108,5 +92,44 @@ function tracegeodesics(
     xs, vs, _ = sample_position_direction_velocity(m, model, sampler, n_samples)
     tracegeodesics(m, xs, vs, args...; kwargs...)
 end
+
+struct CoronaGeodesics{T,M,G,C,P,V}
+    trace::T
+    metric::M
+    geometry::G
+    model::C
+    geodesic_points::P
+    source_velocity::V
+end
+
+function tracecorona(
+    m::AbstractMetric,
+    g::AbstractAccretionGeometry,
+    model::AbstractCoronaModel;
+    λ_max = 10_000,
+    n_samples = 1024,
+    sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
+    trace = TraceGeodesic(),
+    callback = domain_upper_hemisphere(),
+    kwargs...,
+)
+    xs, vs, source_vels = sample_position_direction_velocity(m, model, sampler, n_samples)
+    gps = tracegeodesics(
+        m,
+        xs,
+        vs,
+        g,
+        λ_max;
+        trace = trace,
+        save_on = false,
+        ensemble = EnsembleEndpointThreads(),
+        callback = callback,
+        kwargs...,
+    )
+    mask = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
+    CoronaGeodesics(trace, m, g, model, gps[mask], source_vels[mask])
+end
+
+include("models/lamp-post.jl")
 
 export LampPostModel

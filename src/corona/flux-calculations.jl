@@ -105,7 +105,6 @@ function energy_ratio(m, gp, v_src)
     e_src / e_disc
 end
 
-
 function flux_source_to_disc(
     m::AbstractMetric,
     model::AbstractCoronaModel,

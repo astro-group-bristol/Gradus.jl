@@ -218,7 +218,7 @@ include("transfer-functions/types.jl")
 include("transfer-functions/cunningham-transfer-functions.jl")
 include("transfer-functions/integration.jl")
 
-include("corona/sky-geometry.jl")
+include("corona/samplers.jl")
 include("corona/corona-models.jl")
 include("corona/disc-profiles.jl")
 # needs the types from disc profiles so defer include

@@ -127,7 +127,7 @@ end
     (a, b)
 end
 
-@recipe function f(p::RadialDiscProfile)
+@recipe function f(p::RadialDiscProfile; normalize = identity)
     legend --> false
     xlabel --> "r (rg)"
     ylabel --> "ε (arb.)"
@@ -135,8 +135,7 @@ end
     yscale --> :log10
 
     y = p.f.ε.u[2:end-1]
-    y = y ./ sum(y)
-    y = y ./ minimum(y)
 
+    @. y = normalize(y)
     p.f.ε.t[2:end-1], y
 end
