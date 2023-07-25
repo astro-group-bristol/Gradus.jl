@@ -102,7 +102,8 @@ function RadialDiscProfile(ce::CoronaGeodesics; kwargs...)
         ce.metric,
         ce.model,
         ce.geodesic_points[J],
-        ce.source_velocity[J],
+        ce.source_velocity[J];
+        kwargs...,
     )
 end
 
@@ -113,7 +114,8 @@ function RadialDiscProfile(ce::CoronaGeodesics{<:TraceRadiativeTransfer}; kwargs
         ce.model,
         ce.geodesic_points[J],
         ce.source_velocity[J],
-        [i.aux[1] for i in ce.geodesic_points[J]],
+        [i.aux[1] for i in ce.geodesic_points[J]];
+        kwargs...,
     )
 end
 
@@ -132,7 +134,7 @@ function RadialDiscProfile(ε, ce::CoronaGeodesics; kwargs...)
         t(gp.x[2]) + gp.x[1]
     end
 
-    RadialDiscProfile(_emissivity_wrapper, _delay_wrapper)
+    RadialDiscProfile(_emissivity_wrapper, _delay_wrapper; kwargs...)
 end
 
 emitted_flux(profile::RadialDiscProfile, gps) = map(profile.f, gps)
