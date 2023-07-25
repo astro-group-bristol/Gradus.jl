@@ -11,20 +11,21 @@ makedocs(
     sitename = "Gradus.jl Documentation",
     pages = [
         "Home" => "index.md",
-        "Overview" => [
-            "Getting started" => "getting-started.md",
+        "Getting started" => "getting-started.md",
+        "Examples" => "examples.md",
+        "Reference & walkthroughs" => [
+            "Catalogue of metrics" => "metrics.md",
+            "Accretion geometry" => "accretion-geometry.md",
             "Problems and solvers" => "problems-and-solvers.md",
-            "Point functions" => "overview/point-functions.md",
-            "Catalogue of metrics" => "overview/metrics.md",
-            "Accretion geometry" => "overview/accretion-geometry.md",
-            "Implementing new metrics" => "internals/custom-metrics.md",
-            "Examples" => "examples/examples.md",
+            "Point functions" => "point-functions.md",
+            "Disc emissivity" => "emissivity.md"
         ],
-        "Advanced" => [
-            "Geodesic integration" => "overview/geodesic-integration.md",
-            "Custom tracing" => "internals/custom-traces.md",
-            "Parallelism and ensembles" => "internals/parallelism.md",
-            "Special radii" => "internals/special-radii.md",
+        "Geodesics and integration" => [
+            "Implementing new metrics" => "custom-metrics.md",
+            "Geodesic integration" => "geodesic-integration.md",
+            "Parallelism and ensembles" => "parallelism.md",
+            "Custom tracing" => "custom-traces.md",
+            "Special radii" => "special-radii.md",
         ],
         "API" =>
             [
