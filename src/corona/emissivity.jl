@@ -24,35 +24,78 @@ function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, N, A, x, g; �
     N / (g^Γ * A * γ)
 end
 
-function point_source_equitorial_disc_emissivity(δ, g, A, γ; Γ = 2)
-    sin(δ) / (g^Γ * A * γ)
-end
+"""
+    point_source_equitorial_disc_emissivity(θ, g, A, γ; Γ = 2)
+
+Calculate the emissivity of a point illuminating source on the spin axis for an annulus of the
+equitorial accretion disc with (proper) area `A`. The precise formulation follows from Dauser et al. (2013),
+with the emissivity calculated as
+```math
+\\varepsilon = \\frac{\\sin \\theta}{A g^\\Gamma \\gamma}
+```
+where ``\\gamma`` is the Lorentz factor due to the velocity of the local disc frame. 
+The ratio of energies is ``g`` (computed with [`energy_ratio`](@ref)), with ``\\Gamma`` being the photon index, and
+``\\theta`` is the angle from the spin axis in the emitters from at which the geodesic was directed.
+
+The ``\\sin \\theta`` term appears to extend the result to three dimensions, since the
+Jacobian of the spherical coordinates (with ``r`` fixes) yields a factor ``\\sin \\theta``
+in order to maintain point density. It may be regarded as the PDF that samples ``\\theta`` uniformly.
+
+Dauser et al. (2013)
+"""
+point_source_equitorial_disc_emissivity(θ, g, A, γ; Γ = 2) = sin(θ) / (g^Γ * A * γ)
 
 """
     function emissivity_profile(
         m::AbstractMetric,
         d::AbstractAccretionGeometry,
         model::AbstractCoronaModel;
-        N = 100,
         kwargs...,
     end
 
-Calculates a [`RadialDiscProfile`](@ref).
+Calculate the reflection emissivity profile of an accretion disc `d` around the spacetime `m`
+for an illuminating coronal model `model`.
 
-Gradus will attempt to automatically switch to use a better scheme to 
+Returns a [`RadialDiscProfile`](@ref) via (Monte-Carlo or uniform) sampling
+of the [`AbstractCoronaModel`](@ref) position and velocity distribution.
+
+This function will attempt to automatically switch to use a better scheme to 
 calculate the emissivity profiles if one is available. If not, the default 
-algorithm is to estimate photon count ``N`` via Monte-Carlo or uniform sampling. 
-The sampling is performed using an [`AbstractDirectionSampler`](@ref), 
-which samples angles on the emitters sky uniformly, along which a geodesic is traced. 
-The effects of the spacetime and the observer's velocity are taken into account 
-by using [`tetradframe`](@ref) and making the corresponding coordinate transformation 
-for local to global coordinates.
+algorithm is to estimate photon count ``N`` and calculate the emissivity with [`source_to_disc_emissivity`](@ref).
 
-In this case, [`tracecorona`](@ref) is used, and the emissivity calculated using [`source_to_disc_emissivity`](@ref).
+Common keyword arguments:
+- `n_samples`: the maximum number of individual geodesics to sample on the emitter's sky.
+
+Please consult the documentation of a specific model (e.g. [`LampPostModel`](@ref)) to
+see algorithm specific keywords that may be passed.
+
+All other keyword arguments are forwarded to [`tracegeodesics`](@ref).
+
+## Example
+
+```julia
+m = KerrMetric()
+d = GeometricThinDisc(Gradus.isco(m), 1000.0, π/2)
+model = LampPostModel(h = 10.0)
+
+profile = emissivity_profile(m, d, model; n_samples = 128)
+
+# visualise as a function of disc radius
+using Plots
+plot(profile)
+```
+
+## Notes
+
+The sampling is performed using an [`AbstractDirectionSampler`](@ref), 
+which samples angles on the emitters sky along which a geodesic is traced. 
+The effects of the spacetime and the observer's velocity are taken into account 
+by using [`tetradframe`](@ref) and the corresponding coordinate transformation 
+for local to global coordinates.
 
 This function assumes axis symmetry, and therefore always interpolates the emissivity
 as a function of the radial coordinate on the disc. If non-symmetric profiles are 
-desired, consider using [`VoronoiDiscProfile`](@ref).
+desired, consider using [`tracecorona`](@ref) with a profile constructor, e.g. [`VoronoiDiscProfile`](@ref).
 """
 emissivity_profile(
     m::AbstractMetric,
@@ -83,12 +126,18 @@ function emissivity_profile(
     model::AbstractCoronaModel;
     kwargs...,
 )
-    error(
-        """Not yet implemented for $(Base.typename(typeof(model)).name) with $(Base.typename(typeof(d)).name). 
-        This dispatch is reserved for more sophisticated (rather that just pure Monte-Carlo sampling) 
-        of the emissivity profile, and may not be applicable for all coronal models. Pass the `sampler` kwarg
-        with an `AbstractDirectionSampler` to use the general strategy.
-        """,
+    @warn(
+        "No sampler specified and no sophisticated algorithm for " *
+        "$(Base.typename(typeof(model)).name) with $(Base.typename(typeof(d)).name) " *
+        "implemented. Defaulting to `EvenSampler(BothHemispheres(), GoldenSpiralGenerator())` " *
+        "as the sampler. Pass the `sampler` keyword to specify a different sampler."
+    )
+    emissivity_profile(
+        EvenSampler(BothHemispheres(), GoldenSpiralGenerator()),
+        m,
+        d,
+        model;
+        kwargs...,
     )
 end
 

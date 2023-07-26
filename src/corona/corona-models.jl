@@ -86,7 +86,7 @@ function tracegeodesics(
     model::AbstractCoronaModel,
     args...;
     n_samples = 1024,
-    sampler = WeierstrassSampler(res = 100.0),
+    sampler = EvenSampler(BothHemispheres(), GoldenSpiralGenerator()),
     kwargs...,
 )
     xs, vs, _ = sample_position_direction_velocity(m, model, sampler, n_samples)

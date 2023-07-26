@@ -18,7 +18,7 @@ makedocs(
             "Accretion geometry" => "accretion-geometry.md",
             "Problems and solvers" => "problems-and-solvers.md",
             "Point functions" => "point-functions.md",
-            "Disc emissivity" => "emissivity.md"
+            "Disc emissivity" => "emissivity.md",
         ],
         "Geodesics and integration" => [
             "Implementing new metrics" => "custom-metrics.md",

@@ -16,19 +16,17 @@ These functions are not meant to be directly interacted with. Instead, Gradus ab
 
 Depending on the geometry of the corona, the symmetries of the spacetime, and the type of disc being traced, there are sometimes very efficient schemes for calculating the emissivity profiles.
 
-As a motivating example, consider the lamp post geometry: rays may either be traced by (randomly) sampling directions on the local sky of the emitter:
+As a motivating example, consider the lamp post geometry with 64 rays. These may either be traced by sampling directions on the local sky of the emitter:
 
-![]
+![](./figs/coronal-paths-sphere.svg)
 
-Or, alternatively, we may exploit the radial symmetry of the system, and sample fewer points in the two dimensional plane:
+Or, alternatively, we may exploit the radial symmetry of the system, and sample fewer points in the two dimensional ``x``-``z`` plane:
 
-![]
+![](./figs/coronal-paths-circle.svg)
 
-In this case, we must be careful to weight the emissivity accordingly:
 
-```@docs
-point_source_equitorial_disc_emissivity
-```
+!!! note
+    For detailed descriptions of these methods, see [Emissivity profile algorithms](@ref).
 
 Both of these methods can be used to estimate the emissivity profiles with trivial changes to switch between them
 
@@ -48,4 +46,12 @@ RadialDiscProfile
 
 ```@docs
 VoronoiDiscProfile
+```
+
+## Emissivity profile algorithms
+
+In this case, we must be careful to weight the emissivity accordingly:
+
+```@docs
+point_source_equitorial_disc_emissivity
 ```
