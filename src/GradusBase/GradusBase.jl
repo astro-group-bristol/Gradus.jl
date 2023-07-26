@@ -55,6 +55,8 @@ export AbstractMetric,
     AbstractIntegrationParameters,
     IntegrationParameters,
     update_integration_parameters!,
-    restrict_ensemble
+    restrict_ensemble,
+    set_status!,
+    get_status
 
 end # module

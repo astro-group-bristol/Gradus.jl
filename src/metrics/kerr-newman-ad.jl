@@ -95,7 +95,7 @@ function geodesic_ode_problem(
         f,
         u_init,
         time_domain,
-        IntegrationParameters(StatusCodes.NoStatus);
+        IntegrationParameters(nothing, StatusCodes.NoStatus);
         callback = callback,
     )
 end

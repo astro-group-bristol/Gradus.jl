@@ -19,6 +19,10 @@ update_integration_parameters!(
     ::AbstractIntegrationParameters,
 ) = error("Not implemented for $(typeof(p))")
 
+mutable struct _IntegrationStatus
+    status::StatusCodes.T
+end
+
 mutable struct IntegrationParameters <: AbstractIntegrationParameters
     status::StatusCodes.T
 end
@@ -27,9 +31,18 @@ function update_integration_parameters!(
     p::IntegrationParameters,
     new::IntegrationParameters,
 )
-    p.status = new.status
+    set_status!(p, new.status)
     p
 end
+
+set_status!(params::AbstractIntegrationParameters, status::StatusCodes.T) =
+    params.status = status
+
+get_status(params::AbstractIntegrationParameters) = params.status
+
+set_status!(params::_IntegrationStatus, status::StatusCodes.T) = params.status = status
+
+get_status(params::_IntegrationStatus) = params.status
 
 """
     abstract type AbstractGeodesicPoint
@@ -118,7 +131,7 @@ function unpack_solution(::AbstractMetric, sol::SciMLBase.AbstractODESolution{T}
         # get the auxiliary values if we have any
         aux = unpack_auxiliary(us[end])
 
-        GeodesicPoint(sol.prob.p.status, t_init, t, x_init, x, v_init, v, aux)
+        GeodesicPoint(get_status(sol.prob.p), t_init, t, x_init, x, v_init, v, aux)
     end
 end
 
@@ -154,7 +167,7 @@ function unpack_solution_full(
             ui = SVector{4,T}(us[i][1:4])
             vi = SVector{4,T}(us[i][5:8])
             ti = ts[i]
-            GeodesicPoint(sol.prob.p.status, t_start, ti, u_start, ui, v_start, vi)
+            GeodesicPoint(get_status(sol.prob.p), t_start, ti, u_start, ui, v_start, vi)
         end
     end
 end

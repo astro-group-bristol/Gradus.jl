@@ -78,7 +78,7 @@ function VoronoiDiscProfile(
     VoronoiDiscProfile(
         m,
         d,
-        filter(i -> i.prob.p.status == StatusCodes.IntersectedWithGeometry, simsols.u),
+        filter(i -> get_status(i.prob.p) == StatusCodes.IntersectedWithGeometry, simsols.u),
     )
 end
 
