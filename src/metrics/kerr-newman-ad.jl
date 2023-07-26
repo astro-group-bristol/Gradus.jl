@@ -25,10 +25,10 @@ using ..MuladdMacro
         @SVector [tt, rr, θθ, ϕϕ, tϕ]
     end
 
-    function electromagnetic_potential(m, rθ)
+    function electromagnetic_potential(m, rθ::SVector{2,T}) where {T}
         (r, θ) = rθ
         Σ₀ = Σ(r, m.a, θ)
-        (r * m.Q / Σ₀) * SVector{4,eltype(rθ)}(1, 0, 0, -m.a * sin(θ)^2)
+        (r * m.Q / Σ₀) * SVector{4,T}(1, 0, 0, -m.a * sin(θ)^2)
     end
 end
 
@@ -111,12 +111,12 @@ end
 
 function CircularOrbits.Ω(
     m::KerrNewmanMetric,
-    rθ;
+    rθ::SVector{2,T},
     q = 0.0,
     μ = 1.0,
     contra_rotating = false,
-    Ω_init = eltype(rθ)(rθ[1] / 100),
-)
+    Ω_init = T(rθ[1] / 100),
+) where {T}
     g, jacs = Gradus.metric_jacobian(m, rθ)
     # only want the derivatives w.r.t. r
     ∂rg = jacs[:, 1]

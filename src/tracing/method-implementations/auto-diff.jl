@@ -216,11 +216,11 @@ f(rθ), J
 ```
 but non-allocating.
 """
-function metric_jacobian(m::AbstractStaticAxisSymmetric, rθ)
+function metric_jacobian(m::AbstractStaticAxisSymmetric, rθ::SVector{2,T}) where {T}
     f = x -> metric_components(m, x)
-    T = typeof(ForwardDiff.Tag(f, eltype(rθ)))
-    ydual = _static_dual_eval(T, f, rθ)
-    (ForwardDiff.value.(T, ydual), _extract_jacobian(T, ydual, rθ))
+    TT = typeof(ForwardDiff.Tag(f, T))
+    ydual = _static_dual_eval(TT, f, rθ)
+    (ForwardDiff.value.(TT, ydual), _extract_jacobian(TT, ydual, rθ))
 end
 
 @inbounds function geodesic_equation(

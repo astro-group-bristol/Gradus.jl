@@ -34,16 +34,16 @@ function find_offset_for_radius(
     μ = 0.0,
     solver_opts...,
 )
-    measure = gp -> begin
+    function _measure(gp::GeodesicPoint{T}) where {T}
         r = if gp.status == StatusCodes.IntersectedWithGeometry
             gp.x[2] * sin(gp.x[3])
         else
-            zero(eltype(gp.x))
+            zero(T)
         end
         rₑ - r
     end
 
-    velfunc = r -> begin
+    function _velfunc(r)
         α = r * cos(θₒ)
         β = r * sin(θₒ)
         constrain_all(m, u, map_impact_parameters(m, u, α, β), μ)
@@ -53,7 +53,7 @@ function find_offset_for_radius(
     integ = _init_integrator(
         m,
         u,
-        velfunc(0.0),
+        _velfunc(0.0),
         d,
         (0.0, max_time);
         save_on = false,
@@ -64,8 +64,8 @@ function find_offset_for_radius(
         if r < 0
             return -1000 * r
         end
-        gp = _solve_reinit!(integ, vcat(u, velfunc(r)))
-        measure(gp)
+        gp = _solve_reinit!(integ, vcat(u, _velfunc(r)))
+        _measure(gp)
     end
 
     # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
@@ -77,10 +77,10 @@ function find_offset_for_radius(
     end
 
 
-    gp0 = _solve_reinit!(integ, vcat(u, velfunc(r0)))
-    if !isapprox(measure(gp0), 0.0, atol = 1e-4)
+    gp0 = _solve_reinit!(integ, vcat(u, _velfunc(r0)))
+    if !isapprox(_measure(gp0), 0.0, atol = 1e-4)
         @warn(
-            "Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ (offset_max = $offset_max, measure = $(measure(gp0)))."
+            "Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ (offset_max = $offset_max, measure = $(_measure(gp0)))."
         )
         return NaN, gp0
     end

@@ -48,7 +48,8 @@ struct TracingConfiguration{
                 "Trajectories should be `nothing` when solving only a single geodesic problem.",
             )
         end
-        _trajectories = eltype(velocity) <: SVector ? length(velocity) : trajectories
+        _trajectories =
+            (V <: AbstractVector && eltype(V) <: SVector) ? length(velocity) : trajectories
         _ensemble = restrict_ensemble(m, ensemble)
         new{
             T,

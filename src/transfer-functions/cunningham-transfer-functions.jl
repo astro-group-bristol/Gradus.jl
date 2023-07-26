@@ -1,7 +1,7 @@
 
-function _adjust_extrema!(g)
-    g[1] = zero(eltype(g))
-    g[end] = one(eltype(g))
+function _adjust_extrema!(g::AbstractArray{T}) where {T}
+    g[1] = zero(T)
+    g[end] = one(T)
 end
 
 function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2)

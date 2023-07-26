@@ -14,14 +14,12 @@ using StaticArrays
 using Optim
 using DataInterpolations
 using VoronoiCells
-using FiniteDifferences
 using Roots
 using ProgressMeter
 using Buckets
 using QuadGK
 using MuladdMacro
 
-using Accessors: @set
 using Tullio: @tullio
 
 import ForwardDiff
@@ -255,14 +253,8 @@ export AbstractPointFunction,
     AbstractDiscProfile,
     AbstractDirectionSampler
 
-# precompilation help
-precompile(
-    tracegeodesics,
-    (KerrMetric{Float64}, SVector{4,Float64}, SVector{4,Float64}, Tuple{Float64,Float64}),
-)
-precompile(
-    rendergeodesics,
-    (KerrMetric{Float64}, SVector{4,Float64}, GeometricThinDisc{Float64}, Float64),
-)
+if Base.VERSION >= v"1.4.2"
+    include("precompile.jl")
+end
 
 end # module

@@ -1,8 +1,8 @@
 # use this everywhere where we need a dot product so it's quick and easy to
 # change the underlying implementation
-@fastmath function _fast_dot(x, y)
+@fastmath function _fast_dot(x::AbstractVector{T}, y::AbstractVector) where {T}
     @assert size(x) == size(y)
-    res = zero(eltype(x))
+    res = zero(T)
     @inbounds for i in eachindex(x)
         res += x[i] * y[i]
     end
@@ -26,15 +26,15 @@ Project vector `v` onto `u` with metric `g`. Optional first argument may be
 """
 mproject(g, v, u) = dotproduct(g, v, u) / propernorm(g, u)
 
-function projectbasis(g, basis, v)
-    s = zero(SVector{4,eltype(g)})
+function projectbasis(g::AbstractMatrix{T}, basis, v) where {T}
+    s = zero(SVector{4,T})
     for e in basis
         s += mproject(g, v, e) .* e
     end
     s
 end
 
-function gramschmidt(v, basis, g; tol = 4eps(eltype(g)))
+function gramschmidt(v, basis, g::AbstractMatrix{T}; tol = 4eps(T)) where {T}
     p = projectbasis(g, basis, v)
 
     while sum(p) > tol
@@ -81,7 +81,7 @@ that is, returns a tuple that corresponds to the ``x^1, x^2, x^3, x^4`` coordina
     # ensure there is an initial direction
     # else just set it to r
     if sum(state) == 1
-        state = SVector{4,eltype(state)}(1, 0, 0, 1)
+        state = SVector{4,Bool}(1, 0, 0, 1)
     end
     # store number of permutations of the space vectors needed to get 
     # tetrad in the correct order at the end
