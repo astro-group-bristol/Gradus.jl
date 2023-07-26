@@ -86,8 +86,8 @@ function _map_impact_parameters(m::AbstractMetric, x, α, β)
     xfm(local_momentum(x[2], α, β))
 end
 
-function faraday_tensor(m::AbstractMetric, x)
-    ST = SVector{4,eltype(x)}
+function faraday_tensor(m::AbstractMetric, x::AbstractVector{T}) where {T}
+    ST = SVector{4,T}
     dA = ForwardDiff.jacobian(t -> electromagnetic_potential(m, t), SVector(x[2], x[3]))
     ∂A = hcat(zeros(ST), dA, zeros(ST))
     g = inv(metric(m, x))
