@@ -52,6 +52,7 @@ end
     n_points = 400,
     projection = :none,
     t_span = 100.0,
+    plane = :XY,
 )
     sol = p.args[1]
     projection := projection
@@ -76,7 +77,15 @@ end
         coords = if projection == :polar
             path[3], path[1]
         else
-            path[1], path[2]
+            if plane == :XY
+                path[1], path[2]
+            elseif plane == :XZ
+                path[1], path[3]
+            elseif plane == :YZ
+                path[2], path[3]
+            else
+                error("Unknown plane: $(plane). Only XY, XZ, or YZ are implemented.")
+            end
         end
         @series begin
             coords

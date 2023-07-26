@@ -94,7 +94,7 @@ function flux_source_to_disc(
     map(flux, points)
 end
 
-function energy_ratio(m, gp, v_src)
+function energy_ratio(m::AbstractMetric, gp::GeodesicPoint, v_src)
     g_src = metric(m, gp.x_init)
     @tullio e_src := g_src[i, j] * gp.v_init[i] * v_src[j]
     # at the disc

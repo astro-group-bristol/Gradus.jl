@@ -32,7 +32,7 @@ plot_paths(sols, legend = false, n_points = 2048)
 plot_horizon!(m, lw = 2.0, color = :black)
 ```
 
-![](./figures/example-tracing.svg)
+![](./example-figures/example-tracing.svg)
 
 Alternatively, plotting the 3D paths from e.g. a lamp-post coronal model:
 
@@ -51,7 +51,7 @@ plot_paths_3d(sols, legend=false, extent = 10, t_span = 100.0)
 plot_horizon_3d!(m)
 ```
 
-![](./figures/example-3d-tracing.svg)
+![](./example-figures/example-3d-tracing.svg)
 
 ## Shadow
 
@@ -87,7 +87,7 @@ p = heatmap(
 contour!(p, α, β, img, color = :red)
 ```
 
-![](./figures/example-shadow.png)
+![](./example-figures/example-shadow.png)
 
 ## Redshift image
 
@@ -126,7 +126,7 @@ pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersect
 heatmap(α, β, img)
 ```
 
-![](./figures/example-redshift.png)
+![](./example-figures/example-redshift.png)
 
 ## Redshift line-profile 
 
@@ -147,7 +147,7 @@ lineprof = fit(Histogram, data, x_bins)
 plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)
 ```
 
-![](./figures/example-redshift-histogram.svg)
+![](./example-figures/example-redshift-histogram.svg)
 
 ## Line profiles
 
@@ -177,7 +177,7 @@ energy = gs .* 6.4
 plot(energy, flux, legend=false)
 ```
 
-![](./figures/example-line-profile.svg)
+![](./example-figures/example-line-profile.svg)
 
 ## Reverberation transfer functions
 
@@ -224,7 +224,7 @@ p = heatmap(
 )
 ```
 
-![](./figures/example-reverb-tf.png)
+![](./example-figures/example-reverb-tf.png)
 
 ## Covariant radiative transfer
 
@@ -260,7 +260,7 @@ a, b, img = @time rendergeodesics(
 heatmap(a, b, img, aspect_ratio = 1, xlabel = "α", ylabel = "β")
 ```
 
-![](./figures/example-covariant-radiative-transfer.png)
+![](./example-figures/example-covariant-radiative-transfer.png)
 
 ## Interpolating redshifts
 
@@ -299,7 +299,7 @@ pf = redshift ∘ ConstPointFunctions.filter_intersected
 heatmap(α, β, img)
 ```
 
-![](./figures/example-interpolated.png)
+![](./example-figures/example-interpolated.png)
 
 !!! note
     Note that this interpolation is automatically performed when using [`ConstPointFunctions.redshift(m, x)`](@ref) if no analytic implementation is given.
@@ -344,7 +344,7 @@ end
 heatmap(α, β, img, aspect_ratio=1)
 ```
 
-![](./figures/example-thick-disc-doughnut.png)
+![](./example-figures/example-thick-disc-doughnut.png)
 
 For more disc on disc geometry, see [`AbstractAccretionDisc`](@ref) and associated sections.
 
@@ -370,7 +370,7 @@ end
 p
 ```
 
-![](./figures/example-circular-orbits.svg)
+![](./example-figures/example-circular-orbits.svg)
 
 ## ISCO
 
@@ -406,7 +406,7 @@ end
 plot!(last.(data), first.(data), color=:black, linestyle=:dash, label="ISCO")
 ```
 
-![](./figures/example-isco.svg)
+![](./example-figures/example-isco.svg)
 
 ## Event horizons and naked singularities
 
@@ -433,7 +433,7 @@ end
 p
 ```
 
-![](./figures/example-horizon.svg)
+![](./example-figures/example-horizon.svg)
 
 We can also calculate parameter combinations that lead to naked singularities, and plot the parameter space domains to show exclusion zones:
 
@@ -468,7 +468,7 @@ heatmap(
 )
 ```
 
-![](./figures/example-exclusion.png)
+![](./example-figures/example-exclusion.png)
 
 ## Cunningham transfer functions
 
@@ -493,7 +493,7 @@ end
 p
 ```
 
-![](./figures/example-bambi-fig1.svg)
+![](./example-figures/example-bambi-fig1.svg)
 
 And Fig. 2:
 
@@ -513,7 +513,7 @@ end
 p
 ```
 
-![](./figures/example-bambi-fig2.svg)
+![](./example-figures/example-bambi-fig2.svg)
 
 ## Concentric rings
 
@@ -547,7 +547,7 @@ end
 p
 ```
 
-![](./figures/example-concentric.svg)
+![](./example-figures/example-concentric.svg)
 
 
 ## Hot spot on the disc
@@ -608,8 +608,8 @@ a, b, img = rendergeodesics(
 heatmap(a, b, img)
 ```
 
-![](./figures/example-hot-spot-slow.svg)
+![](./example-figures/example-hot-spot-slow.svg)
 
 In the fast light regime, with an initial radial angle of `-2.6` gives a very different picture
 
-![](./figures/example-hot-spot-fast.svg)
+![](./example-figures/example-hot-spot-fast.svg)
