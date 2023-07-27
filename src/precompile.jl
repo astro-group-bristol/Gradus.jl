@@ -116,26 +116,3 @@ Base.precompile(
         Float64,
     },
 )   # time: 0.007585501
-Base.precompile(
-    Tuple{
-        var"#200#threadsfor_fun#119"{
-            var"#200#threadsfor_fun#118#120"{
-                KerrMetric{Float64},
-                Matrix{Float64},
-                Vector{GeodesicPoint{Float64,SVector{1,Float64}}},
-                PointFunction{
-                    var"#154#156"{
-                        var"#154#155#157"{
-                            FilterPointFunction{var"#110#116"{var"#110#111#117"},Float64},
-                            var"#109#115",
-                            var"#110#116"{var"#110#111#117"},
-                        },
-                    },
-                },
-                Float64,
-                Base.OneTo{Int64},
-            },
-        },
-        Int64,
-    },
-)   # time: 0.001631875
