@@ -26,11 +26,7 @@ makedocs(
             "Parallelism and ensembles" => "parallelism.md",
             "Special radii" => "special-radii.md",
         ],
-        "API" =>
-            [
-                "Gradus" => "api-documentation/Gradus.md",
-                "GradusBase" => "api-documentation/GradusBase.md",
-            ] |> sort,
+        "API" => ["Gradus" => "api-documentation/Gradus.md"] |> sort,
     ],
 )
 

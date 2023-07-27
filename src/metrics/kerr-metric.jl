@@ -54,7 +54,8 @@ where
 ```
 
 ## Parameters
-$(FIELDS)
+- `M = 1`: black hole mass.
+- `a = 0`: black hole spin.
 """
 @with_kw struct KerrMetric{T} <: AbstractStaticAxisSymmetric{T}
     @deftype T
@@ -80,7 +81,7 @@ function convert_angles(a, r, θ, ϕ, θ_obs, ϕ_obs)
 end
 
 # for disc profile models
-function GradusBase.vector_to_local_sky(m::KerrMetric, u, θ, ϕ)
+function vector_to_local_sky(m::KerrMetric, u, θ, ϕ)
     convert_angles(m.a, u[2], u[3], u[4], θ, ϕ)
 end
 

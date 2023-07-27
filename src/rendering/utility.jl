@@ -1,5 +1,6 @@
 """
-    $(TYPEDSIGNATURES)
+    calculate_velocities(m::AbstractMetric, init_pos, α_generator, β::Number)
+    calculate_velocities(m::AbstractMetric, init_pos, α_genetator, β_generator)
 
 Calculates initial four-velocity vectors from impact parameters ``\\alpha`` and
 ``\\beta``, with ``v^t = 0``, i.e. unconstrained, given some ``init_pos`` four-vector.
@@ -11,12 +12,13 @@ in the same plane may be easily traced.
 function calculate_velocities(m::AbstractMetric, init_pos, α_generator, β::Number)
     [map_impact_parameters(m, init_pos, α, β) for α in α_generator]
 end
-
 function calculate_velocities(m::AbstractMetric, init_pos, α_genetator, β_generator)
     [map_impact_parameters(m, init_pos, α, β) for α in α_genetator, β in β_generator]
 end
 
 """
+    calculate_velocities!(vs, m::AbstractMetric, init_pos, α_generator, β::Number)
+
 In-place specialisation, writing the four-velocities into `vs`.
 """
 function calculate_velocities!(vs, m::AbstractMetric, init_pos, α_generator, β::Number)
@@ -27,7 +29,7 @@ end
 
 
 """
-    $(TYPEDSIGNATURES)
+    x_to_α(X, x_mid, fov)
 
 Utility function for converting some `X` on an image plane into ``\\alpha``, given
 the midpoint `x_mid` and field-of-view multiplier `fov`.
@@ -36,7 +38,7 @@ the midpoint `x_mid` and field-of-view multiplier `fov`.
 x_to_α(X, x_mid, fov) = (X + 1e-3 - x_mid) / fov
 
 """
-    $(TYPEDSIGNATURES)
+    y_to_β(Y, y_mid, fov)
 
 Utility function for converting some `Y` on an image plane into ``\\beta``, given
 the midpoint `y_mid` and field-of-view multiplier `fov`.

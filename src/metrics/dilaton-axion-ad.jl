@@ -50,7 +50,10 @@ end # module
     struct DilatonAxion{T} <: AbstractStaticAxisSymmetric{T}
 
 Einstein-Maxwell-Dilaton-Axion metric.
-$(FIELDS)
+- `M = 1.0`: Singularity mass.
+- `a = 0.0`: Singularity spin.
+- `β = 0.0`: Dilaton coupling strength.
+- `b = 1.0`: Axion coupling strength.
 """
 @with_kw struct DilatonAxion{T} <: AbstractStaticAxisSymmetric{T}
     @deftype T
@@ -66,6 +69,6 @@ end
 
 metric_components(m::DilatonAxion{T}, rθ) where {T} =
     __DilatonAxionAD.metric_components(m.M, m.a, m.β, m.b, rθ)
-GradusBase.inner_radius(m::DilatonAxion{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+inner_radius(m::DilatonAxion{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
 export DilatonAxion

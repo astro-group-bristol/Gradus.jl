@@ -32,7 +32,7 @@ using Gradus
     M = 1.0
 end
 
-function GradusBase.metric_components(m::EddingtonFinkelsteinAD{T}, rθ) where {T}
+function Gradus.metric_components(m::EddingtonFinkelsteinAD{T}, rθ) where {T}
     (r, θ) = rθ
     M = m.M
 
@@ -44,12 +44,12 @@ function GradusBase.metric_components(m::EddingtonFinkelsteinAD{T}, rθ) where {
     (tt, rr, θθ, ϕϕ, T(0.0))
 end
 
-GradusBase.inner_radius(m::EddingtonFinkelsteinAD) = 2 * m.M
+Gradus.inner_radius(m::EddingtonFinkelsteinAD) = 2 * m.M
 ```
 A few notes:
 - We use `@with_kw` from [Parameters.jl](https://github.com/mauro3/Parameters.jl) to define various utility constructors for us.
-- [`GradusBase.metric_components`](@ref) must return five elements for [`AbstractStaticAxisSymmetric`](@ref), where the last element is the off-axis ``g_{t \phi}`` matrix element, which in this case is always 0.
-- The [`GradusBase.inner_radius`](@ref) function defines the inner-radius of integration chart. This defines where the integration should terminate to avoid running indefinitely, and is, in this case, set to the event-horizon of our metric.
+- [`metric_components`](@ref) must return five elements for [`AbstractStaticAxisSymmetric`](@ref), where the last element is the off-axis ``g_{t \phi}`` matrix element, which in this case is always 0.
+- The [`inner_radius`](@ref) function defines the inner-radius of integration chart. This defines where the integration should terminate to avoid running indefinitely, and is, in this case, set to the event-horizon of our metric.
 
 That's all we need! This metric is now ready to be traced in the usual way.
 

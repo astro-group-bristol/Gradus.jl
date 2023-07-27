@@ -53,8 +53,7 @@ function chart_for_metric(
     outer_radius = T(12000);
     closest_approach = T(1.01),
 ) where {T}
-    chart =
-        PolarChart(GradusBase.inner_radius(m) * closest_approach, convert(T, outer_radius))
+    chart = PolarChart(inner_radius(m) * closest_approach, convert(T, outer_radius))
     chart
 end
 

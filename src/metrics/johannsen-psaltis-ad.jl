@@ -31,7 +31,9 @@ end # module
     struct JohannsenPsaltisMetric{T} <: AbstractStaticAxisSymmetric{T}
 
 Johannsen and Psaltis 2011
-$(FIELDS)
+- `M = 1.0`: Black hole mass.
+- `a = 0.0`: Black hole spin.
+- `ϵ3 = 0.0`: ``\\epsilon_{3}`` deviation parameter.
 """
 @with_kw struct JohannsenPsaltisMetric{T} <: AbstractStaticAxisSymmetric{T}
     @deftype T
@@ -45,6 +47,6 @@ end
 
 metric_components(m::JohannsenPsaltisMetric{T}, rθ) where {T} =
     __JohannsenPsaltisAD.metric_components(m.M, m.a, m.ϵ3, rθ)
-GradusBase.inner_radius(m::JohannsenPsaltisMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+inner_radius(m::JohannsenPsaltisMetric{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
 export JohannsenPsaltisMetric

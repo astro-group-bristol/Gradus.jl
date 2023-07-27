@@ -20,7 +20,7 @@ Required implementations:
 AbstractStaticAxisSymmetric
 
 """
-    $(TYPEDSIGNATURES)
+    metric_components(m::AbstractStaticAxisSymmetric, rθ
 
 Interface for [`AbstractStaticAxisSymmetric`](@ref). Should return
 a vector or tuple with the elements
@@ -156,7 +156,7 @@ Limitations:
 end
 
 """
-    $(FUNCTIONNAME)(g_comp, v, μ = 0.0, positive::Bool = true)
+    constrain_time(g_comp, v, μ = 0.0, positive::Bool = true)
 
 Constrains the time component of the four-velocity `v`, given metric components `g_comp` and
 effective mass `μ`.

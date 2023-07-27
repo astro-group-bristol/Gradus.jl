@@ -11,7 +11,7 @@ Evaluates Bardeen+73 (3.9),
 ```
 """
 function local_velocity(m::AbstractMetric, x, v, component::Int)
-    es = GradusBase.lnrbasis(m, x)
+    es = lnrbasis(m, x)
     𝒱t = _fast_dot(es[1], v)
     𝒱i = _fast_dot(es[component], v)
     𝒱i / 𝒱t

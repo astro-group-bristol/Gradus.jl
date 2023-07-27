@@ -76,7 +76,7 @@ end
     Currently, Gradus.jl uses exclusively Boyer-Lindquist coordinates for its metrics. However, new coordinates can be implemented, and documentation for this will come soon.
 
 ```julia
-GradusBase.inner_radius(m::KerrMetric) = 2 * m.M
+Gradus.inner_radius(m::KerrMetric) = 2 * m.M
 ```
 
 - Finally, we specify some inner radius for the integration. This is the cutoff around the origin at which radius the geodesic integration will stop to avoid numerical errors. Here, it is just the Schwarzschild radius, or the outer event horizon. Gradus.jl can calculate different horizons from the metric automatically, which can be useful if you don't know the solution ahead of time, or if the solution is non-symmetric in $\theta$. But if we know it, we can benefit from a small performance boost by implementing it directly.

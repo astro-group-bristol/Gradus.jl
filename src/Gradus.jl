@@ -2,9 +2,8 @@ module Gradus
 
 import Base: in
 using Base.Threads: @threads
-using LinearAlgebra: ×, ⋅, norm, det, dot
+using LinearAlgebra: ×, ⋅, norm, det, dot, inv
 
-using DocStringExtensions
 using Parameters
 
 using SciMLBase
@@ -26,72 +25,204 @@ import ForwardDiff
 import GeometryBasics
 import Symbolics
 
-include("GradusBase/GradusBase.jl")
-import .GradusBase:
-    AbstractCoordinates,
-    AbstractTrace,
-    AbstractStaticAxisSymmetric,
-    BoyerLindquist,
-    E,
-    Lz,
-    AbstractMetric,
-    metric,
-    unpack_solution,
-    unpack_solution_full,
-    GeodesicPoint,
-    AbstractGeodesicPoint,
-    vector_to_local_sky,
-    AbstractMetric,
-    geodesic_equation,
-    constrain,
-    inner_radius,
-    metric_type,
-    metric_components,
-    inverse_metric_components,
-    unpack_solution,
-    dotproduct,
-    propernorm,
-    tetradframe,
-    lnrbasis,
-    lnrframe,
-    lowerindices,
-    raiseindices,
-    StatusCodes,
-    AbstractIntegrationParameters,
-    IntegrationParameters,
-    update_integration_parameters!,
-    restrict_ensemble,
-    _fast_dot,
-    set_status_code!,
-    get_status_code
+using EnumX
 
-export AbstractMetric,
-    AbstractTrace,
-    AbstractStaticAxisSymmetric,
-    BoyerLindquist,
-    AbstractCoordinates,
-    unpack_solution,
-    unpack_solution_full,
-    GeodesicPoint,
-    AbstractGeodesicPoint,
-    AbstractMetric,
-    constrain,
-    inner_radius,
-    metric_components,
-    inverse_metric_components,
-    dotproduct,
-    propernorm,
-    tetradframe,
-    lnrbasis,
-    lnrframe,
-    lowerindices,
-    raiseindices,
-    StatusCodes,
-    AbstractIntegrationParameters,
-    IntegrationParameters
+"""
+    StatusCodes.T
 
-# export static arrays too
-export SVector, @SVector
+Status codes that represent the fate of different geodesics.
+
+- `OutOfDomain`: left the integration chart by travelling to effective infinity (see [`chart_for_metric`](@ref)).
+- `WithinInnerBoundary`: left the integration chart by falling into the inner horizon [`inner_radius`](@ref).
+- `IntersectedWithGeometry`: geodesics intersected with [`AbstractAccretionGeometry`](@ref) and terminated there. Note
+that this status code only applies to optically thick geometry (see [`optical_property`](@ref) for more).
+- `NoStatus`: the default status code, which is used to imply no calculation has yet been performed.
+"""
+@enumx StatusCodes begin
+    OutOfDomain
+    WithinInnerBoundary
+    IntersectedWithGeometry
+    NoStatus
+end
+
+abstract type AbstractCoordinates end
+struct BoyerLindquist{C} <: AbstractCoordinates end
+
+"""
+    abstract type AbstractMetric{T} end
+
+Abstract type used to dispatch different geodesic problems.
+"""
+abstract type AbstractMetric{T,C} end
+
+Base.length(::AbstractMetric) = 1
+Base.iterate(m::AbstractMetric) = (m, nothing)
+Base.iterate(::AbstractMetric, ::Nothing) = nothing
+
+# some utility types
+abstract type AbstractStaticAxisSymmetric{T} <: AbstractMetric{T,BoyerLindquist{(:r, :θ)}} end
+
+"""
+    metric_components(m::AbstractMetric{T}, x)
+
+Return a tuple with each non-zero metric component for the metric described by `m` at position
+`x`. Note that the position need not be a four-vector, and for specific implementations may
+only be a subset of the total manifold coordinates. See specific implementations for subtypes of
+[`AbstractMetric`](@ref) for details.
+"""
+metric_components(m::AbstractMetric, x) = error("Not implemented for metric $(typeof(m))")
+inverse_metric_components(m::AbstractMetric, x) =
+    error("Not implemented for metric $(typeof(m))")
+
+"""
+    geodesic_equation(m::AbstractMetric, x, v)
+
+Calculate the four-acceleration of the geodesic equation for a spacetime given by the metric `m`,
+four-position `x` and four-velocity `v`.
+
+A geodesic is the shortest path connecting two points in space. For flat space, this is just a straight line. In
+curved space, geodesics are analogous to straight lines between points (e.g. the great circle on a sphere).
+
+The geodesic equation calculates the acceleration experienced by a particle at position ``x^\\mu = (t, r, \\theta, \\phi)`` travelling
+with tangential velocity ``v^\\nu = \\text{d} x / \\text{d} \\lambda`` due to the curvature of spacetime. The curvature is calculated from the metric, encoded in the 
+[Christoffel symbols](https://en.wikipedia.org/wiki/Christoffel_symbols). The acceleration is then calculated via
+
+```math
+\\frac{\\text{d}^2 x^\\mu}{\\text{d} \\lambda^2}
+    = - \\Gamma^{\\mu}_{\\phantom{\\mu}\\nu\\sigma}
+    \\frac{\\text{d}x^\\nu}{\\text{d} \\lambda}
+    \\frac{\\text{d}x^\\sigma}{\\text{d} \\lambda}
+```
+
+where ``\\Gamma^{\\mu}_{\\phantom{\\mu}\\nu\\sigma}`` are the Christoffel symbols (of the second kind), and ``\\lambda`` is an affine parameter
+that parameterizes the solution.
+"""
+geodesic_equation(m::AbstractMetric, x, v) =
+    error("Not implemented for metric parameters $(typeof(m))")
+
+"""
+    constrain(m::AbstractMetric, x, v; μ=0)
+
+Calculate the time component ``v^t`` of a velocity vector `v`, which would constrain the vector at a position `x` as a 
+geodesic with invariant mass `μ`.
+
+The velocity vector needs to only specify the ``v^r``, ``v^\\theta``, and ``v^\\phi`` component, as the ``v^t`` is constrained in GR by
+
+```math
+g_{\\sigma\\nu} v^\\sigma v^\\nu = -\\mu^2,
+```
+
+where ``\\mu^2`` is the invariant mass of the particle. This furthermore permits a choice of geodesic to trace. The choices correspond to
+
+- `μ = 0.0` (default): null geodesic
+- `μ > 0.0`: time-like geodesic
+- `μ < 0.0`: space-like geodesic
+"""
+constrain(m::AbstractMetric{T}, x, v; μ::T = 0.0) where {T} =
+    error("Not implemented for metric parameters $(typeof(m))")
+
+"""
+    inner_radius(m::AbstractMetric{T})
+
+Return the innermost valid coordinate relative to the origin, for use in geodesic tracing.
+
+This usually represents some property of the metric, e.g. event horizon radius in Kerr/Schwarzschild metrics, or
+throat diameter in worm hole metrics.
+"""
+inner_radius(::AbstractMetric{T}) where {T} = zero(T)
+
+"""
+    metric_type(m::AbstractMetric{T})
+
+Return the [`AbstractMetric`](@ref) type associated with the metric parameters `m`.
+"""
+metric_type(m::AbstractMetric) = error("Not implemented for metric parameters $(typeof(m))")
+
+
+"""
+    metric(m::AbstractMetric{T}, u)
+
+Numerically evaluate the corresponding metric for [`AbstractMetric`](@ref), given parameter values `m`
+and some point `u`.
+"""
+metric(m::AbstractMetric, u) = error("Not implemented for metric $(typeof(m))")
+
+restrict_ensemble(::AbstractMetric, ensemble) = ensemble
+
+"""
+    AbstractTrace
+
+Parameters that are constant throughout the integration (e.g. mass or frequency) for any
+number of geodesics. Also used to dispatch different tracing problems.
+"""
+abstract type AbstractTrace end
+
+"""
+    AbstractIntegrationParameters
+
+Parameters that are made available at each step of the integration, that need not be constant.
+For example, the turning points or withing-geometry flags.
+
+The integration parameters should track which spacetime `M` they are parameters for.
+Integration parameters must implement
+- [`set_status_code!`](@ref)
+- [`get_status_code`](@ref)
+
+For more complex parameters, may also optionally implement
+- [`update_integration_parameters!`](@ref)
+
+See the documentation of each of the above functions for details of their operation.
+"""
+abstract type AbstractIntegrationParameters end
+
+"""
+    update_integration_parameters!(old::AbstractIntegrationParameters, new::AbstractIntegrationParameters)
+
+Update (mutate) the `old` integration parameters to take the value of the `new`. Function should return
+the `old`.
+
+Note this function is practically only used to update any mutable fields in the integration parameters,
+such as resetting any changes to an original state.
+"""
+function update_integration_parameters!(
+    old::AbstractIntegrationParameters,
+    new::AbstractIntegrationParameters,
+)
+    set_status_code!(old, get_status_code(new))
+    old
+end
+
+"""
+    set_status_code!(p::AbstractIntegrationParameters, status::StatusCodes.T)
+
+Update the status [`StatusCodes`](@ref) in `p` with `status`.
+"""
+set_status_code!(params::AbstractIntegrationParameters, status::StatusCodes.T) =
+    error("Not implemented for $(typeof(params))")
+
+"""
+    get_status_code(p::AbstractIntegrationParameters)::StatusCodes.T
+
+Return the status [`StatusCodes`](@ref) in `status`.
+"""
+get_status_code(params::AbstractIntegrationParameters) =
+    error("Not implemented for $(typeof(params))")
+
+
+"""
+    abstract type AbstractGeodesicPoint
+
+Supertype for geodesic points, used to store information about specific points along geodesic
+trajectories.
+
+!!! note
+    Currently limited to storing the start and endpoint of any given trajectory. To keep the
+    full geodesic path, it is encouraged to use the `SciMLBase.AbstractODESolution` directly.
+
+Must minimally have the same fields as [`GeodesicPoint`](@ref).
+Examples include [`Gradus.FirstOrderGeodesicPoint`](@ref).
+"""
+abstract type AbstractGeodesicPoint{T} end
 
 """
     abstract type AbstractPointFunction
@@ -202,7 +333,9 @@ abstract type AbstractDirectionSampler{SkyDomain,Generator} end
 
 struct EnsembleEndpointThreads end
 
+include("orthonormalization.jl")
 include("utils.jl")
+include("solution-processing.jl")
 
 include("tracing/configuration.jl")
 include("tracing/tracing.jl")
@@ -228,8 +361,7 @@ include("tracing/method-implementations/first-order.jl")
 include("point-functions.jl")
 
 include("orbits/circular-orbits.jl")
-include("orbits/orbit-discovery.jl")
-include("orbits/orbit-interpolations.jl")
+include("orbits/orbit-solving.jl")
 
 include("geometry/geometry.jl")
 include("geometry/intersections.jl")
@@ -250,8 +382,8 @@ include("transfer-functions/transfer-functions-2d.jl")
 include("corona/flux-calculations.jl")
 include("corona/emissivity.jl")
 
-include("metrics/boyer-lindquist-ad.jl")
-include("metrics/boyer-lindquist-fo.jl")
+include("metrics/kerr-metric.jl")
+include("metrics/kerr-metric-first-order.jl")
 include("metrics/johannsen-ad.jl")
 include("metrics/johannsen-psaltis-ad.jl")
 include("metrics/morris-thorne-ad.jl")
@@ -269,7 +401,12 @@ include("geometry/polish-doughnut.jl")
 
 include("plotting-recipes.jl")
 
-export AbstractPointFunction,
+if Base.VERSION >= v"1.4.2"
+    include("precompile.jl")
+end
+
+export AbstractMetric,
+    AbstractPointFunction,
     AbstractCacheStrategy,
     AbstractRenderCache,
     AbstractSkyDomain,
@@ -279,8 +416,13 @@ export AbstractPointFunction,
     AbstractDiscProfile,
     AbstractDirectionSampler
 
-if Base.VERSION >= v"1.4.2"
-    include("precompile.jl")
-end
+export unpack_solution, unpack_solution_full
+
+export metric_components
+
+export StatusCodes
+
+# export static arrays too
+export SVector, @SVector
 
 end # module

@@ -45,7 +45,10 @@ end # module
 
 Kerr metric in Boyer-Lindquist coordintes with a path-length ansatz, equivalent to a refractive
 index `n`, within the coronal radius `corona_radius`.
-$(FIELDS)
+- `M = 1.0`: Black hole mass.
+- `a = 0.0`: Black hole spin.
+- `n = 1.0`: Refractive index within the corona.
+- `corona_radius = 20.0`: Radius of the corona.
 """
 @with_kw struct KerrRefractive{T} <: AbstractStaticAxisSymmetric{T}
     @deftype T
@@ -62,7 +65,7 @@ end
 # implementation
 metric_components(m::KerrRefractive{T}, rθ) where {T} =
     __KerrRefractiveAD.metric_components(m.M, m.a, m.n, m.corona_radius, rθ)
-GradusBase.inner_radius(m::KerrRefractive{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+inner_radius(m::KerrRefractive{T}) where {T} = m.M + √(m.M^2 - m.a^2)
 
 # special radii
 isco(m::KerrRefractive{T}) where {T} = __BoyerLindquistFO.isco(m.M, m.a)
