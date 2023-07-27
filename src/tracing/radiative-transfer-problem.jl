@@ -36,12 +36,16 @@ function _radiative_transfer_integration_parameters(status::StatusCodes.T, geome
     RadiativeTransferIntegrationParameters(status, within_geometry)
 end
 
+set_status_code!(params::RadiativeTransferIntegrationParameters, status::StatusCodes.T) =
+    params.status = status
+get_status_code(params::RadiativeTransferIntegrationParameters) = params.status
+
 
 function update_integration_parameters!(
     p::RadiativeTransferIntegrationParameters,
     new::RadiativeTransferIntegrationParameters,
 )
-    p.status = new.status
+    set_status_code!(p, get_status_code(new))
     p.within_geometry .= new.within_geometry
     p
 end

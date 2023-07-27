@@ -13,10 +13,10 @@ end
     function chart_terminate!(integrator)
         # terminate with status code depending on whether inner or outer boundary
         if integrator.u[2] ≤ chart.inner_radius
-            integrator.p.status = StatusCodes.WithinInnerBoundary
+            set_status_code!(integrator.p, StatusCodes.WithinInnerBoundary)
             terminate!(integrator)
         else
-            integrator.p.status = StatusCodes.OutOfDomain
+            set_status_code!(integrator.p, StatusCodes.OutOfDomain)
             terminate!(integrator)
         end
     end
@@ -38,10 +38,10 @@ end
         # terminate with status code depending on whether inner or outer boundary
         rmin = chart.shapefunc(integrator.u[3])
         if integrator.u[2] ≤ rmin
-            integrator.p.status = StatusCodes.WithinInnerBoundary
+            set_status_code!(integrator.p, StatusCodes.WithinInnerBoundary)
             terminate!(integrator)
         else
-            integrator.p.status = StatusCodes.OutOfDomain
+            set_status_code!(integrator.p, StatusCodes.OutOfDomain)
             terminate!(integrator)
         end
     end
