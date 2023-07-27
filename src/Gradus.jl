@@ -62,8 +62,8 @@ import .GradusBase:
     update_integration_parameters!,
     restrict_ensemble,
     _fast_dot,
-    set_status!,
-    get_status
+    set_status_code!,
+    get_status_code
 
 export AbstractMetric,
     AbstractTrace,

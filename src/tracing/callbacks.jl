@@ -1,6 +1,6 @@
 function terminate_with_status!(status::StatusCodes.T)
     function _terminate_with_status_closure!(integrator)
-        set_status!(integrator.p, status)
+        set_status_code!(integrator.p, status)
         terminate!(integrator)
     end
 end

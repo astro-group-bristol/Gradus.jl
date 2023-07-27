@@ -96,6 +96,10 @@ end
 make_parameters(L, Q, sign_θ, ::Type{T}) where {T} =
     FirstOrderIntegrationParameters{T}(L, Q, -1, sign_θ, [0.0, 0.0], StatusCodes.NoStatus)
 
+set_status_code!(params::FirstOrderIntegrationParameters, status::StatusCodes.T) =
+    params.status = status
+get_status_code(params::FirstOrderIntegrationParameters) = params.status
+
 function update_integration_parameters!(
     p::FirstOrderIntegrationParameters,
     new::FirstOrderIntegrationParameters,
@@ -104,7 +108,7 @@ function update_integration_parameters!(
     p.Q = new.Q
     p.θ = new.θ
     p.changes = new.changes
-    p.status = new.status
+    set_status_code!(p, get_status_code(new))
     p
 end
 
