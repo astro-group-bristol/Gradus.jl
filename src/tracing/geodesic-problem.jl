@@ -1,3 +1,11 @@
+mutable struct IntegrationParameters <: AbstractIntegrationParameters
+    status::StatusCodes.T
+end
+
+set_status_code!(params::IntegrationParameters, status::StatusCodes.T) =
+    params.status = status
+get_status_code(params::IntegrationParameters) = params.status
+
 """
     geodesic_ode_problem(
         trace::AbstractTrace,

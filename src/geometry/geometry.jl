@@ -16,11 +16,11 @@ function to_cartesian(r, ϕ, θ)
 end
 
 """
-    to_cartesian(gp::GradusBase.AbstractGeodesicPoint{T})
+    to_cartesian(gp::AbstractGeodesicPoint{T})
 
 Return the end position of `gp` in Cartesian coordinates.
 """
-function to_cartesian(gp::GradusBase.AbstractGeodesicPoint{T}) where {T}
+function to_cartesian(gp::AbstractGeodesicPoint{T}) where {T}
     @inbounds let r = gp.x[2], ϕ = gp.x[4]
         x = r * cos(ϕ)
         y = r * sin(ϕ)

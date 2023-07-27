@@ -14,7 +14,7 @@ using Aqua
 end
 
 @time @testset "metric-geometry" verbose = true begin
-    include("unit/gradusbase.geometry.jl")
+    include("unit/orthonormalization.jl")
     include("unit/metrics.kerr-newman.jl")
     include("test-special-radii.jl")
 end

@@ -1,8 +1,7 @@
 module __BoyerLindquistFO
-using DocStringExtensions
 
 """
-    $(TYPEDSIGNATURES)
+    T(E, L, r, a)
 
 From Bardeen et al. (1972) eq. (2.10):
 
@@ -14,7 +13,7 @@ T = E \\left( r^2 + a^2 \\right) - L * a.
 
 
 """
-    $(TYPEDSIGNATURES)
+    Vr(E, L, M, Q, r, a)
 
 From Bardeen et al. (1972) eq. (2.10), for the special case of a null-geodesic ``\\mu = 0``:
 
@@ -26,7 +25,7 @@ V_r = T^2 - \\Delta \\left[ (L - a E)^2 + Q \\right]
 
 
 """
-    $(TYPEDSIGNATURES)
+    Vθ(E, L, Q, a, θ)
 
 From Bardeen et al. (1972) eq. (2.10), for the special case of a null-geodesic ``\\mu = 0``:
 
@@ -39,7 +38,7 @@ V_\\theta =
 
 
 """
-    $(TYPEDSIGNATURES)
+    Σδt_δλ(E, L, M, r, a, θ)
 
 The ``t`` compontent of the equation of motion for a photon around a black hole, multiplied
 by ``\\Sigma``.
@@ -58,7 +57,7 @@ end
 
 
 """
-    $(TYPEDSIGNATURES)
+    Σδr_δλ(E, L, M, Q, r, a)
 
 The ``r`` compontent of the equation of motion for a photon around a black hole, multiplied
 by ``\\Sigma``.
@@ -80,7 +79,7 @@ end
 
 
 """
-    $(TYPEDSIGNATURES)
+    Σδθ_δλ(E, L, Q, a, θ)
 
 The ``\\theta`` compontent of the equation of motion for a photon around a black hole,
 multiplied by ``\\Sigma``.
@@ -102,7 +101,7 @@ end
 
 
 """
-    $(TYPEDSIGNATURES)
+    Σδϕ_δλ(E, L, M, r, a, θ)
 
 The ``\\phi`` compontent of the equation of motion for a photon around a black hole,
 multiplied by ``\\Sigma``.
@@ -121,7 +120,7 @@ end
 
 
 """
-    $(TYPEDSIGNATURES)
+    S(θ, α, ω)
 
 From Fanton et al. (1997), eq. (76):
 
@@ -133,7 +132,7 @@ S(θ, α, ω) = 1 + α * ω * sin(θ)
 
 
 """
-    $(TYPEDSIGNATURES)
+    sinΦsinΨ(Σ₀, sinθ, A₀, Δ₀, S₀, r, a, α, β) 
 
 Calculates and returns the observer's angles ``\\sin \\Theta`` and ``\\sin \\Phi``, where
 the parameters in the function signature correspond to the Bardeen et al. (1972) paper.
@@ -182,7 +181,7 @@ end
 
 
 """
-    $(TYPEDSIGNATURES)
+    LQ(M, r, a, θ, sinΦ, sinΨ)
 
 Calculates conserved quantities
 - angular momentum ``L``
@@ -247,7 +246,7 @@ end
 
 
 """
-    $(TYPEDSIGNATURES)
+    Σ(r, a, θ)
 
 From Bardeen et al. (1972) eq. (2.3):
 
@@ -259,7 +258,7 @@ From Bardeen et al. (1972) eq. (2.3):
 
 
 """
-    $(TYPEDSIGNATURES)
+    Δ(M, r, a)
 
 From Bardeen et al. (1972) eq. (2.3):
 
@@ -271,7 +270,7 @@ From Bardeen et al. (1972) eq. (2.3):
 
 
 """
-    $(TYPEDSIGNATURES)
+    A(M, r, a, θ)
 
 From Bardeen et al. (1972) eq. (2.3):
 
@@ -283,7 +282,7 @@ A(M, r, a, θ) = (r^2 + a^2)^2 - a^2 * Δ(M, r, a) * sin(θ)^2
 
 
 """
-    $(TYPEDSIGNATURES)
+    Z₁(M, a)
 
 From Bardeen et al. (1972) eq. (2.21):
 
@@ -299,7 +298,7 @@ Z₁(M, a) = 1 + ∛(1 - (a / M)^2) * (∛(1 + (a / M)) + ∛(1 - (a / M)))
 
 
 """
-    $(TYPEDSIGNATURES)
+    Z₂(M, a)
 
 From Bardeen et al. (1972) eq. (2.21):
 
@@ -323,7 +322,8 @@ function four_velocity(u, E, M, a, p)
 end
 
 """
-    $(TYPEDSIGNATURES)
+    isco(M, a, ±)
+    isco(M, a)
 
 From Bardeen et al. (1972) eq. (2.21):
 
@@ -339,7 +339,9 @@ end # module
 
 """
 A first-order implementation of [`KerrMetric`](@ref).
-$(FIELDS)
+- `M = 1.0`: Black hole mass.
+- `a = 0.0`: Black hole spin.
+- `E = 1.0`: Geodesic energy (a consant of motion).
 """
 @with_kw struct KerrSpacetimeFirstOrder{T} <: AbstractFirstOrderMetric{T}
     @deftype T
@@ -351,8 +353,8 @@ $(FIELDS)
     E = 1.0
 end
 
-GradusBase.inner_radius(m::KerrSpacetimeFirstOrder) = m.M + √(m.M^2 - m.a^2)
-GradusBase.constrain(::KerrSpacetimeFirstOrder, u, v; μ = 0.0) = v[1]
+inner_radius(m::KerrSpacetimeFirstOrder) = m.M + √(m.M^2 - m.a^2)
+constrain(::KerrSpacetimeFirstOrder, u, v; μ = 0.0) = v[1]
 
 four_velocity(u, m::KerrSpacetimeFirstOrder, p) =
     __BoyerLindquistFO.four_velocity(u, m.E, m.M, m.a, p)

@@ -21,7 +21,7 @@ end # module
 
 Morris-Thorne wormhole metric.
 
-$(FIELDS)
+- `b = 1.0`: Throat size.
 """
 @with_kw struct MorrisThorneWormhole{T} <: AbstractStaticAxisSymmetric{T}
     @deftype T
@@ -32,6 +32,6 @@ end
 # implementation
 metric_components(m::MorrisThorneWormhole{T}, rθ) where {T} =
     __MorrisThorneAD.metric_components(m.b, rθ)
-GradusBase.inner_radius(m::MorrisThorneWormhole{T}) where {T} = 0.0
+inner_radius(m::MorrisThorneWormhole{T}) where {T} = 0.0
 
 export MorrisThorneWormhole

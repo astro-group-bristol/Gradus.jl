@@ -44,7 +44,7 @@ end
     m::AbstractFirstOrderMetric{T},
     sol::SciMLBase.AbstractODESolution{T},
 ) where {T}
-    us, ts, p = GradusBase.extract_fields(sol)
+    us, ts, p = extract_fields(sol)
 
     @inbounds @views begin
         u_start = SVector{4,T}(us[1][1:4])
@@ -77,7 +77,7 @@ function metric_callback(m::AbstractFirstOrderMetric, chart::AbstractChart)
 end
 
 """
-    $(TYPEDSIGNATURES)
+    four_velocity(x, m::AbstractFirstOrderMetric, p)
 
 Calculate the four-velocity at a point `u`, given a set of metric parameters and the constants
 of motion in `p`.
@@ -135,28 +135,25 @@ convert_velocity_type(::StaticVector{S,T}, v) where {S,T} = convert(SVector{S,T}
 convert_velocity_type(u::AbstractVector{T}, v) where {T} = convert(typeof(u), collect(v))
 
 """
-    $(TYPEDSIGNATURES)
+    Vr(m::AbstractFirstOrderMetric, u, p) 
 
 Effective potential in the radial direction. Used only to track sign changes.
 """
-Vr(m::AbstractFirstOrderMetric{T}, u, p) where {T} =
-    error("Not implmented for $(typeof(m)).")
+Vr(m::AbstractFirstOrderMetric, u, p) = error("Not implmented for $(typeof(m)).")
 """
-    $(TYPEDSIGNATURES)
+    Vθ(m::AbstractFirstOrderMetric, u, p)
 
 Effective potential in the angular direction. Used only to track sign changes.
 """
-Vθ(m::AbstractFirstOrderMetric{T}, u, p) where {T} =
-    error("Not implmented for $(typeof(m)).")
+Vθ(m::AbstractFirstOrderMetric, u, p) = error("Not implmented for $(typeof(m)).")
 
 """
-    $(TYPEDSIGNATURES)
+    calc_lq(m::AbstractFirstOrderMetric, pos, param))
 
 Calculate constants of motion ``L`` and ``Q``, given a set of metric parameters,
 the geodesic position, and the `param` vector.
 """
-calc_lq(m::AbstractFirstOrderMetric{T}, pos, param) where {T} =
-    error("Not implmented for $(typeof(m)).")
+calc_lq(m::AbstractFirstOrderMetric, pos, param) = error("Not implmented for $(typeof(m)).")
 
 function flip_radial_sign!(integrator)
     integrator.p.r = -integrator.p.r

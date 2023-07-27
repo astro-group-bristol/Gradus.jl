@@ -1,90 +1,16 @@
-"""
-    AbstractTrace
-
-Parameters that are constant throughout the integration (e.g. mass or frequency) for any
-number of geodesics. Also used to dispatch different tracing problems.
-"""
-abstract type AbstractTrace end
-
-"""
-    AbstractIntegrationParameters
-
-Parameters that are made available at each step of the integration, that need not be constant.
-For example, the turning points or withing-geometry flags.
-
-The integration parameters should track which spacetime `M` they are parameters for.
-Integration parameters must implement
-- [`set_status_code!`](@ref)
-- [`get_status_code`](@ref)
-
-For more complex parameters, may also optionally implement
-- [`update_integration_parameters!`](@ref)
-
-See the documentation of each of the above functions for details of their operation.
-"""
-abstract type AbstractIntegrationParameters end
-
-"""
-    update_integration_parameters!(old::AbstractIntegrationParameters, new::AbstractIntegrationParameters)
-
-Update (mutate) the `old` integration parameters to take the value of the `new`. Function should return
-the `old`.
-
-Note this function is practically only used to update any mutable fields in the integration parameters,
-such as resetting any changes to an original state.
-"""
-function update_integration_parameters!(
-    old::AbstractIntegrationParameters,
-    new::AbstractIntegrationParameters,
-)
-    set_status_code!(old, get_status_code(new))
-    old
-end
-
-"""
-    set_status_code!(p::AbstractIntegrationParameters, status::StatusCodes.T)
-
-Update the status [`StatusCodes.T`](@ref) in `p` with `status`.
-"""
-set_status_code!(params::AbstractIntegrationParameters, status::StatusCodes.T) =
-    error("Not implemented for $(typeof(params))")
-
-"""
-    get_status_code(p::AbstractIntegrationParameters)::StatusCodes.T
-
-Return the status [`StatusCodes.T`](@ref) in `status`.
-"""
-get_status_code(params::AbstractIntegrationParameters) =
-    error("Not implemented for $(typeof(params))")
-
-mutable struct IntegrationParameters <: AbstractIntegrationParameters
-    status::StatusCodes.T
-end
-
-set_status_code!(params::IntegrationParameters, status::StatusCodes.T) =
-    params.status = status
-get_status_code(params::IntegrationParameters) = params.status
-
-"""
-    abstract type AbstractGeodesicPoint
-
-Supertype for geodesic points, used to store information about specific points along geodesic
-trajectories.
-
-!!! note
-    Currently limited to storing the start and endpoint of any given trajectory. To keep the
-    full geodesic path, it is encouraged to use the `SciMLBase.AbstractODESolution` directly.
-
-Must minimally have the same fields as [`GeodesicPoint`](@ref).
-Examples include [`Gradus.FirstOrderGeodesicPoint`](@ref).
-"""
-abstract type AbstractGeodesicPoint{T} end
 
 """
     struct GeodesicPoint <: AbstractGeodesicPoint
 
-$(FIELDS)
-
+Fields:
+- `status::StatusCodes.T`: Return code of the integrator for this geodesic.
+- `λ_min::T`: Start affine time
+- `λ_max::T`: End affine time
+- `x_init::SVector{4,T}`: Start four position
+- `x::SVector{4,T}`: End four position
+- `v_init::SVector{4,T}`: Start four velocity
+- `v::SVector{4,T}`: End four velocity
+- `aux::A`: Auxillary values (polarisation, intensities, etc.)
 """
 struct GeodesicPoint{T,A} <: AbstractGeodesicPoint{T}
     "Return code of the integrator for this geodesic."

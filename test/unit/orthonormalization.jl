@@ -26,7 +26,7 @@ for m in all_metrics, r in radii, θ in angles
     v = Gradus.constrain_all(m, u, CircularOrbits.fourvelocity(m, r), 1.0)
 
     # function that we are testing
-    M = Gradus.GradusBase.tetradframe(m, u, v)
+    M = Gradus.tetradframe(m, u, v)
 
     m_mat = Gradus.metric(m, u)
     @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
@@ -38,7 +38,7 @@ for m in all_metrics, r in radii, θ in angles
     u = @SVector([0.0, r, θ, 0.0])
 
     # function that we are testing
-    M = Gradus.GradusBase.lnrframe(m, u)
+    M = Gradus.lnrframe(m, u)
 
     m_mat = Gradus.metric(m, u)
     @tullio res[a, b] := m_mat[i, j] * M[a][i] * M[b][j]
@@ -65,13 +65,13 @@ function kerr_lnrframe(m, u)
 end
 
 function numerical_lnrframe(m, u)
-    vecs = Gradus.GradusBase.lnrframe(m, u)
+    vecs = Gradus.lnrframe(m, u)
     reduce(hcat, vecs)
 end
 
 for M = 0.2:0.8:2.0, a = -M:0.5:M
     m = KerrMetric(M, a)
-    r = inner_radius(m) + 4.2
+    r = Gradus.inner_radius(m) + 4.2
     for θ in angles
         u = @SVector [0.0, r, θ, 0.0]
         expected = kerr_lnrframe(m, u)
@@ -97,13 +97,13 @@ function kerr_lnrbasis(m, u)
 end
 
 function numerical_lnrbasis(m, u)
-    vecs = Gradus.GradusBase.lnrbasis(m, u)
+    vecs = Gradus.lnrbasis(m, u)
     reduce(hcat, vecs)
 end
 
 for M = 0.2:0.8:2.0, a = -M:0.5:M
     m = KerrMetric(M, a)
-    r = inner_radius(m) + 0.3
+    r = Gradus.inner_radius(m) + 0.3
     for θ in angles
         u = @SVector [0.0, r, θ, 0.1]
         expected = kerr_lnrbasis(m, u)

@@ -129,5 +129,3 @@ raiseindices(m::AbstractMetric, u, v) = raiseindices(inv(metric(m, u)), v)
 
 lnrbasis_matrix(m::AbstractMetric, x) = reduce(hcat, lnrbasis(m, x))
 lnrframe_matrix(m::AbstractMetric, x) = reduce(hcat, lnrframe(m, x))
-
-export dotproduct, propernorm, _fast_dot

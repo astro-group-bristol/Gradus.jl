@@ -1,5 +1,6 @@
 """
-    $(TYPEDSIGNATURES)
+    isco(m::AbstractMetric)
+    isco(m::AbstractMetric, lower_bound, upper_bound; kwargs...) 
 
 Innermost stable circular orbit (ISCO), defined by
 ```math
@@ -33,7 +34,7 @@ function isco(
 end
 
 """
-    $(TYPEDSIGNATURES)
+    find_isco_bounds(m::AbstractStaticAxisSymmetric, max_upper_bound, step; kwargs...)
 
 Brute force method for finding the first radius at which ``\\frac{E}{\\mu} > 1``. The method
 calculates ``E`` with [`CircularOrbits.energy`](@ref), where `r` steps from `upper_bound` to
@@ -59,7 +60,7 @@ function find_isco_bounds(
 end
 
 """
-    $(TYPEDSIGNATURES)
+    photon_orbit(m::AbstractMetric)
 
 Photon orbit radius, defined as the radius for which
 ```math
@@ -69,7 +70,7 @@ Photon orbit radius, defined as the radius for which
 photon_orbit(m::AbstractMetric) = error("Not implemented for $(typeof(m)).")
 
 """
-    $(TYPEDSIGNATURES)
+    marginally_bound_orbit(m::AbstractMetric)
 
 Marginally bound orbit
 ```math
@@ -81,7 +82,7 @@ marginally_bound_orbit(m::AbstractMetric) = error("Not implemented for $(typeof(
 """
     event_horizon(m::AbstractMetric; select = last, resolution = 100, θε = 1e-7, rmax = 5.0)
 
-Event horizon radius, often equivalent to [`GradusBase.inner_radius`](@ref), however remains
+Event horizon radius, often equivalent to [`inner_radius`](@ref), however remains
 distinct, such that the latter may still be an arbitrary chart cutoff.
 
 Utility function for helping plot an event horizon shape. Returns a tuple containing the `r`

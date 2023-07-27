@@ -5,6 +5,7 @@ CurrentModule = Gradus
 ```
 
 ```@docs
+StatusCodes
 tracegeodesics
 inverse_metric_components
 Gradus.metric_jacobian

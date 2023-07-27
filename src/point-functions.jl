@@ -2,8 +2,6 @@
     struct PointFunction <: AbstractPointFunction
     PointFunction(func)
 
-$(FIELDS)
-
 Point functions are functions that are used to calculate physical parameters from geodesic
 integrations, and to compose more complex models. A number of default and utility `PointFunction`
 are defined in [`Gradus.ConstPointFunctions`](@ref).
@@ -20,7 +18,7 @@ end
 pf = PointFunction(func)
 ```
 - The `AbstractMetric` argument may be used to dispatch for different metrics.
-- `gp` is an [`GradusBase.AbstractGeodesicPoint`](@ref) corresponding to a given geodesic.
+- `gp` is an [`AbstractGeodesicPoint`](@ref) corresponding to a given geodesic.
 - The `max_time` parameter is the maximum integration time used to integrate the geodesics. This may be useful when trying to determine whether a geodesic terminated early or not.
 
 They may be invoked by invoking the instance
@@ -51,8 +49,6 @@ end
 """
     struct FilterPointFunction <: AbstractPointFunction
     FilterPointFunction(func, default_value)
-
-$(FIELDS)
 
 Point functions used to filter geodesics. They may be constructed with
 ```julia
@@ -87,7 +83,7 @@ FilterPointFunction(f) = FilterPointFunction(f, NaN)
 
 @inline function (pf::AbstractPointFunction)(
     m::AbstractMetric,
-    gp::GradusBase.AbstractGeodesicPoint{T},
+    gp::AbstractGeodesicPoint{T},
     max_time;
     kwargs...,
 )::T where {T}
