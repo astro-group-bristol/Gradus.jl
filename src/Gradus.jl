@@ -162,9 +162,33 @@ Abstract type for binning structures over discs (e.g., radial bins, voronoi).
 abstract type AbstractDiscProfile end
 
 """
-    AbstractCoronaModel{T,N}
+    abstract type AbstractCoronaModel{T}
 
-Type `T`.
+The supertype of coronal models, which concrete models must subtype.
+Struct implementing `AbstractCoronaModel` must implement minimally
+[`sample_position_velocity`](@ref).
+
+For example, adding the lamp-post coronal model
+```julia
+struct LampPostModel{T} <: AbstractCoronaModel{T}
+    height::T
+end
+
+function Gradus.sample_position_velocity(m::AbstractMetric, model::LampPostModel)
+    # avoid coordinate singularity with a small θ
+    x = SVector(0, model.height, 1e-3, 0)
+    # ensure velocity is normalized
+    g = metric_components(m, SVector(x[2], x[3]))
+    v = inv(√(-g[1])) * SVector(1, 0, 0, 0)
+    x, v
+end
+```
+
+Note that [`sample_position_velocity`](@ref) has a number of its own requirements (see that
+function's documentation). This function must be implemented as a fallback for other methods.
+
+If special symmetries exist, these may be used in the implementations of higher-order functions, such as
+[`emissivity_profile`](@ref). 
 """
 abstract type AbstractCoronaModel{T} end
 
