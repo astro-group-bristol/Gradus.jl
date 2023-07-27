@@ -31,6 +31,66 @@ function sample_position_direction_velocity(
     xs, vs, vs_source
 end
 
+"""
+    sample_position_velocity(m::AbstractMetric, model::AbstractCoronaModel) 
+    sample_position_velocity(
+        m::AbstractMetric,
+        model::AbstractCoronaModel,
+        ::AbstractDirectionSampler,
+        i,
+        N,
+    )
+
+Sample a source position and velocity pair from the [`AbstractCoronaModel`](@ref), optionally
+specifying the sampler, the sample index `i`, and total number of samples `N`. The latter is
+used when uniform samples are needed, but will invoke the prior if not implemented.
+
+Currently, these functions should make use of `random` if they have underlying position and/or
+velocity distributions, allowing higher order methods, such as [`tracecorona`](@ref) to approximate
+a Monte-Carlo sampling technique. The user is required to ensure that the distributions have the desired
+properties.
+
+This function must return a pair of `SVector{4,T}`, where the type must match the parametric type of the
+coronal model, corresponding to the source position and velocity of that position.
+
+The velocity vector must be appropriately normalised for the source (see [`propernorm`](@ref) for help).
+
+## Example
+
+Here we implement a new [`AbstractCoronaModel`](@ref) that is extended over a region at constant
+height above the black hole. Since we desire the distribution of points to be even over this disc, we must
+sample as
+
+```math
+\\phi \\sim 2\\pi \\mathcal{U},
+\\quad \\text{and} \\quad
+r \\sim \\sqrt{R^2 \\mathcal{U}},
+```
+
+where ``\\mathcal{U}`` is a uniform random variable in ``[0, 1]``, and ``R`` is the radial extent of the
+coronal source. Implemented, this is
+
+```julia
+struct ExtendedCorona{T} <: Gradus.AbstractCoronaModel{T}
+    h::T
+    R::T
+end
+
+function Gradus.sample_position_velocity(m::AbstractMetric, model::ExtendedCorona{T}) where {T}
+    ϕ = rand(T) * 2π
+    R = √(rand(T) * model.R^2)
+
+    # geometry to translate to global coordinates
+    r = √(model.h^2 + R^2)
+    θ = atan(R, model.h)
+
+    # ensure velocity is normalized
+    g = metric_components(m, SVector(r, θ))
+    v = inv(√(-g[1])) * SVector(1, 0, 0, 0)
+    SVector(0, r, θ, ϕ), v
+end
+```
+"""
 function sample_position_velocity(
     m::AbstractMetric,
     model::AbstractCoronaModel,
@@ -40,7 +100,6 @@ function sample_position_velocity(
 )
     sample_position_velocity(m, model)
 end
-
 function sample_position_velocity(::AbstractMetric, model::AbstractCoronaModel)
     error(
         "This functions needs to be implemented for $(typeof(model)). See the documentation for this function for instructions.",
