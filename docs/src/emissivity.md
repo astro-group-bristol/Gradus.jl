@@ -36,6 +36,19 @@ emissivity_profile
 
 ## Using emissivity profiles
 
+## Adding coronal models
+
+A coronal model must minimally specify how pairs of source position and velocity are to be sampled. For example, the lamp post model has only a single position (the point location), and is stationary. A stationary extended corona has different positions, but always the same velocity, and a moving extended source has both a position and velocity distribution which must be sampled to calculate the emissivity profile:
+
+![](./figs/corona-samples.svg)
+
+Coronal sources must subtype [`AbstractCoronaModel`](@ref):
+
+```@docs
+AbstractCoronaModel
+sample_position_velocity
+```
+
 ## Radial disc profile
 
 ```@docs
