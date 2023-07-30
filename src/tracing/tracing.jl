@@ -142,7 +142,8 @@ function ensemble_solve_tracing_problem(
         reltol = config.reltol,
         solver_opts...,
         # throw error if wrong keyword arguments passed
-        kwargshandle = KeywordArgError,
+        # TODO: this should be only for the GPU ensemble dispatch
+        # kwargshandle = KeywordArgError,
     )
 end
 # thread reusing dispatch
