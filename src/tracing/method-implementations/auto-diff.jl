@@ -149,7 +149,7 @@ function _compute_geodesic_equation(
     jacobian = (j0, j1_mat, j2_mat, j0)
     # christoffel symbols
     @tullio Γ[i, k, l] :=
-        (1 / 2) *
+        _float_type(T)(1 / 2) *
         inverse_metric[i, m] *
         (jacobian[l][m, k] + jacobian[k][m, l] - jacobian[m][k, l])
     quote
@@ -163,6 +163,9 @@ function _compute_geodesic_equation(
         end
     end
 end
+
+_float_type(T::Type{<:AbstractFloat}) = T
+_float_type(::Type{ForwardDiff.Dual{<:ForwardDiff.Tag{F,T}}}) where {F,T} = T
 
 """
     constrain_time(g_comp, v, μ = 0.0, positive::Bool = true)
