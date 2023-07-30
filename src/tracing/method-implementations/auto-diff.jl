@@ -149,7 +149,7 @@ function _compute_geodesic_equation(
     jacobian = (j0, j1_mat, j2_mat, j0)
     # christoffel symbols
     @tullio Γ[i, k, l] :=
-        (one(T) / 2) *
+        (1 / 2) *
         inverse_metric[i, m] *
         (jacobian[l][m, k] + jacobian[k][m, l] - jacobian[m][k, l])
     quote
