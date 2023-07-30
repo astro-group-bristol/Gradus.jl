@@ -26,19 +26,30 @@ end
 absorption_coefficient(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν) = 0.0
 emissivity_coefficient(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν) = 0.0
 
-mutable struct RadiativeTransferIntegrationParameters{V} <: AbstractIntegrationParameters
-    status::StatusCodes.T
+struct RadiativeTransferIntegrationParameters{M,V} <: AbstractIntegrationParameters{M}
+    metric::M
+    status::MutStatusCode
     within_geometry::V
+    RadiativeTransferIntegrationParameters(
+        metric::M,
+        status,
+        within_geometry::V,
+    ) where {M,V} = new{M,V}(metric, MutStatusCode(status), within_geometry)
 end
 
-function _radiative_transfer_integration_parameters(status::StatusCodes.T, geometry)
+function _radiative_transfer_integration_parameters(
+    metric::AbstractMetric,
+    status::StatusCodes.T,
+    geometry,
+)
     within_geometry = map(!is_finite_disc, geometry)
-    RadiativeTransferIntegrationParameters(status, within_geometry)
+    RadiativeTransferIntegrationParameters(metric, status, within_geometry)
 end
 
 set_status_code!(params::RadiativeTransferIntegrationParameters, status::StatusCodes.T) =
-    params.status = status
-get_status_code(params::RadiativeTransferIntegrationParameters) = params.status
+    params.status[1] = status
+get_status_code(params::RadiativeTransferIntegrationParameters) = params.status[1]
+get_metric(params::RadiativeTransferIntegrationParameters) = params.metric
 
 
 function update_integration_parameters!(
@@ -127,10 +138,10 @@ function radiative_transfer_ode_problem(
 
     function f(u::SVector{9,T}, p, λ) where {T}
         @inbounds let x = SVector{4,T}(u[1:4]), k = SVector{4,T}(u[5:8]), I = u[9]
-
-            dk = SVector{4,T}(geodesic_equation(m, x, k))
+            _m = get_metric(p)
+            dk = SVector{4,T}(geodesic_equation(_m, x, k))
             dI = _intensity_delta(
-                m,
+                _m,
                 x,
                 k,
                 geometry,
@@ -151,7 +162,7 @@ function radiative_transfer_ode_problem(
         f,
         u_init,
         time_domain,
-        _radiative_transfer_integration_parameters(StatusCodes.NoStatus, geometry);
+        _radiative_transfer_integration_parameters(m, StatusCodes.NoStatus, geometry);
         callback = callback,
     )
 end

@@ -6,6 +6,8 @@ using LinearAlgebra: ×, ⋅, norm, det, dot, inv
 
 using Parameters
 
+import DiffEqBase
+
 using SciMLBase
 using OrdinaryDiffEq
 using DiffEqCallbacks
@@ -158,7 +160,7 @@ number of geodesics. Also used to dispatch different tracing problems.
 abstract type AbstractTrace end
 
 """
-    AbstractIntegrationParameters
+    AbstractIntegrationParameters{M}
 
 Parameters that are made available at each step of the integration, that need not be constant.
 For example, the turning points or withing-geometry flags.
@@ -167,13 +169,28 @@ The integration parameters should track which spacetime `M` they are parameters 
 Integration parameters must implement
 - [`set_status_code!`](@ref)
 - [`get_status_code`](@ref)
+- [`get_metric`](@ref)
 
 For more complex parameters, may also optionally implement
 - [`update_integration_parameters!`](@ref)
 
 See the documentation of each of the above functions for details of their operation.
 """
-abstract type AbstractIntegrationParameters end
+abstract type AbstractIntegrationParameters{M<:AbstractMetric} end
+
+# type alias, since this is often used
+const MutStatusCode = MVector{1,StatusCodes.T}
+
+# TODO: temporary fix for https://github.com/SciML/DiffEqBase.jl/issues/918
+function DiffEqBase.anyeltypedual(
+    ::AbstractIntegrationParameters{<:AbstractMetric{T}},
+) where {T}
+    if T <: ForwardDiff.Dual
+        T
+    else
+        Any
+    end
+end
 
 """
     update_integration_parameters!(old::AbstractIntegrationParameters, new::AbstractIntegrationParameters)
@@ -197,7 +214,7 @@ end
 
 Update the status [`StatusCodes`](@ref) in `p` with `status`.
 """
-set_status_code!(params::AbstractIntegrationParameters, status::StatusCodes.T) =
+set_status_code!(params::AbstractIntegrationParameters, ::StatusCodes.T) =
     error("Not implemented for $(typeof(params))")
 
 """
@@ -208,6 +225,14 @@ Return the status [`StatusCodes`](@ref) in `status`.
 get_status_code(params::AbstractIntegrationParameters) =
     error("Not implemented for $(typeof(params))")
 
+"""
+    get_metric(p::AbstractIntegrationParameters{M})::M where {M}
+
+Return the [`AbstractMetric`](@ref) `m::M` for which the integration parameters
+have been specialised.
+"""
+get_metric(params::AbstractIntegrationParameters) =
+    error("Not implemented for $(typeof(params))")
 
 """
     abstract type AbstractGeodesicPoint
