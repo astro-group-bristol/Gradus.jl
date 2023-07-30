@@ -1,10 +1,15 @@
-mutable struct IntegrationParameters <: AbstractIntegrationParameters
-    status::StatusCodes.T
+
+struct IntegrationParameters{M} <: AbstractIntegrationParameters{M}
+    metric::M
+    status::MutStatusCode
+    IntegrationParameters(metric::M, status) where {M} =
+        new{M}(metric, MutStatusCode(status))
 end
 
 set_status_code!(params::IntegrationParameters, status::StatusCodes.T) =
-    params.status = status
-get_status_code(params::IntegrationParameters) = params.status
+    params.status[1] = status
+get_status_code(params::IntegrationParameters) = params.status[1]
+get_metric(params::IntegrationParameters) = params.metric
 
 """
     geodesic_ode_problem(
@@ -14,7 +19,7 @@ get_status_code(params::IntegrationParameters) = params.status
         vel,
         time_domain::Tuple,
         callback
-    )
+    
 
 Returns an `OrdinaryDiffEq.ODEProblem{false}`, specifying the ODE problem to be solved. 
 The precise problem depends on the [`AbstractTrace`](@ref) and [`AbstractMetric`](@ref) defined.
@@ -62,23 +67,22 @@ function geodesic_ode_problem(
     time_domain,
     callback,
 )
-    function geodesic_ode_f(u::SVector{8,T}, p, λ) where {T}
-        @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
-            dv = SVector{4,T}(geodesic_equation(m, x, v))
-            vcat(v, dv)
-        end
-    end
-
     u_init = vcat(pos, vel)
     ODEProblem{false}(
-        geodesic_ode_f,
+        _second_order_ode_f,
         u_init,
         time_domain,
-        IntegrationParameters(StatusCodes.NoStatus);
+        IntegrationParameters(m, StatusCodes.NoStatus);
         callback = callback,
     )
 end
 
+function _second_order_ode_f(u::SVector{8,T}, p, λ) where {T}
+    @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
+        dv = SVector{4,T}(geodesic_equation(get_metric(p), x, v))
+        vcat(v, dv)
+    end
+end
 
 """
     assemble_tracing_problem(trace::AbstractTrace, config::TracingConfiguration)

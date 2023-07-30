@@ -84,21 +84,23 @@ of motion in `p`.
 """
 four_velocity(u, m::AbstractFirstOrderMetric, p) = error("Not implmented for $(typeof(m)).")
 
-mutable struct FirstOrderIntegrationParameters{T} <: AbstractIntegrationParameters
+mutable struct FirstOrderIntegrationParameters{M,T} <: AbstractIntegrationParameters{M}
+    metric::M
     L::T
     Q::T
     r::Int
     θ::Int
     changes::Vector{T}
     status::StatusCodes.T
-end
+    FirstOrderIntegrationParameters(m::M, L, Q, sign_θ, ::Type{T}) where {M,T} =
+        new{M,T}(m, L, Q, -1, sign_θ, [0.0, 0.0], StatusCodes.NoStatus)
 
-make_parameters(L, Q, sign_θ, ::Type{T}) where {T} =
-    FirstOrderIntegrationParameters{T}(L, Q, -1, sign_θ, [0.0, 0.0], StatusCodes.NoStatus)
+end
 
 set_status_code!(params::FirstOrderIntegrationParameters, status::StatusCodes.T) =
     params.status = status
 get_status_code(params::FirstOrderIntegrationParameters) = params.status
+get_metric(params::FirstOrderIntegrationParameters) = params.metric
 
 function update_integration_parameters!(
     p::FirstOrderIntegrationParameters,
@@ -112,6 +114,10 @@ function update_integration_parameters!(
     p
 end
 
+function _first_order_ode_f(u, p, λ)
+    SVector(four_velocity(u, get_metric(p), p)...)
+end
+
 function geodesic_ode_problem(
     ::TraceGeodesic,
     m::AbstractFirstOrderMetric{T},
@@ -122,13 +128,12 @@ function geodesic_ode_problem(
 ) where {S,T}
     L, Q = calc_lq(m, pos, vel)
     ODEProblem{false}(
+        _first_order_ode_f,
         pos,
         time_domain,
-        make_parameters(L, Q, vel[2], T);
+        FirstOrderIntegrationParameters(m, L, Q, vel[2], T);
         callback = callback,
-    ) do u, p, λ
-        SVector(four_velocity(u, m, p)...)
-    end
+    )
 end
 
 convert_velocity_type(::StaticVector{S,T}, v) where {S,T} = convert(SVector{S,T}, v)

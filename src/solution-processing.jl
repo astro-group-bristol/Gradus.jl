@@ -128,5 +128,6 @@ function unpack_solution_full(
 end
 
 unpack_solution(gp::AbstractGeodesicPoint) = gp
-unpack_solution(sol::SciMLBase.AbstractODESolution) = unpack_solution(sol.prob.f.f.m, sol)
+unpack_solution(sol::SciMLBase.AbstractODESolution) =
+    unpack_solution(get_metric(sol.prob.p), sol)
 unpack_solution(simsol::SciMLBase.AbstractEnsembleSolution) = map(unpack_solution, simsol.u)

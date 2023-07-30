@@ -78,10 +78,11 @@ function geodesic_ode_problem(
     end
     function f(u::SVector{8,T}, p, λ) where {T}
         @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
-            dv = SVector{4,T}(geodesic_equation(m, x, v))
+            _m = get_metric(p)
+            dv = SVector{4,T}(geodesic_equation(_m, x, v))
             # add maxwell part
             dvf = if !(trace.q ≈ 0.0)
-                F = faraday_tensor(m, x)
+                F = faraday_tensor(_m, x)
                 q_μ * (F * v)
             else
                 zero(SVector{4,T})
@@ -95,7 +96,7 @@ function geodesic_ode_problem(
         f,
         u_init,
         time_domain,
-        IntegrationParameters(StatusCodes.NoStatus);
+        IntegrationParameters(m, StatusCodes.NoStatus);
         callback = callback,
     )
 end
