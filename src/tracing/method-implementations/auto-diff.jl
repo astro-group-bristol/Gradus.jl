@@ -112,11 +112,20 @@ Limitations:
 - currenly pre-supposes static, axis-symmetric metric.
 """
 @generated function compute_geodesic_equation(
-    _ginv::SVector,
-    _j1::SVector,
-    _j2::SVector,
-    _v::SVector,
+    _ginv::SVector{5},
+    _j1::SVector{5},
+    _j2::SVector{5},
+    _v::SVector{4},
 )
+    _compute_geodesic_equation(_ginv, _j1, _j2, _v)
+end
+# seperate the code generation for easier debugging
+function _compute_geodesic_equation(
+    _ginv::Type{<:SVector{5,T}},
+    _j1::Type{<:SVector{5}},
+    _j2::Type{<:SVector{5}},
+    _v::Type{<:SVector{4}},
+) where {T}
     Symbolics.@variables ginv[1:5], j1[1:5], j2[1:5], v[1:4] # non zero metric components
     inverse_metric = [
         ginv[1] 0 0 ginv[5]
@@ -140,15 +149,15 @@ Limitations:
     jacobian = (j0, j1_mat, j2_mat, j0)
     # christoffel symbols
     @tullio Γ[i, k, l] :=
-        1 / 2 *
+        (one(T) / 2) *
         inverse_metric[i, m] *
         (jacobian[l][m, k] + jacobian[k][m, l] - jacobian[m][k, l])
     quote
         @inbounds @muladd @fastmath let ginv = _ginv, j1 = _j1, j2 = _j2, v = _v
-            Γ1 = SMatrix{4,4}($(Symbolics.toexpr.(Γ[1, :, :])...))
-            Γ2 = SMatrix{4,4}($(Symbolics.toexpr.(Γ[2, :, :])...))
-            Γ3 = SMatrix{4,4}($(Symbolics.toexpr.(Γ[3, :, :])...))
-            Γ4 = SMatrix{4,4}($(Symbolics.toexpr.(Γ[4, :, :])...))
+            Γ1 = SMatrix{4,4,$(T)}($(Symbolics.toexpr.(Γ[1, :, :])...))
+            Γ2 = SMatrix{4,4,$(T)}($(Symbolics.toexpr.(Γ[2, :, :])...))
+            Γ3 = SMatrix{4,4,$(T)}($(Symbolics.toexpr.(Γ[3, :, :])...))
+            Γ4 = SMatrix{4,4,$(T)}($(Symbolics.toexpr.(Γ[4, :, :])...))
 
             -SVector{4}((Γ1 * v) ⋅ v, (Γ2 * v) ⋅ v, (Γ3 * v) ⋅ v, (Γ4 * v) ⋅ v)
         end
