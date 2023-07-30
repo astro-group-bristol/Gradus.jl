@@ -24,6 +24,17 @@ using MuladdMacro
 using Tullio: @tullio
 
 import ForwardDiff
+# todo: temporary fix for https://github.com/JuliaGPU/Metal.jl/issues/229
+function Base.sin(x::ForwardDiff.Dual{<:ForwardDiff.Tag{F,Float32}}) where {F}
+    s = sin(ForwardDiff.value(x))
+    c = cos(ForwardDiff.value(x))
+    return ForwardDiff.Dual{typeof(x).parameters[1]}(s, c * ForwardDiff.partials(x))
+end
+function Base.cos(x::ForwardDiff.Dual{<:ForwardDiff.Tag{F,Float32}}) where {F}
+    s = sin(ForwardDiff.value(x))
+    c = cos(ForwardDiff.value(x))
+    return ForwardDiff.Dual{typeof(x).parameters[1]}(c, -s * ForwardDiff.partials(x))
+end
 import GeometryBasics
 import Symbolics
 
