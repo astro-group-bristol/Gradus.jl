@@ -131,20 +131,20 @@ function __prerendergeodesics(
 end
 
 function _render_velocity_function(
-    m::AbstractMetric,
+    m::AbstractMetric{T},
     position,
     image_width,
     image_height,
     fov,
-)
+) where {T}
     y_mid = image_height ÷ 2
     x_mid = image_width ÷ 2
     xfm = lnr_momentum_to_global_velocity_transform(m, position)
     function velfunc(i)
         Y = i % image_height
         X = i ÷ image_height
-        α = x_to_α(X, x_mid, fov)
-        β = y_to_β(Y, y_mid, fov)
+        α = x_to_α(T, X, x_mid, fov)
+        β = y_to_β(T, Y, y_mid, fov)
         xfm(local_momentum(position[2], α, β))
     end
 end

@@ -35,7 +35,8 @@ Utility function for converting some `X` on an image plane into ``\\alpha``, giv
 the midpoint `x_mid` and field-of-view multiplier `fov`.
 """
 # have to use a slight 0.001 offset to avoid integrating α=0.0 geodesics in first order methods
-x_to_α(X, x_mid, fov) = (X + 1e-3 - x_mid) / fov
+x_to_α(X, x_mid, fov) = x_to_α(typeof(fov), X, x_mid, fov)
+x_to_α(T::Type, X, x_mid, fov) = (X + T(1e-3) - x_mid) / T(fov)
 
 """
     y_to_β(Y, y_mid, fov)
@@ -43,7 +44,8 @@ x_to_α(X, x_mid, fov) = (X + 1e-3 - x_mid) / fov
 Utility function for converting some `Y` on an image plane into ``\\beta``, given
 the midpoint `y_mid` and field-of-view multiplier `fov`.
 """
-y_to_β(Y, y_mid, fov) = (Y - y_mid) / fov
+y_to_β(Y, y_mid, fov) = y_to_β(typeof(fov), Y, y_mid, fov)
+y_to_β(T::Type, Y, y_mid, fov) = (Y - y_mid) / T(fov)
 
 function init_progress_bar(text, N, enabled)
     ProgressMeter.Progress(
