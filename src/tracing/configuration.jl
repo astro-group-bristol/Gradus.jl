@@ -24,6 +24,7 @@ struct TracingConfiguration{
     λ_domain::Tuple{T,T}
     abstol::T
     reltol::T
+    verbose::Bool
     # constructor
     function TracingConfiguration(
         m::AbstractMetric{T},
@@ -39,6 +40,7 @@ struct TracingConfiguration{
         λ_max,
         abstol,
         reltol,
+        verbose,
     ) where {T,V}
         if V <: Function && isnothing(trajectories)
             error("When velocity is a function, trajectories must be defined.")
@@ -75,6 +77,7 @@ struct TracingConfiguration{
             (λ_min, λ_max),
             abstol,
             reltol,
+            verbose,
         )
     end
 end
@@ -93,6 +96,7 @@ end
     trajectories = nothing,
     abstol = 1e-9,
     reltol = 1e-9,
+    integrator_verbose = true,
     solver_opts...,
 ) where {D}
     _velocity, _trajectories = promote_velfunc(m, position, velocity, trajectories)
@@ -110,6 +114,7 @@ end
         D <: Number ? λs : λs[2],
         abstol,
         reltol,
+        integrator_verbose,
     )
     config, solver_opts
 end
