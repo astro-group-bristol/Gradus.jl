@@ -8,6 +8,7 @@ end
 function RadialDiscProfile(
     m::AbstractMetric,
     model::AbstractCoronaModel,
+    spec::AbstractCoronalSpectrum,
     gps::AbstractVector{<:GeodesicPoint},
     source_vels::AbstractVector,
     intensities = nothing;
@@ -25,7 +26,7 @@ function RadialDiscProfile(
     times = map(i -> i.x[1], gps)
     gs = energy_ratio.(m, gps, source_vels)
 
-    RadialDiscProfile(m, radii, times, gs, intensities; kwargs...)
+    RadialDiscProfile(m, spec, radii, times, gs, intensities; kwargs...)
 end
 
 function RadialDiscProfile(rs::AbstractArray, ts::AbstractArray, εs::AbstractArray)
@@ -56,6 +57,7 @@ The relativistic correction is calculated via
 """
 function RadialDiscProfile(
     m::AbstractMetric,
+    spec::AbstractCoronalSpectrum,
     radii::AbstractArray{T},
     times,
     gs,
@@ -93,17 +95,26 @@ function RadialDiscProfile(
         x = SVector(0, R, π / 2, 0)
         A = dr * _proper_area(m, x)
         # I now stores emissivity
-        I[i] = source_to_disc_emissivity(m, I[i], A, x, eratios(R))
+        I[i] = source_to_disc_emissivity(m, spec, I[i], A, x, eratios(R))
     end
 
     RadialDiscProfile(bins, ts, I)
 end
 
+<<<<<<< HEAD
 function RadialDiscProfile(ce::CoronaGeodesics; kwargs...)
     J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
+||||||| parent of c13b47f (feat: added coronal spectra for emissivity models)
+function RadialDiscProfile(ce::CoronaGeodesics; kwargs...)
+    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
+=======
+function RadialDiscProfile(ce::CoronaGeodesics, spec::AbstractCoronalSpectrum; kwargs...)
+    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
+>>>>>>> c13b47f (feat: added coronal spectra for emissivity models)
     @views RadialDiscProfile(
         ce.metric,
         ce.model,
+        spec,
         ce.geodesic_points[J],
         ce.source_velocity[J];
         kwargs...,
@@ -115,6 +126,7 @@ function RadialDiscProfile(ce::CoronaGeodesics{<:TraceRadiativeTransfer}; kwargs
     @views RadialDiscProfile(
         ce.metric,
         ce.model,
+        spec,
         ce.geodesic_points[J],
         ce.source_velocity[J],
         [i.aux[1] for i in ce.geodesic_points[J]];

@@ -1,5 +1,5 @@
 """
-    source_to_disc_emissivity(m, N, A, x, g; Γ = 2)
+    source_to_disc_emissivity(m, N, A, x, g)
 
 Compute the emissivity of a disc element with (proper) area `A` at coordinates `x` with metric
 `m`. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
@@ -16,12 +16,20 @@ always considered to be the Keplerian velocity.
 
 Wilkins & Fabian (2012) and Gonzalez et al. (2017).
 """
-function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, N, A, x, g; Γ = 2)
+function source_to_disc_emissivity(
+    m::AbstractStaticAxisSymmetric,
+    spec::AbstractCoronalSpectrum,
+    N,
+    A,
+    x,
+    g,
+)
     v = CircularOrbits.fourvelocity(m, SVector(x[2], x[3]))
     # account for relativistic effects in area due to lorentz shift
     γ = lorentz_factor(m, x, v)
     # divide by area to get number density
-    N / (g^Γ * A * γ)
+    I = coronal_spectrum(spec, g)
+    N * I / (A * γ)
 end
 
 """
@@ -43,7 +51,14 @@ in order to maintain point density. It may be regarded as the PDF that samples `
 
 Dauser et al. (2013)
 """
+<<<<<<< HEAD
 point_source_equatorial_disc_emissivity(θ, g, A, γ; Γ = 2) = sin(θ) / (g^Γ * A * γ)
+||||||| parent of c13b47f (feat: added coronal spectra for emissivity models)
+point_source_equitorial_disc_emissivity(θ, g, A, γ; Γ = 2) = sin(θ) / (g^Γ * A * γ)
+=======
+point_source_equitorial_disc_emissivity(spec::AbstractCoronalSpectrum, θ, g, A, γ) =
+    sin(θ) * coronal_spectrum(spec, g) / (A * γ)
+>>>>>>> c13b47f (feat: added coronal spectra for emissivity models)
 
 """
     function emissivity_profile(
@@ -97,24 +112,38 @@ This function assumes axis symmetry, and therefore always interpolates the emiss
 as a function of the radial coordinate on the disc. If non-symmetric profiles are 
 desired, consider using [`tracecorona`](@ref) with a profile constructor, e.g. [`VoronoiDiscProfile`](@ref).
 """
-emissivity_profile(
+function emissivity_profile(
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
     model::AbstractCoronaModel;
+    spectrum = PowerLawSpectrum(2.0),
+    kwargs...,
+)
+    emissivity_profile(m, d, model, spectrum; kwargs...)
+end
+function emissivity_profile(
+    m::AbstractMetric,
+    d::AbstractAccretionGeometry,
+    model::AbstractCoronaModel,
+    spectrum::AbstractCoronalSpectrum;
     sampler = nothing,
     kwargs...,
-) = emissivity_profile(sampler, m, d, model; kwargs...)
+)
+    emissivity_profile(sampler, m, d, model, spectrum; kwargs...)
+end
 function emissivity_profile(
     sampler::AbstractDirectionSampler,
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
-    model::AbstractCoronaModel;
+    model::AbstractCoronaModel,
+    spectrum::AbstractCoronalSpectrum;
     grid = GeometricGrid(),
     N = 100,
     kwargs...,
 )
     RadialDiscProfile(
-        tracecorona(m, d, model; sampler = sampler, kwargs...);
+        tracecorona(m, d, model; sampler = sampler, kwargs...),
+        spectrum;
         grid = grid,
         N = N,
     )
@@ -123,7 +152,8 @@ function emissivity_profile(
     ::Nothing,
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
-    model::AbstractCoronaModel;
+    model::AbstractCoronaModel,
+    spectrum::AbstractCoronalSpectrum;
     kwargs...,
 )
     @warn(
@@ -136,7 +166,8 @@ function emissivity_profile(
         EvenSampler(BothHemispheres(), GoldenSpiralGenerator()),
         m,
         d,
-        model;
+        model,
+        spectrum;
         kwargs...,
     )
 end
@@ -156,7 +187,8 @@ end
 function _point_source_symmetric_emissivity_profile(
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
-    model::AbstractCoronaModel;
+    model::AbstractCoronaModel,
+    spec::AbstractCoronalSpectrum;
     n_samples = 100,
     λ_max = 10_000.0,
     callback = domain_upper_hemisphere(),
@@ -189,7 +221,7 @@ function _point_source_symmetric_emissivity_profile(
     points = points[J]
     δs = δs[J]
 
-    r, ε = _point_source_emissivity(m, d, v, δs, points)
+    r, ε = _point_source_emissivity(m, d, spec, v, δs, points)
     t = [i.x[1] for i in @views(points[1:end-1])]
 
     RadialDiscProfile(r, t, ε)
@@ -198,6 +230,7 @@ end
 function _point_source_emissivity(
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
+    spec::AbstractCoronalSpectrum,
     source_velocity,
     δs,
     points,
@@ -212,7 +245,13 @@ function _point_source_emissivity(
     Δr = diff(r)
     @. A = A * Δr
     r = r[1:end-1]
+<<<<<<< HEAD
     ε = point_source_equatorial_disc_emissivity.(@views(δs[1:end-1]), gs, A, γ)
+||||||| parent of c13b47f (feat: added coronal spectra for emissivity models)
+    ε = point_source_equitorial_disc_emissivity.(@views(δs[1:end-1]), gs, A, γ)
+=======
+    ε = point_source_equitorial_disc_emissivity.(spec, @views(δs[1:end-1]), gs, A, γ)
+>>>>>>> c13b47f (feat: added coronal spectra for emissivity models)
     r, ε
 end
 

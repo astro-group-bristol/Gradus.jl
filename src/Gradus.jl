@@ -365,6 +365,19 @@ Base.length(::AbstractCoronaModel) = 1
 Base.iterate(m::AbstractCoronaModel) = (m, nothing)
 Base.iterate(::AbstractCoronaModel, ::Nothing) = nothing
 
+"""
+TODO: DOCSTRING
+"""
+abstract type AbstractCoronalSpectrum end
+
+# for broadcasting
+Base.length(::AbstractCoronalSpectrum) = 1
+Base.iterate(g::AbstractCoronalSpectrum) = (g, nothing)
+Base.iterate(::AbstractCoronalSpectrum, ::Nothing) = nothing
+
+coronal_spectrum(spectrum::AbstractCoronalSpectrum, g) =
+    error("not implemented for $(typeof(spectrum))")
+
 abstract type AbstractDirectionSampler{SkyDomain,Generator} end
 
 struct EnsembleEndpointThreads end
@@ -418,6 +431,7 @@ include("corona/disc-profiles.jl")
 include("transfer-functions/transfer-functions-2d.jl")
 include("corona/flux-calculations.jl")
 include("corona/emissivity.jl")
+include("corona/spectra.jl")
 
 include("metrics/kerr-metric.jl")
 include("metrics/kerr-metric-first-order.jl")
