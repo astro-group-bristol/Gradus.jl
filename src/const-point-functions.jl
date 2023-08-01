@@ -23,8 +23,9 @@ import ..Gradus
 A [`FilterPointFunction`](@ref) that filters geodesics that termined early (i.e., did not reach maximum integration time or effective infinity).
 Default: `NaN`.
 """
-const filter_early_term =
-    FilterPointFunction((m, gp, max_time; kwargs...) -> gp.λ_max < max_time, NaN)
+function filter_early_term(T::Type = Float64)
+    FilterPointFunction((m, gp, max_time; kwargs...) -> gp.λ_max < max_time, T(NaN))
+end
 
 """
     filter_intersected(m::AbstractMetric, gp::AbstractGeodesicPoint, max_time)
@@ -32,17 +33,21 @@ const filter_early_term =
 A [`FilterPointFunction`](@ref) that filters geodesics which intersected with the accretion
 disc. Default: `NaN`.
 """
-const filter_intersected = FilterPointFunction(
-    (m, gp, max_time; kwargs...) -> gp.status == StatusCodes.IntersectedWithGeometry,
-    NaN,
-)
+function filter_intersected(T::Type = Float64)
+    FilterPointFunction(
+        (m, gp, max_time; kwargs...) -> gp.status == StatusCodes.IntersectedWithGeometry,
+        T(NaN),
+    )
+end
 
 """
     affine_time(m::AbstractMetric, gp::AbstractGeodesicPoint, max_time)
 
 A [`PointFunction`](@ref) returning the affine integration time at the endpoint of the geodesic.
 """
-const affine_time = PointFunction((m, gp, max_time; kwargs...) -> gp.λ_max)
+function affine_time()
+    PointFunction((m, gp, max_time; kwargs...) -> gp.λ_max)
+end
 
 """
     shadow(m::AbstractMetric, gp::AbstractGeodesicPoint, max_time)
@@ -50,7 +55,9 @@ const affine_time = PointFunction((m, gp, max_time; kwargs...) -> gp.λ_max)
 A [`PointFunction`](@ref) which colours the shadow of the black hole for any disc-less render.
 Equivalent to `ConstPointFunctions.affine_time ∘ ConstPointFunctions.filter_early_term`.
 """
-const shadow = affine_time ∘ filter_early_term
+function shadow(T::Type = Float64)
+    affine_time() ∘ filter_early_term(T)
+end
 
 """
     redshift(m::AbstractMetric)

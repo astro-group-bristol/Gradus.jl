@@ -72,7 +72,7 @@ d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
 
 # define point function which filters geodesics that intersected the accretion disc
 # and use those to calculate redshift
-pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected
+pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected()
 
 α, β, img = rendergeodesics(
     m,
@@ -211,7 +211,7 @@ pl_int = interpolate_plunging_velocities(m)
 
 redshift = interpolate_redshift(pl_int, x)
 
-pf = redshift ∘ ConstPointFunctions.filter_intersected
+pf = redshift ∘ ConstPointFunctions.filter_intersected()
 
 α, β, img = rendergeodesics(
     m,

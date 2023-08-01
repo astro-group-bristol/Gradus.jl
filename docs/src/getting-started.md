@@ -317,7 +317,7 @@ The thick disc callback receives the full four-position, so we forward only the 
 We now need to update our point function so that it filters those geodesics which intersected with the geometry instead of those that fell into the black hole. This is a standard function already implemented in [`ConstPointFunctions`](@ref); only a composition is needed:
 
 ```julia
-pf_geometry = time_coord ∘ ConstPointFunctions.filter_intersected
+pf_geometry = time_coord ∘ ConstPointFunctions.filter_intersected()
 ```
 
 We then make a handful of small changes to make our image more interesting, and render just as before, passing the disc in to the [`rendergeodesics`](@ref) function:
@@ -362,7 +362,7 @@ We can choose any velocity profile we like, but for simplicity we use the veloci
 ```julia
 redshift = ConstPointFunctions.redshift(m, x)
 # compose to filter those that intersected with the geometry
-redshift_geometry = redshift ∘ ConstPointFunctions.filter_intersected
+redshift_geometry = redshift ∘ ConstPointFunctions.filter_intersected()
 ```
 
 This is another [`PointFunction`](@ref), and is used in the same way. Rendering as before:
@@ -395,7 +395,7 @@ j_m = JohannsenMetric(M=1.0, a = 0.7, α13 = 2.0, ϵ3 = 1.0)
 
 # pass the new metric
 j_redshift = ConstPointFunctions.redshift(j_m, x)
-j_redshift_geometry = j_redshift ∘ ConstPointFunctions.filter_intersected
+j_redshift_geometry = j_redshift ∘ ConstPointFunctions.filter_intersected()
 
 α, β, image = rendergeodesics(
     # pass the new metric
