@@ -124,10 +124,9 @@ Limitations:
     j0 = zeros(Symbolics.Num, (4, 4))
     jacobian = (j0, j1_mat, j2_mat, j0)
     # christoffel symbols
+    # NB: factor of a half is deferred for both type stability and op count
     @tullio Γ[i, k, l] :=
-        (1 / 2) *
-        inverse_metric[i, m] *
-        (jacobian[l][m, k] + jacobian[k][m, l] - jacobian[m][k, l])
+        inverse_metric[i, m] * (jacobian[l][m, k] + jacobian[k][m, l] - jacobian[m][k, l])
     quote
         @inbounds @muladd @fastmath let ginv = _ginv, j1 = _j1, j2 = _j2, v = _v
             Γ1 = SMatrix{4,4,T}($(Symbolics.toexpr.(Γ[1, :, :])...))
@@ -135,13 +134,10 @@ Limitations:
             Γ3 = SMatrix{4,4,T}($(Symbolics.toexpr.(Γ[3, :, :])...))
             Γ4 = SMatrix{4,4,T}($(Symbolics.toexpr.(Γ[4, :, :])...))
 
-            -SVector{4}((Γ1 * v) ⋅ v, (Γ2 * v) ⋅ v, (Γ3 * v) ⋅ v, (Γ4 * v) ⋅ v)
+            -T(0.5) * SVector{4}((Γ1 * v) ⋅ v, (Γ2 * v) ⋅ v, (Γ3 * v) ⋅ v, (Γ4 * v) ⋅ v)
         end
     end
 end
-
-_float_type(T::Type{<:AbstractFloat}) = T
-_float_type(::Type{ForwardDiff.Dual{<:ForwardDiff.Tag{F,T}}}) where {F,T} = T
 
 """
     constrain_time(g_comp, v, μ = 0.0, positive::Bool = true)
