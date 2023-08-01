@@ -112,15 +112,15 @@ function _solve_radius_condition(
     select = maximum,
     resolution::Int = 100,
     θε::T = T(1e-7),
-    rmax = 5.0,
-    init = 0.0,
+    rmax = T(5.0),
+    init = T(0.0),
 ) where {T}
-    θs = range(θε, 2π - θε, resolution)
+    θs = range(θε, T(2π - θε), resolution)
     rs = map(θs) do θ
         f(r) = condition_function(m, r, θ)
         r = Roots.find_zeros(f, init, rmax)
         if isempty(r) || all(isnan, r)
-            NaN
+            T(NaN)
         else
             select(r)
         end
