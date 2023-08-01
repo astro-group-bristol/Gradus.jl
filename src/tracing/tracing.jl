@@ -136,15 +136,14 @@ function ensemble_solve_tracing_problem(
     solve(
         prob,
         config.solver,
-        config.ensemble,
+        ensemble,
         ;
         trajectories = config.trajectories,
         abstol = config.abstol,
         reltol = config.reltol,
         solver_opts...,
         # throw error if wrong keyword arguments passed
-        # TODO: this should be only for the GPU ensemble dispatch
-        # kwargshandle = KeywordArgError,
+        kwargshandle = KeywordArgError,
         verbose = config.verbose,
     )
 end
