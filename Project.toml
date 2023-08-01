@@ -26,6 +26,12 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 VoronoiCells = "e3e34ffb-84e9-5012-9490-92c94d0c60a4"
 
+[weakdeps]
+DiffEqGPU = "071ae1c0-96b5-11e9-1965-c90190d839ea"
+
+[extensions]
+GradusDiffEqGPUExt = "DiffEqGPU"
+
 [compat]
 Buckets = ">=0.1.11"
 julia = "1.9"
