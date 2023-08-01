@@ -147,7 +147,7 @@ d = ThickDisc(x -> cross_section(x[2]))
 
 # ---------------------------------------------------------
 
-pf_geometry = time_coord ∘ ConstPointFunctions.filter_intersected
+pf_geometry = time_coord ∘ ConstPointFunctions.filter_intersected()
 
 # ---------------------------------------------------------
 
@@ -177,7 +177,7 @@ savefig(DIRR * "getting-started-6-weird-disc-render.png")
 
 redshift = ConstPointFunctions.redshift(m, x)
 # compose to filter those that intersected with the geometry
-redshift_geometry = redshift ∘ ConstPointFunctions.filter_intersected
+redshift_geometry = redshift ∘ ConstPointFunctions.filter_intersected()
 
 # ---------------------------------------------------------
 
@@ -204,7 +204,7 @@ is_naked_singularity(j_m)
 
 # pass the new metric
 j_redshift = ConstPointFunctions.redshift(j_m, x)
-j_redshift_geometry = j_redshift ∘ ConstPointFunctions.filter_intersected
+j_redshift_geometry = j_redshift ∘ ConstPointFunctions.filter_intersected()
 
 α, β, image = rendergeodesics(
     # pass the new metric

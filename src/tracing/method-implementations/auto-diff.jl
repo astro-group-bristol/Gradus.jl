@@ -112,45 +112,29 @@ Limitations:
 - currenly pre-supposes static, axis-symmetric metric.
 """
 @generated function compute_geodesic_equation(
-    _ginv::SVector,
-    _j1::SVector,
-    _j2::SVector,
-    _v::SVector,
-)
+    _ginv::SVector{5,T},
+    _j1::SVector{5},
+    _j2::SVector{5},
+    _v::SVector{4},
+) where {T}
     Symbolics.@variables ginv[1:5], j1[1:5], j2[1:5], v[1:4] # non zero metric components
-    inverse_metric = [
-        ginv[1] 0 0 ginv[5]
-        0 ginv[2] 0 0
-        0 0 ginv[3] 0
-        ginv[5] 0 0 ginv[4]
-    ]
-    j1_mat = [
-        j1[1] 0 0 j1[5]
-        0 j1[2] 0 0
-        0 0 j1[3] 0
-        j1[5] 0 0 j1[4]
-    ]
-    j2_mat = [
-        j2[1] 0 0 j2[5]
-        0 j2[2] 0 0
-        0 0 j2[3] 0
-        j2[5] 0 0 j2[4]
-    ]
+    inverse_metric = _symmetric_matrix(ginv)
+    j1_mat = _symmetric_matrix(j1)
+    j2_mat = _symmetric_matrix(j2)
     j0 = zeros(Symbolics.Num, (4, 4))
     jacobian = (j0, j1_mat, j2_mat, j0)
     # christoffel symbols
+    # NB: factor of a half is deferred for both type stability and op count
     @tullio Γ[i, k, l] :=
-        1 / 2 *
-        inverse_metric[i, m] *
-        (jacobian[l][m, k] + jacobian[k][m, l] - jacobian[m][k, l])
+        inverse_metric[i, m] * (jacobian[l][m, k] + jacobian[k][m, l] - jacobian[m][k, l])
     quote
         @inbounds @muladd @fastmath let ginv = _ginv, j1 = _j1, j2 = _j2, v = _v
-            Γ1 = SMatrix{4,4}($(Symbolics.toexpr.(Γ[1, :, :])...))
-            Γ2 = SMatrix{4,4}($(Symbolics.toexpr.(Γ[2, :, :])...))
-            Γ3 = SMatrix{4,4}($(Symbolics.toexpr.(Γ[3, :, :])...))
-            Γ4 = SMatrix{4,4}($(Symbolics.toexpr.(Γ[4, :, :])...))
+            Γ1 = SMatrix{4,4,T}($(Symbolics.toexpr.(Γ[1, :, :])...))
+            Γ2 = SMatrix{4,4,T}($(Symbolics.toexpr.(Γ[2, :, :])...))
+            Γ3 = SMatrix{4,4,T}($(Symbolics.toexpr.(Γ[3, :, :])...))
+            Γ4 = SMatrix{4,4,T}($(Symbolics.toexpr.(Γ[4, :, :])...))
 
-            -SVector{4}((Γ1 * v) ⋅ v, (Γ2 * v) ⋅ v, (Γ3 * v) ⋅ v, (Γ4 * v) ⋅ v)
+            -T(0.5) * SVector{4}((Γ1 * v) ⋅ v, (Γ2 * v) ⋅ v, (Γ3 * v) ⋅ v, (Γ4 * v) ⋅ v)
         end
     end
 end
@@ -241,12 +225,7 @@ end
 function metric(m::AbstractStaticAxisSymmetric, x::SVector{4})
     rθ = (x[2], x[3])
     comps = metric_components(m, rθ)
-    @SMatrix [
-        comps[1] 0 0 comps[5]
-        0 comps[2] 0 0
-        0 0 comps[3] 0
-        comps[5] 0 0 comps[4]
-    ]
+    _symmetric_matrix(comps)
 end
 
 export AbstractStaticAxisSymmetric

@@ -104,6 +104,7 @@ solve_tracing_problem(
         solver_opts...,
         # throw error if wrong keyword arguments passed
         kwargshandle = KeywordArgError,
+        verbose = config.verbose,
     )
     sol
 end
@@ -135,7 +136,7 @@ function ensemble_solve_tracing_problem(
     solve(
         prob,
         config.solver,
-        config.ensemble,
+        ensemble,
         ;
         trajectories = config.trajectories,
         abstol = config.abstol,
@@ -143,6 +144,7 @@ function ensemble_solve_tracing_problem(
         solver_opts...,
         # throw error if wrong keyword arguments passed
         kwargshandle = KeywordArgError,
+        verbose = config.verbose,
     )
 end
 # thread reusing dispatch
@@ -166,6 +168,7 @@ end
             solver = config.solver,
             abstol = config.abstol,
             reltol = config.reltol,
+            verbose = config.verbose,
             save_on = save_on,
             solver_opts...,
         ),
@@ -197,6 +200,7 @@ end
     abstol = 1e-9,
     reltol = 1e-9,
     save_on = true,
+    verbose = true,
     solver_opts...,
 )
     SciMLBase.init(
@@ -208,6 +212,7 @@ end
         solver_opts...,
         # throw error if wrong keyword arguments passed
         kwargshandle = KeywordArgError,
+        verbose = verbose,
     )
 end
 
@@ -221,7 +226,7 @@ end
 ) where {T}
     config, solver_opts = tracing_configuration(trace, m, args...; kwargs...)
     problem = assemble_tracing_problem(trace, config)
-    _init_integrator(problem; solver_opts...)
+    _init_integrator(problem; verbose = config.verbose, solver_opts...)
 end
 
 

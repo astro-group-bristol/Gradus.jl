@@ -2,6 +2,15 @@ function _make_interpolation(x, y)
     DataInterpolations.LinearInterpolation(y, x)
 end
 
+@inline function _symmetric_matrix(comps::AbstractVector{T})::SMatrix{4,4,T} where {T}
+    @SMatrix [
+        comps[1] 0 0 comps[5]
+        0 comps[2] 0 0
+        0 0 comps[3] 0
+        comps[5] 0 0 comps[4]
+    ]
+end
+
 @inline function _threaded_map(f, itr::T) where {T}
     N = length(itr)
     items = !(T <: AbstractArray) ? collect(itr) : itr

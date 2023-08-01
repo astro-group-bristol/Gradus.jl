@@ -53,16 +53,16 @@ function chart_for_metric(
     outer_radius = T(12000);
     closest_approach = T(1.01),
 ) where {T}
-    chart = PolarChart(inner_radius(m) * closest_approach, convert(T, outer_radius))
+    chart = PolarChart(inner_radius(m) * closest_approach, outer_radius)
     chart
 end
 
 function event_horizon_chart(
-    m::AbstractMetric;
-    outer_radius = 1200.0,
-    closest_approach = 1.01,
+    m::AbstractMetric{T};
+    outer_radius = T(12000),
+    closest_approach = T(1.01),
     kwargs...,
-)
+) where {T}
     rs, θs = event_horizon(m; kwargs...)
     shapefunc = DataInterpolations.LinearInterpolation(rs .* closest_approach, θs)
     PoloidalShapeChart(shapefunc, outer_radius)

@@ -1,4 +1,3 @@
-
 struct IntegrationParameters{M} <: AbstractIntegrationParameters{M}
     metric::M
     status::MutStatusCode
@@ -77,11 +76,11 @@ function geodesic_ode_problem(
     )
 end
 
-function _second_order_ode_f(u::SVector{8,T}, p, λ) where {T}
-    @inbounds let x = SVector{4,T}(@view(u[1:4])), v = SVector{4,T}(@view(u[5:8]))
-        dv = SVector{4,T}(geodesic_equation(get_metric(p), x, v))
-        vcat(v, dv)
-    end
+function _second_order_ode_f(u::SVector{8}, p, λ)
+    x = @inbounds SVector{4}(view(u, 1:4))
+    v = @inbounds SVector{4}(view(u, 5:8))
+    dv = geodesic_equation(get_metric(p), x, v)
+    return vcat(v, dv)
 end
 
 """

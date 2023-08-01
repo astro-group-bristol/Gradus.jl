@@ -1,15 +1,15 @@
 function render_configuration(
-    m,
+    m::AbstractMetric{T},
     position,
     args...;
     image_width,
     image_height,
     fov,
-    μ = 0.0,
-    q = 0.0,
+    μ = T(0.0),
+    q = T(0.0),
     trace = TraceGeodesic(; μ = μ, q = q),
     kwargs...,
-)
+) where {T}
     config, solver_opts = tracing_configuration(
         trace,
         m,
@@ -30,7 +30,7 @@ function rendergeodesics(
     args...;
     image_width = 350,
     image_height = 250,
-    fov = 30.0,
+    fov = T(30.0),
     ensemble = EnsembleEndpointThreads(),
     kwargs...,
 ) where {T}
@@ -51,15 +51,15 @@ function rendergeodesics(
 end
 
 function prerendergeodesics(
-    m::AbstractMetric,
+    m::AbstractMetric{T},
     position,
     args...;
     cache = EndpointCache(),
     image_width = 350,
     image_height = 250,
-    fov = 3.0,
+    fov = T(3.0),
     kwargs...,
-)
+) where {T}
     trace, config, solver_opts = render_configuration(
         m,
         position,
@@ -82,11 +82,11 @@ end
 function render_into_image!(
     image,
     trace::AbstractTrace,
-    config::TracingConfiguration;
+    config::TracingConfiguration{T};
     pf = PointFunction((m, gp, λ_max) -> gp.λ_max) ∘
-         FilterPointFunction((m, gp, λ_max; kwargs...) -> gp.λ_max < λ_max, NaN),
+         FilterPointFunction((m, gp, λ_max; kwargs...) -> gp.λ_max < λ_max, T(NaN)),
     solver_opts...,
-)
+) where {T}
     sol_or_points = __render_geodesics(trace, config; solver_opts...)
     points = sol_or_points_to_points(sol_or_points)
     apply_to_image!(config.metric, image, points, pf, config.λ_domain[2])
@@ -131,20 +131,20 @@ function __prerendergeodesics(
 end
 
 function _render_velocity_function(
-    m::AbstractMetric,
+    m::AbstractMetric{T},
     position,
     image_width,
     image_height,
     fov,
-)
+) where {T}
     y_mid = image_height ÷ 2
     x_mid = image_width ÷ 2
     xfm = lnr_momentum_to_global_velocity_transform(m, position)
     function velfunc(i)
         Y = i % image_height
         X = i ÷ image_height
-        α = x_to_α(X, x_mid, fov)
-        β = y_to_β(Y, y_mid, fov)
+        α = x_to_α(X, x_mid, T(fov))
+        β = y_to_β(Y, y_mid, T(fov))
         xfm(local_momentum(position[2], α, β))
     end
 end

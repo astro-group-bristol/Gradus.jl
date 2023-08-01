@@ -78,9 +78,6 @@ struct FilterPointFunction{F,T} <: AbstractPointFunction
     default::T
 end
 
-# todo: this should type specialize better
-FilterPointFunction(f) = FilterPointFunction(f, NaN)
-
 @inline function (pf::AbstractPointFunction)(
     m::AbstractMetric,
     gp::AbstractGeodesicPoint{T},
