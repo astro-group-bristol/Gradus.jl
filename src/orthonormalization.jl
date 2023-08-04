@@ -4,7 +4,7 @@
     @assert size(x) == size(y)
     res = zero(T)
     @inbounds for i in eachindex(x)
-        res += x[i] * y[i]
+        res = muladd(x[i], y[i], res)
     end
     res
 end
