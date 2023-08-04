@@ -421,14 +421,7 @@ HotSpot(R::T, r::T, ϕ::T) where {T} = HotSpot(R, SVector(r, π / 2, ϕ))
 # are treated as if we are always within geometry
 Gradus.is_finite_disc(::Type{<:HotSpot}) = false
 
-function Gradus.covariant_absorption_emission_velocity(
-    m::AbstractMetric,
-    x,
-    ν,
-    hs::HotSpot,
-    r_isco,
-    λ,
-)
+function Gradus.fluid_absorption_emission(m::AbstractMetric, x, ν, hs::HotSpot, r_isco, λ)
     v_disc = CircularOrbits.fourvelocity(m, hs.position[1])
 
     # use coordinate time, given the disc velocity, to advance the position

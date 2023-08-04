@@ -1,26 +1,26 @@
 function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν, invν3, r_isco, λ)
-    a_ν, j_ν, u = covariant_absorption_emission_velocity(m, x, ν, geometry, r_isco, λ)
-    g = metric(m, x)
-    k_rev = SVector(-k[1], k[2], k[3], -k[4])
-    u_rev = SVector(-u[1], u[2], u[3], u[4])
-    -(g * k_rev) ⋅ u_rev * (-a_ν * I + j_ν * invν3)
+    # fluid velocity in at the current point
+    u = fluid_velocity(m, geometry, x, r_isco, λ)
+    # prefactor ds / dλ
+    dsdλ = -dotproduct(m, x, k, u)
+    # radiative transfer coefficients
+    v = ν * dsdλ
+    a₀ν, j₀ν = fluid_absorption_emission(m, geometry, x, v, u)
+    # covariant radiative transfer
+    (-a₀ν * v * I + j₀ν / v^2)
 end
 
-function covariant_absorption_emission_velocity(
-    m::AbstractMetric,
-    x,
-    ν,
-    d::AbstractAccretionGeometry,
-    r_isco,
-    λ,
-)
-    u = if x[2] > r_isco
-        CircularOrbits.fourvelocity(m, x[2])
+function fluid_velocity(m::AbstractMetric, ::AbstractAccretionGeometry, x, r_isco, λ)
+    r = x[2] * sin(x[3])
+    if r > r_isco
+        CircularOrbits.fourvelocity(m, r)
     else
-        CircularOrbits.plunging_fourvelocity(m, x[2])
+        CircularOrbits.plunging_fourvelocity(m, r)
     end
+end
 
-    (absorption_coefficient(m, d, x, ν), emissivity_coefficient(m, d, x, ν), u)
+function fluid_absorption_emission(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν, u)
+    absorption_coefficient(m, d, x, ν), emissivity_coefficient(m, d, x, ν)
 end
 
 absorption_coefficient(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν) = 0.0
