@@ -1,26 +1,26 @@
-function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν, invν3, r_isco, λ)
-    a_ν, j_ν, u = covariant_absorption_emission_velocity(m, x, ν, geometry, r_isco, λ)
-    g = metric(m, x)
-    k_rev = SVector(-k[1], k[2], k[3], -k[4])
-    u_rev = SVector(-u[1], u[2], u[3], u[4])
-    -(g * k_rev) ⋅ u_rev * (-a_ν * I + j_ν * invν3)
+function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν₀, r_isco, λ)
+    # fluid velocity in at the current point
+    u = fluid_velocity(m, geometry, x, r_isco, λ)
+    # prefactor ds / dλ
+    dsdλ = -dotproduct(m, x, k, u)
+    # radiative transfer coefficients
+    ν = ν₀ * dsdλ
+    aν, jν = fluid_absorption_emission(m, geometry, x, ν, u)
+    # covariant radiative transfer
+    dsdλ * (-aν * I + jν / ν^3)
 end
 
-function covariant_absorption_emission_velocity(
-    m::AbstractMetric,
-    x,
-    ν,
-    d::AbstractAccretionGeometry,
-    r_isco,
-    λ,
-)
-    u = if x[2] > r_isco
-        CircularOrbits.fourvelocity(m, x[2])
+function fluid_velocity(m::AbstractMetric, ::AbstractAccretionGeometry, x, r_isco, λ)
+    r = x[2] * sin(x[3])
+    if r > r_isco
+        CircularOrbits.fourvelocity(m, r)
     else
-        CircularOrbits.plunging_fourvelocity(m, x[2])
+        CircularOrbits.plunging_fourvelocity(m, r)
     end
+end
 
-    (absorption_coefficient(m, d, x, ν), emissivity_coefficient(m, d, x, ν), u)
+function fluid_absorption_emission(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν, u)
+    absorption_coefficient(m, d, x, ν), emissivity_coefficient(m, d, x, ν)
 end
 
 absorption_coefficient(m::AbstractMetric, d::AbstractAccretionGeometry, x, ν) = 0.0
@@ -68,14 +68,13 @@ function _intensity_delta(
     geometry::CompositeGeometry,
     within,
     I,
-    ν,
-    invν3,
+    ν₀,
     r_isco,
     λ,
 ) where {T}
     sum(enumerate(geometry.geometry)) do (i, g)
         if within[i]
-            radiative_transfer(m, x, k, g, I, ν, invν3, r_isco, λ)
+            radiative_transfer(m, x, k, g, I, ν₀, r_isco, λ)
         else
             zero(T)
         end
@@ -89,13 +88,12 @@ function _intensity_delta(
     geometry::AbstractAccretionGeometry,
     within,
     I,
-    ν,
-    invν3,
+    ν₀,
     r_isco,
     λ,
 ) where {T}
     if within[1]
-        radiative_transfer(m, x, k, geometry, I, ν, invν3, r_isco, λ)
+        radiative_transfer(m, x, k, geometry, I, ν₀, r_isco, λ)
     else
         zero(T)
     end
@@ -133,7 +131,6 @@ function radiative_transfer_ode_problem(
     callback,
     geometry,
 )
-    invν3 = inv(trace.ν)^3
     r_isco = Gradus.isco(m)
 
     function f(u::SVector{9,T}, p, λ) where {T}
@@ -148,7 +145,6 @@ function radiative_transfer_ode_problem(
                 p.within_geometry,
                 I,
                 trace.ν,
-                invν3,
                 r_isco,
                 λ,
             )

@@ -1,4 +1,4 @@
-lines = readlines(@__DIR__() * "/src/examples/examples.md")
+lines = readlines(@__DIR__() * "/src/examples.md")
 
 examples = String[]
 
