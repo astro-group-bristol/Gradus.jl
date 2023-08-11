@@ -112,7 +112,7 @@ end
 
 function CircularOrbits.Ω(
     m::KerrNewmanMetric,
-    rθ::SVector{2,T},
+    rθ::SVector{2,T};
     q = 0.0,
     μ = 1.0,
     contra_rotating = false,

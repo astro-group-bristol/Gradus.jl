@@ -30,3 +30,10 @@ ensemble = Gradus.EnsembleEndpointThreads()
 @test test_tracer(m, u, 0.0; ensemble = ensemble) ≈ 448853.6312965758 rtol = 1e-3
 @test test_tracer(m, u, 1.0; ensemble = ensemble) ≈ 263323.2126428741 rtol = 1e-3
 @test test_tracer(m, u, -1.0; ensemble = ensemble) ≈ 653341.4649407878 rtol = 1e-3
+
+
+# ensure the circular velocity calculations work
+@test CircularOrbits.fourvelocity(m, 20.0; q = 1.0) ≈
+      [1.065341126764724, 0.0, 0.0, 0.007652504287280518] rtol = 1e-5
+@test CircularOrbits.fourvelocity(m, 20.0; q = -1.0) ≈
+      [1.099562453625687, 0.0, 0.0, 0.015091823134051219] rtol = 1e-5
