@@ -1,7 +1,7 @@
 name = "Gradus"
 uuid = "c5b7b928-ea15-451c-ad6f-a331a0f3e4b7"
 authors = ["fjebaker <fergusbkr@gmail.com>"]
-version = "0.4.14"
+version = "0.4.15"
 
 [deps]
 Buckets = "3235f445-51d8-4100-901d-5b23398ac3ab"
