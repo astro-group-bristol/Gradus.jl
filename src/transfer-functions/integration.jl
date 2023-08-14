@@ -1,21 +1,78 @@
+_lineprofile_integrand(_, g) = g^4
+
+struct IntegrationSetup{T,K,F,R,SegBufType}
+    h::T
+    time::K
+    integrand::F
+    pure_radial::R
+    segbuf::SegBufType
+end
+
+IntegrationSetup(T::Type, integrand, pure_radial; time = nothing, h = 1e-8) =
+    IntegrationSetup(h, time, integrand, pure_radial, alloc_segbuf(T))
+
+function integrand(setup::IntegrationSetup, f, r, g, g✶)
+    # the radial term and π is hoisted into the integration weight for that annulus
+    ω = f / (√(g✶ * (1 - g✶)) * g)
+    ω * setup.integrand(r, g)
+end
+
+struct _IntegrationClosures{S<:IntegrationSetup,B<:TransferBranches}
+    setup::S
+    branch::B
+end
+
+function _time_bins(c::_IntegrationClosures, glo, ghi)
+    _g_xfm(g) = max(c.setup.h, min(1 - c.setup.h, g_to_g✶(g, c.branch.gmin, c.branch.gmax)))
+    g✶lo = _g_xfm(glo)
+    g✶hi = _g_xfm(ghi)
+    t_lo = c.branch.lower_t(g✶lo) + c.branch.lower_t(g✶hi)
+    t_hi = c.branch.upper_t(g✶lo) + c.branch.upper_t(g✶hi)
+    (t_lo, t_hi)
+end
+
+function _upper_branch(c::_IntegrationClosures)
+    function _upper_branch_integrand(g)
+        g✶ = g_to_g✶(g, c.branch.gmin, c.branch.gmax)
+        f = c.branch.upper_f(g✶)
+        integrand(c.setup, f, c.branch.rₑ, g, g✶)
+    end
+end
+
+function _lower_branch(c::_IntegrationClosures)
+    function _lower_branch_integrand(g)
+        g✶ = g_to_g✶(g, c.branch.gmin, c.branch.gmax)
+        f = c.branch.lower_f(g✶)
+        integrand(c.setup, f, c.branch.rₑ, g, g✶)
+    end
+end
+
+function _both_branches(c::_IntegrationClosures)
+    function _both_branches_integrand(g)
+        g✶ = g_to_g✶(g, c.branch.gmin, c.branch.gmax)
+        f = c.branch.upper_f(g✶) + c.branch.lower_f(g✶)
+        integrand(c.setup, f, c.branch.rₑ, g, g✶)
+    end
+end
+
 g_to_g✶(g, gmin, gmax) = @. (g - gmin) / (gmax - gmin)
 g✶_to_g(g✶, gmin, gmax) = @. (gmax - gmin) * g✶ + gmin
 
 function integrate_edge(S, lim, lim_g✶, gmin, gmax)
     gh = g✶_to_g(lim_g✶, gmin, gmax)
-    a = abs(√gh - √lim)
-    2 * S(gh) * a
+    2 * S(gh) * abs(√gh - √lim)
 end
 
-@fastmath function _cunningham_integrand(f, g, gs, gmin, gmax)
-    f * π * (g)^3 / (√(gs * (1 - gs)) * (gmax - gmin))
-end
+function integrate_bin(c::_IntegrationClosures, S, lo::T, hi) where {T}
+    # alias for convenience
+    gmin = c.branch.gmin
+    gmax = c.branch.gmax
+    h = c.setup.h
 
-function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8, segbuf = nothing)
     glo = clamp(lo, gmin, gmax)
     ghi = clamp(hi, gmin, gmax)
 
-    lum = 0.0
+    lum = zero(T)
     if glo == ghi
         return lum
     end
@@ -41,33 +98,9 @@ function integrate_bin(S, gmin, gmax, lo, hi; h = 2e-8, segbuf = nothing)
         end
     end
 
-    res, _ = quadgk(S, glo, ghi; segbuf = segbuf)
+    res, _ = quadgk(S, glo, ghi; segbuf = c.setup.segbuf)
     lum += res
     return lum
-end
-
-function _transform_g✶_to_g(branch, h)
-    gmin = branch.gmin
-    gmax = branch.gmax
-
-    function _g_lower_f(g)
-        g✶ = g_to_g✶(g, gmin, gmax)
-        _cunningham_integrand(branch.lower_f(g✶), g, g✶, gmin, gmax)
-    end
-    function _g_upper_f(g)
-        g✶ = g_to_g✶(g, gmin, gmax)
-        _cunningham_integrand(branch.upper_f(g✶), g, g✶, gmin, gmax)
-    end
-    function _g_lower_t(g)
-        g✶ = max(h, min(1 - h, g_to_g✶(g, gmin, gmax)))
-        branch.lower_t(g✶)
-    end
-    function _g_upper_t(g)
-        g✶ = max(h, min(1 - h, g_to_g✶(g, gmin, gmax)))
-        branch.upper_t(g✶)
-    end
-
-    _g_lower_f, _g_upper_f, _g_lower_t, _g_upper_t
 end
 
 function _build_g✶_grid(Ng✶, h)
@@ -131,7 +164,8 @@ function integrate_lineprofile(
     # pre-allocate output
     flux = zeros(T, length(g_grid))
     fine_rₑ_grid = Grids._inverse_grid(extrema(radii)..., Nr) |> collect
-    _integrate_fluxbin!(flux, ε, itb, fine_rₑ_grid, g_grid; kwargs...)
+    setup = IntegrationSetup(T, _lineprofile_integrand, ε; kwargs...)
+    _integrate_transfer_problem!(flux, setup, itb, fine_rₑ_grid, g_grid)
     _normalize(flux, g_grid)
 end
 
@@ -142,108 +176,86 @@ function integrate_lagtransfer(
     g_grid,
     t_grid;
     Nr = 1000,
+    t0 = 0,
     kwargs...,
 ) where {T}
     # pre-allocate output
     flux = zeros(T, (length(g_grid), length(t_grid)))
     fine_rₑ_grid = Grids._geometric_grid(extrema(radii)..., Nr) |> collect
-    _integrate_fluxbin!(flux, profile, itb, fine_rₑ_grid, g_grid, t_grid; kwargs...)
+    setup = IntegrationSetup(
+        T,
+        _lineprofile_integrand,
+        profile.f.ε;
+        time = r -> profile.t.t(r) - t0,
+        kwargs...,
+    )
+    _integrate_transfer_problem!(flux, setup, itb, fine_rₑ_grid, g_grid, t_grid)
     _normalize(flux, g_grid)
 end
 
-function _integrate_fluxbin!(
-    flux::AbstractVector,
-    ε,
+function _integrate_transfer_problem!(
+    output::AbstractVector,
+    setup::IntegrationSetup{T,Nothing},
     itb::InterpolatingTransferBranches{T},
     radii_grid,
-    g_grid;
-    h = 1e-8,
-    # allocate a segbuf for Gauss-Kronrod
-    segbuf = alloc_segbuf(T),
+    g_grid,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
     # build fine radial grid for trapezoidal integration
     @inbounds for (i, rₑ) in enumerate(radii_grid)
-        branch = itb(rₑ)
-        F1, F2, _, _ = _transform_g✶_to_g(branch, h)
+        closures = _IntegrationClosures(setup, itb(rₑ))
         Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
-        # integration weight for this annuli
-        θ = Δrₑ * rₑ * ε(rₑ)
+        # integration weight for this annulus
+        θ =
+            Δrₑ * rₑ * setup.pure_radial(rₑ) * π /
+            (closures.branch.gmax - closures.branch.gmin)
         @inbounds for j in eachindex(g_grid_view)
             glo = g_grid[j]
             ghi = g_grid[j+1]
-            f = integrate_bin(
-                g -> F1(g) + F2(g),
-                branch.gmin,
-                branch.gmax,
-                glo,
-                ghi;
-                h = h,
-                segbuf = segbuf,
-            )
-            flux[j] += f * θ
+            k = integrate_bin(closures, _both_branches(closures), glo, ghi)
+            output[j] += k * θ
         end
     end
 end
 
-function _integrate_fluxbin!(
-    flux::AbstractMatrix,
-    profile,
+function _integrate_transfer_problem!(
+    output::AbstractMatrix,
+    setup::IntegrationSetup,
     itb::InterpolatingTransferBranches{T},
     radii_grid,
     g_grid,
-    t_grid;
-    h = 1e-8,
-    # allocate a segbuf for Gauss-Kronrod
-    segbuf = alloc_segbuf(T),
-    t0 = 0,
+    t_grid,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
     # build fine radial grid for trapezoidal integration
     @inbounds for (i, rₑ) in enumerate(radii_grid)
-        branch = itb(rₑ)
-        F1, F2, T1, T2 = _transform_g✶_to_g(branch, h)
+        closures = _IntegrationClosures(setup, itb(rₑ))
         Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
-
-        # integration weight for this annuli
-        θ = Δrₑ * rₑ * profile.f.ε(rₑ)
+        θ =
+            Δrₑ * rₑ * setup.pure_radial(rₑ) * π /
+            (closures.branch.gmax - closures.branch.gmin)
         # time delay for this annuli
-        t_source_disc = profile.t.t(rₑ)
+        t_source_disc = setup.time(rₑ)
 
         @inbounds for j in eachindex(g_grid_view)
             glo = g_grid[j]
             ghi = g_grid[j+1]
-            f1 = integrate_bin(
-                F1,
-                branch.gmin,
-                branch.gmax,
-                glo,
-                ghi;
-                h = h,
-                segbuf = segbuf,
-            )
-            f2 = integrate_bin(
-                F2,
-                branch.gmin,
-                branch.gmax,
-                glo,
-                ghi;
-                h = h,
-                segbuf = segbuf,
-            )
+            k1 = integrate_bin(closures, _lower_branch(closures), glo, ghi)
+            k2 = integrate_bin(closures, _upper_branch(closures), glo, ghi)
 
             # find which bin to dump in
-            t1 = 0.5 * (T1(glo) + T1(ghi)) - t0 + t_source_disc
-            t2 = 0.5 * (T2(glo) + T2(ghi)) - t0 + t_source_disc
+            t_lo, t_hi = _time_bins(closures, glo, ghi)
+            t1 = (t_lo / 2) + t_source_disc
+            t2 = (t_hi / 2) + t_source_disc
             i1 = searchsortedfirst(t_grid, t1)
             i2 = searchsortedfirst(t_grid, t2)
 
             imax = lastindex(t_grid)
             if i1 < imax
-                flux[j, i1] += f1 * θ
+                output[j, i1] += k1 * θ
             end
             if i2 < imax
-                flux[j, i2] += f2 * θ
+                output[j, i2] += k2 * θ
             end
         end
     end
