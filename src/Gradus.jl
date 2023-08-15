@@ -366,7 +366,9 @@ Base.iterate(m::AbstractCoronaModel) = (m, nothing)
 Base.iterate(::AbstractCoronaModel, ::Nothing) = nothing
 
 """
-TODO: DOCSTRING
+abstract type AbstractCoronalSpectrum end
+
+Abstract type specifying interface for the spectra.
 """
 abstract type AbstractCoronalSpectrum end
 
