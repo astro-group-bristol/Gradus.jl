@@ -2,9 +2,11 @@
     source_to_disc_emissivity(m, N, A, x, g)
 
 Compute the emissivity of a disc element with (proper) area `A` at coordinates `x` with metric
-`m`. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
-be specified, along with the ratio of energies `g` (computed with [`energy_ratio`](@ref)) and photon index
-`Γ`.
+`m` and coronal spectrum 'spec'. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
+be specified, along with the ratio of energies `g` (computed with [`energy_ratio`](@ref)) and the spectrum 'spec'. 
+Spectrum for the power law simply returns the photon index 'Γ'. 'I' stores the 'coronal_spectrum' which is a function 
+of 'spectrum' and 'g' since it is defined as 'g^Γ' so passing the spectrum as an argument allows their further modification.
+Furthermore, it guarantees that as the spectrum changes, the correct 'coronal_spectrum' function will be called.
 
 The mathematical definition is
 ```math
@@ -33,7 +35,7 @@ function source_to_disc_emissivity(
 end
 
 """
-    point_source_equatorial_disc_emissivity(θ, g, A, γ; Γ = 2)
+    point_source_equatorial_disc_emissivity(θ, g, A, γ, spectrum)
 
 Calculate the emissivity of a point illuminating source on the spin axis for an annulus of the
 equatorial accretion disc with (proper) area `A`. The precise formulation follows from Dauser et al. (2013),
@@ -42,8 +44,10 @@ with the emissivity calculated as
 \\varepsilon = \\frac{\\sin \\theta}{A g^\\Gamma \\gamma}
 ```
 where ``\\gamma`` is the Lorentz factor due to the velocity of the local disc frame. 
-The ratio of energies is ``g`` (computed with [`energy_ratio`](@ref)), with ``\\Gamma`` being the photon index, and
-``\\theta`` is the angle from the spin axis in the emitters from at which the geodesic was directed.
+The ratio of energies is ``g`` (computed with [`energy_ratio`](@ref)), with ``spectrum`` being the abstract
+coronal spectrum and  ``\\theta`` is the angle from the spin axis in the emitters from at which the geodesic was directed. 
+'coronal_spectrum' function is used to calculate the spectrum of the corona by taking 'g' to the power of 'Γ', allowing
+further modification of spectrum if needed, based on the value of the photon index.
 
 The ``\\sin \\theta`` term appears to extend the result to three dimensions, since the
 Jacobian of the spherical coordinates (with ``r`` fixes) yields a factor ``\\sin \\theta``
@@ -51,14 +55,8 @@ in order to maintain point density. It may be regarded as the PDF that samples `
 
 Dauser et al. (2013)
 """
-<<<<<<< HEAD
-point_source_equatorial_disc_emissivity(θ, g, A, γ; Γ = 2) = sin(θ) / (g^Γ * A * γ)
-||||||| parent of c13b47f (feat: added coronal spectra for emissivity models)
-point_source_equitorial_disc_emissivity(θ, g, A, γ; Γ = 2) = sin(θ) / (g^Γ * A * γ)
-=======
-point_source_equitorial_disc_emissivity(spec::AbstractCoronalSpectrum, θ, g, A, γ) =
+point_source_equatorial_disc_emissivity(spec::AbstractCoronalSpectrum, θ, g, A, γ) =
     sin(θ) * coronal_spectrum(spec, g) / (A * γ)
->>>>>>> c13b47f (feat: added coronal spectra for emissivity models)
 
 """
     function emissivity_profile(
@@ -245,13 +243,7 @@ function _point_source_emissivity(
     Δr = diff(r)
     @. A = A * Δr
     r = r[1:end-1]
-<<<<<<< HEAD
-    ε = point_source_equatorial_disc_emissivity.(@views(δs[1:end-1]), gs, A, γ)
-||||||| parent of c13b47f (feat: added coronal spectra for emissivity models)
-    ε = point_source_equitorial_disc_emissivity.(@views(δs[1:end-1]), gs, A, γ)
-=======
-    ε = point_source_equitorial_disc_emissivity.(spec, @views(δs[1:end-1]), gs, A, γ)
->>>>>>> c13b47f (feat: added coronal spectra for emissivity models)
+    ε = point_source_equatorial_disc_emissivity.(spec, @views(δs[1:end-1]), gs, A, γ)
     r, ε
 end
 
