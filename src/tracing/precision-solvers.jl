@@ -1,3 +1,58 @@
+function _find_offset_for_measure(
+    measure,
+    m::AbstractMetric,
+    u,
+    d::AbstractAccretionGeometry,
+    θₒ;
+    zero_atol = 1e-7,
+    offset_max = 20.0,
+    max_time = 2 * u[2],
+    β₀ = 0,
+    α₀ = 0,
+    μ = 0.0,
+    solver_opts...,
+)
+    function _velfunc(r::T) where {T}
+        α = r * cos(θₒ) + T(α₀)
+        β = r * sin(θₒ) + T(β₀)
+        constrain_all(m, u, map_impact_parameters(m, u, α, β), μ)
+    end
+
+    # init a reusable integrator
+    integ = _init_integrator(
+        m,
+        u,
+        _velfunc(0.0),
+        d,
+        (0.0, max_time);
+        save_on = false,
+        solver_opts...,
+    )
+
+    function f(r)
+        if r < 0
+            return -1000 * r
+        end
+        gp = _solve_reinit!(integ, vcat(u, _velfunc(r)))
+        measure(gp)
+    end
+
+    # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
+    r0 = try
+        Roots.find_zero(f, offset_max / 2, Roots.Order0(); atol = zero_atol)
+    catch err
+        if (err isa Roots.ConvergenceFailed) && (d isa AbstractThickAccretionDisc)
+            @warn("$(err) for rₑ = $(rₑ)")
+            # TODO: this should return something more sensible (e.g. a NaN geodesic point)
+            return NaN, _solve_reinit!(integ, vcat(u, _velfunc(offset_max)))
+        end
+        throw(err)
+    end
+
+    gp0 = _solve_reinit!(integ, vcat(u, _velfunc(r0)))
+    r0, gp0
+end
+
 """
     find_offset_for_radius(
         m::AbstractMetric,
@@ -28,11 +83,7 @@ function find_offset_for_radius(
     d::AbstractAccretionGeometry,
     rₑ,
     θₒ;
-    zero_atol = 1e-7,
-    offset_max = 20.0,
-    max_time = 2 * u[2],
-    μ = 0.0,
-    solver_opts...,
+    kwargs...,
 )
     function _measure(gp::GeodesicPoint{T}) where {T}
         r = if gp.status == StatusCodes.IntersectedWithGeometry
@@ -42,46 +93,13 @@ function find_offset_for_radius(
         end
         rₑ - r
     end
+    r0, gp0 = _find_offset_for_measure(_measure, m, u, d, θₒ; kwargs...)
 
-    function _velfunc(r)
-        α = r * cos(θₒ)
-        β = r * sin(θₒ)
-        constrain_all(m, u, map_impact_parameters(m, u, α, β), μ)
+    if (r0 < 0)
+        error("Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ")
     end
-    # init a reusable integrator
-
-    integ = _init_integrator(
-        m,
-        u,
-        _velfunc(0.0),
-        d,
-        (0.0, max_time);
-        save_on = false,
-        solver_opts...,
-    )
-
-    function f(r)
-        if r < 0
-            return -1000 * r
-        end
-        gp = _solve_reinit!(integ, vcat(u, _velfunc(r)))
-        _measure(gp)
-    end
-
-    # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
-    r0 = Roots.find_zero(f, offset_max * 0.5, Roots.Order0(); atol = zero_atol)
-    if r0 < 0
-        error(
-            "Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ (offset_max = $offset_max).",
-        )
-    end
-
-
-    gp0 = _solve_reinit!(integ, vcat(u, _velfunc(r0)))
     if !isapprox(_measure(gp0), 0.0, atol = 1e-4)
-        @warn(
-            "Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ (offset_max = $offset_max, measure = $(_measure(gp0)))."
-        )
+        @warn("Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ")
         return NaN, gp0
     end
     r0, gp0
@@ -152,7 +170,8 @@ function impact_parameters_for_radius(
     α = zeros(T, N)
     β = zeros(T, N)
     impact_parameters_for_radius!(α, β, m, u, d, radius; kwargs...)
-    (filter(!isnan, α), filter(!isnan, β))
+    # (filter(!isnan, α), filter(!isnan, β))
+    α, β
 end
 
 function jacobian_∂αβ_∂gr(
