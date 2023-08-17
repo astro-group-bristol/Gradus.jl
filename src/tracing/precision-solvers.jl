@@ -9,7 +9,7 @@ function _find_offset_for_measure(
     max_time = 2 * u[2],
     β₀ = 0,
     α₀ = 0,
-    μ = 0.0,
+    μ = 0,
     solver_opts...,
 )
     function _velfunc(r::T) where {T}
@@ -131,6 +131,8 @@ function impact_parameters_for_radius!(
     u::AbstractVector{T},
     d::AbstractAccretionDisc,
     rₑ;
+    β₀ = zero(T),
+    α₀ = zero(T),
     kwargs...,
 ) where {T}
     if size(αs) != size(βs)
@@ -139,9 +141,9 @@ function impact_parameters_for_radius!(
     θs = range(0, 2π, length(αs))
     @inbounds @threads for i in eachindex(θs)
         θ = θs[i]
-        r, _ = find_offset_for_radius(m, u, d, rₑ, θ; kwargs...)
-        αs[i] = r * cos(θ)
-        βs[i] = r * sin(θ)
+        r, _ = find_offset_for_radius(m, u, d, rₑ, θ; α₀ = α₀, β₀ = β₀, kwargs...)
+        αs[i] = r * cos(θ) - α₀
+        βs[i] = r * sin(θ) - β₀
     end
     (αs, βs)
 end
