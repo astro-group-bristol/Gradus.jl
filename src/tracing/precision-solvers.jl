@@ -38,16 +38,7 @@ function _find_offset_for_measure(
     end
 
     # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
-    r0 = try
-        Roots.find_zero(f, offset_max / 2, Roots.Order0(); atol = zero_atol)
-    catch err
-        if (err isa Roots.ConvergenceFailed) && (d isa AbstractThickAccretionDisc)
-            @warn("$(err) for rₑ = $(rₑ)")
-            # TODO: this should return something more sensible (e.g. a NaN geodesic point)
-            return NaN, _solve_reinit!(integ, vcat(u, _velfunc(offset_max)))
-        end
-        throw(err)
-    end
+    r0 = Roots.find_zero(f, offset_max / 2, Roots.Order0(); atol = zero_atol)
 
     gp0 = _solve_reinit!(integ, vcat(u, _velfunc(r0)))
     r0, gp0
@@ -105,6 +96,38 @@ function find_offset_for_radius(
     r0, gp0
 end
 
+function find_offset_for_radius(
+    m::AbstractMetric,
+    u,
+    d::AbstractThickAccretionDisc,
+    rₑ,
+    θₒ;
+    kwargs...,
+)
+    # set up a datum plane
+    h = cross_section(d, SVector(0, rₑ, π / 2, 0))
+    plane = PlaneDisc(h)
+
+    function _measure(gp::GeodesicPoint{T}) where {T}
+        r = if gp.status == StatusCodes.IntersectedWithGeometry
+            gp.x[2] * sin(gp.x[3])
+        else
+            zero(T)
+        end
+        rₑ - r
+    end
+    r0, gp0 = _find_offset_for_measure(_measure, m, u, plane, θₒ; kwargs...)
+
+    # if (r0 < 0)
+    #     error("Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ")
+    # end
+    if !isapprox(_measure(gp0), 0.0, atol = 1e-4)
+        @warn("Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ")
+        return NaN, gp0
+    end
+    r0, gp0
+end
+
 """
     impact_parameters_for_radius!(
         αs::AbstractVector,
@@ -142,8 +165,8 @@ function impact_parameters_for_radius!(
     @inbounds @threads for i in eachindex(θs)
         θ = θs[i]
         r, _ = find_offset_for_radius(m, u, d, rₑ, θ; α₀ = α₀, β₀ = β₀, kwargs...)
-        αs[i] = r * cos(θ) - α₀
-        βs[i] = r * sin(θ) - β₀
+        αs[i] = r * cos(θ) + α₀
+        βs[i] = r * sin(θ) + β₀
     end
     (αs, βs)
 end

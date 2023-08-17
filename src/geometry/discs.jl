@@ -70,10 +70,22 @@ optical_property(::Type{<:GeometricThinDisc}) = OpticallyThin()
         sinθ = sin(θ)
         @SVector [r * sinθ * cos(ϕ), r * sinθ * sin(ϕ), r * cos(θ)]
     end
-    n = @SVector [T(0.0), cos(d.inclination), sin(d.inclination)]
+    n = @SVector [T(0), cos(d.inclination), sin(d.inclination)]
     # project u into normal vector n
     k = p ⋅ n
     abs(k) - (gtol * x4[2])
+end
+
+struct PlaneDisc{T} <: AbstractAccretionDisc{T}
+    height::T
+end
+optical_property(::Type{<:PlaneDisc}) = OpticallyThin()
+
+function distance_to_disc(d::PlaneDisc{T}, x4; gtol) where {T}
+    h = @inbounds let r = x4[2], θ = x4[3], ϕ = x4[4]
+        r * cos(θ)
+    end
+    abs(h) - d.height - (gtol * x4[2])
 end
 
 """
