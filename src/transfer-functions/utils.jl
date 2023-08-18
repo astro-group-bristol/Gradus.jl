@@ -10,16 +10,16 @@ function _TransferDataAccumulator(T::Type, M::Int, cutoff::Int)
     _TransferDataAccumulator(zeros(T, M), zeros(T, M), zeros(T, M), zeros(T, M), cutoff)
 end
 
-Base.eachindex(data) = eachindex(data.θs)
-Base.lastindex(data) = lastindex(data.θs)
-function remove_unused_elements!(data)
+Base.eachindex(data::_TransferDataAccumulator) = eachindex(data.θs)
+Base.lastindex(data::_TransferDataAccumulator) = lastindex(data.θs)
+function remove_unused_elements!(data::_TransferDataAccumulator)
     I = findall(==(0), data.θs)
     deleteat!(data.θs, I)
     deleteat!(data.gs, I)
     deleteat!(data.Js, I)
     deleteat!(data.ts, I)
 end
-function Base.sort!(data)
+function Base.sort!(data::_TransferDataAccumulator)
     I = sortperm(data.θs)
     @. data.θs = data.θs[I]
     @. data.gs = data.gs[I]
@@ -28,7 +28,6 @@ function Base.sort!(data)
 end
 
 function insert_data!(data::_TransferDataAccumulator, i, θ, g, J, t)
-    @assert i <= lastindex(data.θs) "$i > $(lastindex(data.θs))"
     data.θs[i] = θ
     data.gs[i] = g
     data.Js[i] = J
