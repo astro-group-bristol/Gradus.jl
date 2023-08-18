@@ -199,15 +199,15 @@ function _cunningham_transfer_function!(
 end
 
 function cunningham_transfer_function(
-    m::AbstractMetric,
+    m::AbstractMetric{Q},
     x,
     d::AbstractAccretionDisc,
     rₑ::T;
-    θ_offset = 0.6,
+    θ_offset = Q(0.6),
     N = 80,
     N_extrema = 17,
     kwargs...,
-) where {T}
+) where {Q,T}
     M = N + 2 * N_extrema
     K = N ÷ 5
     data = _TransferDataAccumulator(T, M, N)
@@ -225,7 +225,8 @@ end
 # find gmin and gmax via GoldenSection
 # storing all attempts in gs and Js
 function _search_extremal!(data, workhorse, offset)
-    i = data.cutoff
+    # need to specify the type to avoid boxing
+    i::Int = data.cutoff
     N = (lastindex(data) - data.cutoff) ÷ 2 - 1
 
     function _gmin_finder(θ)

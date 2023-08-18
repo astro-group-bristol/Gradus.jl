@@ -21,10 +21,13 @@ function remove_unused_elements!(data::_TransferDataAccumulator)
 end
 function Base.sort!(data::_TransferDataAccumulator)
     I = sortperm(data.θs)
-    @. data.θs = data.θs[I]
-    @. data.gs = data.gs[I]
-    @. data.Js = data.Js[I]
-    @. data.ts = data.ts[I]
+    @inbounds begin
+        data.θs .= data.θs[I]
+        data.gs .= data.gs[I]
+        data.Js .= data.Js[I]
+        data.ts .= data.ts[I]
+    end
+    data
 end
 
 function insert_data!(data::_TransferDataAccumulator, i, θ, g, J, t)
