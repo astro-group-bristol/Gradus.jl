@@ -407,6 +407,7 @@ include("geometry/composite.jl")
 include("geometry/bootstrap.jl")
 
 include("transfer-functions/types.jl")
+include("transfer-functions/utils.jl")
 include("transfer-functions/cunningham-transfer-functions.jl")
 include("transfer-functions/integration.jl")
 
