@@ -219,12 +219,19 @@ function cunningham_transfer_function(
     ))
     workhorse = _rear_workhorse(m, x, d, rₑ; kwargs...)
     gmin, gmax = _cunningham_transfer_function!(data, workhorse, θiterator, θ_offset, rₑ)
-    CunninghamTransferData(data.gs, data.Js, data.ts, gmin, gmax, rₑ)
+    CunninghamTransferData(
+        data.data[2, :],
+        data.data[3, :],
+        data.data[4, :],
+        gmin,
+        gmax,
+        rₑ,
+    )
 end
 
 # find gmin and gmax via GoldenSection
 # storing all attempts in gs and Js
-function _search_extremal!(data, workhorse, offset)
+function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
     # need to specify the type to avoid boxing
     i::Int = data.cutoff
     N = (lastindex(data) - data.cutoff) ÷ 2 - 1

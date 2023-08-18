@@ -88,13 +88,12 @@ function distance_to_disc(d::DatumPlane{T}, x4; gtol) where {T}
     abs(h) - d.height - (gtol * x4[2])
 end
 
-function datumplane(disc::AbstractThickAccretionDisc, x)
-    h = cross_section(disc, x)
-    DatumPlane(h)
-end
-
 function datumplane(disc::AbstractThickAccretionDisc, r::T) where {T}
     h = cross_section(disc, SVector{4,T}(0, r, T(π / 2), 0))
+    DatumPlane(h)
+end
+function datumplane(disc::AbstractThickAccretionDisc, x::SVector{4})
+    h = cross_section(disc, x)
     DatumPlane(h)
 end
 

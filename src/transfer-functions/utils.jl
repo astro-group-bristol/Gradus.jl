@@ -1,40 +1,43 @@
-struct _TransferDataAccumulator{T}
-    θs::Vector{T}
-    gs::Vector{T}
-    Js::Vector{T}
-    ts::Vector{T}
+mutable struct _TransferDataAccumulator{T}
+    data::Matrix{T}
     cutoff::Int
 end
 
 function _TransferDataAccumulator(T::Type, M::Int, cutoff::Int)
-    _TransferDataAccumulator(zeros(T, M), zeros(T, M), zeros(T, M), zeros(T, M), cutoff)
+    mat = zeros(T, (4, M))
+    _TransferDataAccumulator(mat, cutoff)
+end
+
+function Base.getproperty(t::_TransferDataAccumulator, f::Symbol)
+    if f === :θs
+        @views getfield(t, :data)[1, :]
+    elseif f === :gs
+        @views getfield(t, :data)[2, :]
+    elseif f === :Js
+        @views getfield(t, :data)[3, :]
+    elseif f === :ts
+        @views getfield(t, :data)[4, :]
+    else
+        getfield(t, f)
+    end
 end
 
 Base.eachindex(data::_TransferDataAccumulator) = eachindex(data.θs)
-Base.lastindex(data::_TransferDataAccumulator) = lastindex(data.θs)
+Base.lastindex(data::_TransferDataAccumulator) = size(data.data, 2)
+
 function remove_unused_elements!(data::_TransferDataAccumulator)
-    I = findall(==(0), data.θs)
-    deleteat!(data.θs, I)
-    deleteat!(data.gs, I)
-    deleteat!(data.Js, I)
-    deleteat!(data.ts, I)
-end
-function Base.sort!(data::_TransferDataAccumulator)
-    I = sortperm(data.θs)
-    @inbounds begin
-        data.θs .= data.θs[I]
-        data.gs .= data.gs[I]
-        data.Js .= data.Js[I]
-        data.ts .= data.ts[I]
-    end
+    I = findall(!=(0), data.θs)
+    data.data = data.data[:, I]
     data
 end
 
-function insert_data!(data::_TransferDataAccumulator, i, θ, g, J, t)
-    data.θs[i] = θ
-    data.gs[i] = g
-    data.Js[i] = J
-    data.ts[i] = t
+function Base.sort!(data::_TransferDataAccumulator)
+    I = sortperm(data.θs)
+    Base.permutecols!!(data.data, I)
+end
+
+function insert_data!(data::_TransferDataAccumulator, i, vals...)
+    data.data[:, i] .= (vals...,)
     data
 end
 
