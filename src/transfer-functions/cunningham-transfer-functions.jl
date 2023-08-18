@@ -106,7 +106,7 @@ function interpolate_branches(ctf::CunninghamTransferData{T}) where {T}
     )
 end
 
-function _rear_workhorse(
+function _rear_workhorse_with_impact_parameters(
     m::AbstractMetric,
     x,
     d::AbstractAccretionDisc,
@@ -140,9 +140,9 @@ function _rear_workhorse(
         end
         α = r * cos(θ) + α₀
         β = r * sin(θ) + β₀
-        # use underscores to avoid possible boxing
-        _g = redshift_pf(m, gp, max_time)
-        _J = jacobian_∂αβ_∂gr(
+        # redshift and jacobian
+        g = redshift_pf(m, gp, max_time)
+        J = jacobian_∂αβ_∂gr(
             m,
             x,
             d,
@@ -152,16 +152,51 @@ function _rear_workhorse(
             redshift_pf = redshift_pf,
             tracer_kwargs...,
         )
-        (_g, _J, gp.x[1])
+        (g, J, gp.x[1], α, β)
+    end
+    (_workhorse, tracer_kwargs)
+end
+function _rear_workhorse(m::AbstractMetric, x, d::AbstractAccretionDisc, rₑ; kwargs...)
+    workhorse, _ = _rear_workhorse_with_impact_parameters(m, x, d, rₑ; kwargs...)
+    function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
+        g, J, t, _, _ = workhorse(θ)
+        g, J, t
     end
 end
 
-function _rear_workhorse(m::AbstractMetric, x, d::AbstractThickAccretionDisc, rₑ; kwargs...)
+function _rear_workhorse(
+    m::AbstractMetric,
+    x,
+    d::AbstractThickAccretionDisc,
+    rₑ;
+    max_time = 2 * x[2],
+    visible_tolerance = 1e-3,
+    kwargs...,
+)
     plane = datumplane(d, rₑ)
-    datum_workhorse = _rear_workhorse(m, x, plane, rₑ; kwargs...)
-    function _thick_workhorse(θ)
-        vals = datum_workhorse(θ)
-        (vals...,)
+    datum_workhorse, tracer_kwargs = _rear_workhorse_with_impact_parameters(
+        m,
+        x,
+        plane,
+        rₑ;
+        max_time = max_time,
+        kwargs...,
+    )
+    function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
+        g, J, t, α, β = datum_workhorse(θ)
+        # check if the location is visible or not
+        sol = tracegeodesics(
+            m,
+            x,
+            map_impact_parameters(m, x, α, β),
+            d,
+            max_time;
+            save_on = false,
+            tracer_kwargs...,
+        )
+        gp = unpack_solution(sol)
+        is_visible = abs(rₑ - gp.x[2] * sin(gp.x[3])) < visible_tolerance
+        (g, J, t, is_visible)
     end
 end
 
@@ -174,7 +209,7 @@ function _cunningham_transfer_function!(
 )
     for (i, θ) in enumerate(θiterator)
         θ_corrected = θ + 1e-4
-        insert_data!(data, i, θ_corrected, workhorse(θ)...)
+        insert_data!(data, i, θ_corrected, workhorse(θ))
     end
 
     gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
@@ -244,7 +279,7 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
         if abs(θ) < 1e-4 || abs(abs(θ) - π) < 1e-4
             θ += 1e-4
         end
-        insert_data!(data, i, θ, workhorse(θ)...)
+        insert_data!(data, i, θ, workhorse(θ))
         data.gs[i]
     end
     function _gmax_finder(θ)

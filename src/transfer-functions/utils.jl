@@ -1,11 +1,13 @@
 mutable struct _TransferDataAccumulator{T}
     data::Matrix{T}
     cutoff::Int
+    mask::BitVector
 end
 
-function _TransferDataAccumulator(T::Type, M::Int, cutoff::Int)
-    mat = zeros(T, (4, M))
-    _TransferDataAccumulator(mat, cutoff)
+function _TransferDataAccumulator(T::Type, M::Int, cutoff::Int; dims = 4)
+    mat = zeros(T, (dims, M))
+    mask = BitVector(undef, M)
+    _TransferDataAccumulator(mat, cutoff, mask)
 end
 
 function Base.getproperty(t::_TransferDataAccumulator, f::Symbol)
@@ -26,8 +28,7 @@ Base.eachindex(data::_TransferDataAccumulator) = eachindex(data.θs)
 Base.lastindex(data::_TransferDataAccumulator) = size(data.data, 2)
 
 function remove_unused_elements!(data::_TransferDataAccumulator)
-    I = findall(!=(0), data.θs)
-    data.data = data.data[:, I]
+    data.data = data.data[:, data.mask]
     data
 end
 
@@ -36,8 +37,14 @@ function Base.sort!(data::_TransferDataAccumulator)
     Base.permutecols!!(data.data, I)
 end
 
-function insert_data!(data::_TransferDataAccumulator, i, vals...)
-    data.data[:, i] .= (vals...,)
+function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{3})
+    data.mask[i] = true
+    data.data[:, i] .= (θ, vals...)
+    data
+end
+function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{4})
+    data.mask[i] = vals[4]
+    data.data[:, i] .= (θ, vals[1:3]...)
     data
 end
 
