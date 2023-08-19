@@ -198,19 +198,14 @@ end
     # fixed stationary observer velocity
     v_obs = @SVector [1.0, 0.0, 0.0, 0.0]
 
-    r = gp.x[2]
+    r = gp.x[2] * sin(gp.x[3])
     v_disc = if r < isco
         # plunging region
-        @inbounds @SVector [
-            uᵗ(m.M, isco, gp.x[2], m.a),
-            -uʳ(m.M, isco, gp.x[2]),
-            0,
-            uᶲ(m.M, isco, gp.x[2], m.a),
-        ]
+        SVector(uᵗ(m.M, isco, r, m.a), -uʳ(m.M, isco, r), 0, uᶲ(m.M, isco, r, m.a))
     else
         # disc_norm = (eⱽ(m.M, gp.x[2], m.a, gp.x[3]) * √(1 - Vₑ(m.M, gp.x[2], m.a, gp.x[3])^2))
         # @SVector [1 / disc_norm, 0, 0, Ωₑ(m.M, gp.x[2], m.a) / disc_norm]
-        Gradus.CircularOrbits.fourvelocity(m, gp.x[2])
+        Gradus.CircularOrbits.fourvelocity(m, r)
     end
 
     # get metric matrix at position on disc

@@ -1,10 +1,11 @@
+_calculate_transfer_function(rₑ, g, g✶, J) = @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
 
 function _adjust_extrema!(g::AbstractArray{T}) where {T}
     g[1] = zero(T)
     g[end] = one(T)
 end
 
-function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2)
+function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2; H = 1e-6)
     I1 = sortperm(g1)
     I2 = sortperm(g2)
 
@@ -20,7 +21,6 @@ function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2)
     # very problematic due to the g✶ * (1 - g✶) terms, sending the branches to zero
     # so we use an offset to avoid these that is small enough to not impact results at
     # high inclination angles
-    H = 1e-6
     J1 = @. (g1 < 1 - H) & (g1 > H)
     J2 = @. (g2 < 1 - H) & (g2 > H)
     g1 = g1[J1]
@@ -106,37 +106,31 @@ function interpolate_branches(ctf::CunninghamTransferData{T}) where {T}
     )
 end
 
-function _calculate_transfer_function(rₑ, g, g✶, J)
-    if abs(g✶) > 1
-        error("abs(g✶) > 1 for rₑ = $rₑ (g = $g, g✶ = $g✶, J = $J).")
-    end
-    @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
-end
-
-function cunningham_transfer_function(
+function _rear_workhorse_with_impact_parameters(
     m::AbstractMetric,
-    u,
-    d,
-    rₑ::T;
-    max_time = 2 * u[2],
-    redshift_pf = ConstPointFunctions.redshift(m, u),
+    x,
+    d::AbstractAccretionDisc,
+    rₑ;
+    max_time = 2 * x[2],
+    redshift_pf = ConstPointFunctions.redshift(m, x),
     offset_max = 0.4rₑ + 10,
     zero_atol = 1e-7,
-    θ_offset = 0.6,
-    N = 80,
-    N_extrema = 17,
+    β₀ = 0,
+    α₀ = 0,
     tracer_kwargs...,
-) where {T}
+)
     function _workhorse(θ)
         r, gp = find_offset_for_radius(
             m,
-            u,
+            x,
             d,
             rₑ,
             θ;
             zero_atol = zero_atol,
             offset_max = offset_max,
             max_time = max_time,
+            β₀ = β₀,
+            α₀ = α₀,
             tracer_kwargs...,
         )
         if isnan(r)
@@ -144,13 +138,13 @@ function cunningham_transfer_function(
                 "Transfer function integration failed (rₑ=$rₑ, θ=$θ, offset_max = $offset_max).",
             )
         end
-        α = r * cos(θ)
-        β = r * sin(θ)
-        # use underscores to avoid possible boxing
-        _g = redshift_pf(m, gp, max_time)
-        _J = jacobian_∂αβ_∂gr(
+        α = r * cos(θ) + α₀
+        β = r * sin(θ) + β₀
+        # redshift and jacobian
+        g = redshift_pf(m, gp, max_time)
+        J = jacobian_∂αβ_∂gr(
             m,
-            u,
+            x,
             d,
             α,
             β,
@@ -158,126 +152,135 @@ function cunningham_transfer_function(
             redshift_pf = redshift_pf,
             tracer_kwargs...,
         )
-        (_g, _J, gp.x[1])
+        (g, J, gp.x[1], α, β)
+    end
+    (_workhorse, tracer_kwargs)
+end
+function _rear_workhorse(m::AbstractMetric, x, d::AbstractAccretionDisc, rₑ; kwargs...)
+    workhorse, _ = _rear_workhorse_with_impact_parameters(m, x, d, rₑ; kwargs...)
+    function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
+        g, J, t, _, _ = workhorse(θ)
+        g, J, t
+    end
+end
+
+function _rear_workhorse(
+    m::AbstractMetric,
+    x,
+    d::AbstractThickAccretionDisc,
+    rₑ;
+    max_time = 2 * x[2],
+    visible_tolerance = 1e-3,
+    kwargs...,
+)
+    plane = datumplane(d, rₑ)
+    datum_workhorse, tracer_kwargs = _rear_workhorse_with_impact_parameters(
+        m,
+        x,
+        plane,
+        rₑ;
+        max_time = max_time,
+        kwargs...,
+    )
+    function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
+        g, J, t, α, β = datum_workhorse(θ)
+        # check if the location is visible or not
+        sol = tracegeodesics(
+            m,
+            x,
+            map_impact_parameters(m, x, α, β),
+            d,
+            max_time;
+            save_on = false,
+            tracer_kwargs...,
+        )
+        gp = unpack_solution(sol)
+        is_visible = abs(rₑ - gp.x[2] * sin(gp.x[3])) < visible_tolerance
+        (g, J, t, is_visible)
+    end
+end
+
+function _cunningham_transfer_function!(
+    data::_TransferDataAccumulator,
+    workhorse,
+    θiterator,
+    θ_offset,
+    rₑ,
+)
+    for (i, θ) in enumerate(θiterator)
+        θ_corrected = θ + 1e-4
+        insert_data!(data, i, θ_corrected, workhorse(θ))
     end
 
+    gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
+    gmin, gmax = _check_gmin_gmax(gmin_candidate, gmax_candidate, rₑ, data.gs)
+    # we might not have used all of the memory we allocated so let's clean up
+    remove_unused_elements!(data)
+    # sort everything by angle
+    sort!(data)
+
+    # convert from ∂g to ∂g✶
+    @. data.Js = (gmax - gmin) * data.Js
+
+    @inbounds for i in eachindex(data)
+        g✶ = g_to_g✶(data.gs[i], gmin, gmax)
+        # Js is now storing f
+        data.Js[i] = _calculate_transfer_function(rₑ, data.gs[i], g✶, data.Js[i])
+        # gs is now storing g✶
+        data.gs[i] = g✶
+    end
+
+    gmin, gmax
+end
+
+function cunningham_transfer_function(
+    m::AbstractMetric{Q},
+    x,
+    d::AbstractAccretionDisc,
+    rₑ::T;
+    θ_offset = Q(0.6),
+    N = 80,
+    N_extrema = 17,
+    kwargs...,
+) where {Q,T}
     M = N + 2 * N_extrema
     K = N ÷ 5
-
-    θs = zeros(T, M)
-    Js = zeros(T, M)
-    gs = zeros(T, M)
-    ts = zeros(T, M)
+    data = _TransferDataAccumulator(T, M, N)
     # sample so that the expected minima and maxima (0 and π)
-    itt = Iterators.flatten((
+    θiterator = Iterators.flatten((
         range(0 - 2θ_offset, 0 + 2θ_offset, K),
         range(-π / 2, 3π / 2, N - 2 * K),
         range(π - 2θ_offset, π + 2θ_offset, K),
     ))
-    @inbounds for (i, _θ) in enumerate(itt)
-        # avoid coordinate singularity at π / 2
-        θ = _θ + 1e-4
-        g, J, t = _workhorse(θ)
-        gs[i] = g
-        Js[i] = J
-        θs[i] = θ
-        ts[i] = t
-    end
-
-    _gmin, _gmax = @views _search_extremal!(
-        θs[N+1:end],
-        gs[N+1:end],
-        Js[N+1:end],
-        ts[N+1:end],
-        _workhorse,
-        θ_offset,
+    workhorse = _rear_workhorse(m, x, d, rₑ; kwargs...)
+    gmin, gmax = _cunningham_transfer_function!(data, workhorse, θiterator, θ_offset, rₑ)
+    CunninghamTransferData(
+        data.data[2, :],
+        data.data[3, :],
+        data.data[4, :],
+        gmin,
+        gmax,
+        rₑ,
     )
-
-    # remove unused 
-    B = findall(==(0), θs)
-    deleteat!(θs, B)
-    deleteat!(gs, B)
-    deleteat!(Js, B)
-    deleteat!(ts, B)
-
-    gmin, gmax = _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
-
-    I = sortperm(θs)
-    @. θs = θs[I]
-    @. Js = Js[I]
-    @. gs = gs[I]
-    @. ts = ts[I]
-
-    # convert from ∂g to ∂g✶
-    @. Js = (gmax - gmin) * Js
-
-    @inbounds for i in eachindex(gs)
-        g✶ = g_to_g✶(gs[i], gmin, gmax)
-        # Js is now storing f
-        Js[i] = _calculate_transfer_function(rₑ, gs[i], g✶, Js[i])
-        # gs is now storing g✶
-        gs[i] = g✶
-    end
-
-    CunninghamTransferData(gs, Js, ts, gmin, gmax, rₑ)
-end
-
-function _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
-    gmin = _gmin
-    gmax = _gmax
-    # sometimes the interpolation seems to fail if there are duplicate knots
-    if isnan(gmin)
-        @warn "gmin is NaN for rₑ = $rₑ (gmin = $gmin, extrema(gs) = $(extrema(gs)). Using extrema."
-        gmin = minimum(gs)
-    end
-    if isnan(gmax)
-        @warn "gmax is NaN for rₑ = $rₑ (gmax = $gmax, extrema(gs) = $(extrema(gs)). Using extrema."
-        gmax = maximum(gs)
-    end
-    if gmin == gmax
-        @warn (
-            "gmin == gmax for rₑ = $rₑ (gmin = gmax = $gmin, extrema(gs) = $(extrema(gs)). Using extrema."
-        )
-        gmin, gmax = extrema(gs)
-        if gmin == gmax
-            error("Cannot use extrema")
-        end
-    end
-    if gmin > minimum(gs)
-        @warn (
-            "Inferred minima > array minimum rₑ = $rₑ (gmin = $gmin, extrema(gs) = $(extrema(gs)). Using minimum."
-        )
-        gmin = minimum(gs)
-    end
-    if gmax < maximum(gs)
-        @warn (
-            "Inferred maximum < array maximum rₑ = $rₑ (gmax = $gmax, extrema(gs) = $(extrema(gs)). Using maximum."
-        )
-        gmax = maximum(gs)
-    end
-    return gmin, gmax
 end
 
 # find gmin and gmax via GoldenSection
 # storing all attempts in gs and Js
-function _search_extremal!(θs, gs, Js, ts, f, offset)
-    N = length(θs)
+function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
+    # need to specify the type to avoid boxing
+    i::Int = data.cutoff
+    N = (lastindex(data) - data.cutoff) ÷ 2 - 1
 
-    i::Int = 0
     function _gmin_finder(θ)
-        if i > N
-            error("i > N: $i > $N")
+        if i >= lastindex(data)
+            error("i >= lastindex(data): $i >= $(lastindex(data))")
         end
         i += 1
         if abs(θ) < 1e-4 || abs(abs(θ) - π) < 1e-4
             θ += 1e-4
         end
-        g, J, t = f(θ)
-        θs[i] = θ
-        Js[i] = J
-        gs[i] = g
-        ts[i] = t
-        g
+        insert_data!(data, i, θ, workhorse(θ))
+        data.gs[i]
     end
     function _gmax_finder(θ)
         -_gmin_finder(θ)
@@ -289,14 +292,14 @@ function _search_extremal!(θs, gs, Js, ts, f, offset)
         0 - offset,
         0 + offset,
         GoldenSection(),
-        iterations = N ÷ 2 - 1,
+        iterations = N,
     )
     res_max = Optim.optimize(
         _gmax_finder,
         π - offset,
         π + offset,
         GoldenSection(),
-        iterations = N ÷ 2 - 1,
+        iterations = N,
     )
 
     # unpack result, remembering that maximum is inverted
