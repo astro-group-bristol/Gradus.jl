@@ -148,3 +148,10 @@ end
     @. y = normalize(y)
     p.f.ε.t[2:end-1], y
 end
+
+@recipe function f(ctf::CunninghamTransferData; h = 1e-4)
+    xlabel --> "g✶"
+    ylabel --> "f"
+    mask = @. (ctf.g✶ > h) & (ctf.g✶ < 1 - h)
+    ctf.g✶[mask], ctf.f[mask]
+end
