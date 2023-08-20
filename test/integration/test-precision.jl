@@ -20,3 +20,10 @@ target = SVector(10.0, deg2rad(40), -π / 4)
 @test α ≈ 4.848373364532467 rtol = 1e-3
 @test β ≈ 8.012499652493656 rtol = 1e-3
 @test accuracy ≈ 0.0049975644770909105 rtol = 1e-3
+
+# test geodesic point interface
+α, β, gp, accuracy = Gradus.optimize_for_target(target, m, u)
+@test gp.x[1] ≈ 1005.2700874611182 rtol = 1e-3
+@test α ≈ 4.848373364532467 rtol = 1e-3
+@test β ≈ 8.012499652493656 rtol = 1e-3
+@test accuracy ≈ 0.0049975644770909105 rtol = 1e-3
