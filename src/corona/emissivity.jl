@@ -160,8 +160,8 @@ function _point_source_symmetric_emissivity_profile(
     n_samples = 100,
     λ_max = 10_000.0,
     callback = domain_upper_hemisphere(),
-    δmin = 0.1,
-    δmax = 179.9,
+    δmin = 0.01,
+    δmax = 179.99,
     kwargs...,
 )
     δs = deg2rad.(range(δmin, δmax, n_samples))
