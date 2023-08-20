@@ -207,24 +207,24 @@ function jacobian_∂αβ_∂gr(
     abs(inv(det(j)))
 end
 
-function make_target_objective(
+function _make_target_objective(
     target::SVector,
     m::AbstractMetric,
-    u0,
+    x0,
     args...;
     d_tol = 1e-2,
-    max_time = 2u0[2],
+    max_time = 2x0[2],
     callback = nothing,
     μ = 0.0,
     solver_opts...,
 )
     # convenience velocity function
     velfunc = (α, β) -> begin
-        constrain_all(m, u0, map_impact_parameters(m, u0, α, β), μ)
+        constrain_all(m, x0, map_impact_parameters(m, x0, α, β), μ)
     end
 
     # used to track how close the current solver got
-    closest_approach = Ref(u0[2])
+    closest_approach = Ref(x0[2])
     # convert target to cartesian once
     target_cart = to_cartesian(target)
     distance_callback = ContinuousCallback(
@@ -245,7 +245,7 @@ function make_target_objective(
     # init a reusable integrator
     integ = _init_integrator(
         m,
-        u0,
+        x0,
         velfunc(0.0, 0.0),
         args...,
         (0.0, max_time);
@@ -254,31 +254,51 @@ function make_target_objective(
         solver_opts...,
     )
 
-    # map impact parameters to a closest approach 
-    f = ((α, β),) -> begin
-        # reset the closest approach
-        closest_approach[] = u0[2]
+    function _solver(α, β)
         v = velfunc(α, β)
-        _ = _solve_reinit!(integ, vcat(u0, v))
+        _solve_reinit!(integ, vcat(x0, v))
+    end
+
+    # map impact parameters to a closest approach 
+    function _target_objective(impact_params)
+        α = impact_params[1]
+        β = impact_params[2]
+        # reset the closest approach
+        closest_approach[] = x0[2]
+        _ = _solver(α, β)
         closest_approach[]
     end
 
-    return f
+    return _target_objective, _solver
+end
+
+function optimize_for_target(
+    target::SVector,
+    m::AbstractMetric,
+    x0,
+    args...;
+    optimizer = NelderMead(),
+    kwargs...,
+)
+    f, solver = _make_target_objective(target, m, x0, args...; kwargs...)
+    res = optimize(f, [0.0, 0.0], optimizer)
+    out = Optim.minimizer(res)
+    # return α, β, accuracy
+    α, β = out[1], out[2]
+    accuracy = Optim.minimum(res)
+
+    α, β, unpack_solution(solver(α, β)), accuracy
 end
 
 function impact_parameters_for_target(
     target::SVector,
     m::AbstractMetric,
-    u0,
+    x0,
     args...;
-    optimizer = NelderMead(),
     kwargs...,
 )
-    f = make_target_objective(target, m, u0, args...; kwargs...)
-    res = optimize(f, [0.0, 0.0], optimizer)
-    out = Optim.minimizer(res)
-    # return α, β, accuracy
-    out[1], out[2], Optim.minimum(res)
+    α, β, _, accuracy = optimize_for_target(target, m, x0, args...; kwargs...)
+    α, β, accuracy
 end
 
 export find_offset_for_radius, impact_parameters_for_radius, impact_parameters_for_radius!
