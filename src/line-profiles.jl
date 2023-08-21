@@ -61,11 +61,10 @@ end
 function lineprofile(
     bins,
     ε::Function,
-    m::AbstractMetric,
+    m::AbstractMetric{T},
     u,
     d::AbstractAccretionGeometry,
     ::BinnedLineProfile;
-    plane = PolarPlane(GeometricGrid(); Nr = 450, Nθ = 1300, r_max = 50.0),
     λ_max = 2 * u[2],
     redshift_pf = ConstPointFunctions.redshift(m, u),
     verbose = false,
@@ -75,7 +74,7 @@ function lineprofile(
     # todo: make it friendly
     plane = PolarPlane(GeometricGrid(); Nr = 450, Nθ = 1300, r_max = 5maxrₑ),
     solver_args...,
-)
+) where {T}
     progress_bar = init_progress_bar("Lineprofile: ", trajectory_count(plane), verbose)
 
     gps = tracegeodesics(
