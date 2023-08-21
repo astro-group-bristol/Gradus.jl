@@ -25,10 +25,10 @@ function source_to_disc_emissivity(m::AbstractStaticAxisSymmetric, N, A, x, g; �
 end
 
 """
-    point_source_equitorial_disc_emissivity(θ, g, A, γ; Γ = 2)
+    point_source_equatorial_disc_emissivity(θ, g, A, γ; Γ = 2)
 
 Calculate the emissivity of a point illuminating source on the spin axis for an annulus of the
-equitorial accretion disc with (proper) area `A`. The precise formulation follows from Dauser et al. (2013),
+equatorial accretion disc with (proper) area `A`. The precise formulation follows from Dauser et al. (2013),
 with the emissivity calculated as
 ```math
 \\varepsilon = \\frac{\\sin \\theta}{A g^\\Gamma \\gamma}
@@ -43,7 +43,7 @@ in order to maintain point density. It may be regarded as the PDF that samples `
 
 Dauser et al. (2013)
 """
-point_source_equitorial_disc_emissivity(θ, g, A, γ; Γ = 2) = sin(θ) / (g^Γ * A * γ)
+point_source_equatorial_disc_emissivity(θ, g, A, γ; Γ = 2) = sin(θ) / (g^Γ * A * γ)
 
 """
     function emissivity_profile(
@@ -185,7 +185,7 @@ function _point_source_symmetric_emissivity_profile(
     I = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
     points = gps[I]
     δs = δs[I]
-    J = sortperm(points, by = i -> _equitorial_project(i.x))
+    J = sortperm(points, by = i -> _equatorial_project(i.x))
     points = points[J]
     δs = δs[J]
 
@@ -212,7 +212,7 @@ function _point_source_emissivity(
     Δr = diff(r)
     @. A = A * Δr
     r = r[1:end-1]
-    ε = point_source_equitorial_disc_emissivity.(@views(δs[1:end-1]), gs, A, γ)
+    ε = point_source_equatorial_disc_emissivity.(@views(δs[1:end-1]), gs, A, γ)
     r, ε
 end
 

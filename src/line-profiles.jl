@@ -91,13 +91,13 @@ function lineprofile(
         solver_args...,
     )
 
-    I = intersected_with_geometry(gps, x -> (minrₑ <= _equitorial_project(x) <= maxrₑ))
+    I = intersected_with_geometry(gps, x -> (minrₑ <= _equatorial_project(x) <= maxrₑ))
     points = @views gps[I]
     areas = unnormalized_areas(plane)[I]
 
     # calculate physical flux
     g = redshift_pf.(m, points, λ_max)
-    r = map(p -> _equitorial_project(p.x), points)
+    r = map(p -> _equatorial_project(p.x), points)
 
     f = @. ε(r) * g^3 * areas
     # bin

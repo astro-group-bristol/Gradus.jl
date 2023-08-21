@@ -6,7 +6,7 @@ using StaticArrays
 
 @testset "circular-orbits" begin
 
-    @testset "solve_equitorial_circular_orbit" begin
+    @testset "solve_equatorial_circular_orbit" begin
         # only implemented for the BoyerLindquist metrics at the moment
         # expected is sum of the circular orbit vϕ
         # last updated: 22 Apr 2022
@@ -17,16 +17,16 @@ using StaticArrays
             (KerrMetric(M = 1.0, a = -1.0), 0.5993458160081419),
             (JohannsenMetric(M = 1.0, a = 1.0, α22 = 1.0), 0.4980454719932759),
         ]
-            vϕs = solve_equitorial_circular_orbit(m, r_range)
+            vϕs = solve_equatorial_circular_orbit(m, r_range)
             @test isapprox(sum(vϕs), expected, atol = 1e-6, rtol = 0.0)
         end
     end
 
-    @testset "trace_equitorial_circular_orbit" begin
+    @testset "trace_equatorial_circular_orbit" begin
         m = KerrMetric(M = 1.0, a = 0.0)
         Gradus.isco(m)
         r_range = 6.0:0.1:10.0
-        simsols = trace_equitorial_circular_orbit(m, r_range)
+        simsols = trace_equatorial_circular_orbit(m, r_range)
         # smoke test passed
         @test true
     end

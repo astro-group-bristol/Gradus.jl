@@ -113,7 +113,7 @@ end
 Lz(m::AbstractMetric, u, v) = Lz(metric(m, u), v)
 Lz(m::AbstractMetric, gp::AbstractGeodesicPoint) = Lz(m, gp.x, gp.v)
 
-_equitorial_project(x::SVector{4}) = x[2] * sin(abs(x[3]))
+_equatorial_project(x::SVector{4}) = x[2] * sin(abs(x[3]))
 
 _zero_if_nan(x::T) where {T} = isnan(x) ? zero(T) : x
 

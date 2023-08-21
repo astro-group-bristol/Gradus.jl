@@ -21,7 +21,7 @@ end
 Return the end position of `gp` in Cartesian coordinates on the disc (x, y).
 """
 function to_cartesian(gp::AbstractGeodesicPoint{T}) where {T}
-    @inbounds let r = _equitorial_project(gp.x), ϕ = gp.x[4]
+    @inbounds let r = _equatorial_project(gp.x), ϕ = gp.x[4]
         x = r * cos(ϕ)
         y = r * sin(ϕ)
         SVector{2,T}(x, y)

@@ -11,7 +11,7 @@ function radiative_transfer(m::AbstractMetric, x, k, geometry, I, ν₀, r_isco,
 end
 
 function fluid_velocity(m::AbstractMetric, ::AbstractAccretionGeometry, x, r_isco, λ)
-    r = _equitorial_project(x)
+    r = _equatorial_project(x)
     if r > r_isco
         CircularOrbits.fourvelocity(m, r)
     else

@@ -250,7 +250,7 @@ Base.precompile(
     },
 )   # time: 0.007825662
 Base.precompile(
-    Tuple{typeof(point_source_equitorial_disc_emissivity),Float64,Any,Float64,Float64},
+    Tuple{typeof(point_source_equatorial_disc_emissivity),Float64,Any,Float64,Float64},
 )   # time: 0.006162999
 Base.precompile(
     Tuple{

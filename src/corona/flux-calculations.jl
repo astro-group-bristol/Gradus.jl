@@ -31,7 +31,7 @@ lorentz_factor(m::AbstractMetric, ::AbstractAccretionGeometry, x; kwargs...) =
     lorentz_factor(
         m,
         x,
-        CircularOrbits.fourvelocity(m, _equitorial_project(x[2]));
+        CircularOrbits.fourvelocity(m, _equatorial_project(x[2]));
         kwargs...,
     )
 function lorentz_factor(m::AbstractMetric, x, v; component = 4)
@@ -81,7 +81,7 @@ function flux_source_to_disc(
         @tullio E_s := -g_1[i, j] * gp.v_init[i] * v_source[j]
 
         # energy at disc
-        v_disc = disc_velocity(_equitorial_project(gp.x))
+        v_disc = disc_velocity(_equatorial_project(gp.x))
         @tullio E_d := -g_2[i, j] * gp.v[i] * v_disc[j]
 
         # relative redshift source to disc

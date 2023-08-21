@@ -1,5 +1,5 @@
 function trace_single_orbit(m, r, vϕ; max_time = 300.0, μ = 1.0, θ₀ = π / 2, tracer_args...)
-    # fixed in equitorial plane
+    # fixed in equatorial plane
     u = @SVector [0.0, r, θ₀, 0.0]
     v = @SVector [0.0, 0.0, 0.0, vϕ]
     tracegeodesics(m, u, v, (0.0, max_time); μ = μ, tracer_args...)
@@ -12,7 +12,7 @@ function measure_stability(m::AbstractMetric, r, vϕ; tracer_args...)
     sum(((rs .- r) ./ r) .^ 2) / length(rs)
 end
 
-function __solve_equitorial_circular_orbit(
+function __solve_equatorial_circular_orbit(
     m::AbstractMetric,
     r,
     optimizer,
@@ -29,7 +29,7 @@ function __solve_equitorial_circular_orbit(
     Optim.minimizer(res)
 end
 
-function solve_equitorial_circular_orbit(
+function solve_equatorial_circular_orbit(
     m::AbstractMetric,
     r::Number;
     lower_bound = 0.0,
@@ -37,7 +37,7 @@ function solve_equitorial_circular_orbit(
     optimizer = GoldenSection(),
     tracer_args...,
 )
-    __solve_equitorial_circular_orbit(
+    __solve_equatorial_circular_orbit(
         m,
         r,
         optimizer,
@@ -56,7 +56,7 @@ function sliding_window(func, N, lower_bound, upper_bound, lower_rate, upper_rat
     end
 end
 
-function solve_equitorial_circular_orbit(
+function solve_equatorial_circular_orbit(
     m::AbstractMetric,
     r_range::Union{<:AbstractRange,<:AbstractArray};
     lower_bound = 0.0,
@@ -74,7 +74,7 @@ function solve_equitorial_circular_orbit(
         upper_rate,
     ) do (i, lower_bound, upper_bound)
         r = r_range_reverse[i]
-        solve_equitorial_circular_orbit(
+        solve_equatorial_circular_orbit(
             m,
             r,
             ;
@@ -86,13 +86,13 @@ function solve_equitorial_circular_orbit(
     reverse!(candidate_vϕ)
 end
 
-function trace_equitorial_circular_orbit(m::AbstractMetric, rs; kwargs...)
-    map(zip(rs, solve_equitorial_circular_orbit(m, rs; kwargs...))) do (r, vϕ)
+function trace_equatorial_circular_orbit(m::AbstractMetric, rs; kwargs...)
+    map(zip(rs, solve_equatorial_circular_orbit(m, rs; kwargs...))) do (r, vϕ)
         trace_single_orbit(m, r, vϕ; kwargs...)
     end
 end
-function trace_equitorial_circular_orbit(m::AbstractMetric, r::Number; kwargs...)
-    vϕ = solve_equitorial_circular_orbit(m, r; kwargs...)
+function trace_equatorial_circular_orbit(m::AbstractMetric, r::Number; kwargs...)
+    vϕ = solve_equatorial_circular_orbit(m, r; kwargs...)
     trace_single_orbit(m, r, vϕ; kwargs...)
 end
 
@@ -166,5 +166,5 @@ function interpolate_plunging_velocities(
     PlungingInterpolation(m, sol)
 end
 
-export solve_equitorial_circular_orbit,
-    trace_equitorial_circular_orbit, PlungingInterpolation, interpolate_plunging_velocities
+export solve_equatorial_circular_orbit,
+    trace_equatorial_circular_orbit, PlungingInterpolation, interpolate_plunging_velocities

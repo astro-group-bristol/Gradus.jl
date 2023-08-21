@@ -2,7 +2,7 @@ using Test
 using Gradus
 
 # from Dauser+13, the Lorentz factor for the Kerr metric
-# for Keplerian disc velocities in the equitorial plane
+# for Keplerian disc velocities in the equatorial plane
 function _lorentz_factor(a, r)
     A = √(r^2 - 2r + a^2) * (r^(3 / 2) + a)
     B = √(r * √r + 2a - 3 * √r) * √(r^3 + a^2 * r + 2 * a^2) * r^(1 / 4)
