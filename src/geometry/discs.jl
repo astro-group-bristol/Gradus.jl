@@ -32,7 +32,7 @@ struct TopHatDisc{T} <: AbstractThickAccretionDisc{T}
 end
 
 function Gradus.cross_section(d::TopHatDisc, u)
-    # project u into equitorial plane
+    # project u into equatorial plane
     r = u[2] * sin(u[3])
     if (r < d.inner_r) || (r > d.outer_r)
         return -1.0

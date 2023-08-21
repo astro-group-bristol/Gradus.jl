@@ -12,7 +12,7 @@ struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
     ) where {D<:AbstractAccretionDisc,V<:AbstractArray,G}
         if !isapprox(d.inclination, π / 2)
             return error(
-                "Currently only supported for discs in the equitorial plane (θ=π/2).",
+                "Currently only supported for discs in the equatorial plane (θ=π/2).",
             )
         end
         new{D,V,G}(d, polys, gen, gps)
@@ -119,7 +119,7 @@ getareas(vdp::VoronoiDiscProfile) = getarea.(vdp.polys)
 function getproperarea(poly::AbstractArray, m::AbstractMetric)
     A = getarea(poly)
     c = getbarycenter(poly)
-    # get value of metric at the radius of the polygon's barycenter, and in the equitorial plane
+    # get value of metric at the radius of the polygon's barycenter, and in the equatorial plane
     m_params = metric_components(m, (sqrt(c[1]^2 + c[2]^2), π / 2))
     # need radial and azimuthal components of the metric
     sqrt(m_params[2] * m_params[4]) * A

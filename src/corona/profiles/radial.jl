@@ -13,7 +13,7 @@ function RadialDiscProfile(
     intensities = nothing;
     kwargs...,
 )
-    radii = map(i -> i.x[2], gps)
+    radii = map(i -> _equatorial_project(i.x), gps)
     # ensure sorted: let the user sort so that everything is sure to be
     # in order
     if !issorted(radii)
@@ -33,7 +33,10 @@ function RadialDiscProfile(rs::AbstractArray, ts::AbstractArray, εs::AbstractAr
     t = DataInterpolations.LinearInterpolation(ts, rs)
     ε = DataInterpolations.LinearInterpolation(εs, rs)
     # wrap geodesic point wrappers
-    RadialDiscProfile(gp -> ε(gp.x[2]), gp -> t(gp.x[2]) + gp.x[1])
+    RadialDiscProfile(
+        gp -> ε(_equatorial_project(gp.x)),
+        gp -> t(_equatorial_project(gp.x)) + gp.x[1],
+    )
 end
 
 function RadialDiscProfile(rdp::RadialDiscProfile)
@@ -97,7 +100,7 @@ function RadialDiscProfile(
 end
 
 function RadialDiscProfile(ce::CoronaGeodesics; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
+    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
     @views RadialDiscProfile(
         ce.metric,
         ce.model,
@@ -108,7 +111,7 @@ function RadialDiscProfile(ce::CoronaGeodesics; kwargs...)
 end
 
 function RadialDiscProfile(ce::CoronaGeodesics{<:TraceRadiativeTransfer}; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
+    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
     @views RadialDiscProfile(
         ce.metric,
         ce.model,
@@ -120,18 +123,18 @@ function RadialDiscProfile(ce::CoronaGeodesics{<:TraceRadiativeTransfer}; kwargs
 end
 
 function RadialDiscProfile(ε, ce::CoronaGeodesics; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
-    radii = @views [i.x[2] for i in ce.geodesic_points[J]]
+    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
+    radii = @views [_equatorial_project(i.x) for i in ce.geodesic_points[J]]
     times = @views [i.x[1] for i in ce.geodesic_points[J]]
 
     t = DataInterpolations.LinearInterpolation(times, radii)
 
     function _emissivity_wrapper(gp)
-        ε(gp.x[2])
+        ε(_equatorial_project(gp.x))
     end
 
     function _delay_wrapper(gp)
-        t(gp.x[2]) + gp.x[1]
+        t(_equatorial_project(gp.x)) + gp.x[1]
     end
 
     RadialDiscProfile(_emissivity_wrapper, _delay_wrapper; kwargs...)

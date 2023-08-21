@@ -198,7 +198,7 @@ end
     # fixed stationary observer velocity
     v_obs = @SVector [1.0, 0.0, 0.0, 0.0]
 
-    r = gp.x[2] * sin(gp.x[3])
+    r = Gradus._equatorial_project(gp.x)
     v_disc = if r < isco
         # plunging region
         SVector(uᵗ(m.M, isco, r, m.a), -uʳ(m.M, isco, r), 0, uᶲ(m.M, isco, r, m.a))
@@ -247,7 +247,7 @@ function interpolate_redshift(plunging_interpolation, u)
     v_obs = @SVector [1.0, 0.0, 0.0, 0.0]
     closure =
         (m, gp, max_time) -> begin
-            let r = gp.x[2]
+            let r = _equatorial_project(gp.x)
                 v_disc = if r < isco
                     # plunging region
                     vtemp = plunging_interpolation(r)

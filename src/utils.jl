@@ -1,4 +1,37 @@
+struct NaNLinearInterpolator{X,Y}
+    x::Vector{X}
+    y::Vector{Y}
+    default::Y
+end
+
+function _interpolate(interp::NaNLinearInterpolator{X}, x::X) where {X}
+    idx = clamp(searchsortedlast(interp.x, x), 1, length(interp.x) - 1)
+    x1, x2 = interp.x[idx], interp.x[idx+1]
+    y1, y2 = interp.y[idx], interp.y[idx+1]
+
+    w = (x - x1) / (x2 - x1)
+    y = (1 - w) * y1 + w * y2
+
+    if isnan(y)
+        if (w < 0.5)
+            isnan(y1) && return interp.default
+            return y1
+        else
+            isnan(y2) && return interp.default
+            return y2
+        end
+    end
+
+    y
+end
+
+function (interp::NaNLinearInterpolator)(x)
+    _interpolate(interp, x)
+end
+
 function _make_interpolation(x, y)
+    @assert issorted(x) "x must be sorted!"
+    # NaNLinearInterpolator(x, y, zero(eltype(y)))
     DataInterpolations.LinearInterpolation(y, x)
 end
 
@@ -79,5 +112,9 @@ function Lz(metric::AbstractMatrix{T}, v) where {T}
 end
 Lz(m::AbstractMetric, u, v) = Lz(metric(m, u), v)
 Lz(m::AbstractMetric, gp::AbstractGeodesicPoint) = Lz(m, gp.x, gp.v)
+
+_equatorial_project(x::SVector{4}) = x[2] * sin(abs(x[3]))
+
+_zero_if_nan(x::T) where {T} = isnan(x) ? zero(T) : x
 
 export cartesian_squared_distance, cartesian_distance, spherical_to_cartesian

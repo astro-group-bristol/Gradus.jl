@@ -64,7 +64,7 @@ end
 
 Returns a [`PointFunction`](@ref).
 
-Calculate the analytic redshift at a given geodesic point, assuming equitorial, geometrically
+Calculate the analytic redshift at a given geodesic point, assuming equatorial, geometrically
 thin accretion disc. Implementation depends on the metric type. Currently implemented for
 
 - [`Gradus.KerrMetric`](@ref)

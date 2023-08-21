@@ -28,7 +28,12 @@ position `x` via
 ```
 """
 lorentz_factor(m::AbstractMetric, ::AbstractAccretionGeometry, x; kwargs...) =
-    lorentz_factor(m, x, CircularOrbits.fourvelocity(m, x[2]); kwargs...)
+    lorentz_factor(
+        m,
+        x,
+        CircularOrbits.fourvelocity(m, _equatorial_project(x[2]));
+        kwargs...,
+    )
 function lorentz_factor(m::AbstractMetric, x, v; component = 4)
     𝒱ϕ = local_velocity(m, x, v, component)
     inv(√(1 - 𝒱ϕ^2))
@@ -76,7 +81,7 @@ function flux_source_to_disc(
         @tullio E_s := -g_1[i, j] * gp.v_init[i] * v_source[j]
 
         # energy at disc
-        v_disc = disc_velocity(gp.x[2])
+        v_disc = disc_velocity(_equatorial_project(gp.x))
         @tullio E_d := -g_2[i, j] * gp.v[i] * v_disc[j]
 
         # relative redshift source to disc
