@@ -87,6 +87,7 @@ function lineprofile(
         save_on = false,
         verbose = verbose,
         progress_bar = progress_bar,
+        callback = domain_upper_hemisphere(),
         ensemble = EnsembleEndpointThreads(),
         solver_args...,
     )
@@ -101,8 +102,8 @@ function lineprofile(
 
     f = @. ε(r) * g^3 * areas
     # bin
-    F = bucket(Simple(), g, f, bins)
-    bins, F ./ sum(F)
+    flux = bucket(Simple(), g, f, bins)
+    bins, flux ./ sum(flux)
 end
 
 export AbstractLineProfileAlgorithm, BinnedLineProfile, CunninghamLineProfile, lineprofile
