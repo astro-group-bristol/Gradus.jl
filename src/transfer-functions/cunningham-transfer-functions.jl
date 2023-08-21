@@ -55,13 +55,16 @@ function splitbranches(ctf::CunninghamTransferData{T}) where {T}
     _, imax = findmax(ctf.g✶)
     i1, i2 = imax > imin ? (imin, imax) : (imax, imin)
 
+    # if a point is not visible, we have zero flux contribution
+    f = replace(x -> isnan(x) ? zero(T) : x, ctf.f)
+
     if (i1 == i2)
         error("Resolved same min/max for rₑ = $(ctf.rₑ)")
     end
 
     # branch sizes, with duplicate extrema
     N1 = i2 - i1 + 1
-    N2 = length(ctf.f) - N1 + 2
+    N2 = length(f) - N1 + 2
     # allocate branches
     branch1_f = zeros(T, N1)
     branch2_f = zeros(T, N2)
@@ -71,12 +74,12 @@ function splitbranches(ctf::CunninghamTransferData{T}) where {T}
     branch2_g✶ = zeros(T, N2)
 
     for (i, j) in enumerate(i1:i2)
-        branch1_f[i] = ctf.f[j]
+        branch1_f[i] = f[j]
         branch1_g✶[i] = ctf.g✶[j]
         branch1_t[i] = ctf.t[j]
     end
-    for (i, j) in enumerate(Iterators.flatten((1:i1, i2:length(ctf.f))))
-        branch2_f[i] = ctf.f[j]
+    for (i, j) in enumerate(Iterators.flatten((1:i1, i2:length(f))))
+        branch2_f[i] = f[j]
         branch2_g✶[i] = ctf.g✶[j]
         branch2_t[i] = ctf.t[j]
     end

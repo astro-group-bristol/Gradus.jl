@@ -43,8 +43,11 @@ function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{3})
     data
 end
 function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{4})
-    data.mask[i] = vals[4]
+    data.mask[i] = true
     data.data[:, i] .= (θ, vals[1:3]...)
+    if vals[4] == 0
+        data.Js[i] = NaN
+    end
     data
 end
 
