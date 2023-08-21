@@ -191,12 +191,12 @@ end
     end
 end
 
-@inline function redshift_function(m::KerrMetric, gp)
+@inline function redshift_function(m::KerrMetric{T}, gp) where {T}
     isco = Gradus.isco(m)
     # metric matrix at observer
     g_obs = metric(m, gp.x_init)
     # fixed stationary observer velocity
-    v_obs = @SVector [1.0, 0.0, 0.0, 0.0]
+    v_obs = SVector{4,T}(1, 0, 0, 0)
 
     r = Gradus._equatorial_project(gp.x)
     v_disc = if r < isco
@@ -239,12 +239,12 @@ end
 For a full, annotated derivation of this method, see
 [the following blog post](https://fjebaker.github.io/blog/pages/2022-05-plunging-orbits/).
 """
-function interpolate_redshift(plunging_interpolation, u)
+function interpolate_redshift(plunging_interpolation, u::SVector{4,T}) where {T}
     isco = Gradus.isco(plunging_interpolation.m)
     # metric matrix at observer
     g_obs = metric(plunging_interpolation.m, u)
     # fixed stationary observer velocity
-    v_obs = @SVector [1.0, 0.0, 0.0, 0.0]
+    v_obs = SVector{4,T}(1, 0, 0, 0)
     closure =
         (m, gp, max_time) -> begin
             let r = _equatorial_project(gp.x)
@@ -253,7 +253,7 @@ function interpolate_redshift(plunging_interpolation, u)
                     vtemp = plunging_interpolation(r)
                     # we have to reverse radial velocity due to backwards tracing convention
                     # see https://github.com/astro-group-bristol/Gradus.jl/issues/3
-                    @SVector [vtemp[1], -vtemp[2], vtemp[3], vtemp[4]]
+                    SVector{4}(vtemp[1], -vtemp[2], vtemp[3], vtemp[4])
                 else
                     # regular circular orbit
                     CircularOrbits.fourvelocity(plunging_interpolation.m, r)
@@ -269,7 +269,7 @@ function interpolate_redshift(plunging_interpolation, u)
     PointFunction(closure)
 end
 
-interpolate_redshift(m::AbstractMetric, u; kwargs...) =
+interpolate_redshift(m::AbstractMetric, u::SVector{4}; kwargs...) =
     interpolate_redshift(interpolate_plunging_velocities(m; kwargs...), u)
 
 export RedshiftFunctions, interpolate_redshift

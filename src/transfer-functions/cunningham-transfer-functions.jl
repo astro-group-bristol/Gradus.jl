@@ -206,7 +206,7 @@ function _rear_workhorse(
             tracer_kwargs...,
         )
         gp = unpack_solution(sol)
-        is_visible = abs(rₑ - gp.x[2] * sin(gp.x[3])) < visible_tolerance
+        is_visible = abs(rₑ - _equatorial_project(gp.x)) < visible_tolerance
         (g, J, t, is_visible)
     end
 end

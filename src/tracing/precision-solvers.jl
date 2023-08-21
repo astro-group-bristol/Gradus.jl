@@ -78,7 +78,7 @@ function find_offset_for_radius(
 )
     function _measure(gp::GeodesicPoint{T}) where {T}
         r = if gp.status == StatusCodes.IntersectedWithGeometry
-            gp.x[2] * sin(gp.x[3])
+            _equatorial_project(gp.x)
         else
             zero(T)
         end
@@ -174,7 +174,6 @@ function impact_parameters_for_radius(
     α = zeros(T, N)
     β = zeros(T, N)
     impact_parameters_for_radius!(α, β, m, u, d, radius; kwargs...)
-    # (filter(!isnan, α), filter(!isnan, β))
     α, β
 end
 
@@ -200,7 +199,7 @@ function jacobian_∂αβ_∂gr(
         gp = unpack_solution(sol)
         g = redshift_pf(m, gp, max_time)
         # return disc r and redshift g
-        SVector(gp.x[2], g)
+        SVector(_equatorial_project(gp.x), g)
     end
 
     j = ForwardDiff.jacobian(_jacobian_f, SVector(α, β))
@@ -275,13 +274,14 @@ end
 function optimize_for_target(
     target::SVector,
     m::AbstractMetric,
-    x0,
+    x0::SVector{4,T},
     args...;
     optimizer = NelderMead(),
+    p0 = zeros(T, 2),
     kwargs...,
-)
+) where {T}
     f, solver = _make_target_objective(target, m, x0, args...; kwargs...)
-    res = optimize(f, [0.0, 0.0], optimizer)
+    res = optimize(f, p0, optimizer)
     out = Optim.minimizer(res)
     # return α, β, accuracy
     α, β = out[1], out[2]
