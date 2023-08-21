@@ -239,7 +239,7 @@ end
 For a full, annotated derivation of this method, see
 [the following blog post](https://fjebaker.github.io/blog/pages/2022-05-plunging-orbits/).
 """
-function interpolate_redshift(plunging_interpolation, u::T) where {T}
+function interpolate_redshift(plunging_interpolation, u::SVector{4,T}) where {T}
     isco = Gradus.isco(plunging_interpolation.m)
     # metric matrix at observer
     g_obs = metric(plunging_interpolation.m, u)
@@ -269,7 +269,7 @@ function interpolate_redshift(plunging_interpolation, u::T) where {T}
     PointFunction(closure)
 end
 
-interpolate_redshift(m::AbstractMetric, u; kwargs...) =
+interpolate_redshift(m::AbstractMetric, u::SVector{4}; kwargs...) =
     interpolate_redshift(interpolate_plunging_velocities(m; kwargs...), u)
 
 export RedshiftFunctions, interpolate_redshift
