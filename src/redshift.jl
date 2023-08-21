@@ -199,12 +199,18 @@ end
     v_obs = SVector{4,T}(1, 0, 0, 0)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     r = Gradus._equatorial_project(gp.x)
 ||||||| parent of 506d261 (fix: negative theta is positive for projections and type stability)
     r = gp.x[2] * sin(gp.x[3])
 =======
     r = gp.x[2] * sin(abs(gp.x[3]))
 >>>>>>> 506d261 (fix: negative theta is positive for projections and type stability)
+||||||| parent of c5cdc7e (feat: apply _equatorial_project everywhere)
+    r = gp.x[2] * sin(abs(gp.x[3]))
+=======
+    r = Gradus._equitorial_project(gp.x)
+>>>>>>> c5cdc7e (feat: apply _equatorial_project everywhere)
     v_disc = if r < isco
         # plunging region
         SVector(uᵗ(m.M, isco, r, m.a), -uʳ(m.M, isco, r), 0, uᶲ(m.M, isco, r, m.a))
@@ -253,7 +259,13 @@ function interpolate_redshift(plunging_interpolation, u::T) where {T}
     v_obs = SVector{4,T}(1, 0, 0, 0)
     closure =
         (m, gp, max_time) -> begin
+<<<<<<< HEAD
             let r = _equatorial_project(gp.x)
+||||||| parent of c5cdc7e (feat: apply _equatorial_project everywhere)
+            let r = gp.x[2]
+=======
+            let r = _equitorial_project(gp.x)
+>>>>>>> c5cdc7e (feat: apply _equatorial_project everywhere)
                 v_disc = if r < isco
                     # plunging region
                     vtemp = plunging_interpolation(r)

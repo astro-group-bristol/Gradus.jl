@@ -28,12 +28,23 @@ position `x` via
 ```
 """
 lorentz_factor(m::AbstractMetric, ::AbstractAccretionGeometry, x; kwargs...) =
+<<<<<<< HEAD
     lorentz_factor(
         m,
         x,
         CircularOrbits.fourvelocity(m, _equatorial_project(x[2]));
         kwargs...,
     )
+||||||| parent of c5cdc7e (feat: apply _equatorial_project everywhere)
+    lorentz_factor(m, x, CircularOrbits.fourvelocity(m, x[2]); kwargs...)
+=======
+    lorentz_factor(
+        m,
+        x,
+        CircularOrbits.fourvelocity(m, _equitorial_project(x[2]));
+        kwargs...,
+    )
+>>>>>>> c5cdc7e (feat: apply _equatorial_project everywhere)
 function lorentz_factor(m::AbstractMetric, x, v; component = 4)
     𝒱ϕ = local_velocity(m, x, v, component)
     inv(√(1 - 𝒱ϕ^2))
