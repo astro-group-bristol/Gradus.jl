@@ -49,11 +49,12 @@ function lineprofile(
     numrₑ = 100,
     verbose = false,
     h = 2e-8,
+    Nr = 1000,
     kwargs...,
 )
     radii = Grids._inverse_grid(minrₑ, maxrₑ, numrₑ)
     itfs = interpolated_transfer_branches(m, u, d, radii; verbose = verbose, kwargs...)
-    flux = integrate_lineprofile(ε, itfs, radii, bins; h = h)
+    flux = integrate_lineprofile(ε, itfs, radii, bins; h = h, Nr = Nr)
     bins, flux
 end
 
@@ -69,7 +70,10 @@ function lineprofile(
     redshift_pf = ConstPointFunctions.redshift(m, u),
     verbose = false,
     minrₑ = isco(m),
-    maxrₑ = 50,
+    maxrₑ = T(50),
+    # this 5maxrₑ is a heuristic that is insulting
+    # todo: make it friendly
+    plane = PolarPlane(GeometricGrid(); Nr = 450, Nθ = 1300, r_max = 5maxrₑ),
     solver_args...,
 )
     progress_bar = init_progress_bar("Lineprofile: ", trajectory_count(plane), verbose)
@@ -87,13 +91,13 @@ function lineprofile(
         solver_args...,
     )
 
-    I = intersected_with_geometry(gps, x -> (minrₑ <= x[2] <= maxrₑ))
+    I = intersected_with_geometry(gps, x -> (minrₑ <= _equitorial_project(x) <= maxrₑ))
     points = @views gps[I]
     areas = unnormalized_areas(plane)[I]
 
     # calculate physical flux
     g = redshift_pf.(m, points, λ_max)
-    r = [p.x[2] for p in points]
+    r = map(p -> _equitorial_project(p.x), points)
 
     f = @. ε(r) * g^3 * areas
     # bin

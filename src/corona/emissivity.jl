@@ -185,7 +185,7 @@ function _point_source_symmetric_emissivity_profile(
     I = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
     points = gps[I]
     δs = δs[I]
-    J = sortperm(points, by = i -> i.x[2])
+    J = sortperm(points, by = i -> _equitorial_project(i.x))
     points = points[J]
     δs = δs[J]
 
