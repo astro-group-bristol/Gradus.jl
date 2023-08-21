@@ -5,7 +5,7 @@ function _adjust_extrema!(g::AbstractArray{T}) where {T}
     g[end] = one(T)
 end
 
-function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2; H = 1e-6)
+function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2; h = 1e-6)
     I1 = sortperm(g1)
     I2 = sortperm(g2)
 
@@ -21,14 +21,24 @@ function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2; H = 1e-6)
     # very problematic due to the g✶ * (1 - g✶) terms, sending the branches to zero
     # so we use an offset to avoid these that is small enough to not impact results at
     # high inclination angles
-    J1 = @. (g1 < 1 - H) & (g1 > H)
-    J2 = @. (g2 < 1 - H) & (g2 > H)
+    J1 = @. (g1 < 1 - h) & (g1 > h)
+    J2 = @. (g2 < 1 - h) & (g2 > h)
     g1 = g1[J1]
     g2 = g2[J2]
     f1 = f1[J1]
     f2 = f2[J2]
+
+    # save endpoints in time, since these will be pretty accurate
+    t_lo = (t1[1] + t2[1]) / 2
+    t_hi = (t1[end] + t2[end]) / 2
+    # mask
     t1 = t1[J1]
     t2 = t2[J2]
+    # restore endpoints
+    t1[1] = t_lo
+    t1[end] = t_hi
+    t2[1] = t_lo
+    t2[end] = t_hi
 
     _adjust_extrema!(g1)
     _adjust_extrema!(g2)
@@ -80,7 +90,7 @@ function splitbranches(ctf::CunninghamTransferData{T}) where {T}
     end
 end
 
-function interpolate_branches(ctf::CunninghamTransferData{T}) where {T}
+function interpolate_branches(ctf::CunninghamTransferData{T}; h = 1e-6) where {T}
     (lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t) = splitbranches(ctf)
     (lower_g✶, lower_f, lower_t, upper_g✶, upper_f, upper_t) =
         _make_sorted_with_adjustments!(
@@ -89,7 +99,8 @@ function interpolate_branches(ctf::CunninghamTransferData{T}) where {T}
             lower_t,
             upper_g✶,
             upper_f,
-            upper_t,
+            upper_t;
+            h = h,
         )
     lower_branch = _make_interpolation(lower_g✶, lower_f)
     lower_time_branch = _make_interpolation(lower_g✶, lower_t)
@@ -312,6 +323,7 @@ function interpolated_transfer_branches(
     d,
     radii;
     verbose = false,
+    h = 1e-6,
     kwargs...,
 ) where {T}
     progress_bar = init_progress_bar("Transfer functions:", length(radii), verbose)
@@ -333,7 +345,7 @@ function interpolated_transfer_branches(
                 max_time = 10 * x_prob[2],
                 kwargs...,
             )
-            itp = interpolate_branches(ctf)
+            itp = interpolate_branches(ctf; h = h)
             ProgressMeter.next!(progress_bar)
             itp
         end
