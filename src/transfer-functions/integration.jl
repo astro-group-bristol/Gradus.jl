@@ -22,12 +22,35 @@ struct _IntegrationClosures{S<:IntegrationSetup,B<:TransferBranches}
     branch::B
 end
 
+function _time_interpolate(t0, f1, f2, g✶, h)
+    ω, t1, t2 = if g✶ < h
+        i = g✶ / h
+        i, f1(h), f2(h)
+    elseif g✶ > 1 - h
+        i = 1 - (1 - g✶) / h
+        i, f1(1 - h), f2(1 - h)
+    else
+        return t0
+    end
+    t1 * ω + (1 - ω) * t2
+end
+
+function _time_g✶(c::_IntegrationClosures, g✶)
+    t_lower = c.branch.lower_t(g✶)
+    t_upper = c.branch.upper_t(g✶)
+    t1 = _time_interpolate(t_lower, c.branch.lower_t, c.branch.upper_t, g✶, c.setup.h)
+    t2 = _time_interpolate(t_upper, c.branch.upper_t, c.branch.lower_t, g✶, c.setup.h)
+    t1, t2
+    # t_lower, t_upper
+end
+
 function _time_bins(c::_IntegrationClosures, glo, ghi)
-    g✶lo = clamp(g_to_g✶(glo, c.branch.gmin, c.branch.gmax), c.setup.h, 1 - c.setup.h)
-    g✶hi = clamp(g_to_g✶(ghi, c.branch.gmin, c.branch.gmax), c.setup.h, 1 - c.setup.h)
-    t_lo = (c.branch.lower_t(g✶lo) + c.branch.lower_t(g✶hi)) / 2
-    t_hi = (c.branch.upper_t(g✶lo) + c.branch.upper_t(g✶hi)) / 2
-    (t_lo, t_hi)
+    g✶lo = g_to_g✶(glo, c.branch.gmin, c.branch.gmax)
+    g✶hi = g_to_g✶(ghi, c.branch.gmin, c.branch.gmax)
+
+    tl1, tu1 = _time_g✶(c, g✶lo)
+    tl2, tu2 = _time_g✶(c, g✶hi)
+    (tl1 + tl2) / 2, (tu1 + tu2) / 2
 end
 
 function _upper_branch(c::_IntegrationClosures)
@@ -57,9 +80,9 @@ end
 g_to_g✶(g, gmin, gmax) = @. (g - gmin) / (gmax - gmin)
 g✶_to_g(g✶, gmin, gmax) = @. (gmax - gmin) * g✶ + gmin
 
-function integrate_edge(S, lim, lim_g✶, gmin, gmax, h)
+function integrate_edge(S, lim, lim_g✶, gmin, gmax)
     gh = g✶_to_g(lim_g✶, gmin, gmax)
-    2 * S(gh) * abs(√gh - √lim) * (gmax - gmin) * √h
+    2 * S(gh) * abs(√gh - √lim)
 end
 
 function integrate_bin(c::_IntegrationClosures, S, lo::T, hi) where {T}
@@ -81,19 +104,19 @@ function integrate_bin(c::_IntegrationClosures, S, lo::T, hi) where {T}
 
     if g✶lo < h
         if g✶hi > h
-            lum += integrate_edge(S, glo, h, gmin, gmax, h)
+            lum += integrate_edge(S, glo, h, gmin, gmax)
             glo = g✶_to_g(h, gmin, gmax)
         else
-            return integrate_edge(S, glo, g✶hi, gmin, gmax, h)
+            return integrate_edge(S, glo, g✶hi, gmin, gmax)
         end
     end
 
     if g✶hi > 1 - h
         if g✶lo < 1 - h
-            lum += integrate_edge(S, ghi, 1 - h, gmin, gmax, h)
+            lum += integrate_edge(S, ghi, 1 - h, gmin, gmax)
             ghi = g✶_to_g(1 - h, gmin, gmax)
         else
-            return integrate_edge(S, ghi, g✶lo, gmin, gmax, h)
+            return integrate_edge(S, ghi, g✶lo, gmin, gmax)
         end
     end
 
@@ -237,17 +260,19 @@ function _integrate_transfer_problem!(
         t_source_disc = setup.time(rₑ)
 
         @inbounds for j in eachindex(g_grid_view)
-            glo = g_grid[j]
-            ghi = g_grid[j+1]
+            glo = clamp(g_grid[j], closures.branch.gmin, closures.branch.gmax)
+            ghi = clamp(g_grid[j+1], closures.branch.gmin, closures.branch.gmax)
+            # skip if bin not relevant
+            if glo == ghi
+                continue
+            end
             k1 = integrate_bin(closures, _lower_branch(closures), glo, ghi)
             k2 = integrate_bin(closures, _upper_branch(closures), glo, ghi)
 
             # find which bin to dump in
-            t_lo, t_hi = _time_bins(closures, glo, ghi)
-            t1 = t_lo + t_source_disc
-            t2 = t_hi + t_source_disc
-            i1 = searchsortedfirst(t_grid, t1)
-            i2 = searchsortedfirst(t_grid, t2)
+            t_lower_branch, t_upper_branch = _time_bins(closures, glo, ghi)
+            i1 = searchsortedfirst(t_grid, t_lower_branch + t_source_disc)
+            i2 = searchsortedfirst(t_grid, t_upper_branch + t_source_disc)
 
             imax = lastindex(t_grid)
             if i1 <= imax
