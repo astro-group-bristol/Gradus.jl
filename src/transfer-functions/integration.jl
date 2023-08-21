@@ -57,7 +57,7 @@ function _upper_branch(c::_IntegrationClosures)
     function _upper_branch_integrand(g)
         g✶ = g_to_g✶(g, c.branch.gmin, c.branch.gmax)
         f = c.branch.upper_f(g✶)
-        integrand(c.setup, f, c.branch.rₑ, g, g✶)
+        integrand(c.setup, _zero_if_nan(f), c.branch.rₑ, g, g✶)
     end
 end
 
@@ -65,14 +65,16 @@ function _lower_branch(c::_IntegrationClosures)
     function _lower_branch_integrand(g)
         g✶ = g_to_g✶(g, c.branch.gmin, c.branch.gmax)
         f = c.branch.lower_f(g✶)
-        integrand(c.setup, f, c.branch.rₑ, g, g✶)
+        integrand(c.setup, _zero_if_nan(f), c.branch.rₑ, g, g✶)
     end
 end
 
 function _both_branches(c::_IntegrationClosures)
     function _both_branches_integrand(g)
         g✶ = g_to_g✶(g, c.branch.gmin, c.branch.gmax)
-        f = c.branch.upper_f(g✶) + c.branch.lower_f(g✶)
+        fu = c.branch.upper_f(g✶)
+        fl = c.branch.lower_f(g✶)
+        f = _zero_if_nan(fu) + _zero_if_nan(fl)
         integrand(c.setup, f, c.branch.rₑ, g, g✶)
     end
 end
