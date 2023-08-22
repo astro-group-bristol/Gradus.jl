@@ -1,5 +1,5 @@
 """
-    source_to_disc_emissivity(m, N, A, x, g)
+    source_to_disc_emissivity(m, N, A, x, g, spec)
 
 Compute the emissivity of a disc element with (proper) area `A` at coordinates `x` with metric
 `m` and coronal spectrum 'spec'. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
