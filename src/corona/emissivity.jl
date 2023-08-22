@@ -32,7 +32,7 @@ function source_to_disc_emissivity(
 end
 
 """
-    point_source_equatorial_disc_emissivity(θ, g, A, γ, spectrum)
+    point_source_equatorial_disc_emissivity(θ, g, A, γ, spec)
 
 Calculate the emissivity of a point illuminating source on the spin axis for an annulus of the
 equatorial accretion disc with (proper) area `A`. The precise formulation follows from Dauser et al. (2013),
@@ -41,7 +41,7 @@ with the emissivity calculated as
 \\varepsilon = \\frac{\\sin \\theta}{A g^\\Gamma \\gamma}
 ```
 where ``\\gamma`` is the Lorentz factor due to the velocity of the local disc frame. 
-The ratio of energies is ``g`` (computed with [`energy_ratio`](@ref)), with ``spectrum`` being the abstract
+The ratio of energies is ``g`` (computed with [`energy_ratio`](@ref)), with ``spec`` being the abstract
 coronal spectrum and  ``\\theta`` is the angle from the spin axis in the emitters from at which the geodesic was directed. 
 'coronal_spectrum' function is used to calculate the spectrum of the corona by taking 'g' to the power of 'Γ', allowing
 further modification of spectrum if needed, based on the value of the photon index.
