@@ -1,5 +1,4 @@
 using Gradus
-using Plots
 using Test
 
 m = KerrMetric(1.0, 0.998)
