@@ -4,9 +4,6 @@
 Compute the emissivity of a disc element with (proper) area `A` at coordinates `x` with metric
 `m` and coronal spectrum 'spec'. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
 be specified, along with the ratio of energies `g` (computed with [`energy_ratio`](@ref)) and the spectrum 'spec'. 
-Spectrum for the power law simply returns the photon index 'Γ'. 'I' stores the 'coronal_spectrum' which is a function 
-of 'spectrum' and 'g' since it is defined as 'g^Γ' so passing the spectrum as an argument allows their further modification.
-Furthermore, it guarantees that as the spectrum changes, the correct 'coronal_spectrum' function will be called.
 
 The mathematical definition is
 ```math
