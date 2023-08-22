@@ -2,7 +2,7 @@
     source_to_disc_emissivity(m, N, A, x, g, spec)
 
 Compute the emissivity of a disc element with (proper) area `A` at coordinates `x` with metric
-`m` and coronal spectrum 'spec'. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
+`m` and coronal spectrum `spec`. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
 be specified, along with the ratio of energies `g` (computed with [`energy_ratio`](@ref)) and the spectrum `spec`. 
 
 The mathematical definition is
@@ -43,7 +43,7 @@ with the emissivity calculated as
 where ``\\gamma`` is the Lorentz factor due to the velocity of the local disc frame. 
 The ratio of energies is `g` (computed with [`energy_ratio`](@ref)), with `spec` being the abstract
 coronal spectrum and  ``\\theta`` is the angle from the spin axis in the emitters from at which the geodesic was directed. 
-'coronal_spectrum' function is used to calculate the spectrum of the corona by taking 'g' to the power of 'Γ', allowing
+`coronal_spectrum` function is used to calculate the spectrum of the corona by taking `g` to the power of `Γ`, allowing
 further modification of spectrum if needed, based on the value of the photon index.
 
 The ``\\sin \\theta`` term appears to extend the result to three dimensions, since the
