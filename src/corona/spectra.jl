@@ -21,7 +21,7 @@ change in the number of photons in each bin of the emissivity profile, with the 
 per Gonzalez et. al (2017)]
 """
 function coronal_spectrum(spectrum::PowerLawSpectrum, g)
-    g^(spectrum.Γ)
+    g^(-spectrum.Γ)
 end
 
 
