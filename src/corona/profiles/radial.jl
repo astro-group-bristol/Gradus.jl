@@ -101,16 +101,8 @@ function RadialDiscProfile(
     RadialDiscProfile(bins, ts, I)
 end
 
-<<<<<<< HEAD
-function RadialDiscProfile(ce::CoronaGeodesics; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
-||||||| parent of c13b47f (feat: added coronal spectra for emissivity models)
-function RadialDiscProfile(ce::CoronaGeodesics; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
-=======
 function RadialDiscProfile(ce::CoronaGeodesics, spec::AbstractCoronalSpectrum; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> i.x[2])
->>>>>>> c13b47f (feat: added coronal spectra for emissivity models)
+    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
     @views RadialDiscProfile(
         ce.metric,
         ce.model,
