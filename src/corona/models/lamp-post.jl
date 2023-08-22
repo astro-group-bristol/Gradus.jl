@@ -17,6 +17,7 @@ emissivity_profile(
     ::Nothing,
     m::AbstractMetric,
     d::AbstractAccretionDisc,
-    model::LampPostModel;
+    model::LampPostModel,
+    spec::AbstractCoronalSpectrum;
     kwargs...,
-) = _point_source_symmetric_emissivity_profile(m, d, model; kwargs...)
+) = _point_source_symmetric_emissivity_profile(m, d, model, spec; kwargs...)
