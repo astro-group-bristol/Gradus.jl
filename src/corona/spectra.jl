@@ -3,8 +3,9 @@ struct PowerLawSpectrum{T} <: AbstractCoronalSpectrum
     Γ::T
 end
 
-Returns photon index 'Γ' which after specified can be used to produce the coronal spectrum by taking 'g' to 
-its power.
+Spectrum for the power law simply returns the photon index 'Γ'. 'I' stores the 'coronal_spectrum' which is a function 
+of 'spectrum' and 'g' since it is defined as 'g^Γ'.
+
 """
 struct PowerLawSpectrum{T} <: AbstractCoronalSpectrum
     Γ::T
