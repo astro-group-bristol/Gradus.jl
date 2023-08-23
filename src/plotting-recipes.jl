@@ -137,7 +137,6 @@ end
 end
 
 @recipe function f(p::RadialDiscProfile; normalize = identity)
-    legend --> false
     xlabel --> "r (rg)"
     ylabel --> "ε (arb.)"
     xscale --> :log10
