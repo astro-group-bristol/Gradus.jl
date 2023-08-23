@@ -60,6 +60,11 @@ end
 
 abstract type AbstractCoordinates end
 struct BoyerLindquist{C} <: AbstractCoordinates end
+# the following are placeholders
+struct KerrSchild{C} <: AbstractCoordinates end
+struct FlatCartesian{C} <: AbstractCoordinates end
+struct FlatSphericalPolar{C} <: AbstractCoordinates end
+struct FlatCylindricalPolar{C} <: AbstractCoordinates end
 
 """
     abstract type AbstractMetric{T} end
@@ -72,8 +77,9 @@ Base.length(::AbstractMetric) = 1
 Base.iterate(m::AbstractMetric) = (m, nothing)
 Base.iterate(::AbstractMetric, ::Nothing) = nothing
 
-# some utility types
+# some utility abstract types for dispatching special methods
 abstract type AbstractStaticAxisSymmetric{T} <: AbstractMetric{T,BoyerLindquist{(:r, :θ)}} end
+abstract type AbstractStaticSphericallySymmetric{T} <: AbstractStaticAxisSymmetric{T} end
 
 """
     metric_components(m::AbstractMetric{T}, x)
