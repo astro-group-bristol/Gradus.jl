@@ -21,6 +21,7 @@ end
 
 @time @testset "corona" verbose = true begin
     include("unit/coronal-beaming.jl")
+    include("smoke-tests/coronal-spectra.jl")
     include("unit/emissivity.jl")
 end
 
