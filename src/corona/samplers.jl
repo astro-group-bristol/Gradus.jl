@@ -75,7 +75,7 @@ end
     ϕ;
     E₀ = one(T),
 ) where {T}
-    # multiply by -1 for consitency with LowerHemisphere()
+    # multiply by -1 for consitency with `LowerHemisphere`
     hat = -1 * _cart_local_direction(θ, ϕ)
     # to spherical coordinates
     J = _cart_to_spher_jacobian(u[3], u[4])
@@ -83,8 +83,7 @@ end
 
     p = SVector(E₀, E₀ * k[1], E₀ * k[2], E₀ * k[3])
 
-    basis = tetradframe(m, u, v_source)
-    B = reduce(hcat, basis)
+    B = tetradframe_matrix(m, u, v_source)
     (B * p)
 end
 
