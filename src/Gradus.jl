@@ -444,6 +444,7 @@ include("metrics/kerr-refractive-ad.jl")
 include("metrics/dilaton-axion-ad.jl")
 include("metrics/bumblebee-ad.jl")
 include("metrics/kerr-newman-ad.jl")
+include("metrics/minkowski.jl")
 
 include("special-radii.jl")
 include("redshift.jl")
