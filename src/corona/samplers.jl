@@ -67,19 +67,25 @@ function _cart_local_direction(θ, ϕ)
     @SVector [sin(θ) * cos(ϕ), sin(θ) * sin(ϕ), cos(θ)]
 end
 
-@inbounds function sky_angles_to_velocity(m::AbstractMetric{T}, u, v_source, θ, ϕ) where {T}
+@inbounds function sky_angles_to_velocity(
+    m::AbstractMetric{T},
+    u,
+    v_source,
+    θ,
+    ϕ;
+    E₀ = one(T),
+) where {T}
     # multiply by -1 for consitency with LowerHemisphere()
     hat = -1 * _cart_local_direction(θ, ϕ)
-
+    # to spherical coordinates
     J = _cart_to_spher_jacobian(u[3], u[4])
     k = J * hat
-    # todo: check whether this needs normalizing
-    # v = constrain_all(m, u, SVector(1, k[1], k[2], k[3]), μ)
-    v = SVector(0, k[1], k[2], k[3])
+
+    p = SVector(E₀, E₀ * k[1], E₀ * k[2], E₀ * k[3])
 
     basis = tetradframe(m, u, v_source)
     B = reduce(hcat, basis)
-    B * v
+    (B * p)
 end
 
 export LowerHemisphere,
