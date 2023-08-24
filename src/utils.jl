@@ -30,6 +30,7 @@ function (interp::NaNLinearInterpolator)(x)
 end
 
 function _make_interpolation(x, y)
+    @assert size(x) == size(y) "size(x) = $(size(x)), size(y) = $(size(y))"
     @assert issorted(x) "x must be sorted!"
     # NaNLinearInterpolator(x, y, zero(eltype(y)))
     DataInterpolations.LinearInterpolation(y, x)
