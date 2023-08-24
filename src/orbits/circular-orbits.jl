@@ -121,6 +121,9 @@ MuladdMacro.@muladd begin
     fourvelocity(m::AbstractStaticAxisSymmetric, x::SVector{4}; kwargs...) =
         fourvelocity(m, SVector(x[2], x[3]); kwargs...)
 
+    """
+    NB: this function is only valid **at the ISCO**.
+    """
     function plunging_fourvelocity(
         m::AbstractStaticAxisSymmetric,
         rθ;
