@@ -110,7 +110,7 @@ MuladdMacro.@muladd begin
     vϕ(m::AbstractStaticAxisSymmetric, r::Number; kwargs...) =
         vϕ(m, SVector(r, π / 2); kwargs...)
 
-    function fourvelocity(m::AbstractStaticAxisSymmetric, rθ::SVector; kwargs...)
+    function fourvelocity(m::AbstractStaticAxisSymmetric, rθ; kwargs...)
         ginv = inverse_metric_components(m, rθ)
         utuϕ = ut_uϕ(m, rθ, ginv; kwargs...)
 
@@ -118,6 +118,8 @@ MuladdMacro.@muladd begin
     end
     fourvelocity(m::AbstractStaticAxisSymmetric, r::Number; kwargs...) =
         fourvelocity(m, SVector(r, π / 2); kwargs...)
+    fourvelocity(m::AbstractStaticAxisSymmetric, x::SVector{4}; kwargs...) =
+        fourvelocity(m, SVector(x[2], x[3]); kwargs...)
 
     function plunging_fourvelocity(
         m::AbstractStaticAxisSymmetric,
@@ -140,6 +142,20 @@ MuladdMacro.@muladd begin
     end
     plunging_fourvelocity(m::AbstractStaticAxisSymmetric, r::Number; kwargs...) =
         plunging_fourvelocity(m, @SVector([r, π / 2]); kwargs...)
+    plunging_fourvelocity(m::AbstractStaticAxisSymmetric, x::SVector{4}; kwargs...) =
+        fourvelocity(m, SVector(x[2], x[3]); kwargs...)
+
+    function keplerian_velocity(m::AbstractStaticAxisSymmetric, x, r_isco; kwargs...)
+        if x[1] < r_isco
+            plunging_fourvelocity(m, x; kwargs...)
+        else
+            fourvelocity(m, x; kwargs...)
+        end
+    end
+    keplerian_velocity(m::AbstractStaticAxisSymmetric, x::SVector{4}, r_isco; kwargs...) =
+        keplerian_velocity(m, SVector(x[2], x[3]), r_isco; kwargs...)
+    keplerian_velocity(m::AbstractStaticAxisSymmetric, x::Number, r_isco; kwargs...) =
+        keplerian_velocity(m, SVector(x, π / 2), r_isco; kwargs...)
 
 end # mulladd macro
 end # module
