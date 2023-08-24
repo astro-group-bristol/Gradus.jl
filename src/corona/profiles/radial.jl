@@ -44,7 +44,6 @@ function _build_radial_profile(
     ibucket = Buckets.IndexBucket(Int, size(radii), length(bins))
     bucket!(ibucket, Buckets.Simple(), radii, bins)
     groupings = Buckets.unpack_bucket(ibucket)
-    @show groupings
 
     # need to interpolate the redshifts, so calculate those first
     gs = map(groupings) do grouping
@@ -127,6 +126,24 @@ function RadialDiscProfile(ce::CoronaGeodesics, spec::AbstractCoronalSpectrum; k
         ce.source_velocity[J];
         kwargs...,
     )
+end
+
+function RadialDiscProfile(ε, ce::CoronaGeodesics; kwargs...)
+    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
+    radii = @views [_equatorial_project(i.x) for i in ce.geodesic_points[J]]
+    times = @views [i.x[1] for i in ce.geodesic_points[J]]
+
+    t = DataInterpolations.LinearInterpolation(times, radii)
+
+    function _emissivity_wrapper(gp)
+        ε(_equatorial_project(gp.x))
+    end
+
+    function _delay_wrapper(gp)
+        t(_equatorial_project(gp.x)) + gp.x[1]
+    end
+
+    RadialDiscProfile(_emissivity_wrapper, _delay_wrapper; kwargs...)
 end
 
 function RadialDiscProfile(
