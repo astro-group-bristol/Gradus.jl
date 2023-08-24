@@ -228,19 +228,27 @@ function _point_source_emissivity(
     spec::AbstractCoronalSpectrum,
     source_velocity,
     δs,
-    points,
-)
-    _points = @views points[1:end-1]
-    # get the time and radial position
-    r = [i.x[2] for i in points]
-    # create a view
-    gs = Gradus.energy_ratio.(m, _points, (source_velocity,))
-    A = [_proper_area(m, i.x) for i in _points]
-    γ = [Gradus.lorentz_factor(m, d, i.x) for i in _points]
+    points::AbstractVector{<:AbstractGeodesicPoint{T}},
+) where {T}
+    # function for obtaining keplerian velocities
+    _disc_velocity = _keplerian_velocity_projector(m, d)
+    # get radial coordinate
+    r = [_equatorial_project(i.x) for i in points]
+
+    # radial bin size
     Δr = diff(r)
-    @. A = A * Δr
+    _points = @views(points[1:end-1])
+
+    ε = map(enumerate(_points)) do (i, p)
+        v_disc = _disc_velocity(p.x)
+        gs = energy_ratio(m, p, source_velocity, v_disc)
+        γ = lorentz_factor(m, p.x, v_disc)
+        A = _proper_area(m, p.x) * Δr[i]
+
+        point_source_equatorial_disc_emissivity(spec, δs[i], gs, A, γ)
+    end
+
     r = r[1:end-1]
-    ε = point_source_equatorial_disc_emissivity.(spec, @views(δs[1:end-1]), gs, A, γ)
     r, ε
 end
 
