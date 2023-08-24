@@ -252,7 +252,7 @@ get_metric(params::AbstractIntegrationParameters) =
     error("Not implemented for $(typeof(params))")
 
 """
-    abstract type AbstractGeodesicPoint
+    abstract type AbstractGeodesicPoint{T}
 
 Supertype for geodesic points, used to store information about specific points along geodesic
 trajectories.
