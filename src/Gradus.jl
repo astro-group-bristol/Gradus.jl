@@ -120,9 +120,9 @@ geodesic_equation(m::AbstractMetric, x, v) =
     error("Not implemented for metric parameters $(typeof(m))")
 
 """
-    constrain(m::AbstractMetric, x, v; μ=0)
+    _constrain(m::AbstractMetric, x, v; μ=0)
 
-Calculate the time component ``v^t`` of a velocity vector `v`, which would constrain the vector at a position `x` as a 
+Calculate the time component ``v^t`` of a velocity vector `v`, which would _constrain the vector at a position `x` as a 
 geodesic with invariant mass `μ`.
 
 The velocity vector needs to only specify the ``v^r``, ``v^\\theta``, and ``v^\\phi`` component, as the ``v^t`` is constrained in GR by
@@ -137,7 +137,7 @@ where ``\\mu^2`` is the invariant mass of the particle. This furthermore permits
 - `μ > 0.0`: time-like geodesic
 - `μ < 0.0`: space-like geodesic
 """
-constrain(m::AbstractMetric{T}, x, v; μ::T = 0.0) where {T} =
+_constrain(m::AbstractMetric{T}, x, v; μ::T = 0.0) where {T} =
     error("Not implemented for metric parameters $(typeof(m))")
 
 """

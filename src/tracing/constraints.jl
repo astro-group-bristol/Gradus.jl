@@ -22,7 +22,7 @@ end
     # SVector{S,T}(mut)
     # this results in no performance gain over the above, but i think it
     # reads nicer
-    @inbounds SVector{S,T}(constrain(m, u, v, μ = μ), v[2], v[3], v[4])
+    @inbounds SVector{S,T}(_constrain(m, u, v, μ = μ), v[2], v[3], v[4])
 end
 
 function wrap_constraint(m::AbstractMetric, position, velfunc::Function, μ)

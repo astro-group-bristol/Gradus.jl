@@ -354,7 +354,12 @@ A first-order implementation of [`KerrMetric`](@ref).
 end
 
 inner_radius(m::KerrSpacetimeFirstOrder) = m.M + √(m.M^2 - m.a^2)
-constrain(::KerrSpacetimeFirstOrder, u, v; μ = 0.0) = v[1]
+constrain_all(
+    ::KerrSpacetimeFirstOrder,
+    u::StaticVector{S},
+    v::StaticVector{S,T},
+    μ,
+) where {S,T<:Number} = v
 
 four_velocity(u, m::KerrSpacetimeFirstOrder, p) =
     __BoyerLindquistFO.four_velocity(u, m.E, m.M, m.a, p)
