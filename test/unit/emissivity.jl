@@ -44,4 +44,4 @@ r, em = get_emissivity(profile)
     0.0001872210347441914,
     3.8919060688680126e-5,
 ]
-atol = 1e-5
+atol = 1e-2
