@@ -154,3 +154,26 @@ end
     mask = @. (ctf.g✶ > h) & (ctf.g✶ < 1 - h)
     ctf.g✶[mask], ctf.f[mask]
 end
+
+@userplot Plot_Emissivity_Index
+@recipe function f(p::Plot_Emissivity_Index)
+    prof = p.args[1]
+    if !(prof isa RadialDiscProfile)
+        error("Plotting argument for emissivity index must be a radial disc profile.")
+    end
+
+    xscale --> :log10
+    xlabel --> "r"
+    ylabel --> "α"
+    title --> "ε ∝ r⁻ᵅ"
+
+    y = prof.f.ε.u
+    x = prof.f.ε.t
+
+    dydx = diff(y) ./ diff(x)
+    x = x[2:end]
+    y = y[2:end]
+    em_index = @. dydx * x / y
+
+    x[1:end-1], -em_index[1:end-1]
+end
