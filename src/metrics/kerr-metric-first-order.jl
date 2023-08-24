@@ -356,10 +356,10 @@ end
 inner_radius(m::KerrSpacetimeFirstOrder) = m.M + √(m.M^2 - m.a^2)
 constrain_all(
     ::KerrSpacetimeFirstOrder,
-    u::StaticVector{S},
-    v::StaticVector{S,T},
+    u::SVector{4},
+    v::SVector{4,T},
     μ,
-) where {S,T<:Number} = v
+) where {T<:Number} = v
 
 four_velocity(u, m::KerrSpacetimeFirstOrder, p) =
     __BoyerLindquistFO.four_velocity(u, m.E, m.M, m.a, p)

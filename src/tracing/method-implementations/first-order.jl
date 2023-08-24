@@ -121,8 +121,8 @@ end
 function geodesic_ode_problem(
     ::TraceGeodesic,
     m::AbstractFirstOrderMetric{T},
-    pos::StaticVector{S,T},
-    vel::StaticVector{S,T},
+    pos::SVector{S,T},
+    vel::SVector{S,T},
     time_domain,
     callback,
 ) where {S,T}
@@ -136,7 +136,7 @@ function geodesic_ode_problem(
     )
 end
 
-convert_velocity_type(::StaticVector{S,T}, v) where {S,T} = convert(SVector{S,T}, v)
+convert_velocity_type(::SVector{S,T}, v) where {S,T} = convert(SVector{S,T}, v)
 convert_velocity_type(u::AbstractVector{T}, v) where {T} = convert(typeof(u), collect(v))
 
 """
