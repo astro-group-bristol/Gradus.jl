@@ -34,7 +34,9 @@ function lorentz_factor(m::AbstractMetric, x, v; component = 4)
     inv(√(1 - 𝒱ϕ^2))
 end
 
-function _keplerian_velocity_projector(m::AbstractMetric, ::AbstractAccretionGeometry)
+_keplerian_velocity_projector(m::AbstractMetric, ::AbstractAccretionGeometry) =
+    _keplerian_velocity_projector(m)
+function _keplerian_velocity_projector(m::AbstractMetric)
     r_isco = isco(m)
     interp = interpolate_plunging_velocities(m)
 
