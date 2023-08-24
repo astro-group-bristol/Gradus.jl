@@ -34,23 +34,6 @@ function lorentz_factor(m::AbstractMetric, x, v; component = 4)
     inv(√(1 - 𝒱ϕ^2))
 end
 
-_keplerian_velocity_projector(m::AbstractMetric, ::AbstractAccretionGeometry) =
-    _keplerian_velocity_projector(m)
-function _keplerian_velocity_projector(m::AbstractMetric)
-    r_isco = isco(m)
-    interp = interpolate_plunging_velocities(m)
-
-    function _keplerian_project(x::SVector{4})
-        r = _equatorial_project(x)
-        if r < r_isco
-            vtemp = interp(r)
-            SVector(vtemp[1], -vtemp[2], vtemp[3], vtemp[4])
-        else
-            CircularOrbits.fourvelocity(m, r)
-        end
-    end
-end
-
 # todo: these are currently all unused
 function flux_source_to_disc(
     m::AbstractMetric,

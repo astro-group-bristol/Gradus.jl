@@ -145,19 +145,24 @@ MuladdMacro.@muladd begin
     plunging_fourvelocity(m::AbstractStaticAxisSymmetric, x::SVector{4}; kwargs...) =
         fourvelocity(m, SVector(x[2], x[3]); kwargs...)
 
-    function keplerian_velocity(m::AbstractStaticAxisSymmetric, x, r_isco; kwargs...)
-        if x[1] < r_isco
-            plunging_fourvelocity(m, x; kwargs...)
-        else
-            fourvelocity(m, x; kwargs...)
-        end
-    end
-    keplerian_velocity(m::AbstractStaticAxisSymmetric, x::SVector{4}, r_isco; kwargs...) =
-        keplerian_velocity(m, SVector(x[2], x[3]), r_isco; kwargs...)
-    keplerian_velocity(m::AbstractStaticAxisSymmetric, x::Number, r_isco; kwargs...) =
-        keplerian_velocity(m, SVector(x, π / 2), r_isco; kwargs...)
-
 end # mulladd macro
 end # module
+
+_keplerian_velocity_projector(m::AbstractMetric, ::AbstractAccretionGeometry) =
+    _keplerian_velocity_projector(m)
+function _keplerian_velocity_projector(m::AbstractMetric)
+    r_isco = isco(m)
+    interp = interpolate_plunging_velocities(m)
+
+    function _keplerian_project(x::SVector{4})
+        r = _equatorial_project(x)
+        if r < r_isco
+            vtemp = interp(r)
+            SVector(vtemp[1], -vtemp[2], vtemp[3], vtemp[4])
+        else
+            CircularOrbits.fourvelocity(m, r)
+        end
+    end
+end
 
 export CircularOrbits
