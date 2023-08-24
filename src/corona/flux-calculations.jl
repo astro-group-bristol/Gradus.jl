@@ -34,6 +34,7 @@ function lorentz_factor(m::AbstractMetric, x, v; component = 4)
     inv(√(1 - 𝒱ϕ^2))
 end
 
+# todo: these are currently all unused
 function flux_source_to_disc(
     m::AbstractMetric,
     model::AbstractCoronaModel,
@@ -94,14 +95,15 @@ function flux_source_to_disc(
     map(flux, points)
 end
 
-function energy_ratio(m::AbstractMetric, gp::GeodesicPoint, v_src)
+energy_ratio(m::AbstractMetric, gp::GeodesicPoint, v_src) =
+    energy_ratio(m, gp, v_src, CircularOrbits.fourvelocity(m, _equatorial_project(gp.x)))
+function energy_ratio(m::AbstractMetric, gp::GeodesicPoint, v_src, v_disc)
+    # at the source
     g_src = metric(m, gp.x_init)
-    @tullio e_src := g_src[i, j] * gp.v_init[i] * v_src[j]
+    e_src = dotproduct(g_src, gp.v_init, v_src)
     # at the disc
     g_disc = metric(m, gp.x)
-    v_disc = CircularOrbits.fourvelocity(m, SVector(gp.x[2], gp.x[3]))
-    @tullio e_disc := g_disc[i, j] * gp.v[i] * v_disc[j]
-    # ratio g = E_source / E_disc
+    e_disc = dotproduct(g_disc, gp.v, v_disc)
     e_src / e_disc
 end
 

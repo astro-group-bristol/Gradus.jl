@@ -69,22 +69,21 @@ end
 
 @inbounds function sky_angles_to_velocity(
     m::AbstractMetric{T},
-    u,
+    x,
     v_source,
     θ,
     ϕ;
     E₀ = one(T),
 ) where {T}
-    # multiply by -1 for consitency with LowerHemisphere()
+    # multiply by -1 for consitency with `LowerHemisphere`
     hat = -1 * _cart_local_direction(θ, ϕ)
     # to spherical coordinates
-    J = _cart_to_spher_jacobian(u[3], u[4])
+    J = _cart_to_spher_jacobian(x[3], x[4])
     k = J * hat
 
     p = SVector(E₀, E₀ * k[1], E₀ * k[2], E₀ * k[3])
 
-    basis = tetradframe(m, u, v_source)
-    B = reduce(hcat, basis)
+    B = tetradframe_matrix(m, x, v_source)
     (B * p)
 end
 

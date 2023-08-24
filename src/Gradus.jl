@@ -60,6 +60,11 @@ end
 
 abstract type AbstractCoordinates end
 struct BoyerLindquist{C} <: AbstractCoordinates end
+# the following are placeholders
+struct KerrSchild{C} <: AbstractCoordinates end
+struct FlatCartesian{C} <: AbstractCoordinates end
+struct FlatSphericalPolar{C} <: AbstractCoordinates end
+struct FlatCylindricalPolar{C} <: AbstractCoordinates end
 
 """
     abstract type AbstractMetric{T} end
@@ -72,8 +77,9 @@ Base.length(::AbstractMetric) = 1
 Base.iterate(m::AbstractMetric) = (m, nothing)
 Base.iterate(::AbstractMetric, ::Nothing) = nothing
 
-# some utility types
+# some utility abstract types for dispatching special methods
 abstract type AbstractStaticAxisSymmetric{T} <: AbstractMetric{T,BoyerLindquist{(:r, :θ)}} end
+abstract type AbstractStaticSphericallySymmetric{T} <: AbstractStaticAxisSymmetric{T} end
 
 """
     metric_components(m::AbstractMetric{T}, x)
@@ -114,9 +120,9 @@ geodesic_equation(m::AbstractMetric, x, v) =
     error("Not implemented for metric parameters $(typeof(m))")
 
 """
-    constrain(m::AbstractMetric, x, v; μ=0)
+    _constrain(m::AbstractMetric, x, v; μ=0)
 
-Calculate the time component ``v^t`` of a velocity vector `v`, which would constrain the vector at a position `x` as a 
+Calculate the time component ``v^t`` of a velocity vector `v`, which would _constrain the vector at a position `x` as a 
 geodesic with invariant mass `μ`.
 
 The velocity vector needs to only specify the ``v^r``, ``v^\\theta``, and ``v^\\phi`` component, as the ``v^t`` is constrained in GR by
@@ -131,7 +137,7 @@ where ``\\mu^2`` is the invariant mass of the particle. This furthermore permits
 - `μ > 0.0`: time-like geodesic
 - `μ < 0.0`: space-like geodesic
 """
-constrain(m::AbstractMetric{T}, x, v; μ::T = 0.0) where {T} =
+_constrain(m::AbstractMetric{T}, x, v; μ::T = 0.0) where {T} =
     error("Not implemented for metric parameters $(typeof(m))")
 
 """
@@ -246,7 +252,7 @@ get_metric(params::AbstractIntegrationParameters) =
     error("Not implemented for $(typeof(params))")
 
 """
-    abstract type AbstractGeodesicPoint
+    abstract type AbstractGeodesicPoint{T}
 
 Supertype for geodesic points, used to store information about specific points along geodesic
 trajectories.
@@ -444,6 +450,7 @@ include("metrics/kerr-refractive-ad.jl")
 include("metrics/dilaton-axion-ad.jl")
 include("metrics/bumblebee-ad.jl")
 include("metrics/kerr-newman-ad.jl")
+include("metrics/minkowski.jl")
 
 include("special-radii.jl")
 include("redshift.jl")

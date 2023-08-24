@@ -102,6 +102,7 @@ that is, returns a tuple that corresponds to the ``x^1, x^2, x^3, x^4`` coordina
     ret
 end
 tetradframe(m::AbstractMetric, x, v) = tetradframe(metric(m, x), v)
+tetradframe_matrix(m::AbstractMetric, x, v) = reduce(hcat, tetradframe(m, x, v))
 
 # tetrad with latin indices down: frame
 function lnrframe(g::AbstractMatrix{T}) where {T}

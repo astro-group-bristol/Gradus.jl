@@ -152,7 +152,7 @@ g_{\\sigma\\nu} \\dot{u}^\\sigma \\dot{u}^\\nu = -\\mu^2,
 for ``v^t``. The argument `positive` allows the sign of ``\\mu`` to be changed. `true`
 corresponds to time-like geodesics, `false` to space-like.
 
-This function should rarely be directly called, and instead is invoked by [`constrain`](@ref).
+This function should rarely be directly called, and instead is invoked by [`_constrain`](@ref).
 
 Limitations:
 - currenly pre-supposes static, axis-symmetric metric.
@@ -171,7 +171,7 @@ Limitations:
     end
 end
 
-@inline function constrain(m::AbstractStaticAxisSymmetric{T}, u, v; μ = zero(T)) where {T}
+@inline function _constrain(m::AbstractStaticAxisSymmetric{T}, u, v; μ = zero(T)) where {T}
     rθ = (u[2], u[3])
     g_comps = metric_components(m, rθ)
     constrain_time(g_comps, v, μ)
@@ -222,8 +222,8 @@ end
     compute_geodesic_equation(ginv_comps, jacs[:, 1], jacs[:, 2], v)
 end
 
-function metric(m::AbstractStaticAxisSymmetric, x::SVector{4})
-    rθ = (x[2], x[3])
+metric(m::AbstractStaticAxisSymmetric, x::SVector{4}) = metric(m, (x[2], x[3]))
+function metric(m::AbstractStaticAxisSymmetric, rθ)
     comps = metric_components(m, rθ)
     _symmetric_matrix(comps)
 end
