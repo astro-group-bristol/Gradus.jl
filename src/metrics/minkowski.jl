@@ -12,6 +12,7 @@ function Gradus.metric_components(::SphericalMetric, rθ)
 
     SVector(tt, rr, θθ, ϕϕ, zero(T))
 end
+isco(::SphericalMetric{T}) where {T} = zero(T)
 inner_radius(::SphericalMetric{T}) where {T} = 4eps(T)
 
 struct CartesianMetric{T} <: AbstractMetric{T,FlatCartesian{(:x, :y, :z)}} end
@@ -21,6 +22,7 @@ function Gradus.metric_components(::CartesianMetric, x)
     T = eltype(x)
     SVector{4,T}(-1, 1, 1, 1)
 end
+isco(::CartesianMetric{T}) where {T} = zero(T)
 inner_radius(::CartesianMetric{T}) where {T} = 4eps(T)
 
 # trait based dispatch to get the minkowski metric depending on the coordinates of the spacetime
