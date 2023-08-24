@@ -1,5 +1,13 @@
 """
-    source_to_disc_emissivity(m, N, A, x, g, spec)
+    source_to_disc_emissivity(
+        m::AbstractStaticAxisSymmetric,
+        spec::AbstractCoronalSpectrum,
+        N,
+        A,
+        x,
+        g,
+        v_disc,
+    )
 
 Compute the emissivity of a disc element with (proper) area `A` at coordinates `x` with metric
 `m` and coronal spectrum `spec`. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
@@ -22,10 +30,10 @@ function source_to_disc_emissivity(
     A,
     x,
     g,
+    v_disc,
 )
-    v = CircularOrbits.fourvelocity(m, SVector(x[2], x[3]))
     # account for relativistic effects in area due to lorentz shift
-    γ = lorentz_factor(m, x, v)
+    γ = lorentz_factor(m, x, v_disc)
     # divide by area to get number density
     I = coronal_spectrum(spec, g)
     N * I / (A * γ)
@@ -111,7 +119,7 @@ function emissivity_profile(
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
     model::AbstractCoronaModel;
-    spectrum = PowerLawSpectrum(2.0),
+    spectrum = PowerLawSpectrum(2),
     kwargs...,
 )
     emissivity_profile(m, d, model, spectrum; kwargs...)

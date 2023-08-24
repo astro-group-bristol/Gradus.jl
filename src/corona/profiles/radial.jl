@@ -5,39 +5,108 @@ struct RadialDiscProfile{F,R} <: AbstractDiscProfile
     t::R
 end
 
-function RadialDiscProfile(
-    m::AbstractMetric,
-    model::AbstractCoronaModel,
-    spec::AbstractCoronalSpectrum,
-    gps::AbstractVector{<:GeodesicPoint},
-    source_vels::AbstractVector,
-    intensities = nothing;
-    kwargs...,
-)
-    radii = map(i -> _equatorial_project(i.x), gps)
-    # ensure sorted: let the user sort so that everything is sure to be
-    # in order
-    if !issorted(radii)
-        error(
-            "geodesic points (and therefore source velocities) must be sorted by radii: use `sortperm(gps; by = i -> i.x[2])` to get the sorting permutation for both",
-        )
-    end
-
-    times = map(i -> i.x[1], gps)
-    gs = energy_ratio.(m, gps, source_vels)
-
-    RadialDiscProfile(m, spec, radii, times, gs, intensities; kwargs...)
-end
-
 function RadialDiscProfile(rs::AbstractArray, ts::AbstractArray, εs::AbstractArray)
     # create interpolations
-    t = DataInterpolations.LinearInterpolation(ts, rs)
-    ε = DataInterpolations.LinearInterpolation(εs, rs)
+    t = _make_interpolation(rs, ts)
+    ε = _make_interpolation(rs, εs)
     # wrap geodesic point wrappers
     RadialDiscProfile(
         gp -> ε(_equatorial_project(gp.x)),
         gp -> t(_equatorial_project(gp.x)) + gp.x[1],
     )
+end
+
+_get_grouped_intensity(T::Type, groupings, ::Nothing) = @. convert(T, length(groupings))
+_get_grouped_intensity(::Type, groupings, intensity) =
+    [@views(sum(intensity[grouping])) for grouping in groupings]
+
+function _build_radial_profile(
+    m::AbstractMetric,
+    spec::AbstractCoronalSpectrum,
+    radii,
+    times,
+    source_velocities,
+    points::AbstractVector{<:AbstractGeodesicPoint{T}},
+    intensity;
+    grid = GeometricGrid(),
+    N = 100,
+) where {T}
+    @assert size(radii) == size(source_velocities)
+    @assert size(points) == size(source_velocities)
+
+    # function for obtaining keplerian velocities
+    _disc_velocity = _keplerian_velocity_projector(m)
+
+    bins = grid(extrema(radii)..., N) |> collect
+
+    # find the grouping with an index bucket
+    # that is, the points with the same r in Δr on the disc
+    ibucket = Buckets.IndexBucket(Int, size(radii), length(bins))
+    bucket!(ibucket, Buckets.Simple(), radii, bins)
+    groupings = Buckets.unpack_bucket(ibucket)
+    @show groupings
+
+    # need to interpolate the redshifts, so calculate those first
+    gs = map(groupings) do grouping
+        g_total = zero(T)
+        for i in grouping
+            gp = points[i]
+            v_disc = _disc_velocity(gp.x)
+            g_total += energy_ratio(m, gp, source_velocities[i], v_disc)
+        end
+        # get the mean
+        g_total / length(grouping)
+    end
+
+    g_interp = _make_interpolation(bins, gs)
+    grouped_I = _get_grouped_intensity(T, groupings, intensity)
+
+    for (i, I) in enumerate(grouped_I)
+        R = bins[i]
+        r = i == 1 ? 0 : bins[i-1]
+        dr = R - r
+        x = SVector(0, R, π / 2, 0)
+        v_disc = _disc_velocity(x)
+        A = dr * _proper_area(m, x)
+        # now stores emissivity
+        grouped_I[i] = source_to_disc_emissivity(m, spec, I, A, x, g_interp(R), v_disc)
+    end
+
+    ts = [@views(mean(times[grouping])) for grouping in groupings]
+
+    bins, ts, grouped_I
+end
+
+function RadialDiscProfile(
+    m::AbstractMetric,
+    model::AbstractCoronaModel,
+    spec::AbstractCoronalSpectrum,
+    points::AbstractVector{<:AbstractGeodesicPoint},
+    source_velocities::AbstractVector;
+    intensity = nothing,
+    kwargs...,
+)
+    radii = map(i -> _equatorial_project(i.x), points)
+    # ensure sorted: let the user sort so that everything is sure to be
+    # in order
+    if !issorted(radii)
+        error(
+            "geodesic points (and therefore also source velocities) must be sorted by radii: use `sortperm(points; by = i -> i.x[2])` to get the sorting permutation for both",
+        )
+    end
+
+    times = map(i -> i.x[1], points)
+    r, t, ε = _build_radial_profile(
+        m,
+        spec,
+        radii,
+        times,
+        source_velocities,
+        points,
+        intensity;
+        kwargs...,
+    )
+    RadialDiscProfile(r, t, ε)
 end
 
 function RadialDiscProfile(rdp::RadialDiscProfile)
@@ -46,59 +115,6 @@ function RadialDiscProfile(rdp::RadialDiscProfile)
         :RadialDiscProfile,
     )
     rdp
-end
-
-"""
-The relativistic correction is calculated via
-
-```math
-\\tilde{A} = A \\sqrt{g_{\\mu,\\nu}(x)}
-```
-"""
-function RadialDiscProfile(
-    m::AbstractMetric,
-    spec::AbstractCoronalSpectrum,
-    radii::AbstractArray{T},
-    times,
-    gs,
-    intensity,
-    ;
-    grid = GeometricGrid(),
-    N = 100,
-) where {T}
-    bins = collect(grid(extrema(radii)..., N))
-
-    ibucket = Buckets.IndexBucket(Int, size(radii), length(bins))
-    bucket!(ibucket, Buckets.Simple(), radii, bins)
-    groups = Buckets.unpack_bucket(ibucket)
-
-    gs = [@views(mean(gs[g])) for g in groups]
-    ts = [@views(mean(times[g])) for g in groups]
-    I = if isnothing(intensity)
-        # count number of photons in each radial bin
-        @. convert(T, length(groups))
-    else
-        # sum the intensity over the bin
-        [@views(sum(intensity[g])) for g in groups]
-    end
-
-    # interpolate the energy ratio over the disc
-    bin_domain = bins[1:end-1]
-    eratios = DataInterpolations.LinearInterpolation(gs, bin_domain)
-
-    for i in eachindex(I)
-        R = bins[i]
-        r = i == 1 ? 0 : bins[i-1]
-
-        # 2π comes from integrating over dϕ
-        dr = R - r
-        x = SVector(0, R, π / 2, 0)
-        A = dr * _proper_area(m, x)
-        # I now stores emissivity
-        I[i] = source_to_disc_emissivity(m, spec, I[i], A, x, eratios(R))
-    end
-
-    RadialDiscProfile(bins, ts, I)
 end
 
 function RadialDiscProfile(ce::CoronaGeodesics, spec::AbstractCoronalSpectrum; kwargs...)
@@ -113,35 +129,21 @@ function RadialDiscProfile(ce::CoronaGeodesics, spec::AbstractCoronalSpectrum; k
     )
 end
 
-function RadialDiscProfile(ce::CoronaGeodesics{<:TraceRadiativeTransfer}; kwargs...)
+function RadialDiscProfile(
+    ce::CoronaGeodesics{<:TraceRadiativeTransfer},
+    spec::AbstractCoronalSpectrum;
+    kwargs...,
+)
     J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
     @views RadialDiscProfile(
         ce.metric,
         ce.model,
         spec,
         ce.geodesic_points[J],
-        ce.source_velocity[J],
-        [i.aux[1] for i in ce.geodesic_points[J]];
+        ce.source_velocity[J];
+        intensity = [i.aux[1] for i in ce.geodesic_points[J]],
         kwargs...,
     )
-end
-
-function RadialDiscProfile(ε, ce::CoronaGeodesics; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
-    radii = @views [_equatorial_project(i.x) for i in ce.geodesic_points[J]]
-    times = @views [i.x[1] for i in ce.geodesic_points[J]]
-
-    t = DataInterpolations.LinearInterpolation(times, radii)
-
-    function _emissivity_wrapper(gp)
-        ε(_equatorial_project(gp.x))
-    end
-
-    function _delay_wrapper(gp)
-        t(_equatorial_project(gp.x)) + gp.x[1]
-    end
-
-    RadialDiscProfile(_emissivity_wrapper, _delay_wrapper; kwargs...)
 end
 
 emitted_flux(profile::RadialDiscProfile, gps) = map(profile.f, gps)
