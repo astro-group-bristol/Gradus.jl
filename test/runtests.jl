@@ -23,7 +23,7 @@ end
     include("unit/coronal-beaming.jl")
     include("smoke-tests/coronal-spectra.jl")
     include("unit/emissivity.jl")
-    include("test/beamedpointsource-test.jl")
+    include("beamedpointsource-test.jl")
 end
 
 @time @testset "integration" verbose = true begin
