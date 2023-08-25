@@ -1,19 +1,23 @@
-struct RadialDiscProfile{F,R} <: AbstractDiscProfile
-    # geodesic point to flux
-    f::F
-    # geodesic point to time
-    t::R
+struct RadialDiscProfile{T,I} <: AbstractDiscProfile
+    radii::Vector{T}
+    ε::Vector{T}
+    t::Vector{T}
+    interp_ε::I
+    interp_t::I
 end
 
-function RadialDiscProfile(rs::AbstractArray, ts::AbstractArray, εs::AbstractArray)
-    # create interpolations
-    t = _make_interpolation(rs, ts)
-    ε = _make_interpolation(rs, εs)
-    # wrap geodesic point wrappers
-    RadialDiscProfile(
-        gp -> ε(_equatorial_project(gp.x)),
-        gp -> t(_equatorial_project(gp.x)) + gp.x[1],
-    )
+emissivity_at(prof::RadialDiscProfile, r::Number) = prof.interp_ε(r)
+emissivity_at(prof::RadialDiscProfile, gp::AbstractGeodesicPoint) =
+    emissivity_at(prof, _equatorial_project(gp.x))
+
+coordtime_at(prof::RadialDiscProfile, r::Number) = prof.interp_t(r)
+coordtime_at(prof::RadialDiscProfile, gp::AbstractGeodesicPoint) =
+    coordtime_at(prof, _equatorial_project(gp.x)) + gp.x[1]
+
+function RadialDiscProfile(r, t, ε)
+    interp_t = _make_interpolation(view(r, :), view(t, :))
+    interp_ε = _make_interpolation(view(r, :), view(ε, :))
+    RadialDiscProfile(r, ε, t, interp_ε, interp_t)
 end
 
 _get_grouped_intensity(T::Type, groupings, ::Nothing) = @. convert(T, length(groupings))
@@ -116,53 +120,31 @@ function RadialDiscProfile(rdp::RadialDiscProfile)
     rdp
 end
 
-function RadialDiscProfile(ce::CoronaGeodesics, spec::AbstractCoronalSpectrum; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
+function RadialDiscProfile(cg::CoronaGeodesics, spec::AbstractCoronalSpectrum; kwargs...)
+    J = sortperm(cg.geodesic_points; by = i -> _equatorial_project(i.x))
     @views RadialDiscProfile(
-        ce.metric,
-        ce.model,
+        cg.metric,
+        cg.model,
         spec,
-        ce.geodesic_points[J],
-        ce.source_velocity[J];
+        cg.geodesic_points[J],
+        cg.source_velocity[J];
         kwargs...,
     )
-end
-
-function RadialDiscProfile(ε, ce::CoronaGeodesics; kwargs...)
-    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
-    radii = @views [_equatorial_project(i.x) for i in ce.geodesic_points[J]]
-    times = @views [i.x[1] for i in ce.geodesic_points[J]]
-
-    t = DataInterpolations.LinearInterpolation(times, radii)
-
-    function _emissivity_wrapper(gp)
-        ε(_equatorial_project(gp.x))
-    end
-
-    function _delay_wrapper(gp)
-        t(_equatorial_project(gp.x)) + gp.x[1]
-    end
-
-    RadialDiscProfile(_emissivity_wrapper, _delay_wrapper; kwargs...)
 end
 
 function RadialDiscProfile(
-    ce::CoronaGeodesics{<:TraceRadiativeTransfer},
+    cg::CoronaGeodesics{<:TraceRadiativeTransfer},
     spec::AbstractCoronalSpectrum;
     kwargs...,
 )
-    J = sortperm(ce.geodesic_points; by = i -> _equatorial_project(i.x))
+    J = sortperm(cg.geodesic_points; by = i -> _equatorial_project(i.x))
     @views RadialDiscProfile(
-        ce.metric,
-        ce.model,
+        cg.metric,
+        cg.model,
         spec,
-        ce.geodesic_points[J],
-        ce.source_velocity[J];
-        intensity = [i.aux[1] for i in ce.geodesic_points[J]],
+        cg.geodesic_points[J],
+        cg.source_velocity[J];
+        intensity = [i.aux[1] for i in cg.geodesic_points[J]],
         kwargs...,
     )
 end
-
-emitted_flux(profile::RadialDiscProfile, gps) = map(profile.f, gps)
-delay(profile::RadialDiscProfile, gps) = map(profile.t, gps)
-get_emissivity(prof::RadialDiscProfile) = (prof.f.ε.t, prof.f.ε.u)

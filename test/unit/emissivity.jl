@@ -8,7 +8,7 @@ d = GeometricThinDisc(0.0, 500.0, π / 2)
 # using point source angular method
 profile = emissivity_profile(m, d, model; n_samples = 20)
 
-r, em = get_emissivity(profile)
+r, em = profile.radii, profile.ε
 @test em ≈ [
     0.035608673876360804,
     0.016220783046579302,
@@ -30,8 +30,7 @@ profile = emissivity_profile(
     N = 10,
 )
 
-r, em = get_emissivity(profile)
-
+r, em = profile.radii, profile.ε
 @test em ≈ [
     1.4795830708196946,
     3.216264925932792,

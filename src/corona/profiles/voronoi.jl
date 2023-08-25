@@ -19,18 +19,6 @@ struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
     end
 end
 
-function emitted_flux(profile::VoronoiDiscProfile, gps)
-    error("TODO")
-end
-function delay(profile::VoronoiDiscProfile, gps)
-    error("TODO")
-end
-
-# tuple so the calculation may be combined if desired
-@inline function delay_flux(profile::VoronoiDiscProfile, gps)
-    (delay(profile, gps), emitted_flux(profile, gps))
-end
-
 function Base.show(io::IO, vdp::VoronoiDiscProfile{D}) where {D}
     write(io, "VoronoiDiscProfile for $D with $(length(vdp.generators)) generators")
 end
@@ -249,3 +237,5 @@ end
     end
     -1
 end
+
+export VoronoiDiscProfile

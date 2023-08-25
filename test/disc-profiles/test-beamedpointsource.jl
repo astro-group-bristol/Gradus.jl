@@ -16,4 +16,4 @@ profile0 = Gradus.RadialDiscProfile(em_prof0)
 profile1 = Gradus.RadialDiscProfile(em_prof1)
 
 test_radii = range(2, 100, 10) |> collect
-@test profile0.f.ε.(test_radii) ≈ profile1.f.ε.(test_radii) rtol = 1e-1
+@test emissivity_at(profile0, test_radii) ≈ emissivity_at(profile1, test_radii) rtol = 1e-1

@@ -34,8 +34,8 @@ using StaticArrays
         @test true
 
         # check areas
-        areas1 = getareas(vdp1)
-        areas2 = getareas(vdp2)
+        areas1 = Gradus.getareas(vdp1)
+        areas2 = Gradus.getareas(vdp2)
 
         # values computed under visual inspection
         # last computed 21/06/23: updated sampling method
