@@ -27,11 +27,11 @@ drdt(g, β) = β * √(-g[1] / g[2])
 drdt(m::AbstractMetric, x, β) = drdt(metric_components(m, SVector(x[2], x[3])), β)
 end # module
 
-function Gradus.sample_position_velocity(m::AbstractMetric, model::BeamedPointSource)
+function sample_position_velocity(m::AbstractMetric, model::BeamedPointSource)
     x = SVector{4}(0, model.r, 1e-4, 0)
     g = metric_components(m, SVector(x[2], x[3]))
     v̄ = SVector(1, __BeamedPointSource.drdt(g, model.β), 0, 0)
-    v = Gradus.constrain_normalize(m, x, v̄; μ = 1)
+    v = constrain_normalize(m, x, v̄; μ = 1)
     x, v
 end
 
@@ -41,7 +41,8 @@ Gradus.emissivity_profile(
     m::AbstractMetric,
     d::AbstractAccretionDisc,
     model::BeamedPointSource,
-    spec::Gradus.AbstractCoronalSpectrum;
+    spec::AbstractCoronalSpectrum;
     kwargs...,
-) = Gradus._point_source_symmetric_emissivity_profile(m, d, model, spec; kwargs...)
+) = _point_source_symmetric_emissivity_profile(m, d, model, spec; kwargs...)
 
+export BeamedPointSource
