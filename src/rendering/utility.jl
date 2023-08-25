@@ -27,26 +27,6 @@ function calculate_velocities!(vs, m::AbstractMetric, init_pos, α_generator, β
     end
 end
 
-
-"""
-    x_to_α(X, x_mid, fov)
-
-Utility function for converting some `X` on an image plane into ``\\alpha``, given
-the midpoint `x_mid` and field-of-view multiplier `fov`.
-"""
-# have to use a slight 0.001 offset to avoid integrating α=0.0 geodesics in first order methods
-x_to_α(X, x_mid, fov) = x_to_α(typeof(fov), X, x_mid, fov)
-x_to_α(T::Type, X, x_mid, fov) = (X + T(1e-3) - x_mid) / T(fov)
-
-"""
-    y_to_β(Y, y_mid, fov)
-
-Utility function for converting some `Y` on an image plane into ``\\beta``, given
-the midpoint `y_mid` and field-of-view multiplier `fov`.
-"""
-y_to_β(Y, y_mid, fov) = y_to_β(typeof(fov), Y, y_mid, fov)
-y_to_β(T::Type, Y, y_mid, fov) = (Y - y_mid) / T(fov)
-
 function init_progress_bar(text, N, enabled)
     ProgressMeter.Progress(
         N;
@@ -60,10 +40,8 @@ function init_progress_bar(text, N, enabled)
     )
 end
 
-function impact_axes(width, height, fov)
-    x_mid = width ÷ 2
-    y_mid = height ÷ 2
-    α = [Gradus.x_to_α(X, x_mid, fov) for X = 1:width]
-    β = [Gradus.y_to_β(Y, y_mid, fov) for Y = 1:height]
+function impact_axes(width, height, αlims, βlims)
+    α = [a for a in range(αlims..., width)]
+    β = [b for b in range(βlims..., height)]
     α, β
 end

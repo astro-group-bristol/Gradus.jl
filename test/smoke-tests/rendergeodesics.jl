@@ -14,165 +14,84 @@ function _thick_disc(u)
     end
 end
 
-@testset "plain" begin
-    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
-
-    # last computed 21/01/2023: shrink resolution
-    expected = (
-        8969.1564582409967,
-        8969.15634220181,
-        8977.502920124776,
-        203.621259550736,
-        8969.155411207657,
-        8969.157492589824,
+function _run_rendergeodesics(m, args...)
+    x = SVector(0.0, 100.0, deg2rad(85), 0.0)
+    α, β, img = rendergeodesics(
+        m,
+        x,
+        args...,
+        200.0;
+        αlims = (-9.5, 9.5),
+        βlims = (-9.5, 9.5),
+        image_width = 20,
+        image_height = 20,
+        verbose = false,
     )
-    result = map((
-        KerrMetric(),
-        JohannsenMetric(),
-        KerrSpacetimeFirstOrder(),
-        MorrisThorneWormhole(),
-        BumblebeeMetric(),
-        KerrNewmanMetric(),
-    )) do m
-        α, β, img = rendergeodesics(
-            m,
-            u,
-            200.0,
-            fov = 1.0,
-            image_width = 20,
-            image_height = 20,
-            verbose = false,
-        )
-        image_fingerprint = sum(filter(!isnan, img))
-    end
-    for (e, v) in zip(expected, result)
-        # this tolerance is kind of unacceptably high? todo: investigate why
-        @test isapprox(e, v; rtol = 0.1)
+    image_fingerprint = sum(filter(!isnan, img))
+end
+
+metrics = (
+    KerrMetric(),
+    JohannsenMetric(),
+    KerrSpacetimeFirstOrder(),
+    MorrisThorneWormhole(),
+    BumblebeeMetric(),
+    KerrNewmanMetric(),
+)
+
+# shadows
+# last computed 25/08/2023: change rendergeodesic axes behaviour
+expected = [
+    9009.452876609641,
+    9009.448935932085,
+    8873.083256336658,
+    402.17907632733284,
+    9009.452384885506,
+    9009.451384824908,
+]
+result = [_run_rendergeodesics(m) for m in metrics]
+# this tolerance is kind of unacceptably high? todo: investigate why
+@test expected ≈ result rtol = 1e-1
+
+# thin disc
+d = GeometricThinDisc(0.0, 40.0, π / 2)
+# last computed 25/08/2023: change rendergeodesic axes behaviour
+expected = [
+    38412.08347901267,
+    38412.08386562321,
+    37990.55152565702,
+    9375.430228131403,
+    38412.0832157869,
+    38412.08517225652,
+]
+result = [_run_rendergeodesics(m, d) for m in metrics]
+@test expected ≈ result rtol = 1e-1
+
+# shakura sunyeav disc
+result = map(metrics) do m
+    if (m isa AbstractFirstOrderMetric) || (m isa MorrisThorneWormhole)
+        0.0
+    else
+        _run_rendergeodesics(m, ShakuraSunyaev(m))
     end
 end
 
-@testset "thin-disc" begin
-    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
-    d = GeometricThinDisc(10.0, 40.0, deg2rad(90.0))
+result = [result...]
+# last computed 25/08/2023: change rendergeodesic axes behaviour
+expected =
+    [34455.34416982827, 34455.344169980635, 0.0, 0.0, 34455.3441698318, 34455.34416971527]
+@test expected ≈ result rtol = 1e-1
 
-    # last computed 21/01/2023: shrink resolution
-    expected = (29605.55590761622, 29605.556409711604, 29741.80749605271, 9858.77920909911)
-    result = map((
-        KerrMetric(),
-        JohannsenMetric(),
-        KerrSpacetimeFirstOrder(),
-        MorrisThorneWormhole(),
-    )) do m
-        α, β, img = rendergeodesics(
-            m,
-            u,
-            d,
-            200.0,
-            fov = 1.0,
-            image_width = 20,
-            image_height = 20,
-            verbose = false,
-        )
-        image_fingerprint = sum(filter(!isnan, img))
-    end
-    for (e, v) in zip(expected, result)
-        # this tolerance is kind of unacceptably high? todo: investigate why
-        @test isapprox(e, v; rtol = 0.1)
-    end
-end
-
-@testset "shakura-sunyaev-disc" begin
-    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
-
-    # last computed 21/01/2023: shrink resolution
-    expected = (34711.33445248479, 34711.33445255157)
-    result = map((KerrMetric(), JohannsenMetric())) do m
-        d = ShakuraSunyaev(m)
-        α, β, img = rendergeodesics(
-            m,
-            u,
-            d,
-            200.0,
-            fov = 1.0,
-            image_width = 20,
-            image_height = 20,
-            verbose = false,
-        )
-        image_fingerprint = sum(filter(!isnan, img))
-    end
-    for (e, v) in zip(expected, result)
-        # this tolerance is kind of unacceptably high? todo: investigate why
-        @test isapprox(e, v; rtol = 0.1)
-    end
-end
-
-@testset "thick-disc" begin
-    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
-    d = ThickDisc(_thick_disc)
-
-    # last computed 21/01/2023: shrink resolution
-    expected = (16593.560393732, 16593.56001187974, 16847.84450997791, 5015.839213855068)
-    result = map((
-        KerrMetric(),
-        JohannsenMetric(),
-        KerrSpacetimeFirstOrder(),
-        MorrisThorneWormhole(),
-    )) do m
-        α, β, img = rendergeodesics(
-            m,
-            u,
-            d,
-            200.0,
-            fov = 1.0,
-            image_width = 20,
-            image_height = 20,
-            verbose = false,
-        )
-        image_fingerprint = sum(filter(!isnan, img))
-    end
-    for (e, v) in zip(expected, result)
-        # this tolerance is kind of unacceptably high? todo: investigate why
-        @test isapprox(e, v; rtol = 0.1)
-    end
-end
-
-@testset "prerendergeodesics" begin
-    u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
-
-    # last computed 21/01/2023: shrink resolution
-    expected = (
-        8969.1564582409967,
-        8969.15634220181,
-        8977.502920124776,
-        203.621259550736,
-        8969.155411207657,
-        8969.157492589824,
-    )
-    result = map((
-        KerrMetric(),
-        JohannsenMetric(),
-        KerrSpacetimeFirstOrder(),
-        MorrisThorneWormhole(),
-        BumblebeeMetric(),
-        KerrNewmanMetric(),
-    )) do m
-        cache = prerendergeodesics(
-            m,
-            u,
-            200.0,
-            fov = 1.0,
-            image_width = 20,
-            image_height = 20,
-            verbose = false,
-        )
-        pf =
-            PointFunction((m, gp, λ_max) -> gp.λ_max) ∘
-            FilterPointFunction((m, gp, λ_max) -> gp.λ_max < λ_max, NaN)
-        img = apply(pf, cache)
-        image_fingerprint = sum(filter(!isnan, img))
-    end
-    for (e, v) in zip(expected, result)
-        # this tolerance is kind of unacceptably high? todo: investigate why
-        @test isapprox(e, v; rtol = 0.1)
-    end
-end
+# thick disc
+d = ThickDisc(_thick_disc)
+result = [_run_rendergeodesics(m, d) for m in metrics]
+# last computed 25/08/2023: change rendergeodesic axes behaviour
+expected = [
+    16918.69258396256,
+    16918.689593279843,
+    16920.323858977506,
+    5104.032822512765,
+    16918.692092917947,
+    16918.691837255217,
+]
+@test expected ≈ result rtol = 1e-1

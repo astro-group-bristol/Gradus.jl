@@ -14,23 +14,22 @@ function test_tracer(m, u, q; kwargs...)
         2000.0;
         image_width = 40,
         image_height = 40,
-        fov = 2.5,
+        αlims = (-8, 8),
+        βlims = (-8, 8),
         q = q,
         kwargs...,
     )
     fingerprint = sum(filter(!isnan, img))
     fingerprint
 end
-
-@test test_tracer(m, u, 0.0) ≈ 448853.6312965758 rtol = 1e-3
-@test test_tracer(m, u, 1.0) ≈ 263323.2126428741 rtol = 1e-3
-@test test_tracer(m, u, -1.0) ≈ 653341.4649407878 rtol = 1e-3
+@test test_tracer(m, u, 0.0) ≈ 428809.9681726607 rtol = 1e-3
+@test test_tracer(m, u, 1.0) ≈ 253280.6794972752 rtol = 1e-3
+@test test_tracer(m, u, -1.0) ≈ 619335.5670363897 rtol = 1e-3
 
 ensemble = Gradus.EnsembleEndpointThreads()
-@test test_tracer(m, u, 0.0; ensemble = ensemble) ≈ 448853.6312965758 rtol = 1e-3
-@test test_tracer(m, u, 1.0; ensemble = ensemble) ≈ 263323.2126428741 rtol = 1e-3
-@test test_tracer(m, u, -1.0; ensemble = ensemble) ≈ 653341.4649407878 rtol = 1e-3
-
+@test test_tracer(m, u, 0.0; ensemble = ensemble) ≈ 428809.9681726607 rtol = 1e-3
+@test test_tracer(m, u, 1.0; ensemble = ensemble) ≈ 253280.6794972752 rtol = 1e-3
+@test test_tracer(m, u, -1.0; ensemble = ensemble) ≈ 619335.5670363897 rtol = 1e-3
 
 # ensure the circular velocity calculations work
 @test CircularOrbits.fourvelocity(m, 20.0; q = 1.0) ≈

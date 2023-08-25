@@ -386,19 +386,25 @@ function _map_impact_parameters(m::KerrSpacetimeFirstOrder, x, iterator)
 end
 
 function _render_velocity_function(
-    m::KerrSpacetimeFirstOrder,
+    m::KerrSpacetimeFirstOrder{T},
     position,
     image_width,
     image_height,
-    fov,
-)
-    y_mid = image_height ÷ 2
-    x_mid = image_width ÷ 2
+    αlims,
+    βlims,
+) where {T}
+    @assert issorted(αlims) "α limits must be sorted"
+    @assert issorted(βlims) "β limits must be sorted"
+
+    αs = range(αlims[1], αlims[2], image_width)
+    βs = range(βlims[1], βlims[2], image_height)
     function velfunc(i)
-        Y = i % image_height
-        X = i ÷ image_height
-        α = x_to_α(X, x_mid, fov)
-        β = y_to_β(Y, y_mid, fov)
+        # get index on image plane
+        x = (i - 1) ÷ image_height + 1
+        y = mod1(i, image_height)
+        # offset a little to avoid coordinate singularities when α = 0
+        α = αs[x] + T(1e-6)
+        β = βs[y] + T(1e-6)
         _map_impact_parameters(m, position, α, β)
     end
 end

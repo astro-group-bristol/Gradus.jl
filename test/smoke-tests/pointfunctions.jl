@@ -14,9 +14,10 @@ using StaticArrays
             u,
             d,
             200.0,
-            fov = 1.0,
             image_width = 100,
-            image_height = 50,
+            image_height = 100,
+            αlims = (-50, 50),
+            βlims = (-50, 50),
             pf = pf,
             verbose = false,
         )

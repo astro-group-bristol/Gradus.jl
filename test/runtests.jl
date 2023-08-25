@@ -4,8 +4,9 @@ using Gradus
 using Aqua
 
 @time @testset "smoke-tests" verbose = true begin
-    include("smoke-tests/rendergeodesics.jl")
     include("smoke-tests/tracegeodesics.jl")
+    include("smoke-tests/rendergeodesics.jl")
+    include("smoke-tests/prerendergeodesics.jl")
     include("smoke-tests/pointfunctions.jl")
     include("smoke-tests/circular-orbits.jl")
     include("smoke-tests/disc-profiles.jl")
