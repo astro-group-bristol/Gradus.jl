@@ -20,14 +20,6 @@ function Base.show(io::IO, ::MIME"text/plain", itb::InterpolatingTransferBranche
     print(io, text)
 end
 
-@inline function _linear_interpolate(y1, y2, θ)
-    (1 - θ) * y1 + θ * y2
-end
-
-@inline function _linear_interpolate(arr::AbstractVector, idx, θ)
-    _linear_interpolate(arr[idx], arr[idx+1], θ)
-end
-
 function _lazy_interpolate(f1, f2, θ)
     function _lazy_interpolate_kernel(x)
         _linear_interpolate(f1(x), f2(x), θ)
