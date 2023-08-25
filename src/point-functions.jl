@@ -88,14 +88,16 @@ end
 end
 
 @inline function apply(pf::AbstractPointFunction, rc::SolutionRenderCache; kwargs...)
-    _threaded_map(
+    result = _threaded_map(
         sol -> pf.f(rc.m, unpack_solution(m, sol), rc.max_time; kwargs...),
         rc.geodesics,
     )
+    reshape(result, (rc.height, rc.width))
 end
 
 @inline function apply(pf::AbstractPointFunction, rc::EndpointRenderCache; kwargs...)
-    _threaded_map(gp -> pf.f(rc.m, gp, rc.max_time; kwargs...), rc.points)
+    result = _threaded_map(gp -> pf.f(rc.m, gp, rc.max_time; kwargs...), rc.points)
+    reshape(result, (rc.height, rc.width))
 end
 
 @inline function Base.:∘(pf1::AbstractPointFunction, pf2::AbstractPointFunction)
