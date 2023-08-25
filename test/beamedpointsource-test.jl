@@ -2,24 +2,14 @@ using Gradus
 using Test
 
 m = KerrMetric(1.0, 0.998)
-d = GeometricThinDisc(0.0, 100.0, π/2)
+d = GeometricThinDisc(0.0, 100.0, π / 2)
 
 model0 = LampPostModel(h = 10.0)
 model1 = Gradus.BeamedPointSource(10.0, 0.0)
 
-em_prof0 = Gradus.emissivity_profile(
-m, 
-d, 
-model0, 
-n_samples = 100_000,
-)
+em_prof0 = Gradus.emissivity_profile(m, d, model0, n_samples = 100_000)
 
-em_prof1 = Gradus.emissivity_profile(
-m, 
-d, 
-model1, 
-n_samples = 100_000,
-)
+em_prof1 = Gradus.emissivity_profile(m, d, model1, n_samples = 100_000)
 
 profile0 = Gradus.RadialDiscProfile(em_prof0)
 
