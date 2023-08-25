@@ -190,5 +190,6 @@ function tracecorona(
 end
 
 include("models/lamp-post.jl")
+include("models/moving-source.jl")
 
 export LampPostModel
