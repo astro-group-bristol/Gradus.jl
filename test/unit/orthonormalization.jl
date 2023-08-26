@@ -74,10 +74,10 @@ for M = 0.2:0.8:2.0, a = -M:0.5:M
     r = Gradus.inner_radius(m) + 4.2
     for θ in angles
         u = @SVector [0.0, r, θ, 0.0]
-        expected = kerr_lnrframe(m, u)
+        analytic_result = kerr_lnrframe(m, u)
         calculated = numerical_lnrframe(m, u)
 
-        @test calculated ≈ expected atol = 1e-13
+        @test calculated ≈ analytic_result atol = 1e-13
     end
 end
 
@@ -106,9 +106,9 @@ for M = 0.2:0.8:2.0, a = -M:0.5:M
     r = Gradus.inner_radius(m) + 0.3
     for θ in angles
         u = @SVector [0.0, r, θ, 0.1]
-        expected = kerr_lnrbasis(m, u)
+        analytic_result = kerr_lnrbasis(m, u)
         calculated = numerical_lnrbasis(m, u)
 
-        @test calculated ≈ expected atol = 1e-10
+        @test calculated ≈ analytic_result atol = 1e-10
     end
 end

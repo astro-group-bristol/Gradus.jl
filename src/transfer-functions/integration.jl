@@ -209,8 +209,8 @@ function integrate_lagtransfer(
     setup = IntegrationSetup(
         T,
         _lineprofile_integrand,
-        profile.f.ε;
-        time = r -> profile.t.t(r) - t0,
+        r -> emissivity_at(profile, r),
+        time = r -> coordtime_at(profile, r) - t0,
         kwargs...,
     )
     _integrate_transfer_problem!(flux, setup, itb, fine_rₑ_grid, g_grid, t_grid)

@@ -36,6 +36,15 @@ function _make_interpolation(x, y)
     DataInterpolations.LinearInterpolation(y, x)
 end
 
+@inline function _linear_interpolate(y1, y2, θ)
+    (1 - θ) * y1 + θ * y2
+end
+
+@inline function _linear_interpolate(arr::AbstractVector, idx, θ)
+    _linear_interpolate(arr[idx], arr[idx+1], θ)
+end
+
+
 @inline function _symmetric_matrix(comps::AbstractVector{T})::SMatrix{4,4,T} where {T}
     @SMatrix [
         comps[1] 0 0 comps[5]

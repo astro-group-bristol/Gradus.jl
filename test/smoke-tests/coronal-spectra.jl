@@ -35,4 +35,4 @@ em_prof2 = Gradus.emissivity_profile(
 profile2 = Gradus.RadialDiscProfile(em_prof2)
 
 #testing if they are equal
-@test profile1.f.ε.u ≈ profile2.f.ε.u
+@test profile1.ε ≈ profile2.ε
