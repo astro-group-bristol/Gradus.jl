@@ -8,7 +8,7 @@ struct IntegrationSetup{T,K,F,R,SegBufType}
     segbuf::SegBufType
 end
 
-IntegrationSetup(T::Type, integrand, pure_radial; time = nothing, h = 1e-8) =
+_integration_setup(T::Type, integrand, pure_radial; time = nothing, h = 1e-8) =
     IntegrationSetup(h, time, integrand, pure_radial, alloc_segbuf(T))
 
 function integrand(setup::IntegrationSetup, f, r, g, g✶)
@@ -188,7 +188,7 @@ function integrate_lineprofile(
     # pre-allocate output
     flux = zeros(T, length(g_grid))
     fine_rₑ_grid = Grids._inverse_grid(extrema(radii)..., Nr) |> collect
-    setup = IntegrationSetup(T, _lineprofile_integrand, ε; kwargs...)
+    setup = _integration_setup(T, _lineprofile_integrand, ε; kwargs...)
     _integrate_transfer_problem!(flux, setup, itb, fine_rₑ_grid, g_grid)
     _normalize(flux, g_grid)
 end
@@ -206,10 +206,10 @@ function integrate_lagtransfer(
     # pre-allocate output
     flux = zeros(T, (length(g_grid), length(t_grid)))
     fine_rₑ_grid = Grids._geometric_grid(extrema(radii)..., Nr) |> collect
-    setup = IntegrationSetup(
+    setup = _integration_setup(
         T,
         _lineprofile_integrand,
-        r -> emissivity_at(profile, r),
+        r -> emissivity_at(profile, r);
         time = r -> coordtime_at(profile, r) - t0,
         kwargs...,
     )
