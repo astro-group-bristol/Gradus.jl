@@ -38,6 +38,8 @@ end
 import GeometryBasics
 import Symbolics
 
+import FFTW
+
 using EnumX
 
 """
@@ -457,6 +459,7 @@ include("redshift.jl")
 include("const-point-functions.jl")
 
 include("line-profiles.jl")
+include("reverberation.jl")
 include("geometry/polish-doughnut.jl")
 
 include("plotting-recipes.jl")
