@@ -136,16 +136,18 @@ end
     (a, b)
 end
 
-@recipe function f(p::RadialDiscProfile; normalize = identity)
+@recipe function f(p::RadialDiscProfile; normalize = nothing)
     xlabel --> "r (rg)"
     ylabel --> "ε (arb.)"
     xscale --> :log10
     yscale --> :log10
 
-    y = p.f.ε.u[2:end-1]
+    y = p.ε[2:end-1]
 
-    @. y = normalize(y)
-    p.f.ε.t[2:end-1], y
+    if !isnothing(normalize)
+        y = normalize(y)
+    end
+    p.radii[2:end-1], y
 end
 
 @recipe function f(ctf::CunninghamTransferData; h = 1e-4)
@@ -167,8 +169,8 @@ end
     ylabel --> "α"
     title --> "ε ∝ r⁻ᵅ"
 
-    y = prof.f.ε.u
-    x = prof.f.ε.t
+    y = prof.ε
+    x = prof.radii
 
     dydx = diff(y) ./ diff(x)
     x = x[2:end]
