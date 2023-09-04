@@ -1,10 +1,12 @@
 abstract type AbstractImagePlane{G} end
-image_plane(plane::AbstractImagePlane, u) = error("Not implemented for $plane")
+image_plane(plane::AbstractImagePlane) = image_plane(plane, SVector(0, 10000, π / 2, 0))
+# todo: remove this, as i don't think it will be needed
+image_plane(plane::AbstractImagePlane, x) = error("Not implemented for $plane")
 trajectory_count(plane::AbstractImagePlane) = error("Not implemented for $plane")
 unnormalized_areas(plane::AbstractImagePlane) = error("Not implemented for $plane")
 
-function impact_parameters(plane::AbstractImagePlane, u)
-    αs, βs = image_plane(plane, u)
+function impact_parameters(plane::AbstractImagePlane, x)
+    αs, βs = image_plane(plane, x)
     vec(αs), vec(βs)
 end
 
@@ -35,13 +37,13 @@ function trajectory_count(plane::PolarPlane)
     plane.Nr * plane.Nθ
 end
 
-function image_plane(plane::PolarPlane, u)
+function image_plane(plane::PolarPlane, x)
     rs = plane.grid(plane.r_min, plane.r_max, plane.Nr)
     δθ = (plane.θ_max - plane.θ_min) / (plane.Nθ)
     θs = range(plane.θ_min, plane.θ_max - δθ, plane.Nθ)
 
     αs = [r * cos(θ) for r in rs, θ in θs]
-    βs = [r * sin(θ) * sin(u[3]) for r in rs, θ in θs]
+    βs = [r * sin(θ) for r in rs, θ in θs]
 
     αs, βs
 end
@@ -81,7 +83,7 @@ function trajectory_count(plane::CartesianPlane)
     (2 * (plane.Ny ÷ 2) - 1) * (2 * (plane.Nx ÷ 2) - 1)
 end
 
-function image_plane(plane::CartesianPlane, u)
+function image_plane(plane::CartesianPlane, x)
     xs = collect(plane.grid(plane.x_min, plane.x_max, plane.Nx ÷ 2))
     ys = collect(plane.grid(plane.y_min, plane.y_max, plane.Ny ÷ 2))
 
