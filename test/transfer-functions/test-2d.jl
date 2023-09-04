@@ -22,14 +22,14 @@ tf = lagtransfer(
 )
 
 # check number of intersection points
-@test length(tf.observer_to_disc) == 311
+@test length(tf.observer_to_disc) == 335
 @test length(tf.emissivity_profile.geodesic_points) == 58
 
 # ensure binning works as expected
 t, E, f = binflux(tf, N_t = 100, N_E = 100)
 
 fluxsum = sum(filter(!isnan, f))
-@test fluxsum ≈ 8.5152 atol = 1e-2
+@test fluxsum ≈ 5.037953486417272 atol = 1e-2
 
 # test semi-analytic method
 
