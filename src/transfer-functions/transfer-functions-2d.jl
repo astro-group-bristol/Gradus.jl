@@ -140,7 +140,7 @@ function lagtransfer(
         m,
         d,
         model;
-        λ_max = max_t,
+        λmax = max_t,
         n_samples = n_samples,
         verbose = verbose,
         progress_bar = progress_bar,

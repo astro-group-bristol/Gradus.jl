@@ -1,3 +1,38 @@
+struct _EmissivityProfileSetup{TryToOptimize,T,SamplerType,SpectrumType}
+    λmax::T
+    δmin::T
+    δmax::T
+    sampler::SamplerType
+    spectrum::SpectrumType
+    n_samples::Int
+end
+
+function _EmissivityProfileSetup(
+    T,
+    spectrum;
+    λmax = T(10000),
+    δmin = T(0.01),
+    δmax = T(179.99),
+    sampler = nothing,
+    n_samples = 1000,
+    other_kwargs...,
+)
+    _sampler = if !isnothing(sampler)
+        sampler
+    else
+        EvenSampler(BothHemispheres(), GoldenSpiralGenerator())
+    end
+    setup = _EmissivityProfileSetup{isnothing(sampler),T,typeof(_sampler),typeof(spectrum)}(
+        λmax,
+        δmin,
+        δmax,
+        _sampler,
+        spectrum,
+        n_samples,
+    )
+    other_kwargs, setup
+end
+
 """
     source_to_disc_emissivity(
         m::AbstractStaticAxisSymmetric,
@@ -116,62 +151,53 @@ as a function of the radial coordinate on the disc. If non-symmetric profiles ar
 desired, consider using [`tracecorona`](@ref) with a profile constructor, e.g. [`VoronoiDiscProfile`](@ref).
 """
 function emissivity_profile(
-    m::AbstractMetric,
+    m::AbstractMetric{T},
     d::AbstractAccretionGeometry,
-    model::AbstractCoronaModel;
+    model::AbstractCoronaModel,
     spectrum = PowerLawSpectrum(2),
+    ;
     kwargs...,
-)
-    emissivity_profile(m, d, model, spectrum; kwargs...)
+) where {T}
+    solver_kwargs, setup = _EmissivityProfileSetup(T, spectrum; kwargs...)
+    emissivity_profile(setup, m, d, model; solver_kwargs...)
 end
+
 function emissivity_profile(
+    setup::_EmissivityProfileSetup{TryToOptimize},
+    m,
+    d,
+    model;
+    kwargs...,
+) where {TryToOptimize}
+    if is_point_source(model) && TryToOptimize
+        _point_source_symmetric_emissivity_profile(setup, m, d, model; kwargs...)
+    else
+        _emissivity_profile(setup, m, d, model; kwargs...)
+    end
+end
+
+function _emissivity_profile(
+    setup::_EmissivityProfileSetup,
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
     model::AbstractCoronaModel,
-    spectrum::AbstractCoronalSpectrum;
-    sampler = nothing,
-    kwargs...,
-)
-    emissivity_profile(sampler, m, d, model, spectrum; kwargs...)
-end
-function emissivity_profile(
-    sampler::AbstractDirectionSampler,
-    m::AbstractMetric,
-    d::AbstractAccretionGeometry,
-    model::AbstractCoronaModel,
-    spectrum::AbstractCoronalSpectrum;
+    ;
     grid = GeometricGrid(),
     N = 100,
     kwargs...,
 )
     RadialDiscProfile(
-        tracecorona(m, d, model; sampler = sampler, kwargs...),
-        spectrum;
+        tracecorona(
+            m,
+            d,
+            model;
+            sampler = setup.sampler,
+            λmax = setup.λmax,
+            n_samples = setup.n_samples,
+        ),
+        setup.spectrum;
         grid = grid,
         N = N,
-    )
-end
-function emissivity_profile(
-    ::Nothing,
-    m::AbstractMetric,
-    d::AbstractAccretionGeometry,
-    model::AbstractCoronaModel,
-    spectrum::AbstractCoronalSpectrum;
-    kwargs...,
-)
-    @warn(
-        "No sampler specified and no sophisticated algorithm for " *
-        "$(Base.typename(typeof(model)).name) with $(Base.typename(typeof(d)).name) " *
-        "implemented. Defaulting to `EvenSampler(BothHemispheres(), GoldenSpiralGenerator())` " *
-        "as the sampler. Pass the `sampler` keyword to specify a different sampler."
-    )
-    emissivity_profile(
-        EvenSampler(BothHemispheres(), GoldenSpiralGenerator()),
-        m,
-        d,
-        model,
-        spectrum;
-        kwargs...,
     )
 end
 
@@ -188,18 +214,14 @@ function polar_angle_to_velfunc(m::AbstractMetric, x, v, δs)
 end
 
 function _point_source_symmetric_emissivity_profile(
+    setup::_EmissivityProfileSetup,
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
-    model::AbstractCoronaModel,
-    spec::AbstractCoronalSpectrum;
-    n_samples = 100,
-    λ_max = 10_000.0,
+    model::AbstractCoronaModel;
     callback = domain_upper_hemisphere(),
-    δmin = 0.01,
-    δmax = 179.99,
     kwargs...,
 )
-    δs = deg2rad.(range(δmin, δmax, n_samples))
+    δs = deg2rad.(range(setup.δmin, setup.δmax, setup.n_samples))
     # we assume a point source
     x, v = sample_position_velocity(m, model)
     velfunc = polar_angle_to_velfunc(m, x, v, δs)
@@ -208,7 +230,7 @@ function _point_source_symmetric_emissivity_profile(
         x,
         velfunc,
         d,
-        λ_max;
+        setup.λmax;
         save_on = false,
         ensemble = EnsembleEndpointThreads(),
         callback = callback,
@@ -224,7 +246,7 @@ function _point_source_symmetric_emissivity_profile(
     points = points[J]
     δs = δs[J]
 
-    r, ε = _point_source_emissivity(m, d, spec, v, δs, points)
+    r, ε = _point_source_emissivity(m, d, setup.spectrum, v, δs, points)
     t = [i.x[1] for i in @views(points[1:end-1])]
 
     RadialDiscProfile(r, t, ε)

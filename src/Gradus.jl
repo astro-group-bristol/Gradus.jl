@@ -369,6 +369,9 @@ If special symmetries exist, these may be used in the implementations of higher-
 """
 abstract type AbstractCoronaModel{T} end
 
+is_point_source(::Type{<:AbstractCoronaModel}) = false
+is_point_source(::T) where {T<:AbstractCoronaModel} = is_point_source(T)
+
 Base.length(::AbstractCoronaModel) = 1
 Base.iterate(m::AbstractCoronaModel) = (m, nothing)
 Base.iterate(::AbstractCoronaModel, ::Nothing) = nothing
