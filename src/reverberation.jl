@@ -44,4 +44,21 @@ function lag_frequency(t, f::AbstractMatrix; flo = 5e-5, kwargs...)
     lag_frequency(t_extended, ψ_extended; kwargs...)
 end
 
-export lag_frequency
+# todo: this interface would be lovely to support, but handling all the kwargs
+# is a real nightmare
+#
+# function lag_frequency(m::AbstractMetric, x, d::AbstractAccretionGeometry, model::AbstractCoronaModel)
+#     other_kwargs, em_setup = _EmissivityProfileSetup(T, spectrum; kwargs...)
+#     solver_kwargs, 
+#     emissivity_profile(em_setup, m, d, model; solver_kwargs...)
+# end
+
+function continuum_time(m::AbstractMetric, x, model::AbstractCoronaModel; kwargs...)
+    pos, _ = Gradus.sample_position_velocity(m, model)
+    target = SVector(pos[2:end]...)
+    _, _, gp, _ =
+        Gradus.optimize_for_target(target, m, x; chart = Gradus.chart_for_metric(m, 2x[2]), callback = domain_upper_hemisphere(), kwargs...)
+    gp.x[1]
+end
+
+export lag_frequency, continuum_time
