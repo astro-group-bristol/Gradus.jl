@@ -16,12 +16,20 @@ end
     m::AbstractMetric,
     u,
     d::AbstractAccretionGeometry,
-    ep::AbstractDiscProfile;
+    profile::AbstractDiscProfile;
     bins = collect(range(0.1, 1.5, 180)),
     algorithm = BinnedLineProfile(),
     kwargs...,
 )
-    lineprofile(bins, r -> ep.f.ε(r), m, u, d; algorithm = algorithm, kwargs...)
+    lineprofile(
+        bins,
+        r -> emissivity_at(profile, r),
+        m,
+        u,
+        d;
+        algorithm = algorithm,
+        kwargs...,
+    )
 end
 
 @inline function lineprofile(
