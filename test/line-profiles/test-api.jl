@@ -13,7 +13,7 @@ rtype = returntype(lineprofile, m, u, d)
 
 prof = emissivity_profile(m, d, LampPostModel(), n_samples = 100)
 
-x, y = lineprofile(m, u, d, prof; numrₑ = 3, N = 20, algorithm = TransferFunctionMethod())
+x, y = lineprofile(m, u, d, prof; numrₑ = 3, N = 20, method = TransferFunctionMethod())
 @test sum(y) ≈ 1 atol = 1e-4
 
 x, y = lineprofile(
@@ -22,6 +22,6 @@ x, y = lineprofile(
     d,
     prof;
     plane = PolarPlane(GeometricGrid(); Nr = 10, Nθ = 10, r_max = 90.0),
-    algorithm = BinningMethod(),
+    method = BinningMethod(),
 )
 @test sum(y) ≈ 1 atol = 1e-4

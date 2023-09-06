@@ -14,7 +14,7 @@ end
     d::AbstractAccretionGeometry,
     profile::AbstractDiscProfile;
     bins = collect(range(0.1, 1.5, 180)),
-    algorithm = BinningMethod(),
+    method = BinningMethod(),
     kwargs...,
 )
     lineprofile(
@@ -23,7 +23,7 @@ end
         m,
         u,
         d;
-        algorithm = algorithm,
+        method = method,
         kwargs...,
     )
 end
@@ -34,10 +34,10 @@ end
     m::AbstractMetric,
     u,
     d::AbstractAccretionGeometry;
-    algorithm::AbstractComputationalMethod = TransferFunctionMethod(),
+    method::AbstractComputationalMethod = TransferFunctionMethod(),
     kwargs...,
 )
-    lineprofile(bins, ε, m, u, d, algorithm; kwargs...)
+    lineprofile(bins, ε, m, u, d, method; kwargs...)
 end
 
 function lineprofile(
