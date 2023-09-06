@@ -43,7 +43,7 @@ prof = emissivity_profile(
 
 radii = Gradus.Grids._inverse_grid(Gradus.isco(m), 100.0, 5)
 d = GeometricThinDisc(0.0, 500.0, π / 2)
-itb = @time Gradus.interpolated_transfer_branches(m, x, d, radii; verbose = true)
+itb = @time Gradus.interpolated_transfer_branches(m, x, d, radii)
 
 bins = collect(range(0.0, 1.5, 100))
 tbins = collect(range(0, 150.0, 100))
