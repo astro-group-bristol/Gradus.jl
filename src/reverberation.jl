@@ -56,8 +56,14 @@ end
 function continuum_time(m::AbstractMetric, x, model::AbstractCoronaModel; kwargs...)
     pos, _ = Gradus.sample_position_velocity(m, model)
     target = SVector(pos[2:end]...)
-    _, _, gp, _ =
-        Gradus.optimize_for_target(target, m, x; chart = Gradus.chart_for_metric(m, 2x[2]), callback = domain_upper_hemisphere(), kwargs...)
+    _, _, gp, _ = Gradus.optimize_for_target(
+        target,
+        m,
+        x;
+        chart = Gradus.chart_for_metric(m, 2x[2]),
+        callback = domain_upper_hemisphere(),
+        kwargs...,
+    )
     gp.x[1]
 end
 
