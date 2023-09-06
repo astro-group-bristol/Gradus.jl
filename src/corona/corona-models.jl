@@ -165,7 +165,7 @@ function tracecorona(
     m::AbstractMetric,
     g::AbstractAccretionGeometry,
     model::AbstractCoronaModel;
-    λ_max = 10_000,
+    λmax = 10_000,
     n_samples = 1024,
     sampler = EvenSampler(domain = BothHemispheres(), generator = RandomGenerator()),
     trace = TraceGeodesic(),
@@ -178,7 +178,7 @@ function tracecorona(
         xs,
         vs,
         g,
-        λ_max;
+        λmax;
         trace = trace,
         save_on = false,
         ensemble = EnsembleEndpointThreads(),

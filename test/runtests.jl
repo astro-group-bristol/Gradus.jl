@@ -3,15 +3,22 @@ using Gradus
 
 using Aqua
 
-@time @testset "smoke-tests" verbose = true begin
+@time @testset "smoke-tracing" verbose = true begin
     include("smoke-tests/tracegeodesics.jl")
     include("smoke-tests/rendergeodesics.jl")
     include("smoke-tests/prerendergeodesics.jl")
+end
+
+@time @testset "smoke-utility" verbose = true begin
     include("smoke-tests/pointfunctions.jl")
     include("smoke-tests/circular-orbits.jl")
     include("smoke-tests/disc-profiles.jl")
     include("smoke-tests/special-radii.jl")
     include("smoke-tests/cunningham-transfer-functions.jl")
+end
+
+@time @testset "smoke-reverberation" verbose = true begin
+    include("smoke-tests/reverberation.jl")
 end
 
 @time @testset "metric-geometry" verbose = true begin

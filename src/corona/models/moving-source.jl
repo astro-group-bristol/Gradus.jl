@@ -36,13 +36,6 @@ function sample_position_velocity(m::AbstractMetric, model::BeamedPointSource)
 end
 
 # since we have axis-symmetry, exploit this method for much faster computation
-Gradus.emissivity_profile(
-    ::Nothing,
-    m::AbstractMetric,
-    d::AbstractAccretionDisc,
-    model::BeamedPointSource,
-    spec::AbstractCoronalSpectrum;
-    kwargs...,
-) = _point_source_symmetric_emissivity_profile(m, d, model, spec; kwargs...)
+is_point_source(::Type{<:BeamedPointSource}) = true
 
 export BeamedPointSource

@@ -1,3 +1,27 @@
+struct _TransferFunctionSetup{T}
+    h::T
+    θ_offset::T
+    α₀::T
+    β₀::T
+    N::Int
+    N_extrema::Int
+end
+
+function _TransferFunctionSetup(
+    T;
+    θ_offset = T(0.6),
+    N = 80,
+    N_extrema = 17,
+    α₀ = 0,
+    β₀ = 0,
+    h = T(1e-6),
+    kwargs...,
+)
+    setup =
+        _TransferFunctionSetup{T}(h, θ_offset, convert(T, α₀), convert(T, β₀), N, N_extrema)
+    kwargs, setup
+end
+
 _calculate_transfer_function(rₑ, g, g✶, J) = @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
 
 function _adjust_extrema!(g::AbstractArray{T}) where {T}
@@ -249,22 +273,45 @@ function cunningham_transfer_function(
     x,
     d::AbstractAccretionDisc,
     rₑ::T;
-    θ_offset = Q(0.6),
-    N = 80,
-    N_extrema = 17,
     kwargs...,
 ) where {Q,T}
-    M = N + 2 * N_extrema
-    K = N ÷ 5
-    data = _TransferDataAccumulator(T, M, N)
+    solver_kwargs, setup = _TransferFunctionSetup(T; kwargs...)
+    cunningham_transfer_function(setup, m, x, d, rₑ; solver_kwargs...)
+end
+
+function cunningham_transfer_function(
+    setup::_TransferFunctionSetup,
+    m::AbstractMetric,
+    x,
+    d::AbstractAccretionDisc,
+    rₑ::T,
+    ;
+    chart = chart_for_metric(m, 10 * x[2]),
+    max_time = 10 * x[2],
+    solver_kwargs...,
+) where {T}
+    M = setup.N + 2 * setup.N_extrema
+    K = setup.N ÷ 5
+    data = _TransferDataAccumulator(T, M, setup.N)
     # sample so that the expected minima and maxima (0 and π)
     θiterator = Iterators.flatten((
-        range(0 - 2θ_offset, 0 + 2θ_offset, K),
-        range(-π / 2, 3π / 2, N - 2 * K),
-        range(π - 2θ_offset, π + 2θ_offset, K),
+        range(0 - 2setup.θ_offset, 0 + 2setup.θ_offset, K),
+        range(-π / 2, 3π / 2, setup.N - 2 * K),
+        range(π - 2setup.θ_offset, π + 2setup.θ_offset, K),
     ))
-    workhorse = _rear_workhorse(m, x, d, rₑ; kwargs...)
-    gmin, gmax = _cunningham_transfer_function!(data, workhorse, θiterator, θ_offset, rₑ)
+    workhorse = _rear_workhorse(
+        m,
+        x,
+        d,
+        rₑ;
+        max_time = max_time,
+        chart = chart,
+        α₀ = setup.α₀,
+        β₀ = setup.β₀,
+        solver_kwargs...,
+    )
+    gmin, gmax =
+        _cunningham_transfer_function!(data, workhorse, θiterator, setup.θ_offset, rₑ)
     CunninghamTransferData(
         data.data[2, :],
         data.data[3, :],
@@ -320,36 +367,41 @@ end
 function interpolated_transfer_branches(
     m::AbstractMetric{T},
     x,
+    d::AbstractAccretionDisc,
+    radii;
+    kwargs...,
+) where {T}
+    solver_kwargs, setup = _TransferFunctionSetup(T; kwargs...)
+    interpolated_transfer_branches(setup, m, x, d, radii; solver_kwargs...)
+end
+
+function interpolated_transfer_branches(
+    setup::_TransferFunctionSetup,
+    m::AbstractMetric{T},
+    x,
     d,
     radii;
     verbose = false,
-    h = 1e-6,
-    kwargs...,
+    solver_kwargs...,
 ) where {T}
     progress_bar = init_progress_bar("Transfer functions:", length(radii), verbose)
     # IILF for calculating the interpolated branches
     𝔉 =
         rₑ -> begin
-            # want to scale the initial position with radius
-            # since redshift / jacobian values calculated at large impact parameters
-            # seem to be inaccurate? either that or the root finder is up to something
-            # but the problems seem to disappear by just keeping everything at low impact
-            x_prob = SVector{4}(x[1], x[2], x[3], x[4])
             ctf = cunningham_transfer_function(
+                setup,
                 m,
-                x_prob,
+                x,
                 d,
                 rₑ,
                 ;
-                chart = chart_for_metric(m, 10 * x_prob[2]),
-                max_time = 10 * x_prob[2],
-                kwargs...,
+                verbose = verbose,
+                solver_kwargs...,
             )
-            itp = interpolate_branches(ctf; h = h)
+            itp = interpolate_branches(ctf; h = setup.h)
             ProgressMeter.next!(progress_bar)
             itp
         end
-
     # calculate interpolated transfer functions for each emission radius
     InterpolatingTransferBranches(_threaded_map(𝔉, radii))
 end
