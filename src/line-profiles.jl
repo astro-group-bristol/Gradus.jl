@@ -1,7 +1,3 @@
-abstract type AbstractLineProfileAlgorithm end
-struct CunninghamLineProfile <: AbstractLineProfileAlgorithm end
-struct BinnedLineProfile <: AbstractLineProfileAlgorithm end
-
 @inline function lineprofile(
     m::AbstractMetric,
     u,
@@ -18,7 +14,7 @@ end
     d::AbstractAccretionGeometry,
     profile::AbstractDiscProfile;
     bins = collect(range(0.1, 1.5, 180)),
-    algorithm = BinnedLineProfile(),
+    algorithm = BinningMethod(),
     kwargs...,
 )
     lineprofile(
@@ -38,7 +34,7 @@ end
     m::AbstractMetric,
     u,
     d::AbstractAccretionGeometry;
-    algorithm::AbstractLineProfileAlgorithm = CunninghamLineProfile(),
+    algorithm::AbstractComputationalMethod = TransferFunctionMethod(),
     kwargs...,
 )
     lineprofile(bins, ε, m, u, d, algorithm; kwargs...)
@@ -50,7 +46,7 @@ function lineprofile(
     m::AbstractMetric,
     u,
     d::AbstractAccretionGeometry,
-    ::CunninghamLineProfile,
+    ::TransferFunctionMethod,
     ;
     minrₑ = isco(m) + 1e-2, # delta to avoid numerical instabilities
     maxrₑ = 50,
@@ -72,7 +68,7 @@ function lineprofile(
     m::AbstractMetric{T},
     u,
     d::AbstractAccretionGeometry,
-    ::BinnedLineProfile;
+    ::BinningMethod;
     λ_max = 2 * u[2],
     redshift_pf = ConstPointFunctions.redshift(m, u),
     verbose = false,
@@ -113,4 +109,4 @@ function lineprofile(
     bins, flux ./ sum(flux)
 end
 
-export AbstractLineProfileAlgorithm, BinnedLineProfile, CunninghamLineProfile, lineprofile
+export AbstractComputationalMethod, BinningMethod, TransferFunctionMethod, lineprofile
