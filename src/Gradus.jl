@@ -395,6 +395,11 @@ abstract type AbstractDirectionSampler{SkyDomain,Generator} end
 
 struct EnsembleEndpointThreads end
 
+
+abstract type AbstractComputationalMethod end
+struct TransferFunctionMethod <: AbstractComputationalMethod end
+struct BinningMethod <: AbstractComputationalMethod end
+
 include("orthonormalization.jl")
 include("utils.jl")
 include("solution-processing.jl")

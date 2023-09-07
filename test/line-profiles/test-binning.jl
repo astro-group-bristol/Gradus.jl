@@ -15,7 +15,7 @@ x, y = lineprofile(
     m,
     u,
     d,
-    BinnedLineProfile();
+    BinningMethod();
     plane = plane,
     callback = domain_upper_hemisphere(),
 )
@@ -40,7 +40,7 @@ x, y = lineprofile(
     m,
     u,
     d,
-    BinnedLineProfile();
+    BinningMethod();
     plane = plane,
     callback = domain_upper_hemisphere(),
 )

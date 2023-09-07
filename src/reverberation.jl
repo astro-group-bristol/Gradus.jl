@@ -44,14 +44,39 @@ function lag_frequency(t, f::AbstractMatrix; flo = 5e-5, kwargs...)
     lag_frequency(t_extended, ψ_extended; kwargs...)
 end
 
-# todo: this interface would be lovely to support, but handling all the kwargs
-# is a real nightmare
-#
-# function lag_frequency(m::AbstractMetric, x, d::AbstractAccretionGeometry, model::AbstractCoronaModel)
-#     other_kwargs, em_setup = _EmissivityProfileSetup(T, spectrum; kwargs...)
-#     solver_kwargs, 
-#     emissivity_profile(em_setup, m, d, model; solver_kwargs...)
-# end
+function lag_frequency(
+    m::AbstractMetric{T},
+    x,
+    d::AbstractAccretionGeometry,
+    model::AbstractCoronaModel;
+    Nr = 6000,
+    bins = collect(range(0.0, 1.5, 500)),
+    tbins = collect(range(0, 1000.0, 2000)),
+    spectrum = PowerLawSpectrum(2),
+    radii = collect(range(Gradus.isco(m) + 1e-2, 300.0, 100)),
+    kwargs...,
+) where {T}
+    other_kwargs, em_setup = _EmissivityProfileSetup(T, spectrum; kwargs...)
+    solver_kwargs, tf_setup = _TransferFunctionSetup(T; other_kwargs...)
+
+    prof = emissivity_profile(em_setup, m, d, model; solver_kwargs...)
+    t0 = continuum_time(m, x, model; solver_kwargs...)
+    itb = interpolated_transfer_branches(tf_setup, m, x, d, radii; solver_kwargs...)
+
+    flux = @time Gradus.integrate_lagtransfer(
+        prof,
+        itb,
+        radii,
+        bins,
+        tbins;
+        t0 = t0,
+        Nr = Nr,
+        h = tf_setup.h,
+    )
+    flux[flux.==0] .= NaN
+
+    tbins, bins, flux
+end
 
 function continuum_time(m::AbstractMetric, x, model::AbstractCoronaModel; kwargs...)
     pos, _ = Gradus.sample_position_velocity(m, model)

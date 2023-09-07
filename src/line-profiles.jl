@@ -1,7 +1,3 @@
-abstract type AbstractLineProfileAlgorithm end
-struct CunninghamLineProfile <: AbstractLineProfileAlgorithm end
-struct BinnedLineProfile <: AbstractLineProfileAlgorithm end
-
 @inline function lineprofile(
     m::AbstractMetric,
     u,
@@ -16,12 +12,20 @@ end
     m::AbstractMetric,
     u,
     d::AbstractAccretionGeometry,
-    ep::AbstractDiscProfile;
+    profile::AbstractDiscProfile;
     bins = collect(range(0.1, 1.5, 180)),
-    algorithm = BinnedLineProfile(),
+    method = BinningMethod(),
     kwargs...,
 )
-    lineprofile(bins, r -> ep.f.ε(r), m, u, d; algorithm = algorithm, kwargs...)
+    lineprofile(
+        bins,
+        r -> emissivity_at(profile, r),
+        m,
+        u,
+        d;
+        method = method,
+        kwargs...,
+    )
 end
 
 @inline function lineprofile(
@@ -30,10 +34,10 @@ end
     m::AbstractMetric,
     u,
     d::AbstractAccretionGeometry;
-    algorithm::AbstractLineProfileAlgorithm = CunninghamLineProfile(),
+    method::AbstractComputationalMethod = TransferFunctionMethod(),
     kwargs...,
 )
-    lineprofile(bins, ε, m, u, d, algorithm; kwargs...)
+    lineprofile(bins, ε, m, u, d, method; kwargs...)
 end
 
 function lineprofile(
@@ -42,7 +46,7 @@ function lineprofile(
     m::AbstractMetric,
     u,
     d::AbstractAccretionGeometry,
-    ::CunninghamLineProfile,
+    ::TransferFunctionMethod,
     ;
     minrₑ = isco(m) + 1e-2, # delta to avoid numerical instabilities
     maxrₑ = 50,
@@ -64,7 +68,7 @@ function lineprofile(
     m::AbstractMetric{T},
     u,
     d::AbstractAccretionGeometry,
-    ::BinnedLineProfile;
+    ::BinningMethod;
     λ_max = 2 * u[2],
     redshift_pf = ConstPointFunctions.redshift(m, u),
     verbose = false,
@@ -105,4 +109,4 @@ function lineprofile(
     bins, flux ./ sum(flux)
 end
 
-export AbstractLineProfileAlgorithm, BinnedLineProfile, CunninghamLineProfile, lineprofile
+export AbstractComputationalMethod, BinningMethod, TransferFunctionMethod, lineprofile
