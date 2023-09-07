@@ -17,15 +17,7 @@ end
     method = BinningMethod(),
     kwargs...,
 )
-    lineprofile(
-        bins,
-        r -> emissivity_at(profile, r),
-        m,
-        u,
-        d;
-        method = method,
-        kwargs...,
-    )
+    lineprofile(bins, r -> emissivity_at(profile, r), m, u, d; method = method, kwargs...)
 end
 
 @inline function lineprofile(
