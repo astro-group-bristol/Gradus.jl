@@ -6,7 +6,7 @@ tracing_suite = BenchmarkGroup(["tracing"])
 m = KerrMetric(M = 1.0, a = 0.0)
 u = SVector(0.0, 1000.0, deg2rad(75.0), 0.0)
 v = map_impact_parameters(m, u, 4.0, 0.0)
-d = GeometricThinDisc(0.0, 1000.0, π / 2)
+d = ThinDisc(0.0, 1000.0)
 time_span = (0.0, 2000.0)
 
 # single position, single velocity
