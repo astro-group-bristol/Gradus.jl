@@ -220,19 +220,42 @@ function _rear_workhorse(
     function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
         g, J, t, α, β = datum_workhorse(θ)
         # check if the location is visible or not
-        sol = tracegeodesics(
+        is_visible = _trace_is_visible(
             m,
             x,
-            map_impact_parameters(m, x, α, β),
+            α,
+            β,
             d,
-            max_time;
-            save_on = false,
+            rₑ;
+            visible_tolerance = visible_tolerance,
             tracer_kwargs...,
         )
-        gp = unpack_solution(sol)
-        is_visible = abs(rₑ - _equatorial_project(gp.x)) < visible_tolerance
         (g, J, t, is_visible)
     end
+end
+
+function _trace_is_visible(
+    m,
+    x,
+    α,
+    β,
+    d,
+    rₑ;
+    max_time = 2x[2],
+    visible_tolerance = 1e-3,
+    kwargs...,
+)
+    sol = tracegeodesics(
+        m,
+        x,
+        map_impact_parameters(m, x, α, β),
+        d,
+        max_time;
+        save_on = false,
+        kwargs...,
+    )
+    gp = unpack_solution(sol)
+    abs(rₑ - _equatorial_project(gp.x)) < visible_tolerance
 end
 
 function _cunningham_transfer_function!(

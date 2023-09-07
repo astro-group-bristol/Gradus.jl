@@ -1,12 +1,12 @@
 function _find_offset_for_measure(
     measure,
     m::AbstractMetric,
-    u,
+    x,
     d::AbstractAccretionGeometry,
     θₒ;
     zero_atol = 1e-7,
     offset_max = 20.0,
-    max_time = 2 * u[2],
+    max_time = 2 * x[2],
     β₀ = 0,
     α₀ = 0,
     μ = 0,
@@ -15,13 +15,13 @@ function _find_offset_for_measure(
     function _velfunc(r::T) where {T}
         α = r * cos(θₒ) + T(α₀)
         β = r * sin(θₒ) + T(β₀)
-        constrain_all(m, u, map_impact_parameters(m, u, α, β), μ)
+        constrain_all(m, x, map_impact_parameters(m, x, α, β), μ)
     end
 
     # init a reusable integrator
     integ = _init_integrator(
         m,
-        u,
+        x,
         _velfunc(0.0),
         d,
         (0.0, max_time);
@@ -33,21 +33,21 @@ function _find_offset_for_measure(
         if r < 0
             return -1000 * r
         end
-        gp = _solve_reinit!(integ, vcat(u, _velfunc(r)))
+        gp = _solve_reinit!(integ, vcat(x, _velfunc(r)))
         measure(gp)
     end
 
     # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
     r0 = Roots.find_zero(f, offset_max / 2, Roots.Order0(); atol = zero_atol)
 
-    gp0 = _solve_reinit!(integ, vcat(u, _velfunc(r0)))
+    gp0 = _solve_reinit!(integ, vcat(x, _velfunc(r0)))
     r0, gp0
 end
 
 """
     find_offset_for_radius(
         m::AbstractMetric,
-        u,
+        x,
         d::AbstractAccretionDisc,
         radius,
         θₒ;
@@ -70,7 +70,7 @@ the event horizon.
 """
 function find_offset_for_radius(
     m::AbstractMetric,
-    u,
+    x,
     d::AbstractAccretionGeometry,
     rₑ,
     θₒ;
@@ -84,7 +84,7 @@ function find_offset_for_radius(
         end
         rₑ - r
     end
-    r0, gp0 = _find_offset_for_measure(_measure, m, u, d, θₒ; kwargs...)
+    r0, gp0 = _find_offset_for_measure(_measure, m, x, d, θₒ; kwargs...)
 
     if (r0 < 0)
         @warn("Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ")
@@ -97,14 +97,14 @@ function find_offset_for_radius(
 end
 function find_offset_for_radius(
     m::AbstractMetric,
-    u,
+    x,
     d::AbstractThickAccretionDisc,
     rₑ,
     θₒ;
     kwargs...,
 )
     plane = datumplane(d, rₑ)
-    find_offset_for_radius(m, u, plane, rₑ, θₒ; kwargs...)
+    find_offset_for_radius(m, x, plane, rₑ, θₒ; kwargs...)
 end
 
 """
@@ -112,7 +112,7 @@ end
         αs::AbstractVector,
         βs::AbstractVector,
         m::AbstractMetric,
-        u::AbstractVector{T},
+        x::AbstractVector{T},
         d::AbstractAccretionDisc,
         rₑ;
         kwargs...,
@@ -130,7 +130,7 @@ function impact_parameters_for_radius!(
     αs::AbstractVector,
     βs::AbstractVector,
     m::AbstractMetric,
-    u::AbstractVector{T},
+    x::AbstractVector{T},
     d::AbstractAccretionDisc,
     rₑ;
     β₀ = zero(T),
@@ -143,7 +143,7 @@ function impact_parameters_for_radius!(
     θs = range(0, 2π, length(αs))
     @inbounds @threads for i in eachindex(θs)
         θ = θs[i]
-        r, _ = find_offset_for_radius(m, u, d, rₑ, θ; α₀ = α₀, β₀ = β₀, kwargs...)
+        r, _ = find_offset_for_radius(m, x, d, rₑ, θ; α₀ = α₀, β₀ = β₀, kwargs...)
         αs[i] = r * cos(θ) + α₀
         βs[i] = r * sin(θ) + β₀
     end
@@ -153,7 +153,7 @@ end
 """
     function impact_parameters_for_radius(
         m::AbstractMetric,
-        u::AbstractVector{T},
+        x::AbstractVector{T},
         d::AbstractAccretionDisc,
         radius;
         N = 500,
@@ -165,7 +165,7 @@ for `N` impact paramter pairs. Filters for `NaN` and returns `(αs, βs)`.
 """
 function impact_parameters_for_radius(
     m::AbstractMetric,
-    u::AbstractVector{T},
+    x::AbstractVector{T},
     d::AbstractAccretionDisc,
     radius;
     N = 500,
@@ -173,29 +173,64 @@ function impact_parameters_for_radius(
 ) where {T}
     α = zeros(T, N)
     β = zeros(T, N)
-    impact_parameters_for_radius!(α, β, m, u, d, radius; kwargs...)
+    impact_parameters_for_radius!(α, β, m, x, d, radius; kwargs...)
+    α, β
+end
+
+function impact_parameters_for_radius_obscured(
+    m::AbstractMetric,
+    x::AbstractVector{T},
+    d::AbstractAccretionDisc,
+    radius;
+    visible_tolerance = 1e-3,
+    N = 500,
+    β₀ = zero(T),
+    α₀ = zero(T),
+    kwargs...,
+) where {T}
+    α = zeros(T, N)
+    β = zeros(T, N)
+    impact_parameters_for_radius!(α, β, m, x, d, radius; β₀ = β₀, α₀ = α₀, kwargs...)
+
+    I = map(
+        i ->
+            !_trace_is_visible(
+                m,
+                x,
+                α[i],
+                β[i],
+                d,
+                radius;
+                visible_tolerance = visible_tolerance,
+                kwargs...,
+            ),
+        eachindex(α),
+    )
+
+    α[I] .= NaN
+    β[I] .= NaN
     α, β
 end
 
 function jacobian_∂αβ_∂gr(
     m,
-    u,
+    x,
     d,
     α,
     β,
     max_time;
     μ = 0.0,
-    redshift_pf = ConstPointFunctions.redshift(m, u),
+    redshift_pf = ConstPointFunctions.redshift(m, x),
     solver_opts...,
 )
 
     # these type hints are crucial for forward diff to be type stable
-    function _jacobian_f(x::SVector{2,T})::SVector{2,T} where {T}
+    function _jacobian_f(impact_params::SVector{2,T})::SVector{2,T} where {T}
         # use underscores to avoid boxing
-        _α, _β = x
+        _α, _β = impact_params
 
-        v = constrain_all(m, u, map_impact_parameters(m, u, _α, _β), μ)
-        sol = tracegeodesics(m, u, v, d, (0.0, max_time); save_on = false, solver_opts...)
+        v = constrain_all(m, x, map_impact_parameters(m, x, _α, _β), μ)
+        sol = tracegeodesics(m, x, v, d, (0.0, max_time); save_on = false, solver_opts...)
         gp = unpack_solution(sol)
         g = redshift_pf(m, gp, max_time)
         # return disc r and redshift g
@@ -228,7 +263,7 @@ function _make_target_objective(
     target_cart = to_cartesian(target)
     distance_callback = ContinuousCallback(
         (u, λ, integrator) -> begin
-            # get vector distance between current u and target
+            # get vector distance between current x and target
             k = target_cart - to_cartesian(u)
             distance = √sum(i -> i^2, k)
             # update best
