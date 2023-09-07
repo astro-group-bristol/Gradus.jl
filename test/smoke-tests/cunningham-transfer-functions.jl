@@ -3,7 +3,7 @@ using Gradus
 
 function test_ctf1(a, angle, rₑ)
     m = KerrMetric(1.0, a)
-    d = GeometricThinDisc(0.0, Inf, π / 2)
+    d = ThinDisc(0.0, Inf)
     x = SVector(0.0, 10_000, deg2rad(angle), 0.0)
     Gradus.cunningham_transfer_function(
         m,

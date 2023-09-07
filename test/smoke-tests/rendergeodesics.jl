@@ -54,7 +54,7 @@ result = [_run_rendergeodesics(m) for m in metrics]
 @test expected ≈ result rtol = 1e-1
 
 # thin disc
-d = GeometricThinDisc(0.0, 40.0, π / 2)
+d = ThinDisc(0.0, 40.0)
 # last computed 25/08/2023: change rendergeodesic axes behaviour
 expected = [
     38412.08347901267,

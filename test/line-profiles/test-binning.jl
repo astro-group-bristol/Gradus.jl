@@ -4,7 +4,7 @@ using StaticArrays
 
 m = KerrMetric(M = 1.0, a = 0.6)
 u = @SVector [0.0, 1000.0, deg2rad(60), 0.0]
-d = GeometricThinDisc(Gradus.isco(m), 250.0, π / 2)
+d = ThinDisc(Gradus.isco(m), 250.0)
 
 plane = PolarPlane(GeometricGrid(); Nr = 100, Nθ = 400)
 
@@ -33,7 +33,7 @@ g_high = x[end-findfirst(>(0), reverse(y))]
 
 # test for other metrics
 m = JohannsenPsaltisMetric(M = 1.0, a = 0.6, ϵ3 = 2.0)
-d = GeometricThinDisc(Gradus.isco(m), 250.0, π / 2)
+d = ThinDisc(Gradus.isco(m), 250.0)
 x, y = lineprofile(
     bins,
     (r) -> r^(-3),

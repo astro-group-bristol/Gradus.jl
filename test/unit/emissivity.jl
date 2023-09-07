@@ -3,7 +3,7 @@ using Gradus
 
 m = KerrMetric(1.0, 0.998)
 model = LampPostModel(h = 10.0)
-d = GeometricThinDisc(0.0, 500.0, π / 2)
+d = ThinDisc(0.0, 500.0)
 
 # using point source angular method
 profile = emissivity_profile(m, d, model; n_samples = 20)
