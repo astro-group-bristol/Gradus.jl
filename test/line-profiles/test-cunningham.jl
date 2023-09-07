@@ -4,7 +4,7 @@ using StaticArrays
 
 m = KerrMetric(M = 1.0, a = 0.6)
 u = @SVector [0.0, 1000.0, deg2rad(60), 0.0]
-d = GeometricThinDisc(0.0, 250.0, π / 2)
+d = ThinDisc(0.0, 250.0)
 
 bins = collect(range(0.1, 1.3, 100))
 x, y =

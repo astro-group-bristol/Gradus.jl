@@ -10,7 +10,7 @@ function _lorentz_factor(a, r)
 end
 
 m = KerrMetric(1.0, 0.998)
-d = GeometricThinDisc(0.0, 1000.0, π / 2)
+d = ThinDisc(0.0, 1000.0)
 
 rrange = collect(Gradus.Grids._geometric_grid(Gradus.isco(m), 1000.0, 100))
 

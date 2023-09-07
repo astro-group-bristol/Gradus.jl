@@ -8,7 +8,7 @@ using StaticArrays
     u = @SVector [0.0, 100.0, deg2rad(85), 0.0]
 
     function run_pointfunction(m, pf)
-        d = GeometricThinDisc(10.0, 40.0, deg2rad(90.0))
+        d = ThinDisc(10.0, 40.0)
         α, β, img = rendergeodesics(
             m,
             u,

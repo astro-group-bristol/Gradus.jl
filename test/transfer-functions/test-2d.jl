@@ -6,7 +6,7 @@ x = SVector(0.0, 1e6, deg2rad(30), 0.0)
 
 plane = PolarPlane(GeometricGrid(), Nr = 20, Nθ = 20)
 
-d = GeometricThinDisc(Gradus.isco(m), 500.0, π / 2)
+d = ThinDisc(Gradus.isco(m), 500.0)
 model = LampPostModel(h = 10.0, θ = deg2rad(0.0001))
 
 # calculate transfer functions
@@ -42,7 +42,7 @@ prof = emissivity_profile(
 )
 
 radii = Gradus.Grids._inverse_grid(Gradus.isco(m), 100.0, 5)
-d = GeometricThinDisc(0.0, 500.0, π / 2)
+d = ThinDisc(0.0, 500.0)
 itb = @time Gradus.interpolated_transfer_branches(m, x, d, radii)
 
 bins = collect(range(0.0, 1.5, 100))

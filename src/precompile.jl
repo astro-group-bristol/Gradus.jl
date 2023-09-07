@@ -7,12 +7,7 @@ Base.precompile(
     },
 )   # time: 5.720331
 Base.precompile(
-    Tuple{
-        typeof(lineprofile),
-        KerrMetric{Float64},
-        SVector{4,Float64},
-        GeometricThinDisc{Float64},
-    },
+    Tuple{typeof(lineprofile),KerrMetric{Float64},SVector{4,Float64},ThinDisc{Float64}},
 )   # time: 2.5695212
 Base.precompile(
     Tuple{
@@ -51,7 +46,7 @@ Base.precompile(
         NamedTuple{(:n_samples,),Tuple{Int64}},
         typeof(emissivity_profile),
         KerrMetric{Float64},
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         LampPostModel{Float64},
     },
 )   # time: 0.9623503
@@ -61,7 +56,7 @@ Base.precompile(
         NamedTuple{(:n_samples,),Tuple{Int64}},
         typeof(tracecorona),
         KerrMetric{Float64},
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         LampPostModel{Float64},
     },
 )   # time: 0.4676826
@@ -94,7 +89,7 @@ Base.precompile(
         typeof(tracegeodesics),
         KerrMetric{Float64},
         LampPostModel{Float64},
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         Vararg{Any},
     },
 )   # time: 0.3443357
@@ -105,7 +100,7 @@ Base.precompile(
         typeof(rendergeodesics),
         KerrMetric{Float64},
         SVector{4,Float64},
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         Vararg{Any},
     },
 )   # time: 0.19957814
@@ -131,7 +126,7 @@ Base.precompile(
         typeof(rendergeodesics),
         KerrMetric{Float64},
         SVector{4,Float64},
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         Vararg{Any},
     },
 )   # time: 0.0841068
@@ -184,7 +179,7 @@ Base.precompile(
         KerrMetric{Float64},
         SVector{4,Float64},
         SVector{4,Float64},
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         Float64,
     },
 )   # time: 0.030030003
@@ -195,7 +190,7 @@ Base.precompile(
         KerrMetric{Float64},
         SVector{4,Float64},
         SVector{4,Float64},
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         Float64,
     },
 )   # time: 0.01967225
@@ -211,7 +206,7 @@ Base.precompile(
         KerrMetric{Float64},
         SVector{4,Float64},
         Function,
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         Float64,
     },
 )   # time: 0.010621044
@@ -227,7 +222,7 @@ Base.precompile(
         KerrMetric{Float64},
         SVector{4,Float64},
         Function,
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         Float64,
     },
 )   # time: 0.008629832
@@ -238,7 +233,7 @@ Base.precompile(
         KerrMetric{Float64},
         Vector{SVector{4,Float64}},
         Vector{SVector{4,Float64}},
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         Float64,
     },
 )   # time: 0.007926913
@@ -257,7 +252,7 @@ Base.precompile(
         typeof(Core.kwcall),
         NamedTuple{(:gtol,),Tuple{Float64}},
         typeof(distance_to_disc),
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         SVector{9,Float64},
     },
 )   # time: 0.003949623
@@ -266,7 +261,7 @@ Base.precompile(
         typeof(Core.kwcall),
         NamedTuple{(:gtol,),Tuple{Float64}},
         typeof(distance_to_disc),
-        GeometricThinDisc{Float64},
+        ThinDisc{Float64},
         SVector{8,Float64},
     },
 )   # time: 0.001979128

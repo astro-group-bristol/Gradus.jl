@@ -3,7 +3,7 @@ using Gradus
 
 m = KerrMetric(1.0, 0.998)
 lp = LampPostModel(h = 10.0)
-d = GeometricThinDisc(0.0, 1000.0, π / 2)
+d = ThinDisc(0.0, 1000.0)
 
 sols = @time tracegeodesics(
     m,

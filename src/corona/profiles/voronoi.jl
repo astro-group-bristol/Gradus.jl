@@ -10,11 +10,6 @@ struct VoronoiDiscProfile{D,V,G} <: AbstractDiscProfile
         gen::Vector{V},
         gps::Vector{G},
     ) where {D<:AbstractAccretionDisc,V<:AbstractArray,G}
-        if !isapprox(d.inclination, π / 2)
-            return error(
-                "Currently only supported for discs in the equatorial plane (θ=π/2).",
-            )
-        end
         new{D,V,G}(d, polys, gen, gps)
     end
 end

@@ -44,7 +44,7 @@ using StaticArrays
         # only implemented for KerrMetric at the moment
         # because of the vector to local sky methods
         m = KerrMetric(M = 1.0, a = 0.0)
-        d = GeometricThinDisc(Gradus.isco(m), 50.0, deg2rad(90.0))
+        d = ThinDisc(Gradus.isco(m), 50.0)
         model = LampPostModel(h = 10.0, θ = deg2rad(0.001))
 
         for Sampler in [EvenSampler, WeierstrassSampler],

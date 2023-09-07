@@ -424,11 +424,21 @@ include("rendering/rendering.jl")
 include("rendering/utility.jl")
 
 include("tracing/method-implementations/first-order.jl")
-
 include("point-functions.jl")
 
 include("orbits/circular-orbits.jl")
 include("orbits/orbit-solving.jl")
+
+include("metrics/kerr-metric.jl")
+include("metrics/kerr-metric-first-order.jl")
+include("metrics/johannsen-ad.jl")
+include("metrics/johannsen-psaltis-ad.jl")
+include("metrics/morris-thorne-ad.jl")
+include("metrics/kerr-refractive-ad.jl")
+include("metrics/dilaton-axion-ad.jl")
+include("metrics/bumblebee-ad.jl")
+include("metrics/kerr-newman-ad.jl")
+include("metrics/minkowski.jl")
 
 include("geometry/geometry.jl")
 include("geometry/intersections.jl")
@@ -451,24 +461,12 @@ include("corona/flux-calculations.jl")
 include("corona/emissivity.jl")
 include("corona/spectra.jl")
 
-include("metrics/kerr-metric.jl")
-include("metrics/kerr-metric-first-order.jl")
-include("metrics/johannsen-ad.jl")
-include("metrics/johannsen-psaltis-ad.jl")
-include("metrics/morris-thorne-ad.jl")
-include("metrics/kerr-refractive-ad.jl")
-include("metrics/dilaton-axion-ad.jl")
-include("metrics/bumblebee-ad.jl")
-include("metrics/kerr-newman-ad.jl")
-include("metrics/minkowski.jl")
-
 include("special-radii.jl")
 include("redshift.jl")
 include("const-point-functions.jl")
 
 include("line-profiles.jl")
 include("reverberation.jl")
-include("geometry/polish-doughnut.jl")
 
 include("plotting-recipes.jl")
 

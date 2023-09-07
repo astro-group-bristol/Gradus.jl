@@ -128,7 +128,7 @@ All other keyword arguments are forwarded to [`tracegeodesics`](@ref).
 
 ```julia
 m = KerrMetric()
-d = GeometricThinDisc(Gradus.isco(m), 1000.0, π/2)
+d = ThinDisc(Gradus.isco(m), 1000.0)
 model = LampPostModel(h = 10.0)
 
 profile = emissivity_profile(m, d, model; n_samples = 128)

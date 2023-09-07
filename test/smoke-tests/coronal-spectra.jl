@@ -2,7 +2,7 @@ using Gradus
 using Test
 
 m = KerrMetric(1.0, 0.998)
-d = GeometricThinDisc(0.0, 100.0, π / 2)
+d = ThinDisc(0.0, 100.0)
 
 model = LampPostModel(h = 10.0)
 

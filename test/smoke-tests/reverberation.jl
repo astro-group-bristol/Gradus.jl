@@ -30,7 +30,7 @@ end
 
 m = KerrMetric(1.0, 0.998)
 x = SVector(0.0, 10_000.0, deg2rad(45), 0.0)
-d = GeometricThinDisc(0.0, Inf, π / 2)
+d = ThinDisc(0.0, Inf)
 
 radii = Gradus.Grids._inverse_grid(Gradus.isco(m), 100.0, 10)
 itb = Gradus.interpolated_transfer_branches(m, x, d, radii; β₀ = 2.0)
