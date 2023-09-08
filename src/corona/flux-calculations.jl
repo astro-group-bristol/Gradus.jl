@@ -74,11 +74,11 @@ function flux_source_to_disc(
         g_2 = metric(m, gp.x)
 
         # energy at source
-        @tullio E_s := -g_1[i, j] * gp.v_init[i] * v_source[j]
+        E_s = dotproduct(g_1, gp.v_init, v_source)
 
         # energy at disc
         v_disc = disc_velocity(_equatorial_project(gp.x))
-        @tullio E_d := -g_2[i, j] * gp.v[i] * v_disc[j]
+        E_d = dotproduct(g_2, gp.v, v_disc)
 
         # relative redshift source to disc
         g_sd = E_d / E_s
