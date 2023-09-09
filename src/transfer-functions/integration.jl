@@ -138,10 +138,8 @@ end
 function _trapezoidal_weight(X, x, i)
     if i == 1
         X[i+1] - x
-    elseif i == lastindex(X)
-        x - X[i-1]
     else
-        X[i+1] - X[i-1]
+        x - X[i-1]
     end
 end
 
