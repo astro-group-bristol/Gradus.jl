@@ -61,5 +61,27 @@ function distance_to_disc(d::AbstractThickAccretionDisc, x4; gtol)
     abs(z) - height - (gtol * x4[2])
 end
 
+function _cartesian_tangent_vector(ρ, d::AbstractThickAccretionDisc)
+    function _parameterization(r)
+        xz_parameterize(d, r)
+    end
+    ∇f = ForwardDiff.derivative(_parameterization, ρ)
+    v = SVector(∇f[1], 0, ∇f[2])
+    v ./ √(v[1]^2 + v[2]^2 + v[3]^2)
+end
+
+function _cartesian_surface_normal(ρ, d::AbstractThickAccretionDisc)
+    ∇f = _cartesian_tangent_vector(ρ, d)
+    # rotate 90 degrees in about ϕ̂
+    SVector(-∇f[3], ∇f[2], ∇f[1])
+end
+
+function _rotate_cartesian_about_z(n, ϕ)
+    SVector(n[1] * cos(ϕ), n[1] * sin(ϕ), n[3])
+end
+
+function _cartesian_surface_normal(ρ, ϕ, d::AbstractThickAccretionDisc)
+    _rotate_cartesian_about_z(_cartesian_surface_normal(ρ, d), ϕ)
+end
 
 export ThickDisc

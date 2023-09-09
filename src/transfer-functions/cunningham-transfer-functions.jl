@@ -147,11 +147,12 @@ function _rear_workhorse_with_impact_parameters(
     d::AbstractAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
-    redshift_pf = ConstPointFunctions.redshift(m, x),
     offset_max = 0.4rₑ + 10,
     zero_atol = 1e-7,
     β₀ = 0,
     α₀ = 0,
+    redshift_pf = ConstPointFunctions.redshift(m, x),
+    jacobian_disc = d,
     tracer_kwargs...,
 )
     function _workhorse(θ)
@@ -180,22 +181,22 @@ function _rear_workhorse_with_impact_parameters(
         J = jacobian_∂αβ_∂gr(
             m,
             x,
-            d,
+            jacobian_disc,
             α,
             β,
             max_time;
             redshift_pf = redshift_pf,
             tracer_kwargs...,
         )
-        (g, J, gp.x[1], α, β)
+        (g, J, gp, α, β)
     end
     (_workhorse, tracer_kwargs)
 end
 function _rear_workhorse(m::AbstractMetric, x, d::AbstractAccretionDisc, rₑ; kwargs...)
     workhorse, _ = _rear_workhorse_with_impact_parameters(m, x, d, rₑ; kwargs...)
     function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
-        g, J, t, _, _ = workhorse(θ)
-        g, J, t
+        g, J, gp, _, _ = workhorse(θ)
+        g, J, gp.x[1]
     end
 end
 
@@ -205,7 +206,6 @@ function _rear_workhorse(
     d::AbstractThickAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
-    visible_tolerance = 1e-3,
     kwargs...,
 )
     plane = datumplane(d, rₑ)
@@ -215,47 +215,15 @@ function _rear_workhorse(
         plane,
         rₑ;
         max_time = max_time,
+        jacobian_disc = d,
         kwargs...,
     )
+    n = _cartesian_surface_normal(rₑ, d)
     function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
-        g, J, t, α, β = datum_workhorse(θ)
-        # check if the location is visible or not
-        is_visible = _trace_is_visible(
-            m,
-            x,
-            α,
-            β,
-            d,
-            rₑ;
-            visible_tolerance = visible_tolerance,
-            tracer_kwargs...,
-        )
-        (g, J, t, is_visible)
+        g, J, gp, _, _ = datum_workhorse(θ)
+        is_visible = _is_visible(m, d, gp, n)
+        (g, J, gp.x[1], is_visible)
     end
-end
-
-function _trace_is_visible(
-    m,
-    x,
-    α,
-    β,
-    d,
-    rₑ;
-    max_time = 2x[2],
-    visible_tolerance = 1e-3,
-    kwargs...,
-)
-    sol = tracegeodesics(
-        m,
-        x,
-        map_impact_parameters(m, x, α, β),
-        d,
-        max_time;
-        save_on = false,
-        kwargs...,
-    )
-    gp = unpack_solution(sol)
-    abs(rₑ - _equatorial_project(gp.x)) < visible_tolerance
 end
 
 function _cunningham_transfer_function!(

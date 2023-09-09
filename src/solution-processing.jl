@@ -114,6 +114,7 @@ function unpack_solution_full(
             ui = SVector{4,T}(us[i][1:4])
             vi = SVector{4,T}(us[i][5:8])
             ti = ts[i]
+            aux = unpack_auxiliary(us[i])
             GeodesicPoint(
                 get_status_code(sol.prob.p),
                 t_start,
@@ -122,6 +123,7 @@ function unpack_solution_full(
                 ui,
                 v_start,
                 vi,
+                aux,
             )
         end
     end
