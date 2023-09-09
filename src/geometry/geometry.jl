@@ -10,9 +10,16 @@ function to_cartesian(vec::SVector{3,T}) where {T}
     SVector{3,T}(to_cartesian(vec[1], vec[2], vec[3]))
 end
 
-function to_cartesian(r, ϕ, θ)
-    sinϕ = sin(ϕ)
-    (r * sinϕ * cos(θ), r * sinϕ * sin(θ), r * cos(ϕ))
+function to_cartesian(r, θ, ϕ)
+    sinθ = sin(θ)
+    (r * sinθ * cos(ϕ), r * sinθ * sin(ϕ), r * cos(θ))
+end
+
+function to_spherical(x, y, z)
+    r = √(x^2 + y^2 + z^2)
+    θ = acos(z / r)
+    ϕ = atan(y, x)
+    (r, θ, ϕ)
 end
 
 """

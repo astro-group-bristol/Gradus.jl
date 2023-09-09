@@ -49,13 +49,17 @@ end
 cross_section(d::ThickDisc, x4) = d.f(x4, d.params...)
 cross_section(d::ThickDisc{T,F,Nothing}, x4) where {T,F} = d.f(x4)
 
+xz_parameterize(d::AbstractAccretionDisc, ρ) =
+    SVector(ρ, cross_section(d, SVector(0, ρ, π / 2, 0)))
+
 function distance_to_disc(d::AbstractThickAccretionDisc, x4; gtol)
     height = cross_section(d, x4)
-    if height <= 0.0
-        return 1.0
+    if height <= 0
+        return one(eltype(x4))
     end
     z = @inbounds x4[2] * cos(x4[3])
     abs(z) - height - (gtol * x4[2])
 end
+
 
 export ThickDisc

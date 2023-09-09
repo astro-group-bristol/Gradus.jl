@@ -4,9 +4,7 @@ end
 optical_property(::Type{<:DatumPlane}) = OpticallyThin()
 
 function distance_to_disc(d::DatumPlane{T}, x4; gtol) where {T}
-    h = @inbounds let r = x4[2], θ = x4[3], ϕ = x4[4]
-        r * cos(θ)
-    end
+    h = x4[2] * cos(x4[3])
     abs(h) - d.height - (gtol * x4[2])
 end
 

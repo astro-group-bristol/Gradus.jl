@@ -16,10 +16,11 @@ ThinDisc(; inner_radius = 0.0, outer_radius = 500.0) = ThinDisc(inner_radius, ou
 optical_property(::Type{<:ThinDisc}) = OpticallyThin()
 
 @fastmath function distance_to_disc(d::ThinDisc{T}, x4; gtol) where {T}
+    ρ = _equatorial_project(x4)
+    if ρ < d.inner_radius || ρ > d.outer_radius
+        return 1.0
+    end
     p = @inbounds let r = x4[2], θ = x4[3], ϕ = x4[4]
-        if r < d.inner_radius || r > d.outer_radius
-            return 1.0
-        end
         sinθ = sin(θ)
         @SVector [r * sinθ * cos(ϕ), r * sinθ * sin(ϕ), r * cos(θ)]
     end
