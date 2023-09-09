@@ -45,7 +45,7 @@ end
 cross_section(d::AbstractThickAccretionDisc, x4) =
     error("Not implemented for $(typeof(d)).")
 r_cross_section(d::AbstractThickAccretionDisc, r::Number) =
-    cross_section(d, SVector(0.0, r, π / 2, 0.0))
+    cross_section(d, SVector(0, r, π / 2, 0))
 
 struct EllipticalDisc{T} <: AbstractAccretionDisc{T}
     inner_radius::T

@@ -63,6 +63,14 @@ function _cart_to_spher_jacobian(θ, ϕ)
     ]
 end
 
+function _spher_to_cart_jacobian(θ, ϕ, r)
+    @SMatrix [
+        sin(θ)*cos(ϕ) r*cos(θ)*cos(ϕ) -r*sin(θ)*sin(ϕ)
+        sin(θ)*sin(ϕ) r*cos(θ)*sin(ϕ) r*sin(θ)*cos(ϕ)
+        cos(θ) -r*sin(θ) 0
+    ]
+end
+
 function _cart_local_direction(θ, ϕ)
     @SVector [sin(θ) * cos(ϕ), sin(θ) * sin(ϕ), cos(θ)]
 end

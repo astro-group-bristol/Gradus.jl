@@ -182,7 +182,6 @@ function impact_parameters_for_radius_obscured(
     x::AbstractVector{T},
     d::AbstractAccretionDisc,
     radius;
-    visible_tolerance = 1e-3,
     N = 500,
     β₀ = zero(T),
     α₀ = zero(T),
@@ -192,24 +191,41 @@ function impact_parameters_for_radius_obscured(
     β = zeros(T, N)
     impact_parameters_for_radius!(α, β, m, x, d, radius; β₀ = β₀, α₀ = α₀, kwargs...)
 
-    I = map(
-        i ->
-            !_trace_is_visible(
-                m,
-                x,
-                α[i],
-                β[i],
-                d,
-                radius;
-                visible_tolerance = visible_tolerance,
-                kwargs...,
-            ),
-        eachindex(α),
+    gps = tracegeodesics(
+        m,
+        x,
+        i -> map_impact_parameters(m, x, α[i], β[i]),
+        datumplane(d, radius),
+        2x[2];
+        ensemble = EnsembleEndpointThreads(),
+        save_on = false,
+        trajectories = length(α),
     )
-
+    n = _cartesian_surface_normal(radius, d)
+    I = [!_is_visible(m, d, gp, n) for gp in gps]
     α[I] .= NaN
     β[I] .= NaN
     α, β
+end
+
+"""
+If dot product between surface normal and the final velocity vector is positive, 
+the point is visible.
+"""
+function _is_visible(m::AbstractMetric, d, gp::AbstractGeodesicPoint, n::SVector{3})
+    gp_new =
+        tracegeodesics(m, gp.x_init, gp.v_init, d, gp.λ_max; save_on = false) |>
+        unpack_solution
+    # geodesics sufficiently close, test the angle
+    v = SVector(gp_new.v[2], gp_new.v[3], gp_new.v[4]) ./ gp_new.v[1]
+    v_geodesic = _spher_to_cart_jacobian(gp_new.x[3], gp_new.x[4], gp_new.x[2]) * v
+    n_rot = _rotate_cartesian_about_z(n, gp_new.x[4])
+
+    X1 = to_cartesian(gp.x)
+    X2 = to_cartesian(gp_new.x)
+    dist = sum(i -> i^2, X1 .- X2)
+
+    return _fast_dot(v_geodesic, n_rot) < 0 && isapprox(dist, 0, atol = 1e-10)
 end
 
 function jacobian_∂αβ_∂gr(
