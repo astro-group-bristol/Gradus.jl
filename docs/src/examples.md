@@ -8,30 +8,25 @@ Depth = 3
 ## Tracing geodesic paths
 
 ```julia
-using Gradus
-using Plots
+using Gradus, Plots
 
 m = JohannsenPsaltisMetric(M=1.0, a=0.6, ϵ3=2.0)
 # observer position
-u = @SVector [0.0, 1000.0, π/2, 0.0]
+x = SVector(0.0, 10000.0, π/2, 0.0)
 
 # set up impact parameter space
 α = collect(range(-10.0, 10.0, 20))
-β = [0.0 for _ in α]
+β = fill(0, size(α))
 
 # build initial velocity and position vectors
-vs = map_impact_parameters(m, u, α, β)
-us = [u for _ in vs]
+vs = map_impact_parameters(m, x, α, β)
+xs = fill(x, size(vs))
 
-sols = tracegeodesics(
-    m, us, vs, (0.0, 2000.0);
-    abstol = 1e-12, reltol = 1e-12
-)
+sols = tracegeodesics(m, xs, vs, 20000.0)
 
 plot_paths(sols, legend = false, n_points = 2048)
 plot_horizon!(m, lw = 2.0, color = :black)
 ```
-
 ![](./example-figures/example-tracing.svg)
 
 Alternatively, plotting the 3D paths from e.g. a lamp-post coronal model:
@@ -50,26 +45,25 @@ sols = tracegeodesics(
 plot_paths_3d(sols, legend=false, extent = 10, t_span = 100.0)
 plot_horizon_3d!(m)
 ```
-
 ![](./example-figures/example-3d-tracing.svg)
 
 ## Shadow
 
 ```julia
-using Gradus
-using Plots
+using Gradus, Plots
 
 m = KerrMetric(1.0, 0.998)
-u = SVector(0.0, 1000.0, π / 2, 0.0)
+x = SVector(0.0, 10000.0, π / 2, 0.0)
 
 α, β, img = rendergeodesics(
     m,
-    u,
+    x,
     # max integration time
-    2000.0,
-    image_width = 1000,
-    image_height = 1000,
-    fov = 70.0,
+    20_000.0,
+    image_width = 800,
+    image_height = 800,
+    αlims = (-4, 8),
+    βlims = (-6, 6),
     verbose = true,
     ensemble = Gradus.EnsembleEndpointThreads(),
 )
@@ -86,7 +80,6 @@ p = heatmap(
 )
 contour!(p, α, β, img, color = :red)
 ```
-
 ![](./example-figures/example-shadow.png)
 
 ## Redshift image
@@ -95,37 +88,35 @@ contour!(p, α, β, img, color = :red)
     The [`Gradus.ConstPointFunctions.redshift`](@ref) function is an analytic solution for redshift, which may not be implemented for every type of metric or disc geometry. See [Interpolating redshifts](@ref) for a more flexible numeric alternative.
 
 ```julia
-using Gradus
-using StaticArrays
-using Plots
+using Gradus, Plots
 
 # metric and metric parameters
 m = KerrMetric(M=1.0, a=1.0)
 # observer position
-u = @SVector [0.0, 1000.0, deg2rad(60), 0.0]
+x = SVector(0.0, 1000.0, deg2rad(60), 0.0)
 # accretion disc
-d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
+d = ThinDisc(1.0, 50.0)
 
 # define point function which filters geodesics that intersected the accretion disc
 # and use those to calculate redshift
-pf = ConstPointFunctions.redshift(m, u) ∘ ConstPointFunctions.filter_intersected()
+pf = ConstPointFunctions.redshift(m, x) ∘ ConstPointFunctions.filter_intersected()
 
 α, β, img = rendergeodesics(
     m,
-    u,
+    x,
     d,
     # maximum integration time
     2000.0,
-    fov = 6.0,
-    image_width = 700,
-    image_height = 240,
+    αlims = (-60, 60), 
+    βlims = (-30, 35),
+    image_width = 800,
+    image_height = 400,
     verbose = true,
     pf = pf,
 )
 
-heatmap(α, β, img)
+heatmap(α, β, img, aspect_ratio = 1)
 ```
-
 ![](./example-figures/example-redshift.png)
 
 ## Redshift line-profile 
@@ -146,7 +137,6 @@ lineprof = fit(Histogram, data, x_bins)
 
 plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)
 ```
-
 ![](./example-figures/example-redshift-histogram.svg)
 
 ## Line profiles
@@ -156,8 +146,8 @@ Line profiles may be calculated using two different methods -- using image-plane
 For a simple maximally-spinning Kerr black hole, the iron line profile (with a delta emission line at 6.4 keV) may be calculated with:
 
 ```julia
-d = GeometricThinDisc(0.0, 400.0, π / 2)
-u = @SVector [0.0, 1000.0, deg2rad(40), 0.0]
+d = ThinDisc(0.0, 400.0)
+x = SVector(0.0, 1000.0, deg2rad(40), 0.0)
 m = KerrMetric(1.0, 0.998)
 
 # maximal integration radius
@@ -168,23 +158,21 @@ maxrₑ = 50.0
 
 # g grid to do flux integration over
 gs = range(0.0, 1.2, 500)
-_, flux = lineprofile(gs, ε, m, u, d, maxrₑ = maxrₑ, verbose = true)
-
-# transform to observed energy
-energy = gs .* 6.4
+_, flux = lineprofile(gs, ε, m, x, d, maxrₑ = maxrₑ, verbose = true)
 
 # plot flux as a function of energy
-plot(energy, flux, legend=false)
+plot(gs, flux, legend=false)
 ```
-
 ![](./example-figures/example-line-profile.svg)
 
 ## Reverberation transfer functions
 
+This first example for calculating the reverberation transfer functions is a binning method. Below is another example using a faster and more efficient method that Gradus provides.
+
 ```julia
 m = KerrMetric(1.0, 0.998)
-u = SVector(0.0, 1000.0, deg2rad(60), 0.0)
-d = GeometricThinDisc(0.0, 1000.0, π / 2)
+x = SVector(0.0, 1000.0, deg2rad(60), 0.0)
+d = ThinDisc(0.0, 1000.0)
 
 # specify coronal geometry
 model = LampPostModel(h = 10.0)
@@ -194,7 +182,7 @@ plane = PolarPlane(GeometricGrid(); Nr = 1800, Nθ = 1800)
 # integrate source to disc and observer to disc
 tf = @time lagtransfer(
     m,
-    u,
+    x,
     d,
     model
     ;
@@ -204,9 +192,12 @@ tf = @time lagtransfer(
     verbose = true,
 )
 
+# compute the continuum spectrum arrival time
+t0 = continuum_time(m, x, model)
+
 # bin into a 2d grid, returning the time and energy axis, 
 # and the flux in each bin
-t, E, f = binflux(tf, N_E = 1500, N_t = 1500)
+t, E, f = binflux(tf, N_E = 1500, N_t = 1500, t0 = t0)
 
 # take the log for visualisation purposes
 I = f .> 0
@@ -223,8 +214,42 @@ p = heatmap(
     clims = (-20, 1)
 )
 ```
-
 ![](./example-figures/example-reverb-tf.png)
+
+An alternative syntax will dispatch our novel time-dependent transfer function integration:
+
+```julia
+# currently needs an infinite disc for the root finder (patch coming soon)
+d = ThinDisc(0.0, Inf)
+radii = Gradus.Grids._inverse_grid(Gradus.isco(m), 1000.0, 100)
+itb = @time Gradus.interpolated_transfer_branches(m, x, d, radii; verbose = true)
+
+# dispatches special methods for calculating the emissivity profile if available
+prof = emissivity_profile(m, d, model; n_samples = 2000)
+
+gbins = collect(range(0.0, 1.4, 500))
+tbins = collect(range(0, 150.0, 500))
+
+flux = Gradus.integrate_lagtransfer(
+    prof, 
+    itb, 
+    radii, 
+    gbins, 
+    tbins; 
+    t0 = t0,
+    Nr = 6000
+)
+
+p = heatmap(
+    tbins,
+    gbins,
+    log.(abs.(flux)),
+    xlabel = "Time (GM/c^3)",
+    ylabel = "Energy (keV)",
+    xlims = [0, 150],
+)
+```
+![](./example-figures/example-reverb-tf-with-tf.png)
 
 ## Covariant radiative transfer
 
@@ -232,7 +257,7 @@ p = heatmap(
 # metric and metric parameters
 m = KerrMetric(M = 1.0, a = 1.0)
 # observer position
-u = SVector(0.0, 1000.0, deg2rad(80), 0.0)
+x = SVector(0.0, 1000.0, deg2rad(80), 0.0)
 # accretion disc
 d = PolishDoughnut(m)
 
@@ -245,21 +270,20 @@ pf = PointFunction((m, gp, t) -> gp.aux[1])
 
 a, b, img = @time rendergeodesics(
     m,
-    u,
+    x,
     d,
     # maximum integration time
     2000.0,
-    fov = 10.0,
-    image_width = 600,
-    image_height = 500,
     verbose = true,
     pf = pf,
+    # instruct the integrator to solve the covariant radiative transfer equation
+    αlims = (-25, 25), 
+    βlims = (-15, 18),
     trace = Gradus.TraceRadiativeTransfer(I₀ = 0),
 )
 
 heatmap(a, b, img, aspect_ratio = 1, xlabel = "α", ylabel = "β")
 ```
-
 ![](./example-figures/example-covariant-radiative-transfer.png)
 
 ## Interpolating redshifts
@@ -267,15 +291,14 @@ heatmap(a, b, img, aspect_ratio = 1, xlabel = "α", ylabel = "β")
 In cases where no analytic redshift solution is known, we can instead interpolate a numeric approximation. For example, interpolating the plunging region velocities and using the analytic solution for general static, axis symmetric metrics outside of the ISCO can be achieved with:
 
 ```julia
-using Gradus
-using Plots
+using Gradus, Plots
 
 # metric and metric parameters
 m = KerrMetric(M=1.0, a=0.4)
 # observer's initial position
 x = SVector(0.0, 1000.0, deg2rad(85), 0.0)
 # accretion disc
-d = GeometricThinDisc(1.0, 50.0, deg2rad(90))
+d = ThinDisc(1.0, 50.0)
 
 pl_int = interpolate_plunging_velocities(m)
 
@@ -289,7 +312,6 @@ pf = redshift ∘ ConstPointFunctions.filter_intersected()
     d,
     # maximum integration time
     2000.0,
-    fov = 6.0,
     image_width = 700,
     image_height = 240,
     verbose = true,
@@ -298,7 +320,6 @@ pf = redshift ∘ ConstPointFunctions.filter_intersected()
 
 heatmap(α, β, img)
 ```
-
 ![](./example-figures/example-interpolated.png)
 
 !!! note
@@ -309,8 +330,7 @@ heatmap(α, β, img)
 Gradus makes it easy to define new height cross sections for thick discs:
 
 ```julia
-using Gradus
-using Plots
+using Gradus, Plots
 
 m = KerrMetric(1.0, 0.0)
 x = SVector(0.0, 1000.0, deg2rad(85), 0.0)
@@ -318,12 +338,11 @@ x = SVector(0.0, 1000.0, deg2rad(85), 0.0)
 # define the disc shape -- return a negative number 
 # where the disc should not be intersected, else the cross 
 # sectional height
-d = ThickDisc() do x
-    r = x[2]
-    if r < 9.0 || r > 11.0
+d = ThickDisc() do ρ
+    if ρ < 9.0 || ρ > 11.0
         return -1.0
     else
-        h = r - 10.0
+        h = ρ - 10.0
         sqrt(1 - h^2)
     end
 end
@@ -334,16 +353,14 @@ end
     x,
     d,
     2000.0,
-    fov = 18.0,
-    image_width = 700,
-    image_height = 350,
+    αlims = (-25, 25), 
+    βlims = (-15, 18),
     verbose = true,
     pf = pf
 )
 
 heatmap(α, β, img, aspect_ratio=1)
 ```
-
 ![](./example-figures/example-thick-disc-doughnut.png)
 
 For more disc on disc geometry, see [`AbstractAccretionDisc`](@ref) and associated sections.
@@ -353,8 +370,7 @@ For more disc on disc geometry, see [`AbstractAccretionDisc`](@ref) and associat
 Simple equatorial circular orbits are straight forward to calculate with Gradus.jl:
 
 ```julia
-using Gradus
-using Plots
+using Gradus, Plots
 
 m = KerrMetric(M=1.0, a=0.8)
 
@@ -369,7 +385,6 @@ end
 
 p
 ```
-
 ![](./example-figures/example-circular-orbits.svg)
 
 ## ISCO
@@ -377,8 +392,7 @@ p
 The [Gradus.isco](@ref) may be calculated with a simple convenience function, as may the energy associated with a given stable circular orbit.
 
 ```julia
-using Gradus
-using Plots
+using Gradus, Plots
 
 # prepare plot
 p = plot(legend=:bottomright, ylabel = "E", xlabel = "r", xscale = :log10)
@@ -405,7 +419,6 @@ end
 # overlay onto plot
 plot!(last.(data), first.(data), color=:black, linestyle=:dash, label="ISCO")
 ```
-
 ![](./example-figures/example-isco.svg)
 
 ## Event horizons and naked singularities
@@ -413,15 +426,14 @@ plot!(last.(data), first.(data), color=:black, linestyle=:dash, label="ISCO")
 Here is an example of how to use [`event_horizon`](@ref) to plot the shape of an event horizon in two dimensions. In the case of a naked singularity, as with the certain parameters combinations in the [`JohannsenPsaltisMetric`](@ref) metric, we see a disconnected region in the plot.
 
 ```julia
-using Gradus
-using Plots
+using Gradus, Plots
 
 function draw_horizon(p, m)
     rs, θs = event_horizon(m, resolution = 200)
     radius = rs
 
-    x = @. radius * cos(θs)
-    y = @. radius * sin(θs)
+    x = @. radius * sin(θs)
+    y = @. radius * cos(θs)
     plot!(p, x, y, label = "a = $(m.a)")
 end
 
@@ -432,7 +444,6 @@ for a in [0.0, 0.5, 0.6, 0.7, 0.8]
 end
 p
 ```
-
 ![](./example-figures/example-horizon.svg)
 
 We can also calculate parameter combinations that lead to naked singularities, and plot the parameter space domains to show exclusion zones:
@@ -467,7 +478,6 @@ heatmap(
     ylabel = "ϵ"
 )
 ```
-
 ![](./example-figures/example-exclusion.png)
 
 ## Cunningham transfer functions
@@ -475,24 +485,22 @@ heatmap(
 Recreating Fig. 1 and 2 from [Bambi et al. (2017)](https://iopscience.iop.org/article/10.3847/1538-4357/aa74c0) for the transfer functions of a Kerr black hole
 
 ```julia
-using Gradus
-using Plots
+using Gradus, Plots
 
 m = KerrMetric(M=1.0, a=0.998)
-d = GeometricThinDisc(0.0, 100.0, π/2)
+d = ThinDisc(0.0, 100.0)
 
 p = plot(legend = false)
 for angle in [3, 35, 50, 65, 74, 85]
     x = @SVector [0.0, 1000.0, deg2rad(angle), 0.0]
     ctf = cunningham_transfer_function(
-        m, x, d, 4.0
+        m, x, d, 4.0; N = 300
     )
     mask = @. (ctf.g✶ > 0.001) & (ctf.g✶ < 0.999)
     @views plot!(p, ctf.g✶[mask], ctf.f[mask])
 end
 p
 ```
-
 ![](./example-figures/example-bambi-fig1.svg)
 
 And Fig. 2:
@@ -505,29 +513,30 @@ p = plot(legend = false)
 for a in [0.0, 0.25, 0.5, 0.75, 0.9, 0.998]
     m = KerrMetric(1.0, a)
     ctf = cunningham_transfer_function(
-        m, x, d, 7.0
+        m, x, d, 7.0; N = 300,
     )
     mask = @. (ctf.g✶ > 0.001) & (ctf.g✶ < 0.999)
     @views plot!(p, ctf.g✶[mask], ctf.f[mask])
 end
 p
 ```
-
 ![](./example-figures/example-bambi-fig2.svg)
+
+
+!!! note
+    For more on transfer functions, how they are calculated and integrated, see [Transfer functions](@ref).
 
 ## Concentric rings
 
 Recreating Figure 2 from Johannsen and Psaltis (2012, II):
 
 ```julia
-using Gradus
-using StaticArrays
-using Plots
+using Gradus, Plots
 
 # their papers has a=-a
 m = KerrMetric(M=1.0, a=-0.4)
-u = @SVector [0.0, 1000, acos(0.25), 0.0]
-d = GeometricThinDisc(0.0, 100.0, π / 2)
+x = @SVector [0.0, 1000, acos(0.25), 0.0]
+d = ThinDisc(0.0, 100.0)
 
 radii = 2.6:1.0:7.6
 
@@ -541,12 +550,11 @@ hline!(p, [0.0], color = :black, linestyle=:dash)
 vline!(p, [0.0], color = :black, linestyle=:dash)
 
 for r in radii
-    α, β = impact_parameters_for_radius(m, u, d, r, N=100)
+    α, β = impact_parameters_for_radius(m, x, d, r, N=100)
     plot!(p, α, β)
 end
 p
 ```
-
 ![](./example-figures/example-concentric.svg)
 
 
@@ -555,8 +563,7 @@ p
 Following [García et al. (2016)], without the magnetic potential, we can implement a model that uses covariant radiative transfer quite straightforwardly:
 
 ```julia
-using Gradus
-using Plots
+using Gradus, Plots
 
 struct HotSpot{T} <: AbstractAccretionDisc{T}
     radius::T
@@ -608,14 +615,12 @@ a, b, img = rendergeodesics(
     hs, 
     20_000.0, 
     verbose = true, 
-    fov = 10.0,
     trace = Gradus.TraceRadiativeTransfer(I₀ = 0.0),
     pf = PointFunction((m, gp, t) -> gp.aux[1]),
 )
 
 heatmap(a, b, img)
 ```
-
 ![](./example-figures/example-hot-spot-slow.svg)
 
 In the fast light regime, with an initial radial angle of `-2.6` gives a very different picture
