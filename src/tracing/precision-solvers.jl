@@ -201,7 +201,7 @@ function impact_parameters_for_radius_obscured(
         save_on = false,
         trajectories = length(α),
     )
-    n = _cartesian_surface_normal(radius, d)
+    n = _cartesian_surface_normal(d, radius)
     I = [!_is_visible(m, d, gp, n) for gp in gps]
     α[I] .= NaN
     β[I] .= NaN
@@ -219,7 +219,7 @@ function _is_visible(m::AbstractMetric, d, gp::AbstractGeodesicPoint, n::SVector
     # geodesics sufficiently close, test the angle
     v = SVector(gp_new.v[2], gp_new.v[3], gp_new.v[4]) ./ gp_new.v[1]
     v_geodesic = _spher_to_cart_jacobian(gp_new.x[3], gp_new.x[4], gp_new.x[2]) * v
-    n_rot = _rotate_cartesian_about_z(n, gp_new.x[4])
+    n_rot = _rotate_about_spinaxis(n, gp_new.x[4])
 
     X1 = to_cartesian(gp.x)
     X2 = to_cartesian(gp_new.x)

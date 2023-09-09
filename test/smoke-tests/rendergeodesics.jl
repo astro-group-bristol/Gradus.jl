@@ -4,12 +4,11 @@ using StaticArrays
 
 # Tests to make sure the basic `rendergeodesics` function works for (ideally) all metrics.
 
-function _thick_disc(u)
-    r = u[2]
-    if r < 9.0 || r > 11.0
+function _thick_disc(ρ)
+    if ρ < 9.0 || ρ > 11.0
         return -1.0
     else
-        x = r - 10.0
+        x = ρ - 10.0
         sqrt(1 - x^2)
     end
 end

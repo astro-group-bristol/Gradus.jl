@@ -113,13 +113,11 @@ function PolishDoughnut(m::AbstractMetric; rₖ = 12.0, n = 0.21, init_r = 5.0, 
     PolishDoughnut(inner_radius, outer_radius, rₖ, n, f)
 end
 
-function cross_section(d::PolishDoughnut, u4)
-    let r = u4[2]
-        if d.inner_radius ≤ r ≤ d.outer_radius
-            d.f(r)
-        else
-            0.0
-        end
+function cross_section(d::PolishDoughnut, ρ)
+    if d.inner_radius ≤ ρ ≤ d.outer_radius
+        d.f(ρ)
+    else
+        zero(typeof(ρ))
     end
 end
 

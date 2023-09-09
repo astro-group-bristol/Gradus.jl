@@ -57,6 +57,7 @@ end
 
 @time @testset "geometry" verbose = true begin
     include("discs/test-polish-doughnut.jl")
+    include("discs/test-geometry.jl")
 end
 
 # little bit of aqua
