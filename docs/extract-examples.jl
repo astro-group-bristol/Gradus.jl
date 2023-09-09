@@ -10,6 +10,14 @@ for line in itt
             push!(code, line)
         end
         push!(examples, join(code, "\n"))
+        # check if we're supposed to output a picture or not
+        img = match(r"!\[.*\]\((.*)\)\s*$", peek(itt))
+        if !isnothing(img)
+            filename = last(splitdir(first(img.captures)))
+            savepath = joinpath(@__DIR__() * "/src/example-figures/", filename)
+            save_line = "savefig(\"$savepath\")"
+            push!(examples, save_line)
+        end
     end
 end
 
