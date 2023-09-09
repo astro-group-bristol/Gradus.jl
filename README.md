@@ -47,7 +47,7 @@ Currently, Gradus.jl can be used for any static, axis-symmetric spacetime to cal
 - non-symmetric disc geometries
 - mesh file geometry
 
-The library is written to make adding new features as effortless as possible. See [Examples](https://astro-group-bristol.github.io/Gradus.jl/dev/examples/examples/) for more. Many new features are currently being developed as our research advances.
+The library is written to make adding new features as effortless as possible. See [Examples](https://astro-group-bristol.github.io/Gradus.jl/dev/examples/) for more. Many new features are currently being developed as our research advances.
 
 Gradus.jl uses [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) and [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) as the backend for integrating and solving the geodesic equation for arbitrary metrics, and vendors the DifferentialEquations.jl solver and callback system, making Gradus.jl easy to extend for new problems. Gradus.jl currently supports multi-CPU integration and analysis, with GPU support on the horizon.
 
