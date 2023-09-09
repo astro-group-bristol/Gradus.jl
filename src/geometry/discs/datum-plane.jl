@@ -8,13 +8,11 @@ function distance_to_disc(d::DatumPlane{T}, x4; gtol) where {T}
     abs(h) - d.height - (gtol * x4[2])
 end
 
-function datumplane(disc::AbstractThickAccretionDisc, r::T) where {T}
-    h = r_cross_section(disc, r)
+function datumplane(disc::AbstractThickAccretionDisc, ρ::T) where {T}
+    h = cross_section(disc, ρ)
     DatumPlane(h)
 end
-function datumplane(disc::AbstractThickAccretionDisc, x::SVector{4})
-    h = cross_section(disc, x)
-    DatumPlane(h)
-end
+datumplane(disc::AbstractThickAccretionDisc, x::SVector{4}) =
+    datumplane(disc, _equatorial_project(x))
 
 export DatumPlane

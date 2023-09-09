@@ -127,6 +127,12 @@ _equatorial_project(r, θ) = r * sin(abs(θ))
 _equatorial_project(x::SVector{4}) = _equatorial_project(x[2], x[3])
 _equatorial_project(x::SVector{8}) = _equatorial_project(x[2], x[3])
 
+_spinaxis_project(r, θ) = r * cos(abs(θ))
+_spinaxis_project(x::SVector{4}) = _spinaxis_project(x[2], x[3])
+_spinaxis_project(x::SVector{8}) = _spinaxis_project(x[2], x[3])
+
+_rotate_about_spinaxis(n::SVector{3}, ϕ) = SVector(n[1] * cos(ϕ), n[1] * sin(ϕ), n[3])
+
 _zero_if_nan(x::T) where {T} = isnan(x) ? zero(T) : x
 
 export cartesian_squared_distance, cartesian_distance, spherical_to_cartesian

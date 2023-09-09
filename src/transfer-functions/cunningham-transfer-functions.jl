@@ -218,7 +218,7 @@ function _rear_workhorse(
         jacobian_disc = d,
         kwargs...,
     )
-    n = _cartesian_surface_normal(rₑ, d)
+    n = _cartesian_surface_normal(d, rₑ)
     function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
         g, J, gp, _, _ = datum_workhorse(θ)
         is_visible = _is_visible(m, d, gp, n)

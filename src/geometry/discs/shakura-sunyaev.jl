@@ -26,12 +26,11 @@ struct ShakuraSunyaev{T} <: AbstractThickAccretionDisc{T}
     risco::T
 end
 
-@fastmath function cross_section(d::ShakuraSunyaev, x)
-    r = _equatorial_project(x)
-    if r < d.risco
-        return -one(typeof(r))
+@fastmath function cross_section(d::ShakuraSunyaev, ρ)
+    if ρ < d.risco
+        return -one(typeof(ρ))
     end
-    H = (3 / 2) * inv(d.η) * (d.Ṁ / d.Ṁedd) * (1 - sqrt(d.risco / r))
+    H = (3 / 2) * inv(d.η) * (d.Ṁ / d.Ṁedd) * (1 - sqrt(d.risco / ρ))
     2H
 end
 
