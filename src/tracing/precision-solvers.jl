@@ -219,7 +219,7 @@ function jacobian_∂αβ_∂gr(
     α,
     β,
     max_time;
-    μ = 0.0,
+    μ = 0,
     redshift_pf = ConstPointFunctions.redshift(m, x),
     solver_opts...,
 )

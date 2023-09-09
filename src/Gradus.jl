@@ -491,6 +491,8 @@ export metric_components
 
 export StatusCodes
 
+export BinningMethod, TransferFunctionMethod
+
 # export static arrays too
 export SVector, @SVector
 

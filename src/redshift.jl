@@ -1,8 +1,7 @@
 module RedshiftFunctions
 import ..Gradus
-import ..Gradus: __BoyerLindquistFO, AbstractMetric, KerrMetric, metric
+import ..Gradus: __BoyerLindquistFO, AbstractMetric, KerrMetric, metric, dotproduct
 using StaticArrays
-using Tullio: @tullio
 
 """
     eⱽ(M, r, a, θ)
@@ -193,8 +192,6 @@ end
 
 @inline function redshift_function(m::KerrMetric{T}, gp) where {T}
     isco = Gradus.isco(m)
-    # metric matrix at observer
-    g_obs = metric(m, gp.x_init)
     # fixed stationary observer velocity
     v_obs = SVector{4,T}(1, 0, 0, 0)
 
@@ -208,10 +205,8 @@ end
         Gradus.CircularOrbits.fourvelocity(m, r)
     end
 
-    # get metric matrix at position on disc
-    g = metric(m, gp.x)
-    @tullio E_disc := -g[i, j] * gp.v[i] * v_disc[j]
-    @tullio E_obs := -g_obs[i, j] * gp.v_init[i] * v_obs[j]
+    E_disc = dotproduct(m, gp.x, gp.v, v_disc)
+    E_obs = dotproduct(m, gp.x_init, gp.v_init, v_obs)
     E_obs / E_disc
 end
 
@@ -261,8 +256,8 @@ function interpolate_redshift(plunging_interpolation, u::SVector{4,T}) where {T}
 
                 # get metric matrix at position on disc
                 g = metric(plunging_interpolation.m, gp.x)
-                @tullio E_disc := -g[i, j] * gp.v[i] * v_disc[j]
-                @tullio E_obs := -g_obs[i, j] * gp.v_init[i] * v_obs[j]
+                E_disc = dotproduct(g, gp.v, v_disc)
+                E_obs = dotproduct(g_obs, gp.v_init, v_obs)
                 E_obs / E_disc
             end
         end

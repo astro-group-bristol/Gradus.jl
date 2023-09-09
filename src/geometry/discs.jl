@@ -55,7 +55,7 @@ end
 
 function distance_to_disc(d::EllipticalDisc, x4; gtol)
     if d.semi_major < x4[2] || x4[2] < d.inner_radius
-        return 1.0
+        return one(eltype(x4))
     end
     # equation of ellipse
     y = √((1 - (x4[2] / d.semi_major)^2) * d.semi_minor^2)
