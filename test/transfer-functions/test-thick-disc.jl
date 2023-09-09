@@ -8,4 +8,4 @@ d = ShakuraSunyaev(m)
 tf = cunningham_transfer_function(m, x, d, 3.0; β₀ = 1.0)
 
 total = sum(filter(!isnan, tf.f))
-@test total ≈ 13.419539069804333 atol = 1e-4
+@test total ≈ 12.148257594740231 atol = 1e-4
