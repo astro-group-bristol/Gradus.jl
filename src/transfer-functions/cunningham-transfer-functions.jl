@@ -147,11 +147,12 @@ function _rear_workhorse_with_impact_parameters(
     d::AbstractAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
-    redshift_pf = ConstPointFunctions.redshift(m, x),
     offset_max = 0.4rₑ + 10,
     zero_atol = 1e-7,
     β₀ = 0,
     α₀ = 0,
+    redshift_pf = ConstPointFunctions.redshift(m, x),
+    jacobian_disc = d,
     tracer_kwargs...,
 )
     function _workhorse(θ)
@@ -180,7 +181,7 @@ function _rear_workhorse_with_impact_parameters(
         J = jacobian_∂αβ_∂gr(
             m,
             x,
-            d,
+            jacobian_disc,
             α,
             β,
             max_time;
@@ -214,6 +215,7 @@ function _rear_workhorse(
         plane,
         rₑ;
         max_time = max_time,
+        jacobian_disc = d,
         kwargs...,
     )
     n = _cartesian_surface_normal(rₑ, d)
