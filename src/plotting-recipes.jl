@@ -1,7 +1,14 @@
 using RecipesBase
 
-function _extract_path(sol, n_points; projection = :none, t_span = 100.0)
-    mid_i = max(1, length(sol.u) ÷ 2)
+function _extract_path(sol, n_points; projection = :none, t_span = 30.0)
+    status = Gradus.get_status_code(sol.prob.p)
+    mid_i =
+        if (status == StatusCodes.IntersectedWithGeometry) ||
+           (status == StatusCodes.WithinInnerBoundary)
+            lastindex(sol.t)
+        else
+            max(1, length(sol.u) ÷ 2)
+        end
 
     start_t = max(sol.t[mid_i] - t_span, sol.t[1])
     end_t = min(sol.t[mid_i] + t_span, sol.t[end])
@@ -31,13 +38,13 @@ end
     zlims --> _range
     aspect_ratio --> 1
 
-    itr = if !(typeof(sol) <: SciMLBase.EnsembleSolution)
-        (; u = (sol,))
+    itr = if typeof(sol) <: SciMLBase.EnsembleSolution
+        sol.u
     else
         sol
     end
 
-    for s in itr.u
+    for s in itr
         path = _extract_path(s, n_points, projection = :none, t_span = t_span)
         @series begin
             path
