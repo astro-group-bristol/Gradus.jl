@@ -183,6 +183,7 @@ function binflux(
     profile::AbstractDiscProfile;
     redshift = ConstPointFunctions.redshift(tf.emissivity_profile.metric, tf.x),
     E₀ = 6.4,
+    t0 = tf.x[2],
     kwargs...,
 )
     t = coordtime_at(profile, tf.observer_to_disc)
@@ -195,7 +196,7 @@ function binflux(
 
     tb, eb, td = bin_transfer_function(t, g * E₀, F; kwargs...)
     # subtract initial time
-    tb .- tf.x[2], eb, td
+    tb .- t0, eb, td
 end
 
 export bin_transfer_function, lagtransfer, binflux
