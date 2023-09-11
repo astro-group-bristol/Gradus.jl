@@ -1,3 +1,4 @@
+const DEFAULT_TOLERANCE = 1e-9
 
 struct TracingConfiguration{
     T,
@@ -94,8 +95,8 @@ end
     solver = Tsit5(),
     ensemble = EnsembleThreads(),
     trajectories = nothing,
-    abstol = 1e-9,
-    reltol = 1e-9,
+    abstol = DEFAULT_TOLERANCE,
+    reltol = DEFAULT_TOLERANCE,
     integrator_verbose = true,
     solver_opts...,
 ) where {D}
