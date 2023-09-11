@@ -37,6 +37,47 @@ function Base.sort!(data::_TransferDataAccumulator)
     Base.permutecols!!(data.data, I)
 end
 
+function _search_visibility_range(vec)
+    i1::Int = 0
+    i2::Int = 0
+    if all(==(true), vec)
+        return 0, 0
+    end
+    s = first(vec)
+    for (i, v) in enumerate(vec)
+        if v != s
+            if i1 == 0
+                i1 = i
+            elseif i2 == 0
+                i2 = i - 1
+                break
+            end
+            s = !s
+        end
+    end
+    if first(vec) == 0
+        if i2 == 0
+            i2 = lastindex(vec)
+        else
+            i1 -= 1
+        end
+    else
+        i1 -= 1
+        i2 += 1
+    end
+    i1, i2
+end
+
+# function make_visibility_correction!(data::_TransferDataAccumulator)
+#     @assert issorted(data.θs) "Data must be sorted first"
+#     # find the start and end of false range
+#     i1, i2 = _search_visibility_range(data.is_visible)
+#     if (i1 != 0) && (i2 != 0)
+#         data.Js[i1] = 0
+#         data.Js[i2] = 0
+#     end
+# end
+
 function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{3})
     data.mask[i] = true
     data.data[:, i] .= (θ, vals...)

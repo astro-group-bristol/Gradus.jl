@@ -1,6 +1,10 @@
+const JACOBIAN_THICK_DISC_TOLERANCE = 1e-14
+
 struct _TransferFunctionSetup{T}
     h::T
     θ_offset::T
+    "Unstable radius with respect to when finer tolerances are needed for the Jacobian evaluation"
+    unstable_radius::T
     α₀::T
     β₀::T
     N::Int
@@ -8,7 +12,7 @@ struct _TransferFunctionSetup{T}
 end
 
 function _TransferFunctionSetup(
-    T;
+    m::AbstractMetric{T};
     θ_offset = T(0.6),
     N = 80,
     N_extrema = 17,
@@ -16,9 +20,16 @@ function _TransferFunctionSetup(
     β₀ = 0,
     h = T(1e-6),
     kwargs...,
-)
-    setup =
-        _TransferFunctionSetup{T}(h, θ_offset, convert(T, α₀), convert(T, β₀), N, N_extrema)
+) where {T}
+    setup = _TransferFunctionSetup{T}(
+        h,
+        θ_offset,
+        1.05 * Gradus.isco(m),
+        convert(T, α₀),
+        convert(T, β₀),
+        N,
+        N_extrema,
+    )
     kwargs, setup
 end
 
@@ -151,10 +162,16 @@ function _rear_workhorse_with_impact_parameters(
     zero_atol = 1e-7,
     β₀ = 0,
     α₀ = 0,
+    unstable_radius = 0,
     redshift_pf = ConstPointFunctions.redshift(m, x),
     jacobian_disc = d,
     tracer_kwargs...,
 )
+    jacobian_tolerances = if (jacobian_disc !== d) && (rₑ < unstable_radius)
+        (; abstol = JACOBIAN_THICK_DISC_TOLERANCE, reltol = JACOBIAN_THICK_DISC_TOLERANCE)
+    else
+        (; abstol = DEFAULT_TOLERANCE, reltol = DEFAULT_TOLERANCE)
+    end
     function _workhorse(θ)
         r, gp = find_offset_for_radius(
             m,
@@ -187,12 +204,20 @@ function _rear_workhorse_with_impact_parameters(
             max_time;
             redshift_pf = redshift_pf,
             tracer_kwargs...,
+            jacobian_tolerances...,
         )
         (g, J, gp, α, β)
     end
     (_workhorse, tracer_kwargs)
 end
-function _rear_workhorse(m::AbstractMetric, x, d::AbstractAccretionDisc, rₑ; kwargs...)
+function _rear_workhorse(
+    setup::_TransferFunctionSetup,
+    m::AbstractMetric,
+    x,
+    d::AbstractAccretionDisc,
+    rₑ;
+    kwargs...,
+)
     workhorse, _ = _rear_workhorse_with_impact_parameters(m, x, d, rₑ; kwargs...)
     function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
         g, J, gp, _, _ = workhorse(θ)
@@ -201,6 +226,7 @@ function _rear_workhorse(m::AbstractMetric, x, d::AbstractAccretionDisc, rₑ; k
 end
 
 function _rear_workhorse(
+    setup::_TransferFunctionSetup,
     m::AbstractMetric,
     x,
     d::AbstractThickAccretionDisc,
@@ -214,6 +240,7 @@ function _rear_workhorse(
         x,
         plane,
         rₑ;
+        unstable_radius = setup.unstable_radius,
         max_time = max_time,
         jacobian_disc = d,
         kwargs...,
@@ -266,7 +293,7 @@ function cunningham_transfer_function(
     rₑ::T;
     kwargs...,
 ) where {Q,T}
-    solver_kwargs, setup = _TransferFunctionSetup(T; kwargs...)
+    solver_kwargs, setup = _TransferFunctionSetup(m; kwargs...)
     cunningham_transfer_function(setup, m, x, d, rₑ; solver_kwargs...)
 end
 
@@ -291,6 +318,7 @@ function cunningham_transfer_function(
         range(π - 2setup.θ_offset, π + 2setup.θ_offset, K),
     ))
     workhorse = _rear_workhorse(
+        setup,
         m,
         x,
         d,
@@ -356,13 +384,13 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
 end
 
 function interpolated_transfer_branches(
-    m::AbstractMetric{T},
+    m::AbstractMetric,
     x,
     d::AbstractAccretionDisc,
     radii;
     kwargs...,
-) where {T}
-    solver_kwargs, setup = _TransferFunctionSetup(T; kwargs...)
+)
+    solver_kwargs, setup = _TransferFunctionSetup(m; kwargs...)
     interpolated_transfer_branches(setup, m, x, d, radii; solver_kwargs...)
 end
 
