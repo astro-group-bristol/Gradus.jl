@@ -1,4 +1,4 @@
-const JACOBIAN_THICK_DISC_TOLERANCE = 1e-14
+const JACOBIAN_THICK_DISC_TOLERANCE = 1e-11
 
 struct _TransferFunctionSetup{T}
     h::T
@@ -24,13 +24,20 @@ function _TransferFunctionSetup(
     setup = _TransferFunctionSetup{T}(
         h,
         θ_offset,
-        1.05 * Gradus.isco(m),
+        1.1 * Gradus.isco(m),
         convert(T, α₀),
         convert(T, β₀),
         N,
         N_extrema,
     )
     kwargs, setup
+end
+
+function _is_unstable_tolerances(setup::_TransferFunctionSetup, d::AbstractAccretionDisc, r)
+    is_unstable = (d isa AbstractThickAccretionDisc) && (r < setup.unstable_radius)
+    tol = is_unstable ? JACOBIAN_THICK_DISC_TOLERANCE : DEFAULT_TOLERANCE
+    tols = (; abstol = tol, reltol = tol)
+    is_unstable, tols
 end
 
 _calculate_transfer_function(rₑ, g, g✶, J) = @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
@@ -153,6 +160,7 @@ function interpolate_branches(ctf::CunninghamTransferData{T}; h = 1e-6) where {T
 end
 
 function _rear_workhorse_with_impact_parameters(
+    setup::_TransferFunctionSetup,
     m::AbstractMetric,
     x,
     d::AbstractAccretionDisc,
@@ -160,18 +168,12 @@ function _rear_workhorse_with_impact_parameters(
     max_time = 2 * x[2],
     offset_max = 0.4rₑ + 10,
     zero_atol = 1e-7,
-    β₀ = 0,
-    α₀ = 0,
-    unstable_radius = 0,
     redshift_pf = ConstPointFunctions.redshift(m, x),
     jacobian_disc = d,
     tracer_kwargs...,
 )
-    jacobian_tolerances = if (jacobian_disc !== d) && (rₑ < unstable_radius)
-        (; abstol = JACOBIAN_THICK_DISC_TOLERANCE, reltol = JACOBIAN_THICK_DISC_TOLERANCE)
-    else
-        (; abstol = DEFAULT_TOLERANCE, reltol = DEFAULT_TOLERANCE)
-    end
+    # additional configuration extracted for jacobians
+    is_unstable::Bool, jacobian_tolerances = _is_unstable_tolerances(setup, d, rₑ)
     function _workhorse(θ)
         r, gp = find_offset_for_radius(
             m,
@@ -182,8 +184,8 @@ function _rear_workhorse_with_impact_parameters(
             zero_atol = zero_atol,
             offset_max = offset_max,
             max_time = max_time,
-            β₀ = β₀,
-            α₀ = α₀,
+            β₀ = setup.β₀,
+            α₀ = setup.α₀,
             tracer_kwargs...,
         )
         if isnan(r)
@@ -191,17 +193,19 @@ function _rear_workhorse_with_impact_parameters(
                 "Transfer function integration failed (rₑ=$rₑ, θ=$θ, offset_max = $offset_max).",
             )
         end
-        α = r * cos(θ) + α₀
-        β = r * sin(θ) + β₀
+        α = r * cos(θ) + setup.α₀
+        β = r * sin(θ) + setup.β₀
         # redshift and jacobian
         g = redshift_pf(m, gp, max_time)
         J = jacobian_∂αβ_∂gr(
             m,
             x,
+            gp.x,
             jacobian_disc,
             α,
             β,
             max_time;
+            use_cross_section = is_unstable,
             redshift_pf = redshift_pf,
             tracer_kwargs...,
             jacobian_tolerances...,
@@ -218,7 +222,7 @@ function _rear_workhorse(
     rₑ;
     kwargs...,
 )
-    workhorse, _ = _rear_workhorse_with_impact_parameters(m, x, d, rₑ; kwargs...)
+    workhorse, _ = _rear_workhorse_with_impact_parameters(setup, m, x, d, rₑ; kwargs...)
     function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
         g, J, gp, _, _ = workhorse(θ)
         g, J, gp.x[1]
@@ -236,11 +240,11 @@ function _rear_workhorse(
 )
     plane = datumplane(d, rₑ)
     datum_workhorse, tracer_kwargs = _rear_workhorse_with_impact_parameters(
+        setup,
         m,
         x,
         plane,
         rₑ;
-        unstable_radius = setup.unstable_radius,
         max_time = max_time,
         jacobian_disc = d,
         kwargs...,
@@ -325,8 +329,6 @@ function cunningham_transfer_function(
         rₑ;
         max_time = max_time,
         chart = chart,
-        α₀ = setup.α₀,
-        β₀ = setup.β₀,
         solver_kwargs...,
     )
     gmin, gmax =

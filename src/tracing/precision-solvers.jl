@@ -229,17 +229,18 @@ function _is_visible(m::AbstractMetric, d, gp::AbstractGeodesicPoint, n::SVector
 end
 
 function jacobian_∂αβ_∂gr(
-    m,
-    x,
-    d,
+    m::AbstractMetric,
+    x::SVector{4},
+    x_target::SVector{4},
+    d::AbstractAccretionDisc,
     α,
     β,
     max_time;
     μ = 0,
     redshift_pf = ConstPointFunctions.redshift(m, x),
+    use_cross_section = false,
     solver_opts...,
 )
-
     # these type hints are crucial for forward diff to be type stable
     function _jacobian_f(impact_params::SVector{2,T})::SVector{2,T} where {T}
         # use underscores to avoid boxing
@@ -249,12 +250,35 @@ function jacobian_∂αβ_∂gr(
         sol = tracegeodesics(m, x, v, d, (0.0, max_time); save_on = false, solver_opts...)
         gp = unpack_solution(sol)
         g = redshift_pf(m, gp, max_time)
-        # return disc r and redshift g
-        SVector(_equatorial_project(gp.x), g)
+
+        # change the way we calculate the return values
+        # for certain regions of thick discs, where there is rapid change
+        # it is easier to compute the jacobian with respect to the height
+        # instead of cylindrical ρ, and then apply the chain rule
+        if (d isa AbstractThickAccretionDisc) && use_cross_section
+            # return height and g
+            SVector(_spinaxis_project(gp.x), g)
+        else
+            # return r and g (don't use ρ since r tends to change more
+            # irrespective of disc)
+            SVector(gp.x[2], g)
+        end
     end
 
-    j = ForwardDiff.jacobian(_jacobian_f, SVector(α, β))
-    abs(inv(det(j)))
+    # compute |∂(r,g) / ∂(α,β)|⁻¹
+    j_matrix = ForwardDiff.jacobian(_jacobian_f, SVector(α, β))
+    J = abs(inv(det(j_matrix)))
+
+    # compute additional chain rule terms
+    if (d isa AbstractThickAccretionDisc) && use_cross_section
+        # we'd need |∂rₑ / ∂h|⁻¹, which is just | ∂h / ∂rₑ |
+        ∂h∂rₑ =
+            ForwardDiff.derivative(ρ -> cross_section(d, ρ), _equatorial_project(x_target))
+        J * abs(∂h∂rₑ)
+    else
+        ∂rₑ∂r = inv(abs(sin(x_target[3])))
+        J * ∂rₑ∂r
+    end
 end
 
 function _make_target_objective(
