@@ -1,4 +1,4 @@
-const JACOBIAN_THICK_DISC_TOLERANCE = 1e-11
+const JACOBIAN_THICK_DISC_TOLERANCE = 1e-13
 
 struct _TransferFunctionSetup{T}
     h::T
@@ -239,7 +239,7 @@ function _rear_workhorse(
     kwargs...,
 )
     plane = datumplane(d, rₑ)
-    datum_workhorse, tracer_kwargs = _rear_workhorse_with_impact_parameters(
+    datum_workhorse, _ = _rear_workhorse_with_impact_parameters(
         setup,
         m,
         x,
