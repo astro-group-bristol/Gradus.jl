@@ -1,5 +1,3 @@
-const JACOBIAN_THICK_DISC_TOLERANCE = 1e-13
-
 struct _TransferFunctionSetup{T}
     h::T
     θ_offset::T
@@ -33,12 +31,8 @@ function _TransferFunctionSetup(
     kwargs, setup
 end
 
-function _is_unstable_tolerances(setup::_TransferFunctionSetup, d::AbstractAccretionDisc, r)
-    is_unstable = (d isa AbstractThickAccretionDisc) && (r < setup.unstable_radius)
-    tol = is_unstable ? JACOBIAN_THICK_DISC_TOLERANCE : DEFAULT_TOLERANCE
-    tols = (; abstol = tol, reltol = tol)
-    is_unstable, tols
-end
+_is_unstable(setup::_TransferFunctionSetup, d::AbstractAccretionDisc, r) =
+    (d isa AbstractThickAccretionDisc) && (r < setup.unstable_radius)
 
 _calculate_transfer_function(rₑ, g, g✶, J) = @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
 
@@ -173,7 +167,7 @@ function _rear_workhorse_with_impact_parameters(
     tracer_kwargs...,
 )
     # additional configuration extracted for jacobians
-    is_unstable::Bool, jacobian_tolerances = _is_unstable_tolerances(setup, d, rₑ)
+    is_unstable::Bool = _is_unstable(setup, jacobian_disc, rₑ)
     function _workhorse(θ)
         r, gp = find_offset_for_radius(
             m,
@@ -208,7 +202,6 @@ function _rear_workhorse_with_impact_parameters(
             use_cross_section = is_unstable,
             redshift_pf = redshift_pf,
             tracer_kwargs...,
-            jacobian_tolerances...,
         )
         (g, J, gp, α, β)
     end

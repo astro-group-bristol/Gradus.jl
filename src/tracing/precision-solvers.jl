@@ -241,13 +241,23 @@ function jacobian_∂αβ_∂gr(
     use_cross_section = false,
     solver_opts...,
 )
+    domain_limiter = d isa AbstractThickAccretionDisc ? domain_upper_hemisphere() : nothing
     # these type hints are crucial for forward diff to be type stable
     function _jacobian_f(impact_params::SVector{2,T})::SVector{2,T} where {T}
         # use underscores to avoid boxing
         _α, _β = impact_params
 
         v = constrain_all(m, x, map_impact_parameters(m, x, _α, _β), μ)
-        sol = tracegeodesics(m, x, v, d, (0.0, max_time); save_on = false, solver_opts...)
+        sol = tracegeodesics(
+            m,
+            x,
+            v,
+            d,
+            (0.0, max_time);
+            save_on = false,
+            callback = domain_limiter,
+            solver_opts...,
+        )
         gp = unpack_solution(sol)
         g = redshift_pf(m, gp, max_time)
 
