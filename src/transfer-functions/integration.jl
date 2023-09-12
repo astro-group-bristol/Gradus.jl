@@ -6,10 +6,24 @@ struct IntegrationSetup{T,K,F,R,SegBufType}
     integrand::F
     pure_radial::R
     segbuf::SegBufType
+    g_grid_upscale::Int
 end
 
-_integration_setup(T::Type, integrand, pure_radial; time = nothing, h = 1e-8) =
-    IntegrationSetup(h, time, integrand, pure_radial, alloc_segbuf(T))
+_integration_setup(
+    T::Type,
+    integrand,
+    pure_radial;
+    time = nothing,
+    h = 1e-8,
+    g_grid_upscale = 2,
+) = IntegrationSetup(h, time, integrand, pure_radial, alloc_segbuf(T), g_grid_upscale)
+
+function _g_fine_grid_iterate(setup::IntegrationSetup, lo, hi)
+    Δ = (hi - lo) / setup.g_grid_upscale
+    lows = range(lo, hi - Δ, setup.g_grid_upscale)
+    highs = range(lo + Δ, hi, setup.g_grid_upscale)
+    zip(lows, highs)
+end
 
 function integrand(setup::IntegrationSetup, f, r, g, g✶)
     # the radial term and π is hoisted into the integration weight for that annulus
@@ -234,8 +248,12 @@ function _integrate_transfer_problem!(
         @inbounds for j in eachindex(g_grid_view)
             glo = g_grid[j]
             ghi = g_grid[j+1]
-            k = integrate_bin(closures, _both_branches(closures), glo, ghi)
-            output[j] += k * θ
+            flux_contrib = zero(eltype(output))
+            for (g_fine_lo, g_fine_hi) in _g_fine_grid_iterate(setup, glo, ghi)
+                k = integrate_bin(closures, _both_branches(closures), g_fine_lo, g_fine_hi)
+                flux_contrib += k
+            end
+            output[j] += flux_contrib * θ
         end
     end
 end
