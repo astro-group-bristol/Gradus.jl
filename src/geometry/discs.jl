@@ -14,6 +14,7 @@ function distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...)
     end
 end
 
+inner_radius(disc::AbstractAccretionDisc) = disc.inner_radius
 
 """
     cross_section(d::AbstractThickAccretionDisc, u)
@@ -68,6 +69,8 @@ struct PrecessingDisc{T,D<:AbstractAccretionDisc{T}} <: AbstractAccretionDisc{T}
     γ::T
     R::SMatrix{3,3,T,9}
 end
+
+inner_radius(p::PrecessingDisc) = inner_radius(p.disc)
 
 function PrecessingDisc(disc, β, γ)
     Rx = SMatrix{3,3}(1, 0, 0, 0, cos(-β), -sin(-β), 0, sin(-β), cos(-β))
