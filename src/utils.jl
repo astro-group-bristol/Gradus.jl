@@ -123,11 +123,21 @@ end
 Lz(m::AbstractMetric, u, v) = Lz(metric(m, u), v)
 Lz(m::AbstractMetric, gp::AbstractGeodesicPoint) = Lz(m, gp.x, gp.v)
 
-_equatorial_project(r, θ) = r * sin(abs(θ))
-_equatorial_project(x::SVector) = _equatorial_project(x[2], x[3])
+@inline function _optional_abs(value::T, do_abs::Bool)::T where {T}
+    if do_abs
+        abs(value)
+    else
+        value
+    end
+end
 
-_spinaxis_project(r, θ) = r * cos(abs(θ))
-_spinaxis_project(x::SVector) = _spinaxis_project(x[2], x[3])
+_equatorial_project(r, θ; signed = false) = r * sin(_optional_abs(θ, signed))
+_equatorial_project(x::SVector; signed = false) =
+    _equatorial_project(x[2], x[3], signed = signed)
+
+_spinaxis_project(r, θ; signed = false) = r * cos(_optional_abs(θ, signed))
+_spinaxis_project(x::SVector; signed = false) =
+    _spinaxis_project(x[2], x[3], signed = signed)
 
 _rotate_about_spinaxis(n::SVector{3}, ϕ) = SVector(n[1] * cos(ϕ), n[1] * sin(ϕ), n[3])
 
