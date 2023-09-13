@@ -56,8 +56,7 @@ function distance_to_disc(d::AbstractThickAccretionDisc, x4; gtol)
     if height <= 0
         return one(eltype(x4))
     end
-    z = _spinaxis_project(x4)
-    abs(z) - height - (gtol * x4[2])
+    _spinaxis_project(x4) - height - (gtol * x4[2])
 end
 
 function _cartesian_tangent_vector(d::AbstractThickAccretionDisc, ρ)

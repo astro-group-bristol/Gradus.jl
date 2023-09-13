@@ -19,15 +19,8 @@ function _find_offset_for_measure(
     end
 
     # init a reusable integrator
-    integ = _init_integrator(
-        m,
-        x,
-        _velfunc(0.0),
-        d,
-        (0.0, max_time);
-        save_on = false,
-        solver_opts...,
-    )
+    integ =
+        _init_integrator(m, x, _velfunc(0.0), d, max_time; save_on = false, solver_opts...)
 
     function f(r)
         if r < 0
@@ -231,12 +224,11 @@ end
 function jacobian_∂αβ_∂gr(
     m::AbstractMetric,
     x::SVector{4},
-    x_target::SVector{4},
+    rₑ,
     d::AbstractAccretionDisc,
     α,
     β,
     max_time;
-    μ = 0,
     redshift_pf = ConstPointFunctions.redshift(m, x),
     use_cross_section = false,
     solver_opts...,
@@ -244,16 +236,12 @@ function jacobian_∂αβ_∂gr(
     domain_limiter = d isa AbstractThickAccretionDisc ? domain_upper_hemisphere() : nothing
     # these type hints are crucial for forward diff to be type stable
     function _jacobian_f(impact_params::SVector{2,T})::SVector{2,T} where {T}
-        # use underscores to avoid boxing
-        _α, _β = impact_params
-
-        v = constrain_all(m, x, map_impact_parameters(m, x, _α, _β), μ)
         sol = tracegeodesics(
             m,
             x,
-            v,
+            map_impact_parameters(m, x, impact_params[1], impact_params[2]),
             d,
-            (0.0, max_time);
+            max_time;
             save_on = false,
             callback = domain_limiter,
             solver_opts...,
@@ -267,11 +255,9 @@ function jacobian_∂αβ_∂gr(
         # instead of cylindrical ρ, and then apply the chain rule
         if (d isa AbstractThickAccretionDisc) && use_cross_section
             # return height and g
-            SVector(_spinaxis_project(gp.x), g)
+            SVector(_spinaxis_project(gp.x, signed = true), g)
         else
-            # return r and g (don't use ρ since r tends to change more
-            # irrespective of disc)
-            SVector(gp.x[2], g)
+            SVector(_equatorial_project(gp.x), g)
         end
     end
 
@@ -282,12 +268,10 @@ function jacobian_∂αβ_∂gr(
     # compute additional chain rule terms
     if (d isa AbstractThickAccretionDisc) && use_cross_section
         # we'd need |∂rₑ / ∂h|⁻¹, which is just | ∂h / ∂rₑ |
-        ∂h∂rₑ =
-            ForwardDiff.derivative(ρ -> cross_section(d, ρ), _equatorial_project(x_target))
+        ∂h∂rₑ = ForwardDiff.derivative(ρ -> cross_section(d, ρ), rₑ)
         J * abs(∂h∂rₑ)
     else
-        ∂rₑ∂r = inv(abs(sin(x_target[3])))
-        J * ∂rₑ∂r
+        J
     end
 end
 

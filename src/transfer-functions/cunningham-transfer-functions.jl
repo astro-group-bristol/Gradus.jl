@@ -22,7 +22,7 @@ function _TransferFunctionSetup(
     setup = _TransferFunctionSetup{T}(
         h,
         θ_offset,
-        1.1 * Gradus.isco(m),
+        Gradus.isco(m) + 1,
         convert(T, α₀),
         convert(T, β₀),
         N,
@@ -161,7 +161,7 @@ function _rear_workhorse_with_impact_parameters(
     rₑ;
     max_time = 2 * x[2],
     offset_max = 0.4rₑ + 10,
-    zero_atol = 1e-7,
+    zero_atol = 1e-8,
     redshift_pf = ConstPointFunctions.redshift(m, x),
     jacobian_disc = d,
     tracer_kwargs...,
@@ -194,7 +194,7 @@ function _rear_workhorse_with_impact_parameters(
         J = jacobian_∂αβ_∂gr(
             m,
             x,
-            gp.x,
+            rₑ,
             jacobian_disc,
             α,
             β,

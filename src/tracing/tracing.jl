@@ -197,8 +197,8 @@ end
 @inline function _init_integrator(
     problem;
     solver = Tsit5(),
-    abstol = 1e-9,
-    reltol = 1e-9,
+    abstol = DEFAULT_TOLERANCE,
+    reltol = DEFAULT_TOLERANCE,
     save_on = true,
     verbose = true,
     solver_opts...,
