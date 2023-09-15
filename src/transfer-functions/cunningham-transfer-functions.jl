@@ -45,13 +45,13 @@ function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2; h = 1e-6)
     I1 = sortperm(g1)
     I2 = sortperm(g2)
 
-    # sort all in ascending g
-    g1 .= g1[I1]
-    g2 .= g2[I2]
-    f1 .= f1[I1]
-    f2 .= f2[I2]
-    t1 .= t1[I1]
-    t2 .= t2[I2]
+    Base.permute!(g1, I1)
+    Base.permute!(f1, I1)
+    Base.permute!(t1, I1)
+
+    Base.permute!(g2, I2)
+    Base.permute!(f2, I2)
+    Base.permute!(t2, I2)
 
     # at low inclination angles, the range of g is so tight that the edges are
     # very problematic due to the g✶ * (1 - g✶) terms, sending the branches to zero
@@ -153,7 +153,7 @@ function interpolate_branches(ctf::CunninghamTransferData{T}; h = 1e-6) where {T
     )
 end
 
-function _rear_workhorse_with_impact_parameters(
+function _setup_workhorse_jacobian_with_kwargs(
     setup::_TransferFunctionSetup,
     m::AbstractMetric,
     x,
@@ -166,8 +166,20 @@ function _rear_workhorse_with_impact_parameters(
     jacobian_disc = d,
     tracer_kwargs...,
 )
-    # additional configuration extracted for jacobians
-    is_unstable::Bool = _is_unstable(setup, jacobian_disc, rₑ)
+    # underscores to avoid boxing variables
+    function _jacobian_function(α_, β_)
+        jacobian_∂αβ_∂gr(
+            m,
+            x,
+            rₑ,
+            jacobian_disc,
+            α_,
+            β_,
+            max_time;
+            redshift_pf = redshift_pf,
+            tracer_kwargs...,
+        )
+    end
     function _workhorse(θ)
         r, gp = find_offset_for_radius(
             m,
@@ -187,25 +199,10 @@ function _rear_workhorse_with_impact_parameters(
                 "Transfer function integration failed (rₑ=$rₑ, θ=$θ, offset_max = $offset_max).",
             )
         end
-        α = r * cos(θ) + setup.α₀
-        β = r * sin(θ) + setup.β₀
-        # redshift and jacobian
         g = redshift_pf(m, gp, max_time)
-        J = jacobian_∂αβ_∂gr(
-            m,
-            x,
-            rₑ,
-            jacobian_disc,
-            α,
-            β,
-            max_time;
-            use_cross_section = is_unstable,
-            redshift_pf = redshift_pf,
-            tracer_kwargs...,
-        )
-        (g, J, gp, α, β)
+        (g, gp, r)
     end
-    (_workhorse, tracer_kwargs)
+    (_workhorse, _jacobian_function, tracer_kwargs)
 end
 function _rear_workhorse(
     setup::_TransferFunctionSetup,
@@ -215,10 +212,12 @@ function _rear_workhorse(
     rₑ;
     kwargs...,
 )
-    workhorse, _ = _rear_workhorse_with_impact_parameters(setup, m, x, d, rₑ; kwargs...)
+    workhorse, jacobian_function, _ =
+        _setup_workhorse_jacobian_with_kwargs(setup, m, x, d, rₑ; kwargs...)
     function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
-        g, J, gp, _, _ = workhorse(θ)
-        g, J, gp.x[1]
+        g, gp, r = workhorse(θ)
+        α, β = _rθ_to_αβ(r, θ; α₀ = setup.α₀, β₀ = setup.β₀)
+        g, jacobian_function(α, β), gp.x[1]
     end
 end
 
@@ -229,23 +228,58 @@ function _rear_workhorse(
     d::AbstractThickAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
+    zero_atol = 1e-8,
+    offset_max = 0.4rₑ + 10,
     kwargs...,
 )
     plane = datumplane(d, rₑ)
-    datum_workhorse, _ = _rear_workhorse_with_impact_parameters(
-        setup,
-        m,
-        x,
-        plane,
-        rₑ;
-        max_time = max_time,
-        jacobian_disc = d,
-        kwargs...,
-    )
-    n = _cartesian_surface_normal(d, rₑ)
+    datum_workhorse, jacobian_function, tracer_kwargs =
+        _setup_workhorse_jacobian_with_kwargs(
+            setup,
+            m,
+            x,
+            plane,
+            rₑ;
+            max_time = max_time,
+            zero_atol = zero_atol,
+            offset_max = offset_max,
+            jacobian_disc = d,
+            kwargs...,
+        )
     function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
-        g, J, gp, _, _ = datum_workhorse(θ)
-        is_visible = _is_visible(m, d, gp, n)
+        g, gp, r = datum_workhorse(θ)
+        r₊, _ = try
+            _find_offset_for_radius(
+                m,
+                x,
+                d,
+                rₑ,
+                θ;
+                initial_r = r,
+                zero_atol = zero_atol,
+                offset_max = offset_max,
+                max_time = max_time,
+                β₀ = setup.β₀,
+                α₀ = setup.α₀,
+                tracer_kwargs...,
+                # don't echo warnings
+                warn = false,
+            )
+        catch err
+            if err isa Roots.ConvergenceFailed
+                # return gp for type stability
+                NaN, gp
+            else
+                throw(err)
+            end
+        end
+        is_visible, J = if !isnan(r₊) && isapprox(r, r₊, atol = 1e-3)
+            α, β = _rθ_to_αβ(r₊, θ; α₀ = setup.α₀, β₀ = setup.β₀)
+            true, jacobian_function(α, β)
+        else
+            false, NaN
+        end
+        # is_visible = _is_visible(m, d, gp, n)
         (g, J, gp.x[1], is_visible)
     end
 end

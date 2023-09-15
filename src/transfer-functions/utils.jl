@@ -127,3 +127,10 @@ function _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
     end
     return gmin, gmax
 end
+
+function _rθ_to_αβ(r, θ; α₀ = 0, β₀ = 0)
+    sinθ, cosθ = sincos(θ)
+    α = r * cosθ + α₀
+    β = r * sinθ + β₀
+    (α, β)
+end
