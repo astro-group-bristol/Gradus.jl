@@ -6,7 +6,7 @@ optical_property(::Type{<:DatumPlane}) = OpticallyThin()
 function distance_to_disc(d::DatumPlane{T}, x4; gtol) where {T}
     # no abs on h since datum planes have no underside
     h = _spinaxis_project(x4, signed = true)
-    h - d.height - (gtol * x4[2])
+    h - d.height
 end
 
 inner_radius(d::DatumPlane) = 0
