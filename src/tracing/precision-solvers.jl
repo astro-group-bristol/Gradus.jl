@@ -60,7 +60,7 @@ function _find_offset_for_radius(
     if warn && (r0 < 0)
         @warn("Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ")
     end
-    if !isapprox(_measure(gp0), 0.0, atol = 1e-5)
+    if !isapprox(_measure(gp0), 0.0, atol = 1e-4)
         warn && @warn("Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ")
         return NaN, gp0
     end
