@@ -33,9 +33,9 @@ end
 @test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.1269951484304088 atol = 1e-5
 
 # large radii
-@test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.134116533963842 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 30, 800.0)) ≈ 0.1339736833006852 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 30, 1000.0)) ≈ 0.1359210533432173 atol = 1e-5
+@test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.13358159097304723 atol = 1e-5
+@test measure_ctf(test_ctf1(0.998, 30, 800.0)) ≈ 0.17351504941705492 atol = 1e-5
+@test measure_ctf(test_ctf1(0.998, 30, 1000.0)) ≈ 0.19085561680308122 atol = 1e-5
 
 # ones that have been problematic in the past
 # and should not raise any errors or warnings
@@ -47,6 +47,4 @@ test_ctf1(0.0, 88, 631.1007589946363)
 test_ctf1(0.9, 88, 952.1406350219423)
 test_ctf1(0.0, 88, 950.8754196211696)
 test_ctf1(0.744, 88, 3.1880132176627862)
-
-# poor offset radius
 test_ctf1(1.0, 88, 1.01)

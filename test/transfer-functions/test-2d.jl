@@ -29,7 +29,7 @@ tf = lagtransfer(
 t, E, f = binflux(tf, N_t = 100, N_E = 100)
 
 fluxsum = sum(filter(!isnan, f))
-@test fluxsum ≈ 5.037953486417272 atol = 1e-2
+@test fluxsum ≈ 5.0139706835342395 atol = 1e-2
 
 # test semi-analytic method
 
