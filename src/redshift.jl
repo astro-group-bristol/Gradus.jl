@@ -190,7 +190,7 @@ end
     end
 end
 
-@inline function redshift_function(m::KerrMetric, gp) where {T}
+@inline function redshift_function(m::KerrMetric, gp)
     isco = Gradus.isco(m)
     r = Gradus._equatorial_project(gp.x)
     v_disc = if r < isco
@@ -205,7 +205,7 @@ end
 @inline function _redshift_dotproduct(m::AbstractMetric{T}, gp, v_disc) where {T}
     # fixed stationary observer velocity
     v_obs = SVector{4,T}(1, 0, 0, 0)
-    _redshift_dotproduct(metric(m, gp.x), v_disc, metric(m, gp.x_init), v_dv_obsisc, gp)
+    _redshift_dotproduct(metric(m, gp.x), v_disc, metric(m, gp.x_init), v_obs, gp)
 end
 
 @inline function _redshift_dotproduct(
