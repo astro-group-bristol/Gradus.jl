@@ -123,19 +123,19 @@ end
 Lz(m::AbstractMetric, u, v) = Lz(metric(m, u), v)
 Lz(m::AbstractMetric, gp::AbstractGeodesicPoint) = Lz(m, gp.x, gp.v)
 
-@inline function _optional_abs(value::T, do_abs::Bool)::T where {T}
-    if do_abs
-        abs(value)
-    else
+@inline function _optional_abs(value::T, signed::Bool)::T where {T}
+    if signed
         value
+    else
+        abs(value)
     end
 end
 
-_equatorial_project(r, θ; signed = false) = r * sin(_optional_abs(θ, signed))
+_equatorial_project(r, θ; signed = false) = r * _optional_abs(sin(θ), signed)
 _equatorial_project(x::SVector; signed = false) =
     _equatorial_project(x[2], x[3], signed = signed)
 
-_spinaxis_project(r, θ; signed = false) = r * cos(_optional_abs(θ, signed))
+_spinaxis_project(r, θ; signed = false) = r * _optional_abs(cos(θ), signed)
 _spinaxis_project(x::SVector; signed = false) =
     _spinaxis_project(x[2], x[3], signed = signed)
 
