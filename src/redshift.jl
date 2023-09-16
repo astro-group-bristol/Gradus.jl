@@ -190,23 +190,33 @@ end
     end
 end
 
-@inline function redshift_function(m::KerrMetric{T}, gp) where {T}
+@inline function redshift_function(m::KerrMetric, gp)
     isco = Gradus.isco(m)
-    # fixed stationary observer velocity
-    v_obs = SVector{4,T}(1, 0, 0, 0)
-
     r = Gradus._equatorial_project(gp.x)
     v_disc = if r < isco
         # plunging region
         SVector(uᵗ(m.M, isco, r, m.a), -uʳ(m.M, isco, r), 0, uᶲ(m.M, isco, r, m.a))
     else
-        # disc_norm = (eⱽ(m.M, gp.x[2], m.a, gp.x[3]) * √(1 - Vₑ(m.M, gp.x[2], m.a, gp.x[3])^2))
-        # @SVector [1 / disc_norm, 0, 0, Ωₑ(m.M, gp.x[2], m.a) / disc_norm]
         Gradus.CircularOrbits.fourvelocity(m, r)
     end
+    _redshift_dotproduct(m, gp, v_disc)
+end
 
-    E_disc = dotproduct(m, gp.x, gp.v, v_disc)
-    E_obs = dotproduct(m, gp.x_init, gp.v_init, v_obs)
+@inline function _redshift_dotproduct(m::AbstractMetric{T}, gp, v_disc) where {T}
+    # fixed stationary observer velocity
+    v_obs = SVector{4,T}(1, 0, 0, 0)
+    _redshift_dotproduct(metric(m, gp.x), v_disc, metric(m, gp.x_init), v_obs, gp)
+end
+
+@inline function _redshift_dotproduct(
+    M_disc::AbstractMatrix,
+    v_disc,
+    M_observer::AbstractMatrix,
+    v_observer,
+    gp,
+)
+    E_disc = dotproduct(M_disc, gp.v, v_disc)
+    E_obs = dotproduct(M_observer, gp.v_init, v_observer)
     E_obs / E_disc
 end
 
@@ -237,31 +247,27 @@ For a full, annotated derivation of this method, see
 function interpolate_redshift(plunging_interpolation, u::SVector{4,T}) where {T}
     isco = Gradus.isco(plunging_interpolation.m)
     # metric matrix at observer
-    g_obs = metric(plunging_interpolation.m, u)
+    m_obs = metric(plunging_interpolation.m, u)
     # fixed stationary observer velocity
     v_obs = SVector{4,T}(1, 0, 0, 0)
-    closure =
-        (m, gp, max_time) -> begin
-            let r = _equatorial_project(gp.x)
-                v_disc = if r < isco
-                    # plunging region
-                    vtemp = plunging_interpolation(r)
-                    # we have to reverse radial velocity due to backwards tracing convention
-                    # see https://github.com/astro-group-bristol/Gradus.jl/issues/3
-                    SVector{4}(vtemp[1], -vtemp[2], vtemp[3], vtemp[4])
-                else
-                    # regular circular orbit
-                    CircularOrbits.fourvelocity(plunging_interpolation.m, r)
-                end
-
-                # get metric matrix at position on disc
-                g = metric(plunging_interpolation.m, gp.x)
-                E_disc = dotproduct(g, gp.v, v_disc)
-                E_obs = dotproduct(g_obs, gp.v_init, v_obs)
-                E_obs / E_disc
-            end
+    function _interpolate_redshift_closure(m, gp, max_time)
+        r = _equatorial_project(gp.x)
+        v_disc = if r < isco
+            # plunging region
+            vtemp = plunging_interpolation(r)
+            # we have to reverse radial velocity due to backwards tracing convention
+            # see https://github.com/astro-group-bristol/Gradus.jl/issues/3
+            SVector{4}(vtemp[1], -vtemp[2], vtemp[3], vtemp[4])
+        else
+            # regular circular orbit
+            CircularOrbits.fourvelocity(plunging_interpolation.m, r)
         end
-    PointFunction(closure)
+
+        # get metric matrix at position on disc
+        g = metric(plunging_interpolation.m, gp.x)
+        RedshiftFunctions._redshift_dotproduct(g, v_disc, m_obs, v_obs, gp)
+    end
+    PointFunction(_interpolate_redshift_closure)
 end
 
 interpolate_redshift(m::AbstractMetric, u::SVector{4}; kwargs...) =

@@ -20,18 +20,16 @@ Here ``\\eta`` is the radiative efficiency, which, if unspecified, is determined
 ```
 """
 struct ShakuraSunyaev{T} <: AbstractThickAccretionDisc{T}
-    Ṁ::T
-    Ṁedd::T
-    η::T
-    risco::T
+    Ṁ_Ṁedd::T
+    inv_η::T
+    inner_radius::T
 end
 
-@fastmath function cross_section(d::ShakuraSunyaev, ρ)
-    if ρ < d.risco
-        return -one(typeof(ρ))
+function cross_section(d::ShakuraSunyaev, ρ)
+    if ρ < d.inner_radius
+        return -zero(typeof(ρ))
     end
-    H = (3 / 2) * inv(d.η) * (d.Ṁ / d.Ṁedd) * (1 - sqrt(d.risco / ρ))
-    2H
+    3 * d.inv_η * d.Ṁ_Ṁedd * (1 - sqrt(d.inner_radius / ρ))
 end
 
 function ShakuraSunyaev(
@@ -50,7 +48,7 @@ function ShakuraSunyaev(
     else
         η
     end
-    ShakuraSunyaev(T(eddington_ratio), 1.0, radiative_efficiency, r_isco)
+    ShakuraSunyaev(T(eddington_ratio), inv(radiative_efficiency), r_isco)
 end
 
 export ShakuraSunyaev

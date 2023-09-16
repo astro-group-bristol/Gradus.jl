@@ -1,3 +1,15 @@
+_gtol_error(gtol, x::SVector) = _gtol_error(gtol, x[2])
+function _gtol_error(gtol, r)
+    R = abs(r)
+    R < 80 && return gtol * R
+    sR = √R
+    if R < 600
+        gtol * 10 * sR
+    else
+        gtol * 20 * sR
+    end
+end
+
 """
     distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...)
 
@@ -14,6 +26,7 @@ function distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...)
     end
 end
 
+inner_radius(disc::AbstractAccretionDisc) = disc.inner_radius
 
 """
     cross_section(d::AbstractThickAccretionDisc, u)
@@ -59,7 +72,7 @@ function distance_to_disc(d::EllipticalDisc, x4; gtol)
     y = √((1 - (x4[2] / d.semi_major)^2) * d.semi_minor^2)
     # check height less than y with tolerance
     h = abs(x4[2] * cos(x4[3]))
-    h - y - (gtol * x4[2])
+    h - y - _gtol_error(gtol, x4)
 end
 
 struct PrecessingDisc{T,D<:AbstractAccretionDisc{T}} <: AbstractAccretionDisc{T}
@@ -68,6 +81,8 @@ struct PrecessingDisc{T,D<:AbstractAccretionDisc{T}} <: AbstractAccretionDisc{T}
     γ::T
     R::SMatrix{3,3,T,9}
 end
+
+inner_radius(p::PrecessingDisc) = inner_radius(p.disc)
 
 function PrecessingDisc(disc, β, γ)
     Rx = SMatrix{3,3}(1, 0, 0, 0, cos(-β), -sin(-β), 0, sin(-β), cos(-β))

@@ -28,9 +28,12 @@ function create_callback_set(m::AbstractMetric, cb, chart::AbstractChart)
 end
 
 # predefined callbacks
-function domain_upper_hemisphere(δ = 1e-3)
+function domain_upper_hemisphere(δ = 1e-4)
+    function _domain_upper_hemisphere_check(u, t, integrator)
+        _spinaxis_project(u, signed = true) < δ
+    end
     DiscreteCallback(
-        (u, t, integrator) -> u[2] * cos(u[3]) < δ,
+        _domain_upper_hemisphere_check,
         terminate_with_status!(StatusCodes.OutOfDomain),
     )
 end

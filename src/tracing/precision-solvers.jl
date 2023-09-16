@@ -6,6 +6,7 @@ function _find_offset_for_measure(
     θₒ;
     zero_atol = 1e-7,
     offset_max = 20.0,
+    initial_r = offset_max / 2,
     max_time = 2 * x[2],
     β₀ = 0,
     α₀ = 0,
@@ -13,21 +14,14 @@ function _find_offset_for_measure(
     solver_opts...,
 )
     function _velfunc(r::T) where {T}
-        α = r * cos(θₒ) + T(α₀)
-        β = r * sin(θₒ) + T(β₀)
+        α, β = _rθ_to_αβ(r, θₒ; α₀ = α₀, β₀ = β₀)
+        # need constrain_all here since `_solve_reinit!` doesn't normalize
         constrain_all(m, x, map_impact_parameters(m, x, α, β), μ)
     end
 
     # init a reusable integrator
-    integ = _init_integrator(
-        m,
-        x,
-        _velfunc(0.0),
-        d,
-        (0.0, max_time);
-        save_on = false,
-        solver_opts...,
-    )
+    integ =
+        _init_integrator(m, x, _velfunc(0.0), d, max_time; save_on = false, solver_opts...)
 
     function f(r)
         if r < 0
@@ -38,9 +32,38 @@ function _find_offset_for_measure(
     end
 
     # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
-    r0 = Roots.find_zero(f, offset_max / 2, Roots.Order0(); atol = zero_atol)
+    r0 = Roots.find_zero(f, initial_r, Roots.Order0(); atol = zero_atol)
 
     gp0 = _solve_reinit!(integ, vcat(x, _velfunc(r0)))
+    r0, gp0
+end
+
+function _find_offset_for_radius(
+    m::AbstractMetric,
+    x,
+    d::AbstractAccretionGeometry,
+    rₑ,
+    θₒ;
+    warn = true,
+    kwargs...,
+)
+    function _measure(gp::GeodesicPoint{T}) where {T}
+        r = if gp.status == StatusCodes.IntersectedWithGeometry
+            _equatorial_project(gp.x)
+        else
+            zero(T)
+        end
+        rₑ - r
+    end
+    r0, gp0 = _find_offset_for_measure(_measure, m, x, d, θₒ; kwargs...)
+
+    if warn && (r0 < 0)
+        @warn("Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ")
+    end
+    if !isapprox(_measure(gp0), 0.0, atol = 1e-4)
+        warn && @warn("Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ")
+        return NaN, gp0
+    end
     r0, gp0
 end
 
@@ -68,44 +91,22 @@ Returns ``NaN`` if no offset exists. This may occur of the geometry is not prese
 (though this more commonly gives a bracketing interval error), or if the emission radius is within 
 the event horizon.
 """
-function find_offset_for_radius(
+find_offset_for_radius(
     m::AbstractMetric,
     x,
     d::AbstractAccretionGeometry,
     rₑ,
     θₒ;
     kwargs...,
-)
-    function _measure(gp::GeodesicPoint{T}) where {T}
-        r = if gp.status == StatusCodes.IntersectedWithGeometry
-            _equatorial_project(gp.x)
-        else
-            zero(T)
-        end
-        rₑ - r
-    end
-    r0, gp0 = _find_offset_for_measure(_measure, m, x, d, θₒ; kwargs...)
-
-    if (r0 < 0)
-        @warn("Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ")
-    end
-    if !isapprox(_measure(gp0), 0.0, atol = 1e-4)
-        @warn("Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ")
-        return NaN, gp0
-    end
-    r0, gp0
-end
-function find_offset_for_radius(
+) = _find_offset_for_radius(m, x, d, rₑ, θₒ; kwargs...)
+find_offset_for_radius(
     m::AbstractMetric,
     x,
     d::AbstractThickAccretionDisc,
     rₑ,
     θₒ;
     kwargs...,
-)
-    plane = datumplane(d, rₑ)
-    find_offset_for_radius(m, x, plane, rₑ, θₒ; kwargs...)
-end
+) = _find_offset_for_radius(m, x, datumplane(d, rₑ), rₑ, θₒ; kwargs...)
 
 """
     impact_parameters_for_radius!(
@@ -217,78 +218,65 @@ function _is_visible(m::AbstractMetric, d, gp::AbstractGeodesicPoint, n::SVector
         tracegeodesics(m, gp.x_init, gp.v_init, d, gp.λ_max; save_on = false) |>
         unpack_solution
     # geodesics sufficiently close, test the angle
-    v = SVector(gp_new.v[2], gp_new.v[3], gp_new.v[4]) ./ gp_new.v[1]
-    v_geodesic = _spher_to_cart_jacobian(gp_new.x[3], gp_new.x[4], gp_new.x[2]) * v
-    n_rot = _rotate_about_spinaxis(n, gp_new.x[4])
+    # v = SVector(gp_new.v[2], gp_new.v[3], gp_new.v[4]) ./ gp_new.v[1]
+    # v_geodesic = _spher_to_cart_jacobian(gp_new.x[3], gp_new.x[4], gp_new.x[2]) * v
+    # n_rot = _rotate_about_spinaxis(n, gp_new.x[4])
 
     X1 = to_cartesian(gp.x)
     X2 = to_cartesian(gp_new.x)
     dist = sum(i -> i^2, X1 .- X2)
 
-    return _fast_dot(v_geodesic, n_rot) < 0 && isapprox(dist, 0, atol = 1e-10)
+    # return _fast_dot(v_geodesic, n_rot) < 0 && 
+    return isapprox(dist, 0, atol = 1e-12)
 end
 
 function jacobian_∂αβ_∂gr(
     m::AbstractMetric,
     x::SVector{4},
-    x_target::SVector{4},
     d::AbstractAccretionDisc,
     α,
     β,
     max_time;
-    μ = 0,
     redshift_pf = ConstPointFunctions.redshift(m, x),
-    use_cross_section = false,
     solver_opts...,
 )
     domain_limiter = d isa AbstractThickAccretionDisc ? domain_upper_hemisphere() : nothing
+
     # these type hints are crucial for forward diff to be type stable
     function _jacobian_f(impact_params::SVector{2,T})::SVector{2,T} where {T}
-        # use underscores to avoid boxing
-        _α, _β = impact_params
-
-        v = constrain_all(m, x, map_impact_parameters(m, x, _α, _β), μ)
         sol = tracegeodesics(
             m,
             x,
-            v,
+            map_impact_parameters(m, x, impact_params[1], impact_params[2]),
             d,
-            (0.0, max_time);
+            max_time;
             save_on = false,
             callback = domain_limiter,
             solver_opts...,
         )
         gp = unpack_solution(sol)
-        g = redshift_pf(m, gp, max_time)
+        ρ = _equatorial_project(gp.x)
 
-        # change the way we calculate the return values
-        # for certain regions of thick discs, where there is rapid change
-        # it is easier to compute the jacobian with respect to the height
-        # instead of cylindrical ρ, and then apply the chain rule
-        if (d isa AbstractThickAccretionDisc) && use_cross_section
-            # return height and g
-            SVector(_spinaxis_project(gp.x), g)
+        # if within the inner radius of the disc, the redshift might be more or 
+        # less undefined, or at the very least discontinuous, causing havoc with
+        # the gradients. furthermore, we shouldn't expect to have any geodesics that
+        # fall within the inner radius thanks to the root finder. so what we do
+        # instead is set δg to zero, which causes the inverse jacobian to be infinite
+        # which we later use as a check for "visibility"
+        # 
+        # todo: this is not perfect, but works well enough
+        g = if (d isa AbstractThickAccretionDisc) && (ρ < inner_radius(d))
+            zero(T)
         else
-            # return r and g (don't use ρ since r tends to change more
-            # irrespective of disc)
-            SVector(gp.x[2], g)
+            redshift_pf(m, gp, max_time)
         end
+
+        SVector(ρ, g)
     end
 
     # compute |∂(r,g) / ∂(α,β)|⁻¹
     j_matrix = ForwardDiff.jacobian(_jacobian_f, SVector(α, β))
-    J = abs(inv(det(j_matrix)))
-
-    # compute additional chain rule terms
-    if (d isa AbstractThickAccretionDisc) && use_cross_section
-        # we'd need |∂rₑ / ∂h|⁻¹, which is just | ∂h / ∂rₑ |
-        ∂h∂rₑ =
-            ForwardDiff.derivative(ρ -> cross_section(d, ρ), _equatorial_project(x_target))
-        J * abs(∂h∂rₑ)
-    else
-        ∂rₑ∂r = inv(abs(sin(x_target[3])))
-        J * ∂rₑ∂r
-    end
+    abs(inv(det(j_matrix)))
 end
 
 function _make_target_objective(
