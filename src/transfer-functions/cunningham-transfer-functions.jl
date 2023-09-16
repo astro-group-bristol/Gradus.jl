@@ -36,9 +36,9 @@ _is_unstable(setup::_TransferFunctionSetup, d::AbstractAccretionDisc, r) =
 
 _calculate_transfer_function(rₑ, g, g✶, J) = @. (1 / (π * rₑ)) * g * √(g✶ * (1 - g✶)) * J
 
-function _adjust_extrema!(g::AbstractArray{T}) where {T}
-    g[1] = zero(T)
-    g[end] = one(T)
+function _adjust_extrema!(arr::AbstractArray{T}, min = zero(T), max = one(T)) where {T}
+    arr[1] = min
+    arr[end] = max
 end
 
 function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2; h = 1e-6)
@@ -71,11 +71,8 @@ function _make_sorted_with_adjustments!(g1, f1, t1, g2, f2, t2; h = 1e-6)
     t1 = t1[J1]
     t2 = t2[J2]
     # restore endpoints
-    t1[1] = t_lo
-    t1[end] = t_hi
-    t2[1] = t_lo
-    t2[end] = t_hi
-
+    _adjust_extrema!(t1, t_lo, t_hi)
+    _adjust_extrema!(t2, t_lo, t_hi)
     _adjust_extrema!(g1)
     _adjust_extrema!(g2)
     g1, f1, t1, g2, f2, t2
