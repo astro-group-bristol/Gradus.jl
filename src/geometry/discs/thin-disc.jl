@@ -22,7 +22,7 @@ function distance_to_disc(d::ThinDisc, x4; gtol)
     if ρ < d.inner_radius || ρ > d.outer_radius
         return one(eltype(x4))
     end
-    _spinaxis_project(x4) - (gtol * x4[2])
+    _spinaxis_project(x4, signed = false) - _gtol_error(gtol, x4)
 end
 
 export ThinDisc

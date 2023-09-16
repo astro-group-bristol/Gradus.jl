@@ -5,7 +5,7 @@
     velocity,
     geometry::AbstractAccretionGeometry,
     args...;
-    gtol = 1e-4,
+    gtol = 1e-2,
     callback = nothing,
     kwargs...,
 )

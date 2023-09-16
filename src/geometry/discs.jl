@@ -1,3 +1,13 @@
+_gtol_error(gtol, x::SVector) = _gtol_error(gtol, x[2])
+function _gtol_error(gtol, r; cut = 80)
+    R = abs(r)
+    if R < cut
+        gtol * R
+    else
+        gtol * sqrt(cut * R)
+    end
+end
+
 """
     distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...)
 
@@ -60,7 +70,7 @@ function distance_to_disc(d::EllipticalDisc, x4; gtol)
     y = √((1 - (x4[2] / d.semi_major)^2) * d.semi_minor^2)
     # check height less than y with tolerance
     h = abs(x4[2] * cos(x4[3]))
-    h - y - (gtol * x4[2])
+    h - y - _gtol_error(gtol, x4)
 end
 
 struct PrecessingDisc{T,D<:AbstractAccretionDisc{T}} <: AbstractAccretionDisc{T}
