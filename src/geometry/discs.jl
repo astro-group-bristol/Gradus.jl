@@ -1,14 +1,6 @@
 _gtol_error(gtol, x::SVector) = _gtol_error(gtol, x[2])
-function _gtol_error(gtol, r)
-    R = abs(r)
-    R < 80 && return gtol * R
-    sR = √R
-    if R < 600
-        gtol * 10 * sR
-    else
-        gtol * 20 * sR
-    end
-end
+# heuristic, no need for accuracy here
+_gtol_error(gtol, r) = @fastmath gtol * abs(r)^0.9
 
 """
     distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...)
