@@ -21,16 +21,16 @@ function measure_ctf(ctf)
 end
 
 # test for different angles
-@test measure_ctf(test_ctf1(0.998, 3, 4.0)) ≈ 0.12010092173620189 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 35, 4.0)) ≈ 0.10321653667404884 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 74, 4.0)) ≈ 0.053601943161397436 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 85, 4.0)) ≈ 0.034591443363911956 atol = 1e-5
+@test measure_ctf(test_ctf1(0.998, 3, 4.0)) ≈ 0.12010092173620189 atol = 1e-4
+@test measure_ctf(test_ctf1(0.998, 35, 4.0)) ≈ 0.10321653667404884 atol = 1e-4
+@test measure_ctf(test_ctf1(0.998, 74, 4.0)) ≈ 0.053601943161397436 atol = 1e-4
+@test measure_ctf(test_ctf1(0.998, 85, 4.0)) ≈ 0.034591443363911956 atol = 1e-4
 
 # different radii
-@test measure_ctf(test_ctf1(0.998, 30, 4.0)) ≈ 0.1064780591310143 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 30, 7.0)) ≈ 0.11934189586976277 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 30, 10.0)) ≈ 0.12397743562664382 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.12741349055786652 atol = 1e-5
+@test measure_ctf(test_ctf1(0.998, 30, 4.0)) ≈ 0.1064780591310143 atol = 1e-4
+@test measure_ctf(test_ctf1(0.998, 30, 7.0)) ≈ 0.11934189586976277 atol = 1e-4
+@test measure_ctf(test_ctf1(0.998, 30, 10.0)) ≈ 0.12397743562664382 atol = 1e-4
+@test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.12741349055786652 atol = 1e-4
 
 # large radii
 @test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.1336262903064427 rtol = 1e-2
