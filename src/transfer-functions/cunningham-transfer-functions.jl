@@ -99,6 +99,7 @@ function splitbranches(ctf::CunninghamTransferData{T}) where {T}
     N1 = i2 - i1 + 1
     N2 = length(ctf.f) - N1 + 2
     # allocate branches
+    # todo: do this all at once with a matrix
     branch1_f = zeros(T, N1)
     branch2_f = zeros(T, N2)
     branch1_t = zeros(T, N1)
@@ -171,7 +172,6 @@ function _setup_workhorse_jacobian_with_kwargs(
         jacobian_∂αβ_∂gr(
             m,
             x,
-            rₑ,
             jacobian_disc,
             α_,
             β_,
@@ -274,12 +274,13 @@ function _rear_workhorse(
             end
         end
         is_visible, J = if !isnan(r₊) && isapprox(r, r₊, atol = 1e-3)
+            # trace jacobian on updated impact parameters
             α, β = _rθ_to_αβ(r₊, θ; α₀ = setup.α₀, β₀ = setup.β₀)
-            true, jacobian_function(α, β)
+            _J = jacobian_function(α, β)
+            isfinite(_J), _J
         else
             false, NaN
         end
-        # is_visible = _is_visible(m, d, gp, n)
         (g, J, gp.x[1], is_visible)
     end
 end

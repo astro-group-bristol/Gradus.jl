@@ -233,7 +233,6 @@ end
 function jacobian_∂αβ_∂gr(
     m::AbstractMetric,
     x::SVector{4},
-    rₑ,
     d::AbstractAccretionDisc,
     α,
     β,
@@ -242,6 +241,7 @@ function jacobian_∂αβ_∂gr(
     solver_opts...,
 )
     domain_limiter = d isa AbstractThickAccretionDisc ? domain_upper_hemisphere() : nothing
+
     # these type hints are crucial for forward diff to be type stable
     function _jacobian_f(impact_params::SVector{2,T})::SVector{2,T} where {T}
         sol = tracegeodesics(
@@ -255,8 +255,23 @@ function jacobian_∂αβ_∂gr(
             solver_opts...,
         )
         gp = unpack_solution(sol)
-        g = redshift_pf(m, gp, max_time)
-        SVector(_equatorial_project(gp.x), g)
+        ρ = _equatorial_project(gp.x)
+
+        # if within the inner radius of the disc, the redshift might be more or 
+        # less undefined, or at the very least discontinuous, causing havoc with
+        # the gradients. furthermore, we shouldn't expect to have any geodesics that
+        # fall within the inner radius thanks to the root finder. so what we do
+        # instead is set δg to zero, which causes the inverse jacobian to be infinite
+        # which we later use as a check for "visibility"
+        # 
+        # todo: this is not perfect, but works well enough
+        g = if (d isa AbstractThickAccretionDisc) && (ρ < inner_radius(d))
+            zero(T)
+        else
+            redshift_pf(m, gp, max_time)
+        end
+
+        SVector(ρ, g)
     end
 
     # compute |∂(r,g) / ∂(α,β)|⁻¹
