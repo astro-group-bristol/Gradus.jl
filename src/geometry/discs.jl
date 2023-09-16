@@ -1,10 +1,12 @@
 _gtol_error(gtol, x::SVector) = _gtol_error(gtol, x[2])
-function _gtol_error(gtol, r; cut = 80)
+function _gtol_error(gtol, r)
     R = abs(r)
-    if R < cut
-        gtol * R
+    R < 80 && return gtol * R
+    sR = √R
+    if R < 600
+        gtol * 10 * sR
     else
-        gtol * sqrt(cut * R)
+        gtol * 20 * sR
     end
 end
 

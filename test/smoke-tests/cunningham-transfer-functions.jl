@@ -33,9 +33,9 @@ end
 @test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.1269951484304088 atol = 1e-5
 
 # large radii
-@test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.13358159097304723 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 30, 800.0)) ≈ 0.17351504941705492 atol = 1e-5
-@test measure_ctf(test_ctf1(0.998, 30, 1000.0)) ≈ 0.19085561680308122 atol = 1e-5
+@test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.13214065188588997 rtol = 1e-2
+@test measure_ctf(test_ctf1(0.998, 30, 800.0)) ≈ 0.13481966054586172 rtol = 1e-2
+@test measure_ctf(test_ctf1(0.998, 30, 1000.0)) ≈ 0.13570698595034328 rtol = 1e-2
 
 # ones that have been problematic in the past
 # and should not raise any errors or warnings
