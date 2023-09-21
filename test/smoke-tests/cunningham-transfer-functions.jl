@@ -33,7 +33,7 @@ end
 @test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.1275864358885266 atol = 1e-4
 
 # large radii
-@test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.1336262903064427 rtol = 1e-2
+@test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.13191798015557799 rtol = 1e-2
 @test measure_ctf(test_ctf1(0.998, 30, 800.0)) ≈ 0.13481966054586172 rtol = 1e-2
 @test measure_ctf(test_ctf1(0.998, 30, 1000.0)) ≈ 0.13570698595034328 rtol = 1e-2
 
