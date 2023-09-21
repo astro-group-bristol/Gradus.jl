@@ -1,3 +1,21 @@
+_warn_disc_integration_limits(::AbstractAccretionGeometry, _, _) = nothing
+function _warn_disc_integration_limits(d::ThinDisc, minrₑ, maxrₑ)
+    if !(d.inner_radius ≈ minrₑ) && (d.inner_radius != 0)
+        @warn """
+        `ThinDisc` inner radius does not equal `minrₑ`. Integration occurs only over 
+        `minrₑ`, and inner radius of the disc is ignored. Set the inner radius to `0` to
+        supress this message.
+        """
+    end
+    if !(d.inner_radius ≈ maxrₑ) && (d.outer_radius != Inf)
+        @warn """
+        `ThinDisc` outer radius does not equal `maxrₑ`. Integration occurs only over 
+        `maxrₑ`, and outer radius of the disc is ignored. Set the outer radius to `Inf` to
+        supress this message.
+        """
+    end
+end
+
 @inline function lineprofile(
     m::AbstractMetric,
     u,
@@ -48,6 +66,7 @@ function lineprofile(
     Nr = 1000,
     kwargs...,
 )
+    _warn_disc_integration_limits(d, minrₑ, maxrₑ)
     radii = Grids._inverse_grid(minrₑ, maxrₑ, numrₑ)
     itfs = interpolated_transfer_branches(m, u, d, radii; verbose = verbose, kwargs...)
     flux = integrate_lineprofile(ε, itfs, radii, bins; h = h, Nr = Nr)

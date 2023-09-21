@@ -1,3 +1,9 @@
+_promote_disc_for_transfer_functions(d::AbstractAccretionDisc) = (d, d)
+function _promote_disc_for_transfer_functions(::ThinDisc{T}) where {T}
+    plane = DatumPlane(zero(T))
+    plane, plane
+end
+
 struct _TransferFunctionSetup{T}
     h::T
     θ_offset::T
@@ -209,8 +215,16 @@ function _rear_workhorse(
     rₑ;
     kwargs...,
 )
-    workhorse, jacobian_function, _ =
-        _setup_workhorse_jacobian_with_kwargs(setup, m, x, d, rₑ; kwargs...)
+    disc, jacobian_disc = _promote_disc_for_transfer_functions(d)
+    workhorse, jacobian_function, _ = _setup_workhorse_jacobian_with_kwargs(
+        setup,
+        m,
+        x,
+        disc,
+        rₑ;
+        jacobian_disc = jacobian_disc,
+        kwargs...,
+    )
     function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
         g, gp, r = workhorse(θ)
         α, β = _rθ_to_αβ(r, θ; α₀ = setup.α₀, β₀ = setup.β₀)
