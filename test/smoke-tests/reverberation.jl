@@ -39,8 +39,8 @@ model1 = LampPostModel()
 freq1, τ1 = calc_lag_freq(m, d, model1, radii, itb)
 
 # smoke test
-@test sum(freq1) ≈ 2449.8787687490535 atol = 1e-2
-@test τ1[132] ≈ 9.281677930459137 atol = 1e-2
+@test sum(freq1) ≈ 2449.8787687490535 rtol = 1e-2
+@test τ1[132] ≈ 9.281677930459137 rtol = 1e-2
 
 # check it works for thick discs too
 d_thick = ShakuraSunyaev(m)
@@ -49,4 +49,4 @@ itb_thick = Gradus.interpolated_transfer_branches(m, x, d_thick, radii; β₀ = 
 freq2, τ2 = calc_lag_freq(m, d_thick, model1, radii, itb_thick)
 
 # should be the same at this inclination
-@test sum(freq2) ≈ 2449.8787687490535 atol = 1e-2
+@test sum(freq2) ≈ 2449.8787687490535 rtol = 1e-2
