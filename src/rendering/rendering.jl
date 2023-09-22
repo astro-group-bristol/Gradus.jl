@@ -6,8 +6,8 @@ function render_configuration(
     image_height,
     αlims,
     βlims,
-    μ = T(0.0),
-    q = T(0.0),
+    μ = 0,
+    q = 0,
     trace = TraceGeodesic(; μ = μ, q = q),
     kwargs...,
 ) where {T}
@@ -148,8 +148,8 @@ function _render_velocity_function(
     @assert issorted(αlims) "α limits must be sorted"
     @assert issorted(βlims) "β limits must be sorted"
 
-    αs = range(αlims[1], αlims[2], image_width)
-    βs = range(βlims[1], βlims[2], image_height)
+    αs = range(T(αlims[1]), T(αlims[2]), image_width)
+    βs = range(T(βlims[1]), T(βlims[2]), image_height)
     xfm = lnr_momentum_to_global_velocity_transform(m, position)
     function velfunc(i)
         # get index on image plane
