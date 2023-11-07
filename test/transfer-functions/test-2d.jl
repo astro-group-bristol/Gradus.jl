@@ -23,7 +23,7 @@ tf = lagtransfer(
 
 # check number of intersection points
 @test length(tf.observer_to_disc) == 335
-@test length(tf.emissivity_profile.geodesic_points) == 58
+@test length(tf.coronal_geodesics.geodesic_points) == 58
 
 # ensure binning works as expected
 t, E, f = binflux(tf, N_t = 100, N_E = 100)

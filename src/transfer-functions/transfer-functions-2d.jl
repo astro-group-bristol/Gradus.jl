@@ -174,21 +174,21 @@ function lagtransfer(
 end
 
 function binflux(tf::LagTransferFunction; kwargs...)
-    profile = AnalyticRadialDiscProfile(r -> r^-3, tf.emissivity_profile)
+    profile = AnalyticRadialDiscProfile(r -> r^-3, tf.coronal_geodesics)
     binflux(tf, profile; kwargs...)
 end
 
 function binflux(
     tf::LagTransferFunction,
     profile::AbstractDiscProfile;
-    redshift = ConstPointFunctions.redshift(tf.emissivity_profile.metric, tf.x),
+    redshift = ConstPointFunctions.redshift(tf.coronal_geodesics.metric, tf.x),
     E₀ = 6.4,
     t0 = tf.x[2],
     kwargs...,
 )
     t = coordtime_at(profile, tf.observer_to_disc)
     ε = emissivity_at(profile, tf.observer_to_disc)
-    g = redshift.(tf.emissivity_profile.metric, tf.observer_to_disc, tf.max_t)
+    g = redshift.(tf.coronal_geodesics.metric, tf.observer_to_disc, tf.max_t)
     # calculate flux
     f = @. g^3 * ε * tf.image_plane_areas
     # normalize
