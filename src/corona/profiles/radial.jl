@@ -6,11 +6,23 @@ struct RadialDiscProfile{T,I} <: AbstractDiscProfile
     interp_t::I
 end
 
-emissivity_at(prof::RadialDiscProfile, r::Number) = prof.interp_ε(r)
+@inline function _enforce_interpolation_bounds(r::Number, prof::RadialDiscProfile)
+    r_min = first(prof.radii)
+    r_max = last(prof.radii)
+    return _enforce_interpolation_bounds(r, r_min, r_max)
+end
+
+function emissivity_at(prof::RadialDiscProfile, r::Number)
+    r_bounded = _enforce_interpolation_bounds(r, prof)
+    prof.interp_ε(r_bounded)
+end
 emissivity_at(prof::RadialDiscProfile, gp::AbstractGeodesicPoint) =
     emissivity_at(prof, _equatorial_project(gp.x))
 
-coordtime_at(prof::RadialDiscProfile, r::Number) = prof.interp_t(r)
+function coordtime_at(prof::RadialDiscProfile, r::Number)
+    r_bounded = _enforce_interpolation_bounds(r, prof)
+    prof.interp_t(r_bounded)
+end
 coordtime_at(prof::RadialDiscProfile, gp::AbstractGeodesicPoint) =
     coordtime_at(prof, _equatorial_project(gp.x)) + gp.x[1]
 

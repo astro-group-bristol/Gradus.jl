@@ -16,10 +16,22 @@ function AnalyticRadialDiscProfile(emissivity, cg::CoronaGeodesics)
     AnalyticRadialDiscProfile(emissivity, t)
 end
 
-emissivity_at(prof::AnalyticRadialDiscProfile, r::Number) = prof.ε(r)
+function emissivity_at(prof::AnalyticRadialDiscProfile, r::Number)
+    r_bounded = _enforce_interpolation_bounds(r, prof)
+    prof.ε(r)
+end
 emissivity_at(prof::AnalyticRadialDiscProfile, gp::AbstractGeodesicPoint) =
     emissivity_at(prof, _equatorial_project(gp.x))
 
-coordtime_at(prof::AnalyticRadialDiscProfile, r::Number) = prof.t(r)
+function coordtime_at(prof::AnalyticRadialDiscProfile, r::Number)
+    r_bounded = _enforce_interpolation_bounds(r, prof)
+    prof.t(r_bounded)
+end
 coordtime_at(prof::AnalyticRadialDiscProfile, gp::AbstractGeodesicPoint) =
     coordtime_at(prof, _equatorial_project(gp.x)) + gp.x[1]
+
+function _enforce_interpolation_bounds(r::Number, prof::AnalyticRadialDiscProfile)
+    r_min = first(prof.t.t)
+    r_max = last(prof.t.t)
+    _enforce_interpolation_bounds(r, r_min, r_max)
+end

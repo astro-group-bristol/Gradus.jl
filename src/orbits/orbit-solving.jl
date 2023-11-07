@@ -112,13 +112,12 @@ struct PlungingInterpolation{M,_interp_type}
         vr = sol[6, :][I]
         vϕ = sol[8, :][I]
 
-        rinterp = DataInterpolations.LinearInterpolation(vt, r; extrapolate=true)
-
-        new{M,typeof(rinterp)}(
+        r_interp = _make_interpolation(r, vt)
+        new{M,typeof(r_interp)}(
             m,
-            rinterp,
-            DataInterpolations.LinearInterpolation(vr, r; extrapolate=true),
-            DataInterpolations.LinearInterpolation(vϕ, r; extrapolate=true),
+            r_interp,
+            _make_interpolation(r, vr),
+            _make_interpolation(r, vϕ),
         )
     end
 end
@@ -128,9 +127,10 @@ function Base.show(io::IO, ::PlungingInterpolation{M}) where {M}
 end
 
 function (pintrp::PlungingInterpolation)(r)
-    vt = pintrp.t(r)
-    vr = pintrp.r(r)
-    vϕ = pintrp.ϕ(r)
+    r_bounded = _enforce_interpolation_bounds(r, pintrp)
+    vt = pintrp.t(r_bounded)
+    vr = pintrp.r(r_bounded)
+    vϕ = pintrp.ϕ(r_bounded)
     SVector(vt, vr, 0, vϕ)
 end
 
@@ -164,6 +164,10 @@ function interpolate_plunging_velocities(
     )
 
     PlungingInterpolation(m, sol)
+end
+
+function _enforce_interpolation_bounds(r::Number, pintrp::PlungingInterpolation)
+    _enforce_interpolation_bounds(r, first(pintrp.r.t), last(pintrp.r.t))
 end
 
 export solve_equatorial_circular_orbit,
