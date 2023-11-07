@@ -32,17 +32,17 @@ struct LagTransferFunction{T,X,E,P}
     max_t::T
     x::X
     image_plane_areas::Vector{T}
-    emissivity_profile::E
+    coronal_geodesics::E
     observer_to_disc::Vector{P}
 end
 
 function Base.show(io::IO, ::MIME"text/plain", tf::LagTransferFunction)
-    text = """LagTransferFunction for $(typeof(tf.emissivity_profile.metric)) 
+    text = """LagTransferFunction for $(typeof(tf.coronal_geodesics.metric)) 
       . observer position      
           $(tf.x)
-      . model                         : $(typeof(tf.emissivity_profile.model))
+      . model                         : $(typeof(tf.coronal_geodesics.model))
       . observer to disc photon count : $(length(tf.observer_to_disc))
-      . source to disc photon count   : $(length(tf.emissivity_profile.geodesic_points))
+      . source to disc photon count   : $(length(tf.coronal_geodesics.geodesic_points))
       Total memory: $(Base.format_bytes(Base.summarysize(tf)))
     """
     print(io, text)

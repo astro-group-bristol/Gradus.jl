@@ -36,6 +36,13 @@ function _make_interpolation(x, y)
     DataInterpolations.LinearInterpolation(y, x)
 end
 
+@inline function _enforce_interpolation_bounds(r::Number, r_min::Number, r_max::Number)
+    if (r < r_min) || (r > r_max)
+        @warn "Interpolation out of bounds $r ∉ [$(r_min),  $(r_max)]. Additional geodesic samples may be required."
+    end
+    clamp(r, r_min, r_max)
+end
+
 @inline function _linear_interpolate(y1, y2, θ)
     (1 - θ) * y1 + θ * y2
 end
