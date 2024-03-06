@@ -72,7 +72,7 @@ p = heatmap(
     α,
     β,
     img,
-    color = :grayC,
+    color = Plots.cgrad(:thermal, rev = true),
     xlabel = "α",
     ylabel = "β",
     aspect_ratio = 1,
@@ -615,14 +615,16 @@ a, b, img = rendergeodesics(
     hs, 
     20_000.0, 
     verbose = true, 
+    αlims = (-15, 15),
+    βlims = (-10, 10),
     trace = Gradus.TraceRadiativeTransfer(I₀ = 0.0),
     pf = PointFunction((m, gp, t) -> gp.aux[1]),
 )
 
 heatmap(a, b, img)
 ```
-![](./example-figures/example-hot-spot-slow.svg)
+![](./example-figures/example-hot-spot-slow.png)
 
 In the fast light regime, with an initial radial angle of `-2.6` gives a very different picture
 
-![](./example-figures/example-hot-spot-fast.svg)
+![](./example-figures/example-hot-spot-fast.png)
