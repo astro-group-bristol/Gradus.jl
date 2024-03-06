@@ -452,7 +452,7 @@ function calculate_line_profile(m, x, d, bins, plane)
         m, 
         x, 
         d, 
-        algorithm = BinningMethod(), 
+        method = BinningMethod(), 
         # no false images
         callback = domain_upper_hemisphere(),
         verbose = true,
