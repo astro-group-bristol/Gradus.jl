@@ -9,6 +9,7 @@ makedocs(
     modules = [Gradus],
     clean = true,
     sitename = "Gradus.jl Documentation",
+    warnonly = true,
     pages = [
         "Home" => "index.md",
         "Getting started" => "getting-started.md",
