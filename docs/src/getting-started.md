@@ -122,8 +122,7 @@ plot_paths(sol)
 # plot 
 plot_horizon!(m)
 ```
-
-![](./figs/getting-started-1-trajectories.svg)
+![](./example-figures/getting-started-1-trajectories.svg)
 
 Choosing the initial velocity in this manner lacks interpretation. We can instead use so-called _impact parameters_ $(\alpha, \beta)$. These may be thought of as follows: 
 
@@ -150,8 +149,7 @@ sols = tracegeodesics(m, xs, vs, λ_max)
 p = plot_paths(sols, legend=false)
 plot_horizon!(m, color = :black)
 ```
-
-![](./figs/getting-started-2-multi-trajectories.svg)
+![](./example-figures/getting-started-2-multi-trajectories.svg)
 
 When we invoke [`tracegeodesics`](@ref) in this way, Gradus.jl will automatically distribute the workload onto as many threads as Julia was started with. For example, starting julia with
 
@@ -211,8 +209,7 @@ end
 
 heatmap(α, β, times, aspect_ratio = 1)
 ```
-
-![](./figs/getting-started-3-basic-shadow.png)
+![](./example-figures/getting-started-3-basic-shadow.png)
 
 This is the so-called _shadow_ of a black hole.
 
@@ -256,15 +253,15 @@ Point functions can also be used in other contexts. For example, [`rendergeodesi
     # image parameters
     image_width = 800, 
     image_height = 800,
-    # the "zoom" -- field of view scale
-    fov = 52,
+    # the "zoom" -- use the impact parameter axes
+    αlims = (-10, 10),
+    βlims = (-8, 8),
     verbose = true
 )
 
 heatmap(α, β, image, aspect_ratio = 1)
 ```
-
-![](./figs/getting-started-4-hr-shadow.png)
+![](./example-figures/getting-started-4-hr-shadow.png)
 
 This is good, but let's make our render a bit more interesting.
 
@@ -303,13 +300,12 @@ y = cross_section.(sample)
 
 plot(sample, y, xlabel = "r", ylabel = "height", aspect_ratio = 1)
 ```
-
-![](./figs/getting-started-5-cross-section.svg)
+![](./example-figures/getting-started-5-cross-section.svg)
 
 We then wrap our cross section function as a [`ThickDisc`](@ref) type:
 
 ```julia
-d = ThickDisc(x -> cross_section(x[2]))
+d = ThickDisc(r -> cross_section(r))
 ```
 
 The thick disc callback receives the full four-position, so we forward only the radial component. 
@@ -338,14 +334,14 @@ x = SVector(0.0, 1000.0, deg2rad(70), 0.0)
     image_width = 1200, 
     image_height = 800,
     # zoom out a little
-    fov = 22,
+    αlims = (-20, 20),
+    βlims = (-15, 15),
     verbose = true
 )
 
 heatmap(α, β, image, aspect_ratio = 1)
 ```
-
-![](./figs/getting-started-6-weird-disc-render.png)
+![](./example-figures/getting-started-6-weird-disc-render.png)
 
 ## 6 Calculating physical quantities
 
@@ -377,14 +373,14 @@ This is another [`PointFunction`](@ref), and is used in the same way. Rendering 
     pf = redshift_geometry,
     image_width = 1200, 
     image_height = 800,
-    fov = 22,
+    αlims = (-20, 20),
+    βlims = (-15, 15),
     verbose = true
 )
 
 heatmap(α, β, image, aspect_ratio = 1)
 ```
-
-![](./figs/getting-started-7-weird-redshift.png)
+![](./example-figures/getting-started-7-weird-redshift.png)
 
 ## 7 Changing metric
 
@@ -407,14 +403,14 @@ j_redshift_geometry = j_redshift ∘ ConstPointFunctions.filter_intersected()
     pf = j_redshift_geometry,
     image_width = 1200, 
     image_height = 800,
-    fov = 22,
+    αlims = (-20, 20),
+    βlims = (-15, 15),
     verbose = true
 )
 
 heatmap(α, β, image, aspect_ratio = 1)
 ```
-
-![](./figs/getting-started-8-jm-weird-redshift.png)
+![](./example-figures/getting-started-8-jm-weird-redshift.png)
 
 ## 8 Calculating line profiles
 
@@ -444,8 +440,7 @@ plot(
     PolarPlane(GeometricGrid(); Nr = 10, Nθ = 20, r_max = 50.0)
 )
 ```
-
-![](./figs/getting-started-9-polar-plane.svg)
+![](./example-figures/getting-started-9-polar-plane.svg)
 
 Each point on this plane represent a photon which will be traced, and the intensity scaled according to the area the point covers on the image plane.
 
@@ -457,7 +452,7 @@ function calculate_line_profile(m, x, d, bins, plane)
         m, 
         x, 
         d, 
-        algorithm = BinnedLineProfile(), 
+        algorithm = BinningMethod(), 
         # no false images
         callback = domain_upper_hemisphere(),
         verbose = true,
@@ -471,9 +466,9 @@ end
 Note that [`lineprofile`](@ref) returns both the redshift $g$ (bins) and flux at each $g$. Since we specified the binning, we can ignore the first return value, and keep only the flux.
 
 ```julia
-d_j_thin = GeometricThinDisc(Gradus.isco(j_m), 200.0, π / 2)
+d_j_thin = ThinDisc(Gradus.isco(j_m), 200.0)
 # and for the schwarzschild metric
-d_s_thin = GeometricThinDisc(Gradus.isco(m), 200.0, π / 2)
+d_s_thin = ThinDisc(Gradus.isco(m), 200.0)
 
 f_j_thick_disc = calculate_line_profile(j_m, x, d, bins, plane)
 f_s_thick_disc = calculate_line_profile(m, x, d, bins, plane)
@@ -485,8 +480,7 @@ plot!(bins, f_s_thick_disc, label = "Schwarzschild[thick]")
 plot!(bins, f_j_thin_disc, label = "Johannsen[thin]")
 plot!(bins, f_s_thin_disc, label = "Schwarzschild[thin]")
 ```
-
-![](./figs/getting-started-10-line-profiles.svg)
+![](./example-figures/getting-started-10-line-profiles.svg)
 
 !!! note
     For how to use these line profiles and other observables in fitting programs, see [Exporting data products](@ref).
