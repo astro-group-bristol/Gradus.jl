@@ -438,6 +438,7 @@ include("metrics/kerr-refractive-ad.jl")
 include("metrics/dilaton-axion-ad.jl")
 include("metrics/bumblebee-ad.jl")
 include("metrics/kerr-newman-ad.jl")
+include("metrics/kerr-dark-matter.jl")
 include("metrics/minkowski.jl")
 
 include("geometry/geometry.jl")
