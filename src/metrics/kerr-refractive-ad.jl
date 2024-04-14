@@ -1,4 +1,5 @@
 module __KerrRefractiveAD
+using ..Gradus: _smooth_interpolate
 using ..StaticArrays
 
 @fastmath Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
@@ -22,18 +23,8 @@ using ..StaticArrays
     # need to interpolate the refractve index boundary
     # else we don't have a gradient to compute, and we miss it
     # hemorraging energy in the process
-    δr = 2.0
-    if r ≤ corona_radius
-        # ...
-    elseif corona_radius ≤ r ≤ corona_radius + δr
-        t = (r - corona_radius) / δr
-        # use an arbitrarily steep smooth interpolation
-        # this one isn't perfect, but does a good job
-        k = atan(1e5t) * 2 / π
-        n = k + n * (1 - k)
-    else
-        n = 1.0
-    end
+    t = _smooth_interpolate(r, corona_radius)
+    n = t + (1 - t) * n
 
     @SVector [tt / n^2, rr, θθ, ϕϕ, tϕ / n]
 end
