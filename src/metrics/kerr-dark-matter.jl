@@ -50,8 +50,6 @@ end # module
 """
     struct KerrDarkMatter
 
-$(FIELDS)
-
 https://arxiv.org/pdf/2003.06829.pdf
 """
 @with_kw struct KerrDarkMatter{T} <: AbstractStaticAxisSymmetric{T}
