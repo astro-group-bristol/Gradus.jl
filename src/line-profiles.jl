@@ -88,6 +88,7 @@ function lineprofile(
     # this 5maxrₑ is a heuristic that is insulting
     # todo: make it friendly
     plane = PolarPlane(GeometricGrid(); Nr = 450, Nθ = 1300, r_max = 5maxrₑ),
+    callback = domain_upper_hemisphere(),
     solver_args...,
 ) where {T}
     progress_bar = init_progress_bar("Lineprofile: ", trajectory_count(plane), verbose)
@@ -101,7 +102,7 @@ function lineprofile(
         save_on = false,
         verbose = verbose,
         progress_bar = progress_bar,
-        callback = domain_upper_hemisphere(),
+        callback = callback,
         ensemble = EnsembleEndpointThreads(),
         solver_args...,
     )
