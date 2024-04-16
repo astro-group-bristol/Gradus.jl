@@ -76,10 +76,10 @@ function _solve_orbit_θ(m, r)
     Gradus.Roots.find_zero(_objective, π / 2)
 end
 
-function make_circular_velocity_function(m::NoZMetric{T}) where {T}
+function make_circular_velocity_function(m::NoZMetric{T}; outer_radius = T(500.0), num_samples::Int = 200) where {T}
     isco = Gradus.isco(m)
 
-    rs = collect(Grids._geometric_grid(isco, T(500), 200))
+    rs = collect(Grids._geometric_grid(isco, outer_radius, num_samples))
     θs = Gradus._solve_orbit_θ.(m, rs)
     interp = Gradus._make_interpolation(rs, θs)
     function _velocity_function(r)

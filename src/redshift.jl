@@ -244,13 +244,13 @@ end
 For a full, annotated derivation of this method, see
 [the following blog post](https://fjebaker.github.io/blog/pages/2022-05-plunging-orbits/).
 """
-function interpolate_redshift(plunging_interpolation, u::SVector{4,T}) where {T}
+function interpolate_redshift(plunging_interpolation, u::SVector{4,T}; kwargs...) where {T}
     isco = Gradus.isco(plunging_interpolation.m)
     # metric matrix at observer
     m_obs = metric(plunging_interpolation.m, u)
     # fixed stationary observer velocity
     v_obs = SVector{4,T}(1, 0, 0, 0)
-    circ_velocity_func = make_circular_velocity_function(plunging_interpolation.m)
+    circ_velocity_func = make_circular_velocity_function(plunging_interpolation.m; kwargs...)
     function _interpolate_redshift_closure(m, gp, max_time)
         r = _equatorial_project(gp.x)
         v_disc = if r < isco
