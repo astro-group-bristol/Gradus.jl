@@ -250,6 +250,7 @@ function interpolate_redshift(plunging_interpolation, u::SVector{4,T}) where {T}
     m_obs = metric(plunging_interpolation.m, u)
     # fixed stationary observer velocity
     v_obs = SVector{4,T}(1, 0, 0, 0)
+    circ_velocity_func = make_circular_velocity_function(plunging_interpolation.m)
     function _interpolate_redshift_closure(m, gp, max_time)
         r = _equatorial_project(gp.x)
         v_disc = if r < isco
@@ -260,7 +261,7 @@ function interpolate_redshift(plunging_interpolation, u::SVector{4,T}) where {T}
             SVector{4}(vtemp[1], -vtemp[2], vtemp[3], vtemp[4])
         else
             # regular circular orbit
-            CircularOrbits.fourvelocity(plunging_interpolation.m, r)
+            circ_velocity_func(r)
         end
 
         # get metric matrix at position on disc
@@ -272,5 +273,12 @@ end
 
 interpolate_redshift(m::AbstractMetric, u::SVector{4}; kwargs...) =
     interpolate_redshift(interpolate_plunging_velocities(m; kwargs...), u)
+
+function make_circular_velocity_function(m::AbstractMetric)
+    function _circular_velocity(r)
+        CircularOrbits.fourvelocity(m, r)
+    end
+end
+
 
 export RedshiftFunctions, interpolate_redshift
