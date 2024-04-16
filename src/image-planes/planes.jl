@@ -51,7 +51,7 @@ end
 function unnormalized_areas(plane::PolarPlane)
     rs = collect(plane.grid(plane.r_min, plane.r_max, plane.Nr))
     # todo: do we need dr here?
-    # dr = diff(rs) 
+    # dr = diff(rs)
     # push!(dr, 0.0)
     A = @. rs^2 # * abs(dr)
     repeat(A, inner = (1, plane.Nθ))
@@ -101,25 +101,11 @@ function image_plane(plane::CartesianPlane, x)
     αs, βs
 end
 
-# @inline function tracing_configuration(
-#     m::AbstractMetric,
-#     position,
-#     plane::AbstractImagePlane,
-#     args...;
-#     kwargs...,
-# )
-#     αs, βs = impact_parameters(plane, position)
-#     velfunc(i) = map_impact_parameters(m, position, αs[i], βs[i])
-#     # forward remaining arguments
-#     tracing_configuration(
-#         m,
-#         position,
-#         velfunc,
-#         args...;
-#         trajectories = trajectory_count(plane),
-#         kwargs...,
-#     )
-# end
+function unnormalized_areas(plane::CartesianPlane{<:LinearGrid,T}) where {T}
+    X_size = 2 * (plane.Ny ÷ 2) - 1
+    Y_size = 2 * (plane.Nx ÷ 2) - 1
+    ones(T, (Y_size, X_size))
+end
 
 function promote_velfunc(m::AbstractMetric, position, plane::AbstractImagePlane, _unused)
     αs, βs = impact_parameters(plane, position)
