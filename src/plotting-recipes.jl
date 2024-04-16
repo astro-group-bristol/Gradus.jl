@@ -133,7 +133,7 @@ end
     end
 end
 
-@recipe function f(p::PolarPlane, u = SVector(0.0, 1000.0, π / 2, 0.0))
+@recipe function f(p::AbstractImagePlane, u = SVector(0.0, 1000.0, π / 2, 0.0))
     a, b = image_plane(p, u)
     seriestype --> :scatter
     color --> :black
