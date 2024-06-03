@@ -4,7 +4,7 @@ function add_julia_code!(examples::Vector{String}, src_file)
     for (lineno, line) in itt
         if line == "```julia"
             code = String["# $(src_file):$(lineno)"]
-            while ((_, line) = popfirst!(itt))[2] != "```"
+            while ((_, line)=popfirst!(itt))[2] != "```"
                 push!(code, line)
             end
             push!(examples, join(code, "\n"))
