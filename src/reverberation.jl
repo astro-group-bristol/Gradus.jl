@@ -56,7 +56,7 @@ function lag_frequency(
     radii = collect(range(Gradus.isco(m) + 1e-2, 300.0, 100)),
     kwargs...,
 ) where {T}
-    other_kwargs, em_setup = _EmissivityProfileSetup(T, spectrum; kwargs...)
+    other_kwargs, em_setup = EmissivityProfileSetup(T, spectrum; kwargs...)
     solver_kwargs, tf_setup = _TransferFunctionSetup(T; other_kwargs...)
 
     prof = emissivity_profile(em_setup, m, d, model; solver_kwargs...)

@@ -461,7 +461,9 @@ include("corona/disc-profiles.jl")
 include("transfer-functions/transfer-functions-2d.jl")
 include("corona/flux-calculations.jl")
 include("corona/emissivity.jl")
+include("corona/models/lamp-post.jl")
 include("corona/spectra.jl")
+
 
 include("special-radii.jl")
 include("redshift.jl")

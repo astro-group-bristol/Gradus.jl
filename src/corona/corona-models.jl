@@ -188,8 +188,3 @@ function tracecorona(
     mask = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
     CoronaGeodesics(trace, m, g, model, gps[mask], source_vels[mask])
 end
-
-include("models/lamp-post.jl")
-include("models/moving-source.jl")
-
-export LampPostModel
