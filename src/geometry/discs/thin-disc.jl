@@ -45,7 +45,8 @@ struct WarpedThinDisc{T,F} <: AbstractAccretionDisc{T}
     outer_radius::T
 end
 
-WarpedThinDisc(f; inner_radius = 0.0, outer_radius = 500.0) = WarpedThinDisc(f, inner_radius, outer_radius)
+WarpedThinDisc(f; inner_radius = 0.0, outer_radius = 500.0) =
+    WarpedThinDisc(f, inner_radius, outer_radius)
 
 optical_property(::Type{<:WarpedThinDisc}) = OpticallyThin()
 
@@ -64,4 +65,3 @@ function distance_to_disc(d::WarpedThinDisc, x4; gtol)
 end
 
 export ThinDisc, WarpedThinDisc
-

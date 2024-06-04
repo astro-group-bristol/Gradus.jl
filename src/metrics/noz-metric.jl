@@ -17,11 +17,15 @@ using ..MuladdMacro
         _epsilon = epsilon(M, a, ϵ, y)
 
         tt =
-            -1 + ((2M * r * (r^(2) + a^(2) * y^(2))) /
-             ((r^(2) + a^(2) * y^(2))^(2) + (r^(2) - 2M * r + a^(2) * y^(2)) * _epsilon))
+            -1 + (
+                (2M * r * (r^(2) + a^(2) * y^(2))) /
+                ((r^(2) + a^(2) * y^(2))^(2) + (r^(2) - 2M * r + a^(2) * y^(2)) * _epsilon)
+            )
         ϕϕ =
             (
-                (1 - y^2) * (r^2 + a^2 * y^2 + _epsilon) * (
+                (1 - y^2) *
+                (r^2 + a^2 * y^2 + _epsilon) *
+                (
                     r^4 +
                     a^4 * y^2 +
                     r^2 * (a^2 + a^2 * y^2 + _epsilon) +
@@ -33,7 +37,7 @@ using ..MuladdMacro
         yy = (r^(2) + a^(2) * y^(2) + _epsilon) / (1 - y^(2))
 
         tϕ =
-            -(2M * r * a*(1 - y^(2)) * (r^(2) + a^(2) * y^(2) + _epsilon)) /
+            -(2M * r * a * (1 - y^(2)) * (r^(2) + a^(2) * y^(2) + _epsilon)) /
             ((r^(2) + a^(2) * y^(2))^(2) + (r^(2) - 2M * r + a^(2) * y^(2)) * _epsilon)
 
         # include the coordinate transformation factor
@@ -76,7 +80,11 @@ function _solve_orbit_θ(m, r)
     Gradus.Roots.find_zero(_objective, π / 2)
 end
 
-function make_circular_velocity_function(m::NoZMetric{T}; outer_radius = T(500.0), num_samples::Int = 200) where {T}
+function make_circular_velocity_function(
+    m::NoZMetric{T};
+    outer_radius = T(500.0),
+    num_samples::Int = 200,
+) where {T}
     isco = Gradus.isco(m)
 
     rs = collect(Grids._geometric_grid(isco, outer_radius, num_samples))
@@ -92,11 +100,11 @@ function isco(m::NoZMetric{T}) where {T}
     kerr_isco = isco(KerrMetric(M = m.M, a = m.a))
     rs = range(inner_radius(m), kerr_isco + 1.0, 100)
     thetas = map(rs) do r
-       try
-          _solve_orbit_θ(m, r)
-       catch
-           zero(T)
-       end
+        try
+            _solve_orbit_θ(m, r)
+        catch
+            zero(T)
+        end
     end
 
     # TODO: this is such a hack

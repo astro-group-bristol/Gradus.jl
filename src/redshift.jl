@@ -195,7 +195,7 @@ end
     r = Gradus._equatorial_project(gp.x)
     v_disc = if r < isco
         # plunging region
-        SVector(uᵗ(m.M, isco, r, m.a), -uʳ(m.M, isco, r), 0, uᶲ(m.M, isco, r, m.a))
+        SVector(uᵗ(m.M, isco, r, m.a), -uʳ(m.M, isco, r), zero(r), uᶲ(m.M, isco, r, m.a))
     else
         Gradus.CircularOrbits.fourvelocity(m, r)
     end
@@ -250,7 +250,8 @@ function interpolate_redshift(plunging_interpolation, u::SVector{4,T}; kwargs...
     m_obs = metric(plunging_interpolation.m, u)
     # fixed stationary observer velocity
     v_obs = SVector{4,T}(1, 0, 0, 0)
-    circ_velocity_func = make_circular_velocity_function(plunging_interpolation.m; kwargs...)
+    circ_velocity_func =
+        make_circular_velocity_function(plunging_interpolation.m; kwargs...)
     function _interpolate_redshift_closure(m, gp, max_time)
         r = _equatorial_project(gp.x)
         v_disc = if r < isco

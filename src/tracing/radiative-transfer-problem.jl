@@ -72,13 +72,22 @@ function _intensity_delta(
     r_isco,
     λ,
 ) where {T}
-    sum(enumerate(geometry.geometry)) do (i, g)
-        if within[i]
-            radiative_transfer(m, x, k, g, I, ν₀, r_isco, λ)
-        else
-            zero(T)
-        end
+    total::T = zero(T)
+    for i in eachindex(geometry.geometry)
+        total += _intensity_delta(
+            m,
+            x,
+            k,
+            geometry.geometry[i],
+            within,
+            I,
+            ν₀,
+            r_isco,
+            λ;
+            index = i,
+        )
     end
+    total
 end
 
 function _intensity_delta(
@@ -90,9 +99,10 @@ function _intensity_delta(
     I,
     ν₀,
     r_isco,
-    λ,
+    λ;
+    index = 1,
 ) where {T}
-    if within[1]
+    if within[index]
         radiative_transfer(m, x, k, geometry, I, ν₀, r_isco, λ)
     else
         zero(T)
@@ -134,7 +144,7 @@ function radiative_transfer_ode_problem(
     r_isco = Gradus.isco(m)
 
     function f(u::SVector{9,T}, p, λ) where {T}
-        @inbounds let x = SVector{4,T}(u[1:4]), k = SVector{4,T}(u[5:8]), I = u[9]
+        @inbounds @views let x = SVector{4,T}(u[1:4]), k = SVector{4,T}(u[5:8]), I = u[9]
             _m = get_metric(p)
             dk = SVector{4,T}(geodesic_equation(_m, x, k))
             dI = _intensity_delta(

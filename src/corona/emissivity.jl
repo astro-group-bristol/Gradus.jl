@@ -1,4 +1,4 @@
-struct _EmissivityProfileSetup{TryToOptimize,T,SamplerType,SpectrumType}
+struct EmissivityProfileSetup{TryToOptimize,T,SamplerType,SpectrumType}
     λmax::T
     δmin::T
     δmax::T
@@ -7,7 +7,7 @@ struct _EmissivityProfileSetup{TryToOptimize,T,SamplerType,SpectrumType}
     n_samples::Int
 end
 
-function _EmissivityProfileSetup(
+function EmissivityProfileSetup(
     T,
     spectrum;
     λmax = T(10000),
@@ -22,7 +22,7 @@ function _EmissivityProfileSetup(
     else
         EvenSampler(BothHemispheres(), GoldenSpiralGenerator())
     end
-    setup = _EmissivityProfileSetup{isnothing(sampler),T,typeof(_sampler),typeof(spectrum)}(
+    setup = EmissivityProfileSetup{isnothing(sampler),T,typeof(_sampler),typeof(spectrum)}(
         λmax,
         δmin,
         δmax,
@@ -73,30 +73,6 @@ function source_to_disc_emissivity(
     I = coronal_spectrum(spec, g)
     N * I / (A * γ)
 end
-
-"""
-    point_source_equatorial_disc_emissivity(θ, g, A, γ, spec)
-
-Calculate the emissivity of a point illuminating source on the spin axis for an annulus of the
-equatorial accretion disc with (proper) area `A`. The precise formulation follows from Dauser et al. (2013),
-with the emissivity calculated as
-```math
-\\varepsilon = \\frac{\\sin \\theta}{A g^\\Gamma \\gamma}
-```
-where ``\\gamma`` is the Lorentz factor due to the velocity of the local disc frame. 
-The ratio of energies is `g` (computed with [`energy_ratio`](@ref)), with `spec` being the abstract
-coronal spectrum and  ``\\theta`` is the angle from the spin axis in the emitters from at which the geodesic was directed. 
-`coronal_spectrum` function is used to calculate the spectrum of the corona by taking `g` to the power of `Γ`, allowing
-further modification of spectrum if needed, based on the value of the photon index.
-
-The ``\\sin \\theta`` term appears to extend the result to three dimensions, since the
-Jacobian of the spherical coordinates (with ``r`` fixes) yields a factor ``\\sin \\theta``
-in order to maintain point density. It may be regarded as the PDF that samples ``\\theta`` uniformly.
-
-Dauser et al. (2013)
-"""
-point_source_equatorial_disc_emissivity(spec::AbstractCoronalSpectrum, θ, g, A, γ) =
-    sin(θ) * coronal_spectrum(spec, g) / (A * γ)
 
 """
     function emissivity_profile(
@@ -158,26 +134,12 @@ function emissivity_profile(
     ;
     kwargs...,
 ) where {T}
-    solver_kwargs, setup = _EmissivityProfileSetup(T, spectrum; kwargs...)
+    solver_kwargs, setup = EmissivityProfileSetup(T, spectrum; kwargs...)
     emissivity_profile(setup, m, d, model; solver_kwargs...)
 end
 
 function emissivity_profile(
-    setup::_EmissivityProfileSetup{TryToOptimize},
-    m,
-    d,
-    model;
-    kwargs...,
-) where {TryToOptimize}
-    if is_point_source(model) && TryToOptimize
-        _point_source_symmetric_emissivity_profile(setup, m, d, model; kwargs...)
-    else
-        _emissivity_profile(setup, m, d, model; kwargs...)
-    end
-end
-
-function _emissivity_profile(
-    setup::_EmissivityProfileSetup,
+    setup::EmissivityProfileSetup,
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
     model::AbstractCoronaModel,
@@ -207,79 +169,10 @@ function _proper_area(m, x::SVector{4})
     2π * det_g
 end
 
-function polar_angle_to_velfunc(m::AbstractMetric, x, v, δs)
+function polar_angle_to_velfunc(m::AbstractMetric, x, v, δs; ϕ = zero(eltype(x)))
     function _polar_angle_velfunc(i)
-        sky_angles_to_velocity(m, x, v, δs[i], 0.0)
+        sky_angles_to_velocity(m, x, v, δs[i], ϕ)
     end
-end
-
-function _point_source_symmetric_emissivity_profile(
-    setup::_EmissivityProfileSetup,
-    m::AbstractMetric,
-    d::AbstractAccretionGeometry,
-    model::AbstractCoronaModel;
-    callback = domain_upper_hemisphere(),
-    kwargs...,
-)
-    δs = deg2rad.(range(setup.δmin, setup.δmax, setup.n_samples))
-    # we assume a point source
-    x, v = sample_position_velocity(m, model)
-    velfunc = polar_angle_to_velfunc(m, x, v, δs)
-    gps = tracegeodesics(
-        m,
-        x,
-        velfunc,
-        d,
-        setup.λmax;
-        save_on = false,
-        ensemble = EnsembleEndpointThreads(),
-        callback = callback,
-        trajectories = length(δs),
-        kwargs...,
-    )
-
-    # filter only those that intersected, and sort radially
-    I = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
-    points = gps[I]
-    δs = δs[I]
-    J = sortperm(points, by = i -> _equatorial_project(i.x))
-    points = points[J]
-    δs = δs[J]
-
-    r, ε = _point_source_emissivity(m, d, setup.spectrum, v, δs, points)
-    t = [i.x[1] for i in @views(points[1:end-1])]
-
-    RadialDiscProfile(r, t, ε)
-end
-
-function _point_source_emissivity(
-    m::AbstractMetric,
-    d::AbstractAccretionGeometry,
-    spec::AbstractCoronalSpectrum,
-    source_velocity,
-    δs,
-    points::AbstractVector{<:AbstractGeodesicPoint{T}},
-) where {T}
-    # function for obtaining keplerian velocities
-    _disc_velocity = _keplerian_velocity_projector(m, d)
-    # get radial coordinate
-    r = [_equatorial_project(i.x) for i in points]
-
-    # radial bin size
-    Δr = diff(r)
-    _points = @views(points[1:end-1])
-
-    ε = map(enumerate(_points)) do (i, p)
-        v_disc = _disc_velocity(p.x)
-        gs = energy_ratio(m, p, source_velocity, v_disc)
-        γ = lorentz_factor(m, p.x, v_disc)
-        A = _proper_area(m, p.x) * Δr[i]
-
-        point_source_equatorial_disc_emissivity(spec, δs[i], gs, A, γ)
-    end
-
-    r = r[1:end-1]
-    r, ε
 end
 
 export emissivity_profile, tracecorona
