@@ -160,3 +160,21 @@ function RadialDiscProfile(
         kwargs...,
     )
 end
+
+"""
+    TimeDependentRadialDiscProfile{T,I}
+
+Time dependent radial disc profile. Each entry in the radii, emissivity, and
+time function maps to a specific contribution, along with the appropriate
+weighting when summing the emissivities at similar times together.
+"""
+struct TimeDependentRadialDiscProfile{T,I} <: AbstractDiscProfile
+    weights::Vector{T}
+    radii::Vector{Vector{T}}
+    ε::Vector{Vector{T}}
+    t::Vector{Vector{T}}
+end
+
+function emissivity_at(prof::TimeDependentRadialDiscProfile, ρ, t)
+    # interpolate the time curve at ρ until we have some (ρ, t)
+end

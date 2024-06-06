@@ -462,6 +462,7 @@ include("transfer-functions/transfer-functions-2d.jl")
 include("corona/flux-calculations.jl")
 include("corona/emissivity.jl")
 include("corona/models/lamp-post.jl")
+include("corona/models/extended.jl")
 include("corona/spectra.jl")
 
 

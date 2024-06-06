@@ -55,6 +55,7 @@ sample_elevation(sm::AbstractDirectionSampler, i) =
     end
 end
 
+# TODO: check these aren't missing a sin(θ) term in the last row?
 function _cart_to_spher_jacobian(θ, ϕ)
     @SMatrix [
         sin(θ)*cos(ϕ) sin(θ)*sin(ϕ) cos(θ)
