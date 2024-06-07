@@ -1,4 +1,22 @@
-struct RingCorona{T} <: Gradus.AbstractCoronaModel{T}
+struct DiscCorona{T} <: AbstractCoronaModel{T}
+    "Radius of the disc"
+    r::T
+    "Height of the base of the cylinder above the disc"
+    h::T
+end
+
+function sample_position_velocity(m::AbstractMetric, model::DiscCorona{T}) where {T}
+    x = rand() * model.r
+    r = sqrt(x^2 + model.h^2)
+    # (x, y) flipped because coordinates are off the Z axis
+    θ = atan(x, model.h)
+    x = SVector{4,T}(0, r, θ, 0)
+    gcomp = metric_components(m, SVector(x[2], x[3]))
+    v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
+    x, v
+end
+
+struct RingCorona{T} <: AbstractCoronaModel{T}
     "Radius of the ring"
     r::T
     "Height of the base of the cylinder above the disc"
