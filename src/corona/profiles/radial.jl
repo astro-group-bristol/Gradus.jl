@@ -168,13 +168,60 @@ Time dependent radial disc profile. Each entry in the radii, emissivity, and
 time function maps to a specific contribution, along with the appropriate
 weighting when summing the emissivities at similar times together.
 """
-struct TimeDependentRadialDiscProfile{T,I} <: AbstractDiscProfile
+struct TimeDependentRadialDiscProfile{T} <: AbstractDiscProfile
     weights::Vector{T}
     radii::Vector{Vector{T}}
-    ε::Vector{Vector{T}}
     t::Vector{Vector{T}}
+    ε::Vector{Vector{T}}
 end
 
-function emissivity_at(prof::TimeDependentRadialDiscProfile, ρ, t)
+# effectively time averaged values
+function emissivity_at(prof::TimeDependentRadialDiscProfile{T}, ρ) where {T}
+    sum(eachindex(prof.radii)) do i
+        radii = prof.radii[i]
+        if (ρ >= radii[1]) && (ρ <= radii[end])
+            _make_interpolation(radii, prof.ε[i])(ρ)
+        else
+            zero(T)
+        end
+    end
+end
+
+function emissivity_interp(prof::TimeDependentRadialDiscProfile{T}, ρ) where {T}
+    ts = zeros(T, length(prof.weights))
+    εs = zeros(T, length(prof.weights))
     # interpolate the time curve at ρ until we have some (ρ, t)
+    for i in eachindex(prof.radii)
+        radii = prof.radii[i]
+        if ρ >= radii[1] && ρ <= radii[end]
+            t_interp = _make_interpolation(radii, prof.t[i])
+            ε_interp = _make_interpolation(radii, prof.ε[i])
+            ts[i] = t_interp(ρ)
+            εs[i] = ε_interp(ρ)
+        else
+            ts[i] = NaN
+            εs[i] = NaN
+        end
+    end
+
+    J = sortperm(ts)
+    _make_interpolation(ts[J], εs[J])
+end
+
+function emissivity_interp_limits(prof::TimeDependentRadialDiscProfile{T}, ρ) where {T}
+    ts = map(eachindex(prof.radii)) do i
+        radii = prof.radii[i]
+        if ρ >= radii[1] && ρ <= radii[end]
+            t_interp = _make_interpolation(radii, prof.t[i])
+            t_interp(ρ)
+        else
+            NaN
+        end
+    end
+    filter!(!isnan, ts)
+    if length(ts) > 0
+        extrema(ts)
+    else
+        (zero(T), zero(T))
+    end
 end
