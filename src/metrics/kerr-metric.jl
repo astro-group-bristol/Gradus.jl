@@ -2,7 +2,7 @@ module __BoyerLindquistAD
 using ..StaticArrays
 using ..MuladdMacro
 
-@muladd @fastmath begin
+@muladd begin
     Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
     Δ(r, R, a) = r^2 + a^2 - R * r
 
@@ -15,13 +15,15 @@ using ..MuladdMacro
         cosθ2 = (1 - sinθ2)
         # slightly faster, especially when considering AD evals
         Σ₀ = r^2 + a^2 * cosθ2
+        Σ₀⁻¹ = 1 / Σ₀
+        γ = sinθ2 * R * r * a
 
-        tt = -(1 - (R * r) / Σ₀)
+        tt = -(1 - (R * r) * Σ₀⁻¹)
         rr = Σ₀ / Δ(r, R, a)
         θθ = Σ₀
-        ϕϕ = sinθ2 * (r^2 + a^2 + (sinθ2 * R * r * a^2) / Σ₀)
+        ϕϕ = sinθ2 * (r^2 + a^2 + (γ * a) * Σ₀⁻¹)
 
-        tϕ = (-R * r * a * sinθ2) / Σ₀
+        tϕ = -γ * Σ₀⁻¹
         @SVector [tt, rr, θθ, ϕϕ, tϕ]
     end
 end
