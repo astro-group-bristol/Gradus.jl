@@ -65,20 +65,21 @@ function _intensity_delta(
     m,
     x,
     k::AbstractArray{T},
-    geometry::CompositeGeometry,
+    geometry::CompositeGeometry{K,D},
     within,
     I,
     ν₀,
     r_isco,
     λ,
-) where {T}
-    total::T = zero(T)
-    for i in eachindex(geometry.geometry)
-        total += _intensity_delta(
+) where {T,K,D}
+    indexed_geom = (enumerate(geometry.geometry)...,)
+    sum(indexed_geom) do args
+        i, geom = args
+        _intensity_delta(
             m,
             x,
             k,
-            geometry.geometry[i],
+            geom,
             within,
             I,
             ν₀,
@@ -87,7 +88,6 @@ function _intensity_delta(
             index = i,
         )
     end
-    total
 end
 
 function _intensity_delta(
