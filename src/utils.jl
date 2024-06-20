@@ -65,22 +65,32 @@ end
 
 Wrapper to different root solving backends to make root solve fast and efficient
 """
-function root_solve(f_objective, initial_value::T, args; kwargs...) where {T <: Union{<:Number,<:SVector{1}}}
+function root_solve(
+    f_objective,
+    initial_value::T,
+    args;
+    abstol = 1e-9,
+    kwargs...,
+) where {T<:Union{<:Number,<:SVector{1}}}
+    # Roots.find_zero(r -> f_objective(r, args), initial_value, Roots.Order0(); atol = abstol)
     x0, f = if T <: Number
         function _obj_wrapper(x::SVector, p)
-            @inbounds SVector{1, eltype(x)}(f_objective(x[1], p))
+            @inbounds SVector{1,eltype(x)}(f_objective(x[1], p))
         end
         SVector{1}(initial_value), _obj_wrapper
     else
         initial_value, f_objective
     end
-    prob = SimpleNonlinearSolve.NonlinearProblem{false}(
-        f,
-        x0,
-        args,
+    prob = SimpleNonlinearSolve.NonlinearProblem{false}(f, x0, args)
+    sol = solve(
+        prob,
+        SimpleNonlinearSolve.SimpleBroyden();
+        abstol = abstol,
+        reltol = abstol,
+        maxiters = 500,
+        kwargs...,
     )
-    sol = solve(prob, SimpleNonlinearSolve.SimpleBroyden(); kwargs...)
-    sol.u[1]
+    sol.u[1], sol.resid[1]
 end
 
 

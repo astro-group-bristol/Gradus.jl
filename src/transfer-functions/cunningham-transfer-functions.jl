@@ -7,6 +7,8 @@ end
 struct _TransferFunctionSetup{T}
     h::T
     θ_offset::T
+    "Tolerance for root finding"
+    zero_atol::T
     "Unstable radius with respect to when finer tolerances are needed for the Jacobian evaluation"
     unstable_radius::T
     α₀::T
@@ -18,6 +20,7 @@ end
 function _TransferFunctionSetup(
     m::AbstractMetric{T};
     θ_offset = T(0.6),
+    zero_atol = T(1e-7),
     N = 80,
     N_extrema = 17,
     α₀ = 0,
@@ -28,6 +31,7 @@ function _TransferFunctionSetup(
     setup = _TransferFunctionSetup{T}(
         h,
         θ_offset,
+        zero_atol,
         Gradus.isco(m) + 1,
         convert(T, α₀),
         convert(T, β₀),
@@ -165,7 +169,6 @@ function _setup_workhorse_jacobian_with_kwargs(
     rₑ;
     max_time = 2 * x[2],
     offset_max = 0.4rₑ + 10,
-    zero_atol = 1e-8,
     redshift_pf = ConstPointFunctions.redshift(m, x),
     jacobian_disc = d,
     tracer_kwargs...,
@@ -190,7 +193,7 @@ function _setup_workhorse_jacobian_with_kwargs(
             d,
             rₑ,
             θ;
-            zero_atol = zero_atol,
+            zero_atol = setup.zero_atol,
             offset_max = offset_max,
             max_time = max_time,
             β₀ = setup.β₀,
@@ -239,7 +242,6 @@ function _rear_workhorse(
     d::AbstractThickAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
-    zero_atol = 1e-8,
     offset_max = 0.4rₑ + 10,
     kwargs...,
 )
@@ -252,7 +254,6 @@ function _rear_workhorse(
             plane,
             rₑ;
             max_time = max_time,
-            zero_atol = zero_atol,
             offset_max = offset_max,
             jacobian_disc = d,
             kwargs...,
@@ -267,7 +268,7 @@ function _rear_workhorse(
                 rₑ,
                 θ;
                 initial_r = r,
-                zero_atol = zero_atol,
+                zero_atol = setup.zero_atol,
                 offset_max = offset_max,
                 max_time = max_time,
                 β₀ = setup.β₀,
@@ -394,6 +395,7 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
             error("i >= lastindex(data): $i >= $(lastindex(data))")
         end
         i += 1
+        # avoid poles
         if abs(θ) < 1e-4 || abs(abs(θ) - π) < 1e-4
             θ += 1e-4
         end
