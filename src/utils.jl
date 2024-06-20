@@ -29,6 +29,14 @@ function (interp::NaNLinearInterpolator)(x)
     _interpolate(interp, x)
 end
 
+"""
+    _make_interpolation(x, y)
+
+Interpolate `y` over `x`
+
+Utility method to wrap some interpolation library and provide the same interface
+for our needs.
+"""
 function _make_interpolation(x, y)
     @assert size(x) == size(y) "size(x) = $(size(x)), size(y) = $(size(y))"
     @assert issorted(x) "x must be sorted!"
@@ -49,6 +57,30 @@ end
 
 @inline function _linear_interpolate(arr::AbstractVector, idx, θ)
     _linear_interpolate(arr[idx], arr[idx+1], θ)
+end
+
+
+"""
+    root_solve(f_objective, initial_value, args) 
+
+Wrapper to different root solving backends to make root solve fast and efficient
+"""
+function root_solve(f_objective, initial_value::T, args; kwargs...) where {T <: Union{<:Number,<:SVector{1}}}
+    x0, f = if T <: Number
+        function _obj_wrapper(x::SVector, p)
+            @inbounds SVector{1, eltype(x)}(f_objective(x[1], p))
+        end
+        SVector{1}(initial_value), _obj_wrapper
+    else
+        initial_value, f_objective
+    end
+    prob = SimpleNonlinearSolve.NonlinearProblem{false}(
+        f,
+        x0,
+        args,
+    )
+    sol = solve(prob, SimpleNonlinearSolve.SimpleBroyden(); kwargs...)
+    sol.u[1]
 end
 
 
