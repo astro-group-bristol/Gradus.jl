@@ -16,6 +16,7 @@ using Optim
 using DataInterpolations
 using VoronoiCells
 using Roots
+import SimpleNonlinearSolve
 using ProgressMeter
 using Buckets
 using QuadGK

@@ -32,7 +32,7 @@ struct GeodesicPoint{T,A} <: AbstractGeodesicPoint{T}
 end
 
 function Base.show(io::IO, gp::GeodesicPoint)
-    print(io, "GeodesicPoint($(gp.x...))")
+    print(io, "GeodesicPoint($(gp.x))")
 end
 
 function Base.show(io::IO, ::MIME"text/plain", gp::GeodesicPoint)

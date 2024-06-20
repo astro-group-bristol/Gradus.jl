@@ -75,18 +75,7 @@ function _intensity_delta(
     indexed_geom = (enumerate(geometry.geometry)...,)
     sum(indexed_geom) do args
         i, geom = args
-        _intensity_delta(
-            m,
-            x,
-            k,
-            geom,
-            within,
-            I,
-            ν₀,
-            r_isco,
-            λ;
-            index = i,
-        )
+        _intensity_delta(m, x, k, geom, within, I, ν₀, r_isco, λ; index = i)
     end
 end
 

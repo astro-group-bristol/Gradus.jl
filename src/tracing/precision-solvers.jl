@@ -1,3 +1,14 @@
+function _offset_objective(r, (measure, velfunc, solve_geodesic, best)::Tuple)
+    r = abs(r)
+    gp = solve_geodesic(velfunc(r))
+    m = measure(gp)
+    if abs(m) < best[2]
+        best[2] = abs(m)
+        best[1] = r
+    end
+    m
+end
+
 function _find_offset_for_measure(
     measure,
     m::AbstractMetric,
@@ -13,29 +24,43 @@ function _find_offset_for_measure(
     μ = 0,
     solver_opts...,
 )
-    function _velfunc(r::T) where {T}
+    function _velfunc(r)
         α, β = _rθ_to_αβ(r, θₒ; α₀ = α₀, β₀ = β₀)
         # need constrain_all here since `_solve_reinit!` doesn't normalize
         constrain_all(m, x, map_impact_parameters(m, x, α, β), μ)
     end
 
     # init a reusable integrator
-    integ =
-        _init_integrator(m, x, _velfunc(0.0), d, max_time; save_on = false, solver_opts...)
+    integ = _init_integrator(
+        m,
+        x,
+        _velfunc(0.0),
+        d,
+        max_time;
+        save_on = false,
+        integrator_verbose = false,
+        solver_opts...,
+    )
 
-    function f(r)
-        if r < 0
-            return -1000 * r
-        end
-        gp = _solve_reinit!(integ, vcat(x, _velfunc(r)))
-        measure(gp)
+    function _solve_geodesic(v)
+        _solve_reinit!(integ, vcat(x, v))
     end
 
-    # use adaptive Order0 method : https://juliamath.github.io/Roots.jl/dev/reference/#Roots.Order0
-    r0 = Roots.find_zero(f, initial_r, Roots.Order0(); atol = zero_atol)
+    best = eltype(x)[0.0, 1.0]
+    r0_candidate, resid = root_solve(
+        _offset_objective,
+        initial_r,
+        (measure, _velfunc, _solve_geodesic, best);
+        abstol = zero_atol,
+    )
 
-    gp0 = _solve_reinit!(integ, vcat(x, _velfunc(r0)))
-    r0, gp0
+    r0 = if best[2] < abs(resid)
+        best[1]
+    else
+        abs(r0_candidate)
+    end
+    gp0 = _solve_geodesic(_velfunc(r0))
+    r0, gp0, measure(gp0)
 end
 
 function _find_offset_for_radius(
@@ -48,20 +73,21 @@ function _find_offset_for_radius(
     kwargs...,
 )
     function _measure(gp::GeodesicPoint{T}) where {T}
-        r = if gp.status == StatusCodes.IntersectedWithGeometry
-            _equatorial_project(gp.x)
-        else
-            zero(T)
+        r = _equatorial_project(gp.x)
+        if gp.status != StatusCodes.IntersectedWithGeometry
+            r = -r
         end
         rₑ - r
     end
-    r0, gp0 = _find_offset_for_measure(_measure, m, x, d, θₒ; kwargs...)
+    r0, gp0, measure0 = _find_offset_for_measure(_measure, m, x, d, θₒ; kwargs...)
 
     if warn && (r0 < 0)
         @warn("Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ")
     end
-    if !isapprox(_measure(gp0), 0.0, atol = 1e-4)
-        warn && @warn("Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ")
+    if !isapprox(measure0, 0.0, atol = 1e-4)
+        warn && @warn(
+            "Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ : measured $(_measure(gp0)) with r = $(r0)"
+        )
         return NaN, gp0
     end
     r0, gp0
