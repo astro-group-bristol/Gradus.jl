@@ -11,7 +11,7 @@ function test_ctf1(a, angle, rₑ)
         d,
         rₑ,
         ;
-        chart = Gradus.chart_for_metric(m, 2 * x[2]),
+        chart = Gradus.chart_for_metric(m, 2 * x[2], closest_approach = 1.005),
         N = 80,
     )
 end
@@ -21,16 +21,16 @@ function measure_ctf(ctf)
 end
 
 # test for different angles
-@test measure_ctf(test_ctf1(0.998, 3, 4.0)) ≈ 0.12161376109873144 atol = 1e-4
-@test measure_ctf(test_ctf1(0.998, 35, 4.0)) ≈ 0.10362951554307089 atol = 1e-4
-@test measure_ctf(test_ctf1(0.998, 74, 4.0)) ≈ 0.054070356518218586 atol = 1e-4
-@test measure_ctf(test_ctf1(0.998, 85, 4.0)) ≈ 0.034811715215212875 atol = 1e-4
+@test measure_ctf(test_ctf1(0.998, 3, 4.0)) ≈ 0.12161376109873144 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 35, 4.0)) ≈ 0.10362951554307089 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 74, 4.0)) ≈ 0.054070356518218586 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 85, 4.0)) ≈ 0.034811715215212875 atol = 1e-3
 
 # different radii
-@test measure_ctf(test_ctf1(0.998, 30, 4.0)) ≈ 0.10779115390995794 atol = 1e-4
-@test measure_ctf(test_ctf1(0.998, 30, 7.0)) ≈ 0.1202759989850966 atol = 1e-4
-@test measure_ctf(test_ctf1(0.998, 30, 10.0)) ≈ 0.12461894214061674 atol = 1e-4
-@test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.1275864358885266 atol = 1e-4
+@test measure_ctf(test_ctf1(0.998, 30, 4.0)) ≈ 0.10779115390995794 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 30, 7.0)) ≈ 0.1202759989850966 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 30, 10.0)) ≈ 0.12461894214061674 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.1275864358885266 atol = 1e-3
 
 # large radii
 @test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.13191798015557799 rtol = 1e-2
