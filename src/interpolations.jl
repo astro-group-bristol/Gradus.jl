@@ -51,13 +51,30 @@ end
     clamp(r, r_min, r_max)
 end
 
-@inline function _linear_interpolate(y1, y2, θ)
+function _linear_interpolate(y1, y2, θ)
     @. (1 - θ) * y1 + θ * y2
 end
 
-@inline function _linear_interpolate!(out, y1, y2, θ)
+function _linear_interpolate!(
+    out::AbstractArray{<:Number},
+    y1::AbstractArray{<:Number},
+    y2::AbstractArray{<:Number},
+    θ,
+)
     @. out = (1 - θ) * y1 + θ * y2
 end
+
+function _linear_interpolate!(
+    out::AbstractArray{T},
+    y1::AbstractArray{T},
+    y2::AbstractArray{T},
+    θ,
+) where {T}
+    for i in eachindex(y1)
+        _linear_interpolate!(out[i], y1[i], y2[i], θ)
+    end
+end
+
 
 @inline function _linear_interpolate(arr::AbstractVector, idx, θ)
     _linear_interpolate(arr[idx], arr[idx+1], θ)
@@ -71,7 +88,7 @@ A `D` dimensional interpolation cache.
 struct InterpolationCache{D,T,N}
     cache::Array{T,N}
     function InterpolationCache{D}(values::AbstractArray{T,N}) where {D,N,T}
-        cache::Array{T,N - 1} = zeros(T, size(values)[1:N-1])
+        cache::Array{T,N - 1} = deepcopy(_get_dim_slice(values, Val{1}()))
         new{D,T,N - 1}(cache)
     end
 end
@@ -110,14 +127,26 @@ function interpolate!(
     slices[D]
 end
 
+function _set_value!(out::AbstractArray{<:Number}, value::AbstractArray{<:Number})
+    @. out = value
+end
+function _set_value!(out::AbstractArray{<:T}, v::T) where {T}
+    _set_value!(out[1], v)
+end
+function _set_value!(out::AbstractArray{<:T}, v::AbstractArray{<:T}) where {T}
+    for (o, k) in zip(out, v)
+        @views _set_value!(o, k)
+    end
+end
+
 function _inplace_interpolate!(out, grid::AbstractArray, values::AbstractArray, x)
     i2 = searchsortedfirst(grid, x)
     if (i2 == 1)
-        @. out = values[1]
+        _set_value!(out, _get_all_slice(values, 1))
         return out
     end
     if i2 > lastindex(grid) || grid[i2] > grid[end]
-        @. out = values[end]
+        _set_value!(out, _get_all_slice(values, lastindex(grid)))
         return out
     end
 

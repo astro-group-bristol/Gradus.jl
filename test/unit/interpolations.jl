@@ -25,3 +25,31 @@ Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
 @inferred Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
 
 @allocated Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
+
+# let's try it with arbitrary data structures
+
+struct Thing
+    a::Vector{Float64}
+    b::Vector{Float64}
+end
+Thing(a::Number, b::Number) = Thing([a], [b])
+
+function Gradus._set_value!(out::Thing, v::Thing)
+    out.a[1] = v.a[1]
+    out.b[1] = v.b[1]
+end
+function Gradus._linear_interpolate!(out::Thing, y1::Thing, y2::Thing, θ)
+    Gradus._linear_interpolate!(out.a, y1.a, y2.a, θ)
+    Gradus._linear_interpolate!(out.b, y1.b, y2.b, θ)
+end
+
+vals = reshape(
+    [Thing(1.0, 1.0), Thing(2.0, 2.0), Thing(-1.0, -1.0), Thing(-2.0, -2.0)],
+    (2, 2),
+)
+
+cache = Gradus.InterpolationCache{2}(vals)
+intp = Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
+# do it twice to make sure no side-effects
+intp = Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
+@test intp.a == [1.5]
