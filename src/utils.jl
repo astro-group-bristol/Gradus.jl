@@ -146,4 +146,11 @@ _zero_if_nan(x::T) where {T} = isnan(x) ? zero(T) : x
     end
 end
 
+@generated function _unroll_for(f, ::Val{N}, items) where {N}
+    exprs = [:(f(items[$i])) for i = 1:N]
+    quote
+        $(exprs...)
+    end
+end
+
 export cartesian_squared_distance, cartesian_distance, spherical_to_cartesian

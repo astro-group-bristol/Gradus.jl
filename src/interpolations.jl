@@ -52,10 +52,84 @@ end
 end
 
 @inline function _linear_interpolate(y1, y2, θ)
-    (1 - θ) * y1 + θ * y2
+    @. (1 - θ) * y1 + θ * y2
+end
+
+@inline function _linear_interpolate!(out, y1, y2, θ)
+    @. out = (1 - θ) * y1 + θ * y2
 end
 
 @inline function _linear_interpolate(arr::AbstractVector, idx, θ)
     _linear_interpolate(arr[idx], arr[idx+1], θ)
 end
 
+"""
+    struct InterpolationCache{D,T,N}
+
+A `D` dimensional interpolation cache.
+"""
+struct InterpolationCache{D,T,N}
+    cache::Array{T,N}
+    function InterpolationCache{D}(values::AbstractArray{T,N}) where {D,N,T}
+        cache::Array{T,N - 1} = zeros(T, size(values)[1:N-1])
+        new{D,T,N - 1}(cache)
+    end
+end
+
+@generated function _get_all_slice(values::AbstractArray{T,N}, i) where {T,N}
+    rem = [:(:) for _ = 1:N-1]
+    :(@views values[$(rem...), i])
+end
+
+@generated function _get_dim_slice(values::AbstractArray{T,N}, ::Val{M}) where {T,N,M}
+    rem = [:(:) for _ = 1:(N-M)]
+    inds = [:(1) for i = 1:M]
+    :(@views values[$(rem...), $(inds...)])
+end
+
+function _make_cache_slices(cache::InterpolationCache{D}) where {D}
+    itr = ((Val{i}() for i = 0:D-1)...,)
+    map(itr) do i
+        _get_dim_slice(cache.cache, i)
+    end
+end
+
+function interpolate!(
+    cache::InterpolationCache{D},
+    grids::NTuple{D,<:AbstractArray},
+    values::AbstractArray,
+    x::NTuple{D},
+) where {D}
+    itr = (1:D...,)
+    slices = _make_cache_slices(cache)
+    vs = (values, slices...)
+    _unroll_for(Val{D}(), (zip(slices, vs, itr)...,)) do K
+        c, v, i = K
+        _inplace_interpolate!(c, grids[i], v, x[i])
+    end
+    slices[D]
+end
+
+function _inplace_interpolate!(out, grid::AbstractArray, values::AbstractArray, x)
+    i2 = searchsortedfirst(grid, x)
+    if (i2 == 1)
+        @. out = values[1]
+        return out
+    end
+    if i2 > lastindex(grid) || grid[i2] > grid[end]
+        @. out = values[end]
+        return out
+    end
+
+    i1 = i2 - 1
+
+    x1 = grid[i1]
+    x2 = grid[i2]
+
+    # interpolation weight
+    θ = (x - x1) / (x2 - x1)
+    y1 = _get_all_slice(values, i1)
+    y2 = _get_all_slice(values, i2)
+    _linear_interpolate!(out, y1, y2, θ)
+    out
+end
