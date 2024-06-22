@@ -468,6 +468,57 @@ function interpolated_transfer_branches(
     InterpolatingTransferBranches(_threaded_map(𝔉, radii))
 end
 
+function transfer_function_grid(
+    m::AbstractMetric,
+    x,
+    d::AbstractAccretionGeometry,
+    radii;
+    Ng = 20,
+    kwargs...,
+)
+    itfs = interpolated_transfer_branches(m, x, d, radii; kwargs...)
+    transfer_function_grid(itfs, Ng)
+end
+
+function transfer_function_grid(itfs::InterpolatingTransferBranches, Ng::Int)
+    g✶_grid = collect(range(0, 1, Ng))
+    r_grid = itfs.radii
+
+    lower_f = [branch.lower_f(g) for g in g✶_grid, branch in itfs.branches]
+    upper_f = [branch.upper_f(g) for g in g✶_grid, branch in itfs.branches]
+    lower_t = [branch.lower_t(g) for g in g✶_grid, branch in itfs.branches]
+    upper_t = [branch.upper_t(g) for g in g✶_grid, branch in itfs.branches]
+
+    CunninghamTransferGrid(
+        r_grid,
+        g✶_grid,
+        itfs.gmin,
+        itfs.gmax,
+        lower_f,
+        upper_f,
+        lower_t,
+        upper_t,
+    )
+end
+
+function (grid::CunninghamTransferGrid)(r)
+    idx = max(
+        1,
+        min(
+            DataInterpolations.searchsortedlastcorrelated(grid.r_grid, r, 0),
+            length(grid.r_grid) - 1,
+        ),
+    )
+    r1, r2 = grid.r_grid[idx], grid.r_grid[idx+1]
+    # interpolation weight
+    θ = (r - r1) / (r2 - r1)
+
+    gmin = _linear_interpolate(grid.g_min, idx, θ)
+    gmax = _linear_interpolate(grid.g_max, idx, θ)
+    upper_f, lower_f, upper_t, lower_t = _lazy_interpolate(grid, idx, θ)
+    TransferBranches(upper_f, lower_f, upper_t, lower_t, gmin, gmax, r)
+end
+
 export CunninghamTransferData,
     TransferBranches,
     InterpolatingTransferBranches,

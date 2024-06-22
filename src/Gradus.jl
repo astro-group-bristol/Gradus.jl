@@ -403,6 +403,7 @@ struct BinningMethod <: AbstractComputationalMethod end
 
 include("orthonormalization.jl")
 include("utils.jl")
+include("interpolations.jl")
 include("solution-processing.jl")
 
 include("tracing/configuration.jl")

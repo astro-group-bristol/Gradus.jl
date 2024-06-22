@@ -181,40 +181,35 @@ end
 
 function integrate_lineprofile(
     prof::AbstractDiscProfile,
-    itb::InterpolatingTransferBranches,
+    transfer_functions,
     radii,
     g_grid;
     kwargs...,
 )
-    integrate_lineprofile(prof.f.ε, itb, radii, g_grid; kwargs...)
+    integrate_lineprofile(prof.f.ε, transfer_functions, radii, g_grid; kwargs...)
 end
 
-function integrate_lineprofile(
-    ε,
-    itb::InterpolatingTransferBranches{T},
-    radii,
-    g_grid;
-    Nr = 1000,
-    kwargs...,
-) where {T}
+function integrate_lineprofile(ε, transfer_functions, radii, g_grid; Nr = 1000, kwargs...)
+    T = eltype(g_grid)
     # pre-allocate output
     flux = zeros(T, length(g_grid))
     fine_rₑ_grid = Grids._inverse_grid(extrema(radii)..., Nr) |> collect
     setup = _integration_setup(T, _lineprofile_integrand, ε; kwargs...)
-    _integrate_transfer_problem!(flux, setup, itb, fine_rₑ_grid, g_grid)
+    _integrate_transfer_problem!(flux, setup, transfer_functions, fine_rₑ_grid, g_grid)
     _normalize(flux, g_grid)
 end
 
 function integrate_lagtransfer(
     profile::AbstractDiscProfile,
-    itb::InterpolatingTransferBranches{T},
+    transfer_functions,
     radii,
     g_grid,
     t_grid;
     Nr = 1000,
     t0 = 0,
     kwargs...,
-) where {T}
+)
+    T = eltype(g_grid)
     # pre-allocate output
     flux = zeros(T, (length(g_grid), length(t_grid)))
     fine_rₑ_grid = Grids._geometric_grid(extrema(radii)..., Nr) |> collect
@@ -225,21 +220,28 @@ function integrate_lagtransfer(
         time = r -> coordtime_at(profile, r) - t0,
         kwargs...,
     )
-    _integrate_transfer_problem!(flux, setup, itb, fine_rₑ_grid, g_grid, t_grid)
+    _integrate_transfer_problem!(
+        flux,
+        setup,
+        transfer_functions,
+        fine_rₑ_grid,
+        g_grid,
+        t_grid,
+    )
     _normalize(flux, g_grid)
 end
 
 function _integrate_transfer_problem!(
     output::AbstractVector,
     setup::IntegrationSetup{T,Nothing},
-    itb::InterpolatingTransferBranches{T},
+    transfer_function_radial_interpolation,
     radii_grid,
     g_grid,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
     # build fine radial grid for trapezoidal integration
     @inbounds for (i, rₑ) in enumerate(radii_grid)
-        closures = _IntegrationClosures(setup, itb(rₑ))
+        closures = _IntegrationClosures(setup, transfer_function_radial_interpolation(rₑ))
         Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
         # integration weight for this annulus
         θ =

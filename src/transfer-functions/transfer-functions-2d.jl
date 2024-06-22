@@ -37,6 +37,32 @@ function _lazy_interpolate(branch::Vector{<:TransferBranches}, idx, θ)
     )
 end
 
+function _lazy_interpolate(grid::CunninghamTransferGrid, idx, θ)
+    x = grid.g✶_grid
+    @views (
+        _lazy_interpolate(
+            _make_interpolation(x, grid.lower_f[:, idx]),
+            _make_interpolation(x, grid.lower_f[:, idx+1]),
+            θ,
+        ),
+        _lazy_interpolate(
+            _make_interpolation(x, grid.upper_f[:, idx]),
+            _make_interpolation(x, grid.upper_f[:, idx+1]),
+            θ,
+        ),
+        _lazy_interpolate(
+            _make_interpolation(x, grid.lower_time[:, idx]),
+            _make_interpolation(x, grid.lower_time[:, idx+1]),
+            θ,
+        ),
+        _lazy_interpolate(
+            _make_interpolation(x, grid.upper_time[:, idx]),
+            _make_interpolation(x, grid.upper_time[:, idx+1]),
+            θ,
+        ),
+    )
+end
+
 # interpolate over radial coordinate
 function (itb::InterpolatingTransferBranches)(r)
     idx = max(
