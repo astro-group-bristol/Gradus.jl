@@ -26,6 +26,14 @@ Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
 
 @allocated Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
 
+# now single dimension edge case
+X1 = [0.0, 1.0]
+vals = [-1.0, 0.0]
+cache = Gradus.InterpolationCache{1}(vals)
+
+@test Gradus.interpolate!(cache, (X1,), vals, (0.0,)) == -1.0
+@test Gradus.interpolate!(cache, (X1,), vals, (0.6,)) == -0.4
+
 # let's try it with arbitrary data structures
 
 struct Thing

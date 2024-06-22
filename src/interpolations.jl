@@ -57,11 +57,15 @@ end
 
 function _linear_interpolate!(
     out::AbstractArray{<:Number},
-    y1::AbstractArray{<:Number},
-    y2::AbstractArray{<:Number},
+    y1::Union{<:Number,AbstractArray{<:Number}},
+    y2::Union{<:Number,AbstractArray{<:Number}},
     θ,
 )
     @. out = (1 - θ) * y1 + θ * y2
+end
+
+function _linear_interpolate!(out::AbstractArray{T}, y1::T, y2::T, θ) where {T}
+    _linear_interpolate!(out[1], y1, y2, θ)
 end
 
 function _linear_interpolate!(
@@ -87,6 +91,10 @@ A `D` dimensional interpolation cache.
 """
 struct InterpolationCache{D,T,N}
     cache::Array{T,N}
+    function InterpolationCache{D}(values::AbstractArray{T,1}) where {D,T}
+        cache::Array{T,1} = [deepcopy(values[1])]
+        new{D,T,1}(cache)
+    end
     function InterpolationCache{D}(values::AbstractArray{T,N}) where {D,N,T}
         cache::Array{T,N - 1} = deepcopy(_get_dim_slice(values, Val{1}()))
         new{D,T,N - 1}(cache)
@@ -124,11 +132,18 @@ function interpolate!(
         c, v, i = K
         _inplace_interpolate!(c, grids[i], v, x[i])
     end
-    slices[D]
+    if D === 1
+        first(cache.cache)
+    else
+        slices[D]
+    end
 end
 
 function _set_value!(out::AbstractArray{<:Number}, value::AbstractArray{<:Number})
     @. out = value
+end
+function _set_value!(out::AbstractArray{<:Number}, v::Number)
+    out[1] = v
 end
 function _set_value!(out::AbstractArray{<:T}, v::T) where {T}
     _set_value!(out[1], v)
