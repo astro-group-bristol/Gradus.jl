@@ -45,8 +45,26 @@ jobs:
           Pkg.add(url="https://github.com/GunnarFarneback/LocalRegistry.jl")
           using LocalRegistry
           Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/astro-group-bristol/AstroRegistry/"))
-          register(pwd(), registry="AstroRegistry", push=false)
-          register(joinpath(pwd(), "lib/GradusSpectralModels"), registry="AstroRegistry", push=false)
+
+          reg1 = try
+              register(pwd(), registry="AstroRegistry", push=false)
+              true
+          catch err
+              display(err)
+              false
+          end
+
+          reg2 = try
+              register(joinpath(pwd(), "lib/GradusSpectralModels"), registry="AstroRegistry", push=false)
+              true
+          catch err
+              display(err)
+              false
+          end
+
+          if !reg1 && !reg2
+              throw("No package registered!")
+          end
           '
       - name: Create new branch
         run: |
