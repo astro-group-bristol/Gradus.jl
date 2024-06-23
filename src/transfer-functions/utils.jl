@@ -132,7 +132,9 @@ function _normalize!(flux::AbstractVector{T}, grid) where {T}
         flux[i] = flux[i] / ḡ
         Σflux += flux[i]
     end
-    @. flux = flux / Σflux
+    if Σflux > 0
+        @. flux = flux / Σflux
+    end
     flux
 end
 
@@ -143,6 +145,8 @@ function _normalize!(flux::AbstractMatrix{T}, grid) where {T}
         @. flux[i, :] = flux[i, :] / ḡ
         Σflux += sum(flux[i, :])
     end
-    @. flux = flux / Σflux
+    if Σflux > 0
+        @. flux = flux / Σflux
+    end
     flux
 end
