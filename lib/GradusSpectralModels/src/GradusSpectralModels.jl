@@ -33,10 +33,10 @@ end
 
 function SpectralFitting.invoke!(output, domain, model::LineProfile)
     grid = model.table.table((model.θ, model.a))
-    rmin = if model.rmin < grid.r_grid[1]
+    rmin = if model.rin < grid.r_grid[1]
         grid.r_grid[1]
     else
-        model.rmin
+        model.rin
     end
     Gradus.integrate_lineprofile!(
         output,
