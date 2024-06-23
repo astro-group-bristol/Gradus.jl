@@ -492,9 +492,34 @@ function transfer_function_grid(itfs::InterpolatingTransferBranches, Ng::Int)
     )
 end
 
+function make_transfer_function_table(
+    M::Type{<:KerrMetric},
+    d::AbstractAccretionDisc,
+    a_range::AbstractVector,
+    θ_range::AbstractVector;
+    verbose = true,
+    r_max = 500.0,
+    n_radii = 150,
+    kwargs...,
+)
+    function _mapper(a, θ)
+        if verbose
+            @info "a, θ = $((a, θ))"
+        end
+        m = M(1.0, a)
+        x = SVector(0.0, 10000.0, deg2rad(θ), 0.0)
+
+        radii = Gradus.Grids._inverse_grid(Gradus.isco(m) + 1e-2, r_max, n_radii)
+        Gradus.transfer_function_grid(m, x, d, radii; verbose = verbose, kwargs...)
+    end
+    grids = [_mapper(a, θ) for a in a_range, θ in θ_range]
+    Gradus.CunninghamTransferTable((θ_range, a_range), grids)
+end
+
 export CunninghamTransferData,
     TransferBranches,
     InterpolatingTransferBranches,
     splitbranches,
     interpolate_branches,
-    cunningham_transfer_function
+    cunningham_transfer_function,
+    make_transfer_function_table
