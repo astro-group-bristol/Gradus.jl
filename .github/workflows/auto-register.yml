@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'Project.toml'
+      - 'lib/GradusSpectralModels/Project.toml'
 
 permissions:
   contents: read
@@ -45,6 +46,7 @@ jobs:
           using LocalRegistry
           Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/astro-group-bristol/AstroRegistry/"))
           register(pwd(), registry="AstroRegistry", push=false)
+          register(joinpath(pwd(), "lib/GradusSpectralModels"), registry="AstroRegistry", push=false)
           '
       - name: Create new branch
         run: |

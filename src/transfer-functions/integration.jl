@@ -35,7 +35,7 @@ function IntegrationSetup(
     time = nothing,
     h = 1e-8,
     g_grid_upscale = 1,
-    n_radii = 500,
+    n_radii = 1000,
     quadrature_points = 23,
 )
     IntegrationSetup(

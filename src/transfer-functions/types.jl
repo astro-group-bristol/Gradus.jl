@@ -64,13 +64,13 @@ end
 
 struct CunninghamTransferTable{N,T,CacheT}
     params::NTuple{N,Vector{T}}
-    grids::Vector{CunninghamTransferGrid{T}}
+    grids::Array{CunninghamTransferGrid{T},N}
     cache::CacheT
 end
 
 function CunninghamTransferTable(
     x::NTuple{N},
-    grids::AbstractVector{<:CunninghamTransferGrid},
+    grids::AbstractArray{<:CunninghamTransferGrid},
 ) where {N}
     _grids = reshape(grids, length.(x))
     cache = InterpolationCache{N}(_grids)
