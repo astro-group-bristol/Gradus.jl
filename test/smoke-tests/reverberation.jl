@@ -10,12 +10,13 @@ function calculate_2d_transfer_function(m, x, model, itb, prof, radii)
     flux = Gradus.integrate_lagtransfer(
         prof,
         itb,
-        radii,
         bins,
         tbins;
         t0 = t0,
-        Nr = 100,
+        n_radii = 100,
         h = 1e-8,
+        rmin = minimum(radii),
+        rmax = maximum(radii),
     )
 
     flux[flux.==0] .= NaN
@@ -44,7 +45,7 @@ freq1, τ1 = calc_lag_freq(m, d, model1, radii, itb)
 
 # check it works for thick discs too
 d_thick = ShakuraSunyaev(m)
-itb_thick = Gradus.interpolated_transfer_branches(m, x, d_thick, radii; β₀ = 2.0)
+itb_thick = @time Gradus.interpolated_transfer_branches(m, x, d_thick, radii; β₀ = 2.0)
 
 freq2, τ2 = calc_lag_freq(m, d_thick, model1, radii, itb_thick)
 

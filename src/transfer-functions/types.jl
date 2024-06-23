@@ -26,6 +26,14 @@ struct CunninghamTransferGrid{T}
     upper_time::Matrix{T}
 end
 
+function inner_radius(ctg::CunninghamTransferGrid)
+    ctg.r_grid[1]
+end
+
+function outer_radius(ctg::CunninghamTransferGrid)
+    ctg.r_grid[end]
+end
+
 # for whatever reason, `fieldnames` always seems to fail to type infer here
 # so just unroll it by hand
 function _set_value!(out::CunninghamTransferGrid, v::CunninghamTransferGrid)
@@ -74,7 +82,7 @@ function (table::CunninghamTransferTable{N})(x::NTuple{N}) where {N}
     interpolate!(table.cache, table.params, table.grids, x)
 end
 
-struct TransferBranches{T,F}
+struct TransferBranches{SameDomain,T,F}
     upper_f::F
     lower_f::F
     upper_t::F
@@ -82,13 +90,32 @@ struct TransferBranches{T,F}
     gmin::T
     gmax::T
     rₑ::T
+    function TransferBranches{SameDomain}(
+        upper_f::F,
+        lower_f::F,
+        upper_t::F,
+        lower_t::F,
+        gmin::T,
+        gmax::T,
+        rₑ::T,
+    ) where {SameDomain,F,T}
+        new{SameDomain,T,F}(upper_f, lower_f, upper_t, lower_t, gmin, gmax, rₑ)
+    end
 end
 
-struct InterpolatingTransferBranches{T,F}
-    branches::Vector{TransferBranches{T,F}}
+struct InterpolatingTransferBranches{T,F,SameDomain}
+    branches::Vector{TransferBranches{SameDomain,T,F}}
     radii::Vector{T}
     gmin::Vector{T}
     gmax::Vector{T}
+end
+
+function outer_radius(itb::InterpolatingTransferBranches)
+    itb.radii[end]
+end
+
+function inner_radius(itb::InterpolatingTransferBranches)
+    itb.radii[1]
 end
 
 struct LagTransferFunction{T,X,E,P}
@@ -100,8 +127,8 @@ struct LagTransferFunction{T,X,E,P}
 end
 
 function Base.show(io::IO, ::MIME"text/plain", tf::LagTransferFunction)
-    text = """LagTransferFunction for $(typeof(tf.coronal_geodesics.metric)) 
-      . observer position      
+    text = """LagTransferFunction for $(typeof(tf.coronal_geodesics.metric))
+      . observer position
           $(tf.x)
       . model                         : $(typeof(tf.coronal_geodesics.model))
       . observer to disc photon count : $(length(tf.observer_to_disc))

@@ -150,7 +150,7 @@ function interpolate_branches(ctf::CunninghamTransferData{T}; h = 1e-6) where {T
     lower_time_branch = _make_interpolation(lower_g✶, lower_t)
     upper_branch = _make_interpolation(upper_g✶, upper_f)
     upper_time_branch = _make_interpolation(upper_g✶, upper_t)
-    TransferBranches(
+    TransferBranches{false}(
         upper_branch,
         lower_branch,
         upper_time_branch,
@@ -260,31 +260,22 @@ function _rear_workhorse(
         )
     function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
         g, gp, r = datum_workhorse(θ)
-        r₊, _ = try
-            _find_offset_for_radius(
-                m,
-                x,
-                d,
-                rₑ,
-                θ;
-                initial_r = r,
-                zero_atol = setup.zero_atol,
-                offset_max = offset_max,
-                max_time = max_time,
-                β₀ = setup.β₀,
-                α₀ = setup.α₀,
-                tracer_kwargs...,
-                # don't echo warnings
-                warn = false,
-            )
-        catch err
-            if err isa Roots.ConvergenceFailed
-                # return gp for type stability
-                NaN, gp
-            else
-                throw(err)
-            end
-        end
+        r₊, _ = _find_offset_for_radius(
+            m,
+            x,
+            d,
+            rₑ,
+            θ;
+            initial_r = r,
+            zero_atol = setup.zero_atol,
+            offset_max = offset_max,
+            max_time = max_time,
+            β₀ = setup.β₀,
+            α₀ = setup.α₀,
+            tracer_kwargs...,
+            # don't echo warnings
+            warn = false,
+        )
         is_visible, J = if !isnan(r₊) && isapprox(r, r₊, atol = 1e-3)
             # trace jacobian on updated impact parameters
             α, β = _rθ_to_αβ(r₊, θ; α₀ = setup.α₀, β₀ = setup.β₀)
@@ -499,24 +490,6 @@ function transfer_function_grid(itfs::InterpolatingTransferBranches, Ng::Int)
         lower_t,
         upper_t,
     )
-end
-
-function (grid::CunninghamTransferGrid)(r)
-    idx = max(
-        1,
-        min(
-            DataInterpolations.searchsortedlastcorrelated(grid.r_grid, r, 0),
-            length(grid.r_grid) - 1,
-        ),
-    )
-    r1, r2 = grid.r_grid[idx], grid.r_grid[idx+1]
-    # interpolation weight
-    θ = (r - r1) / (r2 - r1)
-
-    gmin = _linear_interpolate(grid.g_min, idx, θ)
-    gmax = _linear_interpolate(grid.g_max, idx, θ)
-    upper_f, lower_f, upper_t, lower_t = _lazy_interpolate(grid, idx, θ)
-    TransferBranches(upper_f, lower_f, upper_t, lower_t, gmin, gmax, r)
 end
 
 export CunninghamTransferData,
