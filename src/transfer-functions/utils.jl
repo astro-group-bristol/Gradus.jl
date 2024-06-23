@@ -68,16 +68,6 @@ function _search_visibility_range(vec)
     i1, i2
 end
 
-# function make_visibility_correction!(data::_TransferDataAccumulator)
-#     @assert issorted(data.θs) "Data must be sorted first"
-#     # find the start and end of false range
-#     i1, i2 = _search_visibility_range(data.is_visible)
-#     if (i1 != 0) && (i2 != 0)
-#         data.Js[i1] = 0
-#         data.Js[i2] = 0
-#     end
-# end
-
 function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{3})
     data.mask[i] = true
     data.data[:, i] .= (θ, vals...)
@@ -133,4 +123,26 @@ function _rθ_to_αβ(r, θ; α₀ = 0, β₀ = 0)
     α = r * cosθ + α₀
     β = r * sinθ + β₀
     (α, β)
+end
+
+function _normalize!(flux::AbstractVector{T}, grid) where {T}
+    Σflux = zero(T)
+    @inbounds for i = 1:length(grid)-1
+        ḡ = (grid[i+1] + grid[i])
+        flux[i] = flux[i] / ḡ
+        Σflux += flux[i]
+    end
+    @. flux = flux / Σflux
+    flux
+end
+
+function _normalize!(flux::AbstractMatrix{T}, grid) where {T}
+    Σflux = zero(T)
+    @views @inbounds for i = 1:length(grid)-1
+        ḡ = (grid[i+1] + grid[i])
+        @. flux[i, :] = flux[i, :] / ḡ
+        Σflux += sum(flux[i, :])
+    end
+    @. flux = flux / Σflux
+    flux
 end

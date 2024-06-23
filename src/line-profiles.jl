@@ -69,7 +69,15 @@ function lineprofile(
     _warn_disc_integration_limits(d, minrₑ, maxrₑ)
     radii = Grids._inverse_grid(minrₑ, maxrₑ, numrₑ)
     itfs = interpolated_transfer_branches(m, u, d, radii; verbose = verbose, kwargs...)
-    flux = integrate_lineprofile(ε, itfs, radii, bins; h = h, Nr = Nr)
+    flux = integrate_lineprofile(
+        ε,
+        itfs,
+        bins;
+        h = h,
+        n_radii = Nr,
+        rmin = minimum(radii),
+        rmax = maximum(radii),
+    )
     bins, flux
 end
 

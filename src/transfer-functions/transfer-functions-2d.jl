@@ -21,6 +21,11 @@ function Base.show(io::IO, ::MIME"text/plain", itb::InterpolatingTransferBranche
 end
 
 function _lazy_interpolate(f1, f2, θ)
+    function _lazy_interpolate_kernel(index, weight)
+        y1 = _linear_interpolate(f1.u, index, weight)
+        y2 = _linear_interpolate(f2.u, index, weight)
+        _linear_interpolate(y1, y2, θ)
+    end
     function _lazy_interpolate_kernel(x)
         _linear_interpolate(f1(x), f2(x), θ)
     end
@@ -79,7 +84,25 @@ function (itb::InterpolatingTransferBranches)(r)
     gmin = _linear_interpolate(itb.gmin, idx, θ)
     gmax = _linear_interpolate(itb.gmax, idx, θ)
     upper_f, lower_f, upper_t, lower_t = _lazy_interpolate(itb.branches, idx, θ)
-    TransferBranches(upper_f, lower_f, upper_t, lower_t, gmin, gmax, r)
+    TransferBranches{false}(upper_f, lower_f, upper_t, lower_t, gmin, gmax, r)
+end
+
+function (grid::CunninghamTransferGrid)(r)
+    idx = max(
+        1,
+        min(
+            DataInterpolations.searchsortedlastcorrelated(grid.r_grid, r, 0),
+            length(grid.r_grid) - 1,
+        ),
+    )
+    r1, r2 = grid.r_grid[idx], grid.r_grid[idx+1]
+    # interpolation weight
+    θ = (r - r1) / (r2 - r1)
+
+    gmin = _linear_interpolate(grid.g_min, idx, θ)
+    gmax = _linear_interpolate(grid.g_max, idx, θ)
+    upper_f, lower_f, upper_t, lower_t = _lazy_interpolate(grid, idx, θ)
+    TransferBranches{true}(upper_f, lower_f, upper_t, lower_t, gmin, gmax, r)
 end
 
 function bin_transfer_function(

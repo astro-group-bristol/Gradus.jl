@@ -48,7 +48,16 @@ itb = @time Gradus.interpolated_transfer_branches(m, x, d, radii)
 bins = collect(range(0.0, 1.5, 100))
 tbins = collect(range(0, 150.0, 100))
 
-flux = Gradus.integrate_lagtransfer(prof, itb, radii, bins, tbins; t0 = x[2], Nr = 1000)
+flux = Gradus.integrate_lagtransfer(
+    prof,
+    itb,
+    bins,
+    tbins;
+    t0 = x[2],
+    n_radii = 1000,
+    rmin = minimum(radii),
+    rmax = maximum(radii),
+)
 
 fluxsum = sum(flux)
 # normalisation is missing, so number is big

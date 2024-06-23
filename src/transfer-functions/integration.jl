@@ -1,39 +1,64 @@
 _lineprofile_integrand(_, g) = g^2
 
-struct IntegrationSetup{T,K,F,R,SegBufType}
+function quadrature_integrate(f, a::T, b::T; rule = gauss(5)) where {T}
+    total = zero(T)
+    for (xᵢ, wᵢ) in zip(rule...)
+        u = (xᵢ + 1) * ((b - a) / 2) + a
+        total += wᵢ * f(u)
+    end
+    total * (b - a) / 2
+end
+
+struct IntegrationSetup{T,K,F,R}
     h::T
     time::K
     integrand::F
     pure_radial::R
-    segbuf::SegBufType
+    quadrature_rule::Tuple{Vector{T},Vector{T}}
+    index_cache::Vector{Int}
     g_grid_upscale::Int
+    n_radii::Int
 end
 
-_integration_setup(
-    T::Type,
+function integration_setup(prof, transfer_functions; kwargs...)
+    radial = if prof isa AbstractDiscProfile
+        r -> emissivity_at(prof, r)
+    else
+        prof
+    end
+    IntegrationSetup(_lineprofile_integrand, radial; kwargs...)
+end
+
+function IntegrationSetup(
     integrand,
     pure_radial;
     time = nothing,
     h = 1e-8,
-    g_grid_upscale = 2,
-) = IntegrationSetup(h, time, integrand, pure_radial, alloc_segbuf(T), g_grid_upscale)
+    g_grid_upscale = 1,
+    n_radii = 500,
+    quadrature_points = 23,
+)
+    IntegrationSetup(
+        h,
+        time,
+        integrand,
+        pure_radial,
+        gauss(quadrature_points),
+        ones(Int, 4),
+        g_grid_upscale,
+        n_radii,
+    )
+end
 
 function _g_fine_grid_iterate(upscale, lo, hi)
     Δ = (hi - lo) / upscale
-    lows = range(lo, hi - Δ, upscale)
-    highs = range(lo + Δ, hi, upscale)
-    zip(lows, highs)
+    range(lo, hi - Δ, upscale), Δ
 end
 
 function integrand(setup::IntegrationSetup, f, r, g, g✶)
     # the radial term and π is hoisted into the integration weight for that annulus
     ω = f * g / (√(g✶ * (1 - g✶)))
     ω * setup.integrand(r, g)
-end
-
-struct _IntegrationClosures{S<:IntegrationSetup,B<:TransferBranches}
-    setup::S
-    branch::B
 end
 
 function _time_interpolate(t0, f1, f2, g✶, h)
@@ -49,47 +74,74 @@ function _time_interpolate(t0, f1, f2, g✶, h)
     t1 * ω + (1 - ω) * t2
 end
 
-function _time_g✶(c::_IntegrationClosures, g✶)
-    t_lower = c.branch.lower_t(g✶)
-    t_upper = c.branch.upper_t(g✶)
-    t1 = _time_interpolate(t_lower, c.branch.lower_t, c.branch.upper_t, g✶, c.setup.h)
-    t2 = _time_interpolate(t_upper, c.branch.upper_t, c.branch.lower_t, g✶, c.setup.h)
+function _time_g✶(setup::IntegrationSetup, branch::TransferBranches, g✶)
+    t_lower = branch.lower_t(g✶)
+    t_upper = branch.upper_t(g✶)
+    t1 = _time_interpolate(t_lower, branch.lower_t, branch.upper_t, g✶, setup.h)
+    t2 = _time_interpolate(t_upper, branch.upper_t, branch.lower_t, g✶, setup.h)
     t1, t2
-    # t_lower, t_upper
 end
 
-function _time_bins(c::_IntegrationClosures, glo, ghi)
-    g✶lo = g_to_g✶(glo, c.branch.gmin, c.branch.gmax)
-    g✶hi = g_to_g✶(ghi, c.branch.gmin, c.branch.gmax)
+function _time_bins(setup::IntegrationSetup, branch::TransferBranches, glo, ghi)
+    g✶lo = clamp(g_to_g✶(glo, branch.gmin, branch.gmax), 0, 1)
+    g✶hi = clamp(g_to_g✶(ghi, branch.gmin, branch.gmax), 0, 1)
 
-    tl1, tu1 = _time_g✶(c, g✶lo)
-    tl2, tu2 = _time_g✶(c, g✶hi)
-    (tl1 + tl2) / 2, (tu1 + tu2) / 2
+    tl1, tu1 = _time_g✶(setup, branch, g✶lo)
+    tl2, tu2 = _time_g✶(setup, branch, g✶hi)
+    (tl1, tl2), (tu1, tu2)
 end
 
-function _upper_branch(c::_IntegrationClosures)
+function _upper_branch(setup::IntegrationSetup, branch::TransferBranches)
     function _upper_branch_integrand(g)
-        g✶ = g_to_g✶(g, c.branch.gmin, c.branch.gmax)
-        f = c.branch.upper_f(g✶)
-        integrand(c.setup, _zero_if_nan(f), c.branch.rₑ, g, g✶)
+        g✶ = g_to_g✶(g, branch.gmin, branch.gmax)
+        f = branch.upper_f(g✶)
+        integrand(setup, _zero_if_nan(f), branch.rₑ, g, g✶)
     end
 end
 
-function _lower_branch(c::_IntegrationClosures)
+function _lower_branch(setup::IntegrationSetup, branch::TransferBranches)
     function _lower_branch_integrand(g)
-        g✶ = g_to_g✶(g, c.branch.gmin, c.branch.gmax)
-        f = c.branch.lower_f(g✶)
-        integrand(c.setup, _zero_if_nan(f), c.branch.rₑ, g, g✶)
+        g✶ = g_to_g✶(g, branch.gmin, branch.gmax)
+        f = branch.lower_f(g✶)
+        integrand(setup, _zero_if_nan(f), branch.rₑ, g, g✶)
     end
 end
 
-function _both_branches(c::_IntegrationClosures)
+# find the index of the first `x` where `x[i] >= t`
+function _search_sorted_chronological(x, t, last_i)
+    for i = last_i:lastindex(x)
+        if x[i] >= t
+            return i
+        end
+    end
+    return lastindex(x)
+end
+
+function _both_branches(
+    setup::IntegrationSetup,
+    branch::TransferBranches{SameDomain},
+) where {SameDomain}
     function _both_branches_integrand(g)
-        g✶ = g_to_g✶(g, c.branch.gmin, c.branch.gmax)
-        fu = c.branch.upper_f(g✶)
-        fl = c.branch.lower_f(g✶)
+        g✶ = g_to_g✶(g, branch.gmin, branch.gmax)
+
+        fl, fu = if SameDomain
+            x = branch.upper_f.f1.t
+
+            i1 = _search_sorted_chronological(x, g✶, setup.index_cache[1])
+            setup.index_cache[1] = i1
+            weight = (g✶ - x[i1-1]) / (x[i1] - x[i1-1])
+
+            _fu = branch.upper_f(i1 - 1, weight)
+            _fl = branch.lower_f(i1 - 1, weight)
+            (_fl, _fu)
+        else
+            _fu = branch.upper_f(g✶)
+            _fl = branch.lower_f(g✶)
+            (_fl, _fu)
+        end
+
         f = _zero_if_nan(fu) + _zero_if_nan(fl)
-        integrand(c.setup, f, c.branch.rₑ, g, g✶)
+        integrand(setup, f, branch.rₑ, g, g✶)
     end
 end
 
@@ -101,12 +153,9 @@ function integrate_edge(S, lim, lim_g✶, gmin, gmax)
     2 * S(gh) * abs(√gh - √lim)
 end
 
-function integrate_bin(c::_IntegrationClosures, S, lo::T, hi) where {T}
-    # alias for convenience
-    gmin = c.branch.gmin
-    gmax = c.branch.gmax
-    h = c.setup.h
-
+# a very important `@inline`
+@inline function integrate_bin(setup::IntegrationSetup, S, lo::T, hi, gmin, gmax) where {T}
+    h = setup.h
     glo = clamp(lo, gmin, gmax)
     ghi = clamp(hi, gmin, gmax)
 
@@ -136,7 +185,7 @@ function integrate_bin(c::_IntegrationClosures, S, lo::T, hi) where {T}
         end
     end
 
-    res, _ = quadgk(S, glo, ghi; segbuf = c.setup.segbuf)
+    res = quadrature_integrate(S, glo, ghi; rule = setup.quadrature_rule)
     lum += res
     return lum
 end
@@ -157,144 +206,195 @@ function _trapezoidal_weight(X, x, i)
     end
 end
 
-function _normalize(flux::AbstractVector{T}, grid) where {T}
-    Σflux = zero(T)
-    @inbounds for i = 1:length(grid)-1
-        ḡ = (grid[i+1] + grid[i])
-        flux[i] = flux[i] / ḡ
-        Σflux += flux[i]
-    end
-    @. flux = flux / Σflux
-    flux
-end
-
-function _normalize(flux::AbstractMatrix{T}, grid) where {T}
-    Σflux = zero(T)
-    @views @inbounds for i = 1:length(grid)-1
-        ḡ = (grid[i+1] + grid[i])
-        @. flux[i, :] = flux[i, :] / ḡ
-        Σflux += sum(flux[i, :])
-    end
-    @. flux = flux / Σflux
-    flux
-end
-
 function integrate_lineprofile(
-    prof::AbstractDiscProfile,
+    prof,
     transfer_functions,
-    radii,
     g_grid;
+    rmin = inner_radius(transfer_functions),
+    rmax = outer_radius(transfer_functions),
     kwargs...,
 )
-    integrate_lineprofile(prof.f.ε, transfer_functions, radii, g_grid; kwargs...)
-end
-
-function integrate_lineprofile(ε, transfer_functions, radii, g_grid; Nr = 1000, kwargs...)
-    T = eltype(g_grid)
-    # pre-allocate output
-    flux = zeros(T, length(g_grid))
-    fine_rₑ_grid = Grids._inverse_grid(extrema(radii)..., Nr) |> collect
-    setup = _integration_setup(T, _lineprofile_integrand, ε; kwargs...)
-    _integrate_transfer_problem!(flux, setup, transfer_functions, fine_rₑ_grid, g_grid)
-    _normalize(flux, g_grid)
+    setup = integration_setup(prof, transfer_functions; kwargs...)
+    output = zeros(eltype(g_grid), length(g_grid))
+    integrate_lineprofile!(
+        output,
+        setup,
+        transfer_functions,
+        g_grid;
+        rmin = rmin,
+        rmax = rmax,
+    )
+    output
 end
 
 function integrate_lagtransfer(
-    profile::AbstractDiscProfile,
+    prof,
     transfer_functions,
-    radii,
     g_grid,
     t_grid;
-    Nr = 1000,
+    rmin = inner_radius(transfer_functions),
+    rmax = outer_radius(transfer_functions),
     t0 = 0,
     kwargs...,
 )
-    T = eltype(g_grid)
-    # pre-allocate output
-    flux = zeros(T, (length(g_grid), length(t_grid)))
-    fine_rₑ_grid = Grids._geometric_grid(extrema(radii)..., Nr) |> collect
-    setup = _integration_setup(
-        T,
-        _lineprofile_integrand,
-        r -> emissivity_at(profile, r);
-        time = r -> coordtime_at(profile, r) - t0,
+    setup = integration_setup(
+        prof,
+        transfer_functions;
+        time = r -> coordtime_at(prof, r) - t0,
         kwargs...,
     )
-    _integrate_transfer_problem!(
-        flux,
+    output = zeros(eltype(g_grid), (length(g_grid), length(t_grid)))
+    integrate_lagtransfer!(
+        output,
         setup,
         transfer_functions,
-        fine_rₑ_grid,
         g_grid,
+        t_grid;
+        rmin = rmin,
+        rmax = rmax,
+    )
+    output
+end
+
+function integrate_lineprofile!(
+    output::AbstractVector,
+    setup::IntegrationSetup,
+    transfer_functions,
+    grid::AbstractVector;
+    rmin = inner_radius(transfer_functions),
+    rmax = outer_radius(transfer_functions),
+)
+    # zero the output
+    output .= zero(eltype(output))
+    _integrate_transfer_problem!(output, setup, transfer_functions, (rmin, rmax), grid)
+    _normalize!(output, grid)
+end
+
+function integrate_lagtransfer!(
+    output::AbstractMatrix,
+    setup::IntegrationSetup,
+    transfer_functions,
+    grid::AbstractVector,
+    t_grid::AbstractVector;
+    rmin = inner_radius(transfer_functions),
+    rmax = outer_radius(transfer_functions),
+)
+    # zero the output
+    output .= zero(eltype(output))
+    _integrate_transfer_problem!(
+        output,
+        setup,
+        transfer_functions,
+        (rmin, rmax),
+        grid,
         t_grid,
     )
-    _normalize(flux, g_grid)
+    _normalize!(output, grid)
 end
 
 function _integrate_transfer_problem!(
     output::AbstractVector,
     setup::IntegrationSetup{T,Nothing},
     transfer_function_radial_interpolation,
-    radii_grid,
+    r_limits,
     g_grid,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
-    # build fine radial grid for trapezoidal integration
-    @inbounds for (i, rₑ) in enumerate(radii_grid)
-        closures = _IntegrationClosures(setup, transfer_function_radial_interpolation(rₑ))
-        Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
+
+    r_itterator = Grids._inverse_grid(r_limits..., setup.n_radii)
+    r2 = first(iterate(r_itterator, 2))
+    # prime the first r_prev so that the bin width is r2 - r1
+    r_prev = r_limits[1] - (r2 - r_limits[1])
+
+    for rₑ in r_itterator
+        branch = transfer_function_radial_interpolation(rₑ)
+        S = _both_branches(setup, branch)
+
+        Δrₑ = rₑ - r_prev
         # integration weight for this annulus
-        θ =
-            Δrₑ * rₑ * setup.pure_radial(rₑ) * π /
-            (closures.branch.gmax - closures.branch.gmin)
+        θ = Δrₑ * rₑ * setup.pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
+
         @inbounds for j in eachindex(g_grid_view)
             glo = g_grid[j]
             ghi = g_grid[j+1]
             flux_contrib = zero(eltype(output))
-            for (g_fine_lo, g_fine_hi) in
-                _g_fine_grid_iterate(setup.g_grid_upscale, glo, ghi)
-                k = integrate_bin(closures, _both_branches(closures), g_fine_lo, g_fine_hi)
+            Δg = (ghi - glo) / setup.g_grid_upscale
+
+            for i = 1:setup.g_grid_upscale
+                g_fine_lo = glo + (i - 1) * Δg
+                g_fine_hi = g_fine_lo + Δg
+                k = integrate_bin(setup, S, g_fine_lo, g_fine_hi, branch.gmin, branch.gmax)
                 flux_contrib += k
             end
             output[j] += flux_contrib * θ
         end
+
+        r_prev = rₑ
     end
 end
 
 function _integrate_transfer_problem!(
     output::AbstractMatrix,
-    setup::IntegrationSetup,
-    itb::InterpolatingTransferBranches{T},
-    radii_grid,
+    setup::IntegrationSetup{T},
+    transfer_function_radial_interpolation,
+    r_limits,
     g_grid,
     t_grid,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
-    # build fine radial grid for trapezoidal integration
-    @inbounds for (i, rₑ) in enumerate(radii_grid)
-        closures = _IntegrationClosures(setup, itb(rₑ))
-        Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
-        θ =
-            Δrₑ * rₑ * setup.pure_radial(rₑ) * π /
-            (closures.branch.gmax - closures.branch.gmin)
+
+    r_itterator = Grids._geometric_grid(r_limits..., setup.n_radii)
+    r2 = first(iterate(r_itterator, 2))
+    # prime the first r_prev so that the bin width is r2 - r1
+    r_prev = r_limits[1] - (r2 - r_limits[1])
+
+    for rₑ in r_itterator
+        branch = transfer_function_radial_interpolation(rₑ)
+        S_lower = _lower_branch(setup, branch)
+        S_upper = _upper_branch(setup, branch)
+
+        Δrₑ = rₑ - r_prev
+        # integration weight for this annulus
+        θ = Δrₑ * rₑ * setup.pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
+
         # time delay for this annuli
         t_source_disc = setup.time(rₑ)
 
         @inbounds for j in eachindex(g_grid_view)
-            g_grid_low = clamp(g_grid[j], closures.branch.gmin, closures.branch.gmax)
-            g_grid_hi = clamp(g_grid[j+1], closures.branch.gmin, closures.branch.gmax)
+            glo = clamp(g_grid[j], branch.gmin, branch.gmax)
+            ghi = clamp(g_grid[j+1], branch.gmin, branch.gmax)
             # skip if bin not relevant
-            if g_grid_low == g_grid_hi
+            if glo == ghi
                 continue
             end
-            for (glo, ghi) in
-                _g_fine_grid_iterate(setup.g_grid_upscale, g_grid_low, g_grid_hi)
-                k1 = integrate_bin(closures, _lower_branch(closures), glo, ghi)
-                k2 = integrate_bin(closures, _upper_branch(closures), glo, ghi)
+
+            Δg = (ghi - glo) / setup.g_grid_upscale
+
+            for i = 1:setup.g_grid_upscale
+                g_fine_lo = glo + (i - 1) * Δg
+                g_fine_hi = g_fine_lo + Δg
+
+                k1 = integrate_bin(
+                    setup,
+                    S_lower,
+                    g_fine_lo,
+                    g_fine_hi,
+                    branch.gmin,
+                    branch.gmax,
+                )
+                k2 = integrate_bin(
+                    setup,
+                    S_upper,
+                    g_fine_lo,
+                    g_fine_hi,
+                    branch.gmin,
+                    branch.gmax,
+                )
+
                 # find which bin to dump in
-                t_lower_branch, t_upper_branch = _time_bins(closures, glo, ghi)
-                i1 = searchsortedfirst(t_grid, t_lower_branch + t_source_disc)
-                i2 = searchsortedfirst(t_grid, t_upper_branch + t_source_disc)
+                (tl1, tl2), (tu1, tu2) = _time_bins(setup, branch, g_fine_lo, g_fine_hi)
+                i1 = searchsortedfirst(t_grid, (tl1 + tl2) / 2 + t_source_disc)
+                i2 = searchsortedfirst(t_grid, (tu1 + tu2) / 2 + t_source_disc)
 
                 imax = lastindex(t_grid)
                 if i1 <= imax
@@ -305,7 +405,9 @@ function _integrate_transfer_problem!(
                 end
             end
         end
+
+        r_prev = rₑ
     end
 end
 
-export integrate_lineprofile, g✶_to_g, g_to_g✶
+export integrate_lineprofile, g✶_to_g, g_to_g✶, integration_setup, IntegrationSetup
