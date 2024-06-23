@@ -75,7 +75,7 @@ function _find_offset_for_radius(
     function _measure(gp::GeodesicPoint{T}) where {T}
         r = _equatorial_project(gp.x)
         if gp.status != StatusCodes.IntersectedWithGeometry
-            r = -r
+            r = -2r
         end
         rₑ - r
     end
@@ -270,10 +270,11 @@ function jacobian_∂αβ_∂gr(
 
     # these type hints are crucial for forward diff to be type stable
     function _jacobian_f(impact_params::SVector{2,T})::SVector{2,T} where {T}
+        v = map_impact_parameters(m, x, impact_params[1], impact_params[2])
         sol = tracegeodesics(
             m,
             x,
-            map_impact_parameters(m, x, impact_params[1], impact_params[2]),
+            v,
             d,
             max_time;
             save_on = false,
