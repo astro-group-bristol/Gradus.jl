@@ -38,6 +38,8 @@ function SpectralFitting.invoke!(output, domain, model::LineProfile)
     else
         model.rin
     end
+    # TODO: fixme: provide a better way of rescaling the domain without modifying the input array
+    @. domain = domain / model.E₀
     Gradus.integrate_lineprofile!(
         output,
         model.table.setup,
@@ -46,6 +48,7 @@ function SpectralFitting.invoke!(output, domain, model::LineProfile)
         rmin = rmin,
         rmax = model.rout,
     )
+    @. domain = domain * model.E₀
     output
 end
 
