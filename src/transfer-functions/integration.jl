@@ -236,7 +236,7 @@ function integrate_lagtransfer(
     t_grid;
     rmin = inner_radius(transfer_functions),
     rmax = outer_radius(transfer_functions),
-    g_scale = g_scale,
+    g_scale = 1,
     t0 = 0,
     kwargs...,
 )

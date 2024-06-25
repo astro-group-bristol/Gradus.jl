@@ -25,7 +25,6 @@ interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
 @test Gradus.interpolate!(cache, (X1, X2), vals, (0.5, 1.5)) == (0.0, 0.0, 0.0)
 
 @inferred Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
-@code_warntype Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
 
 @allocated Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
 

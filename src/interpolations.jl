@@ -46,7 +46,7 @@ end
 
 @inline function _enforce_interpolation_bounds(r::Number, r_min::Number, r_max::Number)
     if (r < r_min) || (r > r_max)
-        @warn "Interpolation out of bounds $r ∉ [$(r_min),  $(r_max)]. Additional geodesic samples may be required."
+        @warn "Interpolation out of bounds $r ∉ [$(r_min),  $(r_max)]. Additional geodesic samples may be required (will not log again)." maxlog=1
     end
     clamp(r, r_min, r_max)
 end
