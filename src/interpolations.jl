@@ -229,8 +229,8 @@ end
 @inline @generated function _interpolate_cache!(
     cache::MultilinearInterpolator{D},
     values::AbstractArray{T,D},
-    ::NTuple{D,P},
-) where {D,T,P}
+    p::NTuple
+) where {D,T}
     assignments = []
     exprs = if T <: Number || eltype(T) <: Number
         _, interp = _build_multilinear_expression(D, nothing)
@@ -262,8 +262,8 @@ end
     end
     quote
         begin
-            weights = _reinterpret_dual(P, cache.weights, D)
-            output = _reinterpret_dual(P, cache.output, cache.output_len)
+            weights = _reinterpret_dual(eltype(p), cache.weights, D)
+            output = _reinterpret_dual(eltype(p), cache.output, cache.output_len)
 
             start::Int = 0
             stop::Int = 0
