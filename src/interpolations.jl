@@ -79,101 +79,211 @@ function _linear_interpolate!(
     end
 end
 
-
 @inline function _linear_interpolate(arr::AbstractVector, idx, θ)
     _linear_interpolate(arr[idx], arr[idx+1], θ)
 end
 
-"""
-    struct InterpolationCache{D,T,N}
+restructure(::Number, vals::AbstractVector) = first(vals)
+restructure(::AbstractArray, vals::AbstractVector) = vals
+restructure(::NTuple{N}, vals::AbstractVector) where {N} = ((vals[i] for i = 1:N)...,)
 
-A `D` dimensional interpolation cache.
-"""
-struct InterpolationCache{D,T,N}
-    cache::Array{T,N}
-    function InterpolationCache{D}(values::AbstractArray{T,1}) where {D,T}
-        cache::Array{T,1} = [deepcopy(values[1])]
-        new{D,T,1}(cache)
-    end
-    function InterpolationCache{D}(values::AbstractArray{T,N}) where {D,N,T}
-        cache::Array{T,N - 1} = deepcopy(_get_dim_slice(values, Val{1}()))
-        new{D,T,N - 1}(cache)
+function _tuple_set(tuple::NTuple{N}, index, v)::NTuple{N} where {N}
+    if index == 1
+        (v, tuple[2:end]...)
+    elseif index == N
+        (tuple[1:end-1]..., v)
+    else
+        (tuple[1:index-1], v, tuple[index+1:end])
     end
 end
 
-@generated function _get_all_slice(values::AbstractArray{T,N}, i) where {T,N}
-    rem = [:(:) for _ = 1:N-1]
-    :(@views values[$(rem...), i])
+function _dual_size(len::Int; chunk_size = ForwardDiff.pickchunksize(len))
+    cs = prod((chunk_size * ones(Int, 1)) .+ 1)
+    cs * len
 end
 
-@generated function _get_dim_slice(values::AbstractArray{T,N}, ::Val{M}) where {T,N,M}
-    rem = [:(:) for _ = 1:(N-M)]
-    inds = [:(1) for i = 1:M]
-    :(@views values[$(rem...), $(inds...)])
+struct MultilinearInterpolator{D,T}
+    indices::Vector{NTuple{D,Int}}
+    weights::Vector{T}
+    output::Vector{T}
+    output_len::Int
+    function MultilinearInterpolator{D}(
+        values::AbstractArray{C};
+        T = Float64,
+        kwargs...,
+    ) where {D,C}
+        size_points = 2^D
+        indices = Vector{NTuple{D,Int}}(undef, size_points)
+        weights = zeros(T, _dual_size(D; kwargs...))
+
+        len = if C <: Number
+            1
+        elseif eltype(C) <: Number
+            length(values[1])
+        else
+            sum(fieldnames(C)) do f
+                length(getproperty(values[1], f))
+            end
+        end
+
+        output = Vector{T}(undef, _dual_size(len + 1; kwargs...))
+        new{D,T}(indices, weights, output, len)
+    end
 end
 
-function _make_cache_slices(cache::InterpolationCache{D}) where {D}
-    itr = ((Val{i}() for i = 0:D-1)...,)
-    map(itr) do i
-        _get_dim_slice(cache.cache, i)
+_reinterpret_dual(::Type, v::AbstractArray, n::Int) = view(v, 1:n)
+function _reinterpret_dual(
+    DualType::Type{<:ForwardDiff.Dual},
+    v::AbstractArray{T},
+    n::Int,
+) where {T}
+    n_elems = div(sizeof(DualType), sizeof(T)) * n
+    if n_elems > length(v)
+        @warn "Resizing..."
+        resize!(v, n_elems)
+    end
+    reinterpret(DualType, view(v, 1:n_elems))
+end
+
+
+function update_indices!(
+    cache::MultilinearInterpolator{D},
+    axes::NTuple{D},
+    x::NTuple{D,<:Number},
+) where {D}
+    its = ((1:D)...,)
+
+    weights = _reinterpret_dual(typeof(first(x)), cache.weights, D)
+
+    map(its) do I
+        stride = 2^(D - I)
+        ax = axes[I]
+        x0 = x[I]
+
+        i = min(lastindex(ax), searchsortedfirst(ax, x0))
+        i1, i2 = if i == 1
+            1, 2
+        else
+            i - 1, i
+        end
+
+        weights[I] = (x0 - ax[i1]) / (ax[i2] - ax[i1])
+
+        for (q, j) in enumerate(range(1, lastindex(cache.indices), step = stride))
+            for k = j:j+stride-1
+                tup = cache.indices[k]
+                if !iseven(q)
+                    cache.indices[k] = _tuple_set(tup, I, i1)
+                else
+                    cache.indices[k] = _tuple_set(tup, I, i2)
+                end
+            end
+        end
+
+        nothing
+    end
+    cache.indices
+end
+
+function _build_multilinear_expression(D::Int, field_name)
+    function _lerp(y1, y2, w)
+        :($(y2) * $(w) + $(y1) * (1 - $(w)))
+    end
+    assignments = []
+    _index(i) =
+        if !isnothing(field_name)
+            sym = Base.gensym()
+            push!(
+                assignments,
+                :(
+                    $(sym) = getproperty(
+                        values[cache.indices[$(i)]...],
+                        $(Meta.quot(field_name)),
+                    )
+                ),
+            )
+            sym
+        else
+            :(values[cache.indices[$(i)]...])
+        end
+    _weight(i) = :(weights[$(i)])
+
+    weight_index = D
+
+    # get the knots
+    knots = map(1:2^(D-1)) do d
+        i = d * 2
+        _lerp(_index(i - 1), _index(i), _weight(weight_index))
+    end
+
+    while length(knots) > 1
+        weight_index -= 1
+        knots = map(range(1, lastindex(knots), step = 2)) do i
+            _lerp(knots[i], knots[i+1], _weight(weight_index))
+        end
+    end
+
+    assignments, first(knots)
+end
+
+@inline @generated function _interpolate_cache!(
+    cache::MultilinearInterpolator{D},
+    values::AbstractArray{T,D},
+    ::NTuple{D,P},
+) where {D,T,P}
+    assignments = []
+    exprs = if T <: Number || eltype(T) <: Number
+        _, interp = _build_multilinear_expression(D, nothing)
+        expr = quote
+            @. output = $(interp)
+        end
+        [expr]
+    else
+        interps = (_build_multilinear_expression(D, i) for i in fieldnames(T))
+        map(zip(interps, fieldnames(T))) do I
+            (assign, interp), f = I
+            append!(assignments, assign)
+            sym = Base.gensym()
+            quote
+                start = stop + 1
+                shape = size(getproperty(values[cache.indices[1]...], $(Meta.quot(f))))
+                @views begin
+                    $(sym) = if length(shape) > 0
+                        stop = start + prod(shape) - 1
+                        reshape(output[start:stop], shape)
+                    else
+                        stop = start
+                        output[start:stop]
+                    end
+                    @. $(sym) = $(interp)
+                end
+            end
+        end
+    end
+    quote
+        begin
+            weights = _reinterpret_dual(P, cache.weights, D)
+            output = _reinterpret_dual(P, cache.output, cache.output_len)
+
+            start::Int = 0
+            stop::Int = 0
+            $(assignments...)
+            $(exprs...)
+
+            output
+        end
     end
 end
 
 function interpolate!(
-    cache::InterpolationCache{D},
-    grids::NTuple{D,<:AbstractArray},
-    values::AbstractArray,
-    x::NTuple{D},
-) where {D}
-    itr = (1:D...,)
-    slices = _make_cache_slices(cache)
-    vs = (values, slices...)
-    _unroll_for(Val{D}(), (zip(slices, vs, itr)...,)) do K
-        c, v, i = K
-        _inplace_interpolate!(c, grids[i], v, x[i])
-    end
-    if D === 1
-        first(cache.cache)
-    else
-        slices[D]
-    end
+    cache::MultilinearInterpolator{D},
+    axes::NTuple{D},
+    vals::AbstractArray{T,D},
+    x::NTuple{D,<:Number},
+) where {D,T}
+    update_indices!(cache, axes, x)
+    output = _interpolate_cache!(cache, vals, x)
+    restructure(first(vals), output)
 end
 
-function _set_value!(out::AbstractArray{<:Number}, value::AbstractArray{<:Number})
-    @. out = value
-end
-function _set_value!(out::AbstractArray{<:Number}, v::Number)
-    out[1] = v
-end
-function _set_value!(out::AbstractArray{<:T}, v::T) where {T}
-    _set_value!(out[1], v)
-end
-function _set_value!(out::AbstractArray{<:T}, v::AbstractArray{<:T}) where {T}
-    for (o, k) in zip(out, v)
-        @views _set_value!(o, k)
-    end
-end
-
-function _inplace_interpolate!(out, grid::AbstractArray, values::AbstractArray, x)
-    i2 = searchsortedfirst(grid, x)
-    if (i2 == 1)
-        _set_value!(out, _get_all_slice(values, 1))
-        return out
-    end
-    if i2 > lastindex(grid) || grid[i2] > grid[end]
-        _set_value!(out, _get_all_slice(values, lastindex(grid)))
-        return out
-    end
-
-    i1 = i2 - 1
-
-    x1 = grid[i1]
-    x2 = grid[i2]
-
-    # interpolation weight
-    θ = (x - x1) / (x2 - x1)
-    y1 = _get_all_slice(values, i1)
-    y2 = _get_all_slice(values, i2)
-    _linear_interpolate!(out, y1, y2, θ)
-    out
-end
+export MultilinearInterpolator, interpolate!

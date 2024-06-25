@@ -513,7 +513,7 @@ function make_transfer_function_table(
         Gradus.transfer_function_grid(m, x, d, radii; verbose = verbose, kwargs...)
     end
     grids = [_mapper(a, θ) for a in a_range, θ in θ_range]
-    Gradus.CunninghamTransferTable((θ_range, a_range), grids)
+    Gradus.CunninghamTransferTable((a_range, θ_range), grids)
 end
 
 export CunninghamTransferData,
