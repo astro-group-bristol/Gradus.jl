@@ -26,8 +26,9 @@ function LineProfile(
     rin = FitParam(1.0),
     rout = FitParam(100.0, upper_limit = 100.0),
     E₀ = FitParam(1.0),
+    kwargs...,
 )
-    setup = integration_setup(profile, table((get_value(θ), get_value(a))))
+    setup = integration_setup(profile, table((get_value(θ), get_value(a))); kwargs...)
     LineProfile((; setup = setup, table = table), K, a, θ, rin, rout, E₀)
 end
 
