@@ -212,6 +212,7 @@ function integrate_lineprofile(
     g_grid;
     rmin = inner_radius(transfer_functions),
     rmax = outer_radius(transfer_functions),
+    g_scale = 1,
     kwargs...,
 )
     setup = integration_setup(prof, transfer_functions; kwargs...)
@@ -223,6 +224,7 @@ function integrate_lineprofile(
         g_grid;
         rmin = rmin,
         rmax = rmax,
+        g_scale = g_scale,
     )
     output
 end
@@ -234,6 +236,7 @@ function integrate_lagtransfer(
     t_grid;
     rmin = inner_radius(transfer_functions),
     rmax = outer_radius(transfer_functions),
+    g_scale = 1,
     t0 = 0,
     kwargs...,
 )
@@ -252,6 +255,7 @@ function integrate_lagtransfer(
         t_grid;
         rmin = rmin,
         rmax = rmax,
+        g_scale = g_scale,
     )
     output
 end
@@ -263,10 +267,18 @@ function integrate_lineprofile!(
     grid::AbstractVector;
     rmin = inner_radius(transfer_functions),
     rmax = outer_radius(transfer_functions),
+    kwargs...,
 )
     # zero the output
     output .= zero(eltype(output))
-    _integrate_transfer_problem!(output, setup, transfer_functions, (rmin, rmax), grid)
+    _integrate_transfer_problem!(
+        output,
+        setup,
+        transfer_functions,
+        (rmin, rmax),
+        grid;
+        kwargs...,
+    )
     _normalize!(output, grid)
 end
 
@@ -278,6 +290,7 @@ function integrate_lagtransfer!(
     t_grid::AbstractVector;
     rmin = inner_radius(transfer_functions),
     rmax = outer_radius(transfer_functions),
+    kwargs...,
 )
     # zero the output
     output .= zero(eltype(output))
@@ -287,7 +300,8 @@ function integrate_lagtransfer!(
         transfer_functions,
         (rmin, rmax),
         grid,
-        t_grid,
+        t_grid;
+        kwargs...,
     )
     _normalize!(output, grid)
 end
@@ -297,7 +311,8 @@ function _integrate_transfer_problem!(
     setup::IntegrationSetup{T,Nothing},
     transfer_function_radial_interpolation,
     r_limits,
-    g_grid,
+    g_grid;
+    g_scale = 1,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
 
@@ -315,8 +330,8 @@ function _integrate_transfer_problem!(
         θ = Δrₑ * rₑ * setup.pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
 
         @inbounds for j in eachindex(g_grid_view)
-            glo = g_grid[j]
-            ghi = g_grid[j+1]
+            glo = g_grid[j] / g_scale
+            ghi = g_grid[j+1] / g_scale
             flux_contrib = zero(eltype(output))
             Δg = (ghi - glo) / setup.g_grid_upscale
 
@@ -339,7 +354,8 @@ function _integrate_transfer_problem!(
     transfer_function_radial_interpolation,
     r_limits,
     g_grid,
-    t_grid,
+    t_grid;
+    g_scale = 1,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
 
@@ -361,8 +377,8 @@ function _integrate_transfer_problem!(
         t_source_disc = setup.time(rₑ)
 
         @inbounds for j in eachindex(g_grid_view)
-            glo = clamp(g_grid[j], branch.gmin, branch.gmax)
-            ghi = clamp(g_grid[j+1], branch.gmin, branch.gmax)
+            glo = clamp(g_grid[j] / g_scale, branch.gmin, branch.gmax)
+            ghi = clamp(g_grid[j+1] / g_scale, branch.gmin, branch.gmax)
             # skip if bin not relevant
             if glo == ghi
                 continue

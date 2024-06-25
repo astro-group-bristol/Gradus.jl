@@ -43,6 +43,7 @@ end
 @time @testset "transfer-functions" verbose = true begin
     include("transfer-functions/test-2d.jl")
     include("transfer-functions/test-thick-disc.jl")
+    include("unit/interpolations.jl")
 end
 
 @time @testset "image-planes" verbose = true begin
