@@ -1,7 +1,7 @@
-struct RadialDiscProfile{T,I} <: AbstractDiscProfile
-    radii::Vector{T}
-    ε::Vector{T}
-    t::Vector{T}
+struct RadialDiscProfile{V <: AbstractVector,I} <: AbstractDiscProfile
+    radii::V
+    ε::V
+    t::V
     interp_ε::I
     interp_t::I
 end
