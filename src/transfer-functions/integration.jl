@@ -2,11 +2,16 @@ _lineprofile_integrand(_, g) = g^2
 
 function quadrature_integrate(f, a::T, b::T; rule = gauss(5)) where {T}
     total = zero(T)
-    for (xᵢ, wᵢ) in zip(rule...)
-        u = (xᵢ + 1) * ((b - a) / 2) + a
+    X, W = rule
+
+    q = (b - a) / 2
+    for i in eachindex(X)
+        xᵢ = X[i]
+        wᵢ = W[i]
+        u = muladd((xᵢ + 1), q, a)
         total += wᵢ * f(u)
     end
-    total * (b - a) / 2
+    total * q
 end
 
 struct IntegrationSetup{T,K,F,R}
@@ -55,11 +60,9 @@ function _g_fine_grid_iterate(upscale, lo, hi)
     range(lo, hi - Δ, upscale), Δ
 end
 
-function integrand(setup::IntegrationSetup, f, r, g, g✶)
-    # the radial term and π is hoisted into the integration weight for that annulus
-    ω = f * g / (√(g✶ * (1 - g✶)))
-    ω * setup.integrand(r, g)
-end
+# the radial term and π is hoisted into the integration weight for that annulus
+@fastmath integrand(setup::IntegrationSetup, f, r, g, g✶) =
+    setup.integrand(r, g) * f * g / √(g✶ * (1 - g✶))
 
 function _time_interpolate(t0, f1, f2, g✶, h)
     ω, t1, t2 = if g✶ < h
@@ -109,12 +112,12 @@ end
 
 # find the index of the first `x` where `x[i] >= t`
 function _search_sorted_chronological(x, t, last_i)
-    for i = last_i:lastindex(x)
+    @inbounds for i = last_i:lastindex(x)
         if x[i] >= t
             return i
         end
     end
-    return lastindex(x)
+    lastindex(x)
 end
 
 function _both_branches(
@@ -190,21 +193,7 @@ end
     return lum
 end
 
-function _build_g✶_grid(Ng✶, h)
-    g✶low = h
-    g✶high = 1 - h
-    map(1:Ng✶) do i
-        g✶low + (g✶high - g✶low) / (Ng✶ - 1) * (i - 1)
-    end
-end
-
-function _trapezoidal_weight(X, x, i)
-    if i == 1
-        X[i+1] - x
-    else
-        x - X[i-1]
-    end
-end
+_trapezoidal_weight(X, x, i) = i == 1 ? X[i+1] - x : x - X[i-1]
 
 function integrate_lineprofile(
     prof,
@@ -322,7 +311,7 @@ function _integrate_transfer_problem!(
     # prime the first r_prev so that the bin width is r2 - r1
     r_prev = r_limits[1] - (r2 - r_limits[1])
 
-    for rₑ in r_itterator
+    @inbounds for rₑ in r_itterator
         branch = transfer_function_radial_interpolation(rₑ)
         S = _both_branches(setup, branch)
 
@@ -330,14 +319,14 @@ function _integrate_transfer_problem!(
         # integration weight for this annulus
         θ = Δrₑ * rₑ * pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
 
-        @inbounds for j in eachindex(g_grid_view)
+        for j in eachindex(g_grid_view)
             glo = g_grid[j] / g_scale
             ghi = g_grid[j+1] / g_scale
             flux_contrib = zero(eltype(output))
             Δg = (ghi - glo) / setup.g_grid_upscale
 
             for i = 1:setup.g_grid_upscale
-                g_fine_lo = glo + (i - 1) * Δg
+                g_fine_lo = muladd(i - 1, Δg, glo)
                 g_fine_hi = g_fine_lo + Δg
                 k = integrate_bin(setup, S, g_fine_lo, g_fine_hi, branch.gmin, branch.gmax)
                 flux_contrib += k

@@ -52,9 +52,7 @@ end
     clamp(r, r_min, r_max)
 end
 
-function _linear_interpolate(y1, y2, θ)
-    @. (1 - θ) * y1 + θ * y2
-end
+@fastmath _linear_interpolate(y1, y2, θ) = (1 - θ) * y1 + θ * y2
 
 function _linear_interpolate!(
     out::AbstractArray{<:Number},
