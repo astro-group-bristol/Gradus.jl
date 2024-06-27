@@ -1,4 +1,4 @@
-struct RadialDiscProfile{V <: AbstractVector,I} <: AbstractDiscProfile
+struct RadialDiscProfile{V<:AbstractVector,I} <: AbstractDiscProfile
     radii::V
     ε::V
     t::V
