@@ -312,6 +312,7 @@ function _integrate_transfer_problem!(
     transfer_function_radial_interpolation,
     r_limits,
     g_grid;
+    pure_radial = setup.pure_radial,
     g_scale = 1,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
@@ -327,7 +328,7 @@ function _integrate_transfer_problem!(
 
         Δrₑ = rₑ - r_prev
         # integration weight for this annulus
-        θ = Δrₑ * rₑ * setup.pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
+        θ = Δrₑ * rₑ * pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
 
         @inbounds for j in eachindex(g_grid_view)
             glo = g_grid[j] / g_scale
@@ -355,6 +356,7 @@ function _integrate_transfer_problem!(
     r_limits,
     g_grid,
     t_grid;
+    pure_radial = setup.pure_radial,
     g_scale = 1,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
@@ -371,7 +373,7 @@ function _integrate_transfer_problem!(
 
         Δrₑ = rₑ - r_prev
         # integration weight for this annulus
-        θ = Δrₑ * rₑ * setup.pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
+        θ = Δrₑ * rₑ * pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
 
         # time delay for this annuli
         t_source_disc = setup.time(rₑ)

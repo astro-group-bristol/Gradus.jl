@@ -4,7 +4,7 @@ function _promote_disc_for_transfer_functions(::ThinDisc{T}) where {T}
     plane, plane
 end
 
-struct _TransferFunctionSetup{T}
+struct _TransferFunctionSetup{T,A}
     h::T
     θ_offset::T
     "Tolerance for root finding"
@@ -15,10 +15,12 @@ struct _TransferFunctionSetup{T}
     β₀::T
     N::Int
     N_extrema::Int
+    root_solver::A
 end
 
 function _TransferFunctionSetup(
-    m::AbstractMetric{T};
+    m::AbstractMetric{T},
+    d::AbstractAccretionGeometry;
     θ_offset = T(0.6),
     zero_atol = T(1e-7),
     N = 80,
@@ -26,9 +28,20 @@ function _TransferFunctionSetup(
     α₀ = 0,
     β₀ = 0,
     h = T(1e-6),
+    root_solver = nothing,
     kwargs...,
 ) where {T}
-    setup = _TransferFunctionSetup{T}(
+    # specialize the algorithm depending on whether we are calculating for a thin or thick disc
+    _alg = if isnothing(root_solver)
+        if d isa AbstractThickAccretionDisc
+            RootsAlg()
+        else
+            NonLinearAlg()
+        end
+    else
+        root_solver
+    end
+    setup = _TransferFunctionSetup{T,typeof(_alg)}(
         h,
         θ_offset,
         zero_atol,
@@ -37,6 +50,7 @@ function _TransferFunctionSetup(
         convert(T, β₀),
         N,
         N_extrema,
+        _alg,
     )
     kwargs, setup
 end
@@ -196,6 +210,7 @@ function _setup_workhorse_jacobian_with_kwargs(
             zero_atol = setup.zero_atol,
             offset_max = offset_max,
             max_time = max_time,
+            root_solver = setup.root_solver,
             β₀ = setup.β₀,
             α₀ = setup.α₀,
             tracer_kwargs...,
@@ -260,22 +275,31 @@ function _rear_workhorse(
         )
     function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
         g, gp, r = datum_workhorse(θ)
-        r₊, _ = _find_offset_for_radius(
-            m,
-            x,
-            d,
-            rₑ,
-            θ;
-            initial_r = r,
-            zero_atol = setup.zero_atol,
-            offset_max = offset_max,
-            max_time = max_time,
-            β₀ = setup.β₀,
-            α₀ = setup.α₀,
-            tracer_kwargs...,
-            # don't echo warnings
-            warn = false,
-        )
+        r₊ = try
+            r_thick, _ = _find_offset_for_radius(
+                m,
+                x,
+                d,
+                rₑ,
+                θ;
+                initial_r = r,
+                zero_atol = setup.zero_atol,
+                root_solver = setup.root_solver,
+                offset_max = offset_max,
+                max_time = max_time,
+                β₀ = setup.β₀,
+                α₀ = setup.α₀,
+                tracer_kwargs...,
+                # don't echo warnings
+                warn = false,
+            )
+            r_thick
+        catch
+            # if we fail, for whatever reason, to root solve on the thick discs, 
+            # we don't care, we just need a NaN value and then set that point to 
+            # "not visible"
+            NaN
+        end
         is_visible, J = if !isnan(r₊) && isapprox(r, r₊, atol = 1e-3)
             # trace jacobian on updated impact parameters
             α, β = _rθ_to_αβ(r₊, θ; α₀ = setup.α₀, β₀ = setup.β₀)
@@ -290,11 +314,12 @@ end
 
 function _cunningham_transfer_function!(
     data::_TransferDataAccumulator,
+    setup::_TransferFunctionSetup,
     workhorse,
     θiterator,
-    θ_offset,
     rₑ,
 )
+    θ_offset = setup.θ_offset
     for (i, θ) in enumerate(θiterator)
         θ_corrected = θ + 1e-4
         insert_data!(data, i, θ_corrected, workhorse(θ))
@@ -328,7 +353,7 @@ function cunningham_transfer_function(
     rₑ::T;
     kwargs...,
 ) where {Q,T}
-    solver_kwargs, setup = _TransferFunctionSetup(m; kwargs...)
+    solver_kwargs, setup = _TransferFunctionSetup(m, d; kwargs...)
     cunningham_transfer_function(setup, m, x, d, rₑ; solver_kwargs...)
 end
 
@@ -362,8 +387,7 @@ function cunningham_transfer_function(
         chart = chart,
         solver_kwargs...,
     )
-    gmin, gmax =
-        _cunningham_transfer_function!(data, workhorse, θiterator, setup.θ_offset, rₑ)
+    gmin, gmax = _cunningham_transfer_function!(data, setup, workhorse, θiterator, rₑ)
     CunninghamTransferData(
         data.data[2, :],
         data.data[3, :],
@@ -424,7 +448,7 @@ function interpolated_transfer_branches(
     radii;
     kwargs...,
 )
-    solver_kwargs, setup = _TransferFunctionSetup(m; kwargs...)
+    solver_kwargs, setup = _TransferFunctionSetup(m, d; kwargs...)
     interpolated_transfer_branches(setup, m, x, d, radii; solver_kwargs...)
 end
 

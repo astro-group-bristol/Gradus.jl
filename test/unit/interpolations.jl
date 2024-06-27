@@ -32,13 +32,13 @@ ff(x, y) = 3x^2 + x * y - sin(y)
 ff(x) = SVector(ff(x[1], x[2]))
 X1 = collect(range(0, 1, 1000))
 X2 = collect(range(0, 1, 1000))
-vals = reshape([ff(x, y) for y in X1, x in X2], (length(X1), length(X2)))
+vals = reshape([ff(x, y) for x in X1, y in X2], (length(X1), length(X2)))
 cache = MultilinearInterpolator{2}(vals)
 
 # check that dual cache works too
 function _interpolate_wrapper(cache, X1, X2, vals)
     function _f(x)
-        x2, x1 = x
+        x1, x2 = x
         SVector(interpolate!(cache, (X1, X2), vals, (x1, x2)))
     end
 end
@@ -89,3 +89,22 @@ intp = Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
 intp = Gradus.interpolate!(cache, (X1, X2), vals, (0.0, 1.5))
 @test intp.a == [1.5]
 @test intp.b == [1.5 0; 0 1.5]
+
+# try higher dimensional interpolation
+
+X1 = range(0.0, 1.0, 3)
+X2 = range(1.0, 2.0, 4)
+X3 = range(-1.0, 0.0, 2)
+
+f3(x, y, z) = 2x + 3y + 7z
+vals = [f3(x, y, z) for x in X1, y in X2, z in X3]
+
+cache = MultilinearInterpolator{3}(vals)
+intp = Gradus.interpolate!(cache, (X1, X2, X3), vals, (0.5, 1.5, -0.5))
+@test intp == f3(0.5, 1.5, -0.5)
+
+intp = Gradus.interpolate!(cache, (X1, X2, X3), vals, (1.0, 1.1, -0.1))
+@test intp == f3(1.0, 1.1, -0.1)
+
+intp = Gradus.interpolate!(cache, (X1, X2, X3), vals, (1.0, 1.9, -0.1))
+@test intp == f3(1.0, 1.9, -0.1)

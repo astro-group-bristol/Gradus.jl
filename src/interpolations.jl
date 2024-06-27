@@ -94,7 +94,7 @@ function _tuple_set(tuple::NTuple{N}, index, v)::NTuple{N} where {N}
     elseif index == N
         (tuple[1:end-1]..., v)
     else
-        (tuple[1:index-1], v, tuple[index+1:end])
+        (tuple[1:index-1]..., v, tuple[index+1:end]...)
     end
 end
 

@@ -1,3 +1,11 @@
+abstract type AbstractRootAlgorithm end
+struct RootsAlg <: AbstractRootAlgorithm end
+Base.@kwdef struct NonLinearAlg{A} <: AbstractRootAlgorithm
+    alg::A = SimpleNonlinearSolve.SimpleBroyden()
+end
+
+DEFAULT_ROOT_SOLVER() = NonLinearAlg()
+
 """
     root_solve(f_objective, initial_value, args) 
 
@@ -7,10 +15,35 @@ function root_solve(
     f_objective,
     initial_value::T,
     args;
+    kwargs...,
+) where {T<:Union{<:Number,<:SVector{1}}}
+    root_solve(DEFAULT_ROOT_SOLVER(), f_objective, initial_value, args; kwargs...)
+end
+function root_solve(
+    ::RootsAlg,
+    f_objective,
+    initial_value::T,
+    args;
     abstol = 1e-9,
     kwargs...,
 ) where {T<:Union{<:Number,<:SVector{1}}}
-    # Roots.find_zero(r -> f_objective(r, args), initial_value, Roots.Order0(); atol = abstol)
+    x0 = Roots.find_zero(
+        r -> f_objective(r, args),
+        initial_value,
+        Roots.Order0();
+        atol = abstol,
+    )
+    resid = f_objective(x0, args)
+    x0, resid
+end
+function root_solve(
+    alg::NonLinearAlg,
+    f_objective,
+    initial_value::T,
+    args;
+    abstol = 1e-9,
+    kwargs...,
+) where {T<:Union{<:Number,<:SVector{1}}}
     x0, f = if T <: Number
         function _obj_wrapper(x::SVector, p)
             @inbounds SVector{1,eltype(x)}(f_objective(x[1], p))
@@ -20,14 +53,7 @@ function root_solve(
         initial_value, f_objective
     end
     prob = SimpleNonlinearSolve.NonlinearProblem{false}(f, x0, args)
-    sol = solve(
-        prob,
-        SimpleNonlinearSolve.SimpleBroyden();
-        abstol = abstol,
-        reltol = abstol,
-        maxiters = 500,
-        kwargs...,
-    )
+    sol = solve(prob, alg.alg, abstol = abstol, reltol = abstol, maxiters = 500, kwargs...)
     sol.u[1], sol.resid[1]
 end
 

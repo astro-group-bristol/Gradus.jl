@@ -16,6 +16,7 @@ function _find_offset_for_measure(
     d::AbstractAccretionGeometry,
     θₒ;
     zero_atol = 1e-7,
+    root_solver = DEFAULT_ROOT_SOLVER(),
     offset_max = 20.0,
     initial_r = offset_max / 2,
     max_time = 2 * x[2],
@@ -48,6 +49,7 @@ function _find_offset_for_measure(
 
     best = eltype(x)[0.0, 1.0]
     r0_candidate, resid = root_solve(
+        root_solver,
         _offset_objective,
         initial_r,
         (measure, _velfunc, _solve_geodesic, best);
