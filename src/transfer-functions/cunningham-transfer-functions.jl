@@ -275,23 +275,31 @@ function _rear_workhorse(
         )
     function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
         g, gp, r = datum_workhorse(θ)
-        r₊, _ = _find_offset_for_radius(
-            m,
-            x,
-            d,
-            rₑ,
-            θ;
-            initial_r = r,
-            zero_atol = setup.zero_atol,
-            root_solver = setup.root_solver,
-            offset_max = offset_max,
-            max_time = max_time,
-            β₀ = setup.β₀,
-            α₀ = setup.α₀,
-            tracer_kwargs...,
-            # don't echo warnings
-            warn = false,
-        )
+        r₊ = try
+            r_thick, _ = _find_offset_for_radius(
+                m,
+                x,
+                d,
+                rₑ,
+                θ;
+                initial_r = r,
+                zero_atol = setup.zero_atol,
+                root_solver = setup.root_solver,
+                offset_max = offset_max,
+                max_time = max_time,
+                β₀ = setup.β₀,
+                α₀ = setup.α₀,
+                tracer_kwargs...,
+                # don't echo warnings
+                warn = false,
+            )
+            r_thick
+        catch
+            # if we fail, for whatever reason, to root solve on the thick discs, 
+            # we don't care, we just need a NaN value and then set that point to 
+            # "not visible"
+            NaN
+        end
         is_visible, J = if !isnan(r₊) && isapprox(r, r₊, atol = 1e-3)
             # trace jacobian on updated impact parameters
             α, β = _rθ_to_αβ(r₊, θ; α₀ = setup.α₀, β₀ = setup.β₀)
