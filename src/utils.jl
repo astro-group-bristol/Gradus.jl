@@ -27,7 +27,12 @@ function root_solve(
     abstol = 1e-9,
     kwargs...,
 ) where {T<:Union{<:Number,<:SVector{1}}}
-    x0 = Roots.find_zero(r -> f_objective(r, args), initial_value, Roots.Order0(); atol = abstol)
+    x0 = Roots.find_zero(
+        r -> f_objective(r, args),
+        initial_value,
+        Roots.Order0();
+        atol = abstol,
+    )
     resid = f_objective(x0, args)
     x0, resid
 end
