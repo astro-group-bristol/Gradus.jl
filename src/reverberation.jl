@@ -57,7 +57,7 @@ function lag_frequency(
     kwargs...,
 ) where {T}
     other_kwargs, em_setup = EmissivityProfileSetup(T, spectrum; kwargs...)
-    solver_kwargs, tf_setup = _TransferFunctionSetup(T; other_kwargs...)
+    solver_kwargs, tf_setup = _TransferFunctionSetup(m, d; other_kwargs...)
 
     prof = emissivity_profile(em_setup, m, d, model; solver_kwargs...)
     t0 = continuum_time(m, x, model; solver_kwargs...)
