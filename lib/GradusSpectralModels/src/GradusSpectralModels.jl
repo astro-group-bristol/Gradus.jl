@@ -20,18 +20,18 @@ end
 function Base.copy(m::LineProfile)
     table = Gradus.CunninghamTransferTable(m.table.table.params, m.table.table.grids)
     setup = Gradus.IntegrationSetup(
-        table.setup.h,
-        table.setup.time,
-        table.setup.integrand,
-        table.setup.pure_radial,
-        table.setup.quadrature_rule,
-        deepcopy(table.index_cache),
-        table.setup.g_grid_upscale,
-        table.setup.n_radii,
+        m.table.setup.h,
+        m.table.setup.time,
+        m.table.setup.integrand,
+        m.table.setup.pure_radial,
+        m.table.setup.quadrature_rule,
+        deepcopy(m.table.setup.index_cache),
+        m.table.setup.g_grid_upscale,
+        m.table.setup.n_radii,
     )
     typeof(m)(
         (; setup = setup, table = table),
-        (copy(getproperty(m, f)) for f in fieldnames(typeof(f))[2:end])...,
+        (copy(getproperty(m, f)) for f in fieldnames(typeof(m))[2:end])...,
     )
 end
 
