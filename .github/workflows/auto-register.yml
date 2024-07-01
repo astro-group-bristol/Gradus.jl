@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'Project.toml'
+      - '.github/workflows/auto-register.yml'
       - 'lib/GradusSpectralModels/Project.toml'
 
 permissions:
@@ -38,8 +39,8 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       - run: |
-          git config --global user.email "bot@astro-group-bristol"
-          git config --global user.name "astro-group-bristol[bot]"
+          git config --global user.email "isamborg@cosroe.com"
+          git config --global user.name "Isamborg"
           julia -e '
           import Pkg
           Pkg.add(url="https://github.com/GunnarFarneback/LocalRegistry.jl")
