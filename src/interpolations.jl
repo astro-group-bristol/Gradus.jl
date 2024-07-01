@@ -51,4 +51,3 @@ end
     end
     clamp(r, r_min, r_max)
 end
-
