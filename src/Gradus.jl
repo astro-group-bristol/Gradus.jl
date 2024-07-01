@@ -22,6 +22,9 @@ using Buckets
 using QuadGK
 using MuladdMacro
 
+using MultiLinearInterpolations
+using MultiLinearInterpolations: _linear_interpolate, _linear_interpolate!
+
 using Tullio: @tullio
 
 import ForwardDiff

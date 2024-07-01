@@ -45,7 +45,7 @@ end
 
 # for whatever reason, `fieldnames` always seems to fail to type infer here
 # so just unroll it by hand
-function restructure(grid::CunninghamTransferGrid, vs::AbstractVector)
+function MultiLinearInterpolations.restructure(grid::CunninghamTransferGrid, vs::AbstractVector)
     @views begin
         start = 1
 
