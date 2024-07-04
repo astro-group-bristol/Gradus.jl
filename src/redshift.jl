@@ -249,6 +249,7 @@ function interpolate_redshift(plunging_interpolation, u::SVector{4,T}; kwargs...
     # metric matrix at observer
     m_obs = metric(plunging_interpolation.m, u)
     # fixed stationary observer velocity
+    # TODO: does this need to be normalized ? (!!!)
     v_obs = SVector{4,T}(1, 0, 0, 0)
     circ_velocity_func =
         make_circular_velocity_function(plunging_interpolation.m; kwargs...)
