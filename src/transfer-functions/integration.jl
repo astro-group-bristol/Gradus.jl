@@ -227,12 +227,13 @@ function integrate_lagtransfer(
     rmax = outer_radius(transfer_functions),
     g_scale = 1,
     t0 = 0,
+    time_function = r -> -t0,
     kwargs...,
 )
     setup = integration_setup(
         prof,
         transfer_functions;
-        time = r -> coordtime_at(prof, r) - t0,
+        time = prof isa AbstractDiscProfile ? (r -> coordtime_at(prof, r) - t0) : (time_function),
         kwargs...,
     )
     output = zeros(eltype(g_grid), (length(g_grid), length(t_grid)))
