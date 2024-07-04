@@ -99,11 +99,13 @@ function _point_source_symmetric_emissivity_profile(
     I = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
     points = gps[I]
     δs = δs[I]
-    J = sortperm(points, by = i -> _equatorial_project(i.x))
+    rs = [_equatorial_project(i.x) for i in points]
+    J = sortperm(rs)
+    rs_sorted = rs[J]
     points = points[J]
     δs = δs[J]
 
-    r, ε = _point_source_emissivity(m, d, setup.spectrum, v, δs, points)
+    r, ε = _point_source_emissivity(m, d, setup.spectrum, v, rs_sorted, δs, points)
     t = [i.x[1] for i in @views(points[1:end-1])]
 
     RadialDiscProfile(r, t, ε)
@@ -114,13 +116,12 @@ function _point_source_emissivity(
     d::AbstractAccretionGeometry,
     spec::AbstractCoronalSpectrum,
     source_velocity,
+    r,
     δs,
     points::AbstractVector{<:AbstractGeodesicPoint{T}},
 ) where {T}
     # function for obtaining keplerian velocities
     _disc_velocity = _keplerian_velocity_projector(m, d)
-    # get radial coordinate
-    r = [_equatorial_project(i.x) for i in points]
 
     # radial bin size
     _points = @views(points[1:end-1])

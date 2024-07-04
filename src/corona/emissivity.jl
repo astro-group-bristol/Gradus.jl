@@ -175,4 +175,43 @@ function polar_angle_to_velfunc(m::AbstractMetric, x, v, δs; ϕ = zero(eltype(x
     end
 end
 
+"""
+    rotated_polar_angle_to_velfunc(m::AbstractMetric, x, v, δs, β; θ₀ = 0, ϕ = 0)
+
+Similar to [`polar_angle_to_velfunc`](@ref), except now the generator function
+returned will rotate and offset all velocity vectors. This is equivalent to
+reorientating the local sky in the global coordinates.
+
+The `θ₀` parameter is the offset from the global `θ=0` direction, and `β` is the
+amount to rotate the sky by around it's zenith.
+"""
+function rotated_polar_angle_to_velfunc(
+    m::AbstractMetric,
+    x,
+    v,
+    δs,
+    β;
+    θ₀ = zero(eltype(x)),
+)
+    k = _cart_local_direction(θ₀, zero(eltype(x)))
+    function _polar_angle_velfunc(i)
+        q = _cart_local_direction(δs[i] + θ₀, zero(eltype(x)))
+
+        b = rodrigues_rotate(k, q, β)
+
+        # convert back to spherical coordinates
+        ph = atan(b[2], b[1])
+        th = atan(sqrt(b[2]^2 + b[1]^2), b[3])
+
+        sky_angles_to_velocity(m, x, v, th, ph)
+    end
+end
+
+"""
+    rodrigues_rotate(k, v, θ)
+
+Rodrigue's rotation formula. Rotates a vector ``v`` by ``\\theta`` about ``k``.
+"""
+rodrigues_rotate(k, v, θ) = v * cos(θ) + (k × v) * sin(θ) + k * (k ⋅ v) * (1 - cos(θ))
+
 export emissivity_profile, tracecorona
