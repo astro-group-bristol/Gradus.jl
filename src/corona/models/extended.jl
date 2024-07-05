@@ -237,78 +237,80 @@ function _process_ring_traces(setup::EmissivityProfileSetup, m, d, v, gps, rs, �
     (; t, r, ε = abs.(ε))
 end
 
-function integrate_lagtransfer(
-    profile::RingCoronaProfile,
-    itb::InterpolatingTransferBranches{T},
-    radii,
-    g_grid,
-    t_grid;
-    Nr = 1000,
-    t0 = 0,
-    kwargs...,
-) where {T}
-    # pre-allocate output
-    flux = zeros(T, (length(g_grid), length(t_grid)))
-    fine_rₑ_grid = Grids._geometric_grid(extrema(radii)..., Nr) |> collect
-    setup =
-        _integration_setup(T, _lineprofile_integrand, nothing; time = nothing, kwargs...)
-    _integrate_transfer_problem!(
-        flux,
-        setup,
-        itb,
-        profile,
-        fine_rₑ_grid,
-        g_grid,
-        t_grid;
-        t0 = t0,
-    )
-    _normalize(flux, g_grid)
-end
-
 # TODO: refactor the time-integration to make things like below possible without copy pasting the function
 function _integrate_transfer_problem!(
     output::AbstractMatrix,
-    setup::IntegrationSetup,
-    itb::InterpolatingTransferBranches{T},
-    profile::RingCoronaProfile,
-    radii_grid,
+    setup::IntegrationSetup{T,<:RingCoronaProfile},
+    transfer_function_radial_interpolation,
+    r_limits,
     g_grid,
     t_grid;
-    t0 = 0,
+    g_scale = 1,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
-    # build fine radial grid for trapezoidal integration
-    @inbounds for (i, rₑ) in enumerate(radii_grid)
-        closures = _IntegrationClosures(setup, itb(rₑ))
-        Δrₑ = _trapezoidal_weight(radii_grid, rₑ, i)
-        θ = Δrₑ * rₑ * π / (closures.branch.gmax - closures.branch.gmin)
+
+    r_itterator = Grids._geometric_grid(r_limits..., setup.n_radii)
+    r2 = first(iterate(r_itterator, 2))
+    # prime the first r_prev so that the bin width is r2 - r1
+    r_prev = r_limits[1] - (r2 - r_limits[1])
+
+    for rₑ in r_itterator
+        branch = transfer_function_radial_interpolation(rₑ)
+        S_lower = _lower_branch(setup, branch)
+        S_upper = _upper_branch(setup, branch)
+
+        Δrₑ = rₑ - r_prev
+        # integration weight for this annulus
+        θ = Δrₑ * rₑ * π / (branch.gmax - branch.gmin)
 
         # interpolate the emissivity as function of time
-        t_ε_interp = emissivity_interp(profile, rₑ)
-        t_ε_limts = emissivity_interp_limits(profile, rₑ)
+        t_ε_interp = emissivity_interp(setup.profile, rₑ)
+        t_ε_limts = emissivity_interp_limits(setup.profile, rₑ)
         δt = (t_ε_limts[2] - t_ε_limts[1]) / 100
 
         @inbounds for j in eachindex(g_grid_view)
-            g_grid_low = clamp(g_grid[j], closures.branch.gmin, closures.branch.gmax)
-            g_grid_hi = clamp(g_grid[j+1], closures.branch.gmin, closures.branch.gmax)
+            glo = clamp(g_grid[j] / g_scale, branch.gmin, branch.gmax)
+            ghi = clamp(g_grid[j+1] / g_scale, branch.gmin, branch.gmax)
             # skip if bin not relevant
-            if g_grid_low == g_grid_hi
+            if glo == ghi
                 continue
             end
-            for (glo, ghi) in
-                _g_fine_grid_iterate(setup.g_grid_upscale, g_grid_low, g_grid_hi)
-                k1 = integrate_bin(closures, _lower_branch(closures), glo, ghi)
-                k2 = integrate_bin(closures, _upper_branch(closures), glo, ghi)
-                # find which bin to dump in
-                t_lower_branch, t_upper_branch = _time_bins(closures, glo, ghi)
 
+            Δg = (ghi - glo) / setup.g_grid_upscale
+
+            for i = 1:setup.g_grid_upscale
+                g_fine_lo = glo + (i - 1) * Δg
+                g_fine_hi = g_fine_lo + Δg
+
+                k1 = integrate_bin(
+                    setup,
+                    S_lower,
+                    g_fine_lo,
+                    g_fine_hi,
+                    branch.gmin,
+                    branch.gmax,
+                )
+                k2 = integrate_bin(
+                    setup,
+                    S_upper,
+                    g_fine_lo,
+                    g_fine_hi,
+                    branch.gmin,
+                    branch.gmax,
+                )
+
+                # find which bin to dump in
+                (tl1, tl2), (tu1, tu2) = _time_bins(setup, branch, g_fine_lo, g_fine_hi)
+                t_lower_branch = (tl1 + tl2) / 2 
+                t_upper_branch = (tu1 + tu2) / 2
+                
                 imax = lastindex(t_grid)
                 # loop over all times and find the offsets to dump flux into
                 for time in range(t_ε_limts..., 100)
-                    tlower = t_lower_branch + time - t0
+                    tlower = t_lower_branch + time - setup.t0
                     i1 = @views searchsortedfirst(t_grid, tlower)
 
-                    tupper = t_upper_branch + time - t0
+                    tupper = t_upper_branch + time - setup.t0
                     i2 = @views searchsortedfirst(t_grid, tupper)
 
                     em = t_ε_interp(time)
@@ -321,6 +323,8 @@ function _integrate_transfer_problem!(
                 end
             end
         end
+
+        r_prev = rₑ
     end
 end
 

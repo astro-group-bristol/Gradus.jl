@@ -14,44 +14,50 @@ function quadrature_integrate(f, a::T, b::T; rule = gauss(5)) where {T}
     total * q
 end
 
-struct IntegrationSetup{T,K,F,R}
+struct IntegrationSetup{T,P,F}
     h::T
-    time::K
+    profile::P
     integrand::F
-    pure_radial::R
     quadrature_rule::Tuple{Vector{T},Vector{T}}
     index_cache::Vector{Int}
     g_grid_upscale::Int
     n_radii::Int
+    t0::T
 end
 
-function integration_setup(prof, transfer_functions; kwargs...)
-    radial = if prof isa AbstractDiscProfile
-        r -> emissivity_at(prof, r)
-    else
-        prof
-    end
-    IntegrationSetup(_lineprofile_integrand, radial; kwargs...)
-end
+radial_component(setup::IntegrationSetup, r) =
+    setup.profile.radial(r)
+radial_component(setup::IntegrationSetup{T,<:AbstractDiscProfile}, r) where {T} =
+    emissivity_at(setup.profile, r)
+
+time_component(setup::IntegrationSetup, r) =
+    setup.profile.time(r)
+time_component(setup::IntegrationSetup{T,<:AbstractDiscProfile}, r) where {T} =
+    coordtime_at(setup.profile, r) - setup.t0
+
+integration_setup(prof::AbstractDiscProfile, transfer_functions; kwargs...) =
+    IntegrationSetup(_lineprofile_integrand, prof; kwargs...)
+integration_setup(radial::Function, transfer_functions; time = nothing, kwargs...) =
+    IntegrationSetup(_lineprofile_integrand, (;radial = radial, time = time); kwargs...)
 
 function IntegrationSetup(
     integrand,
-    pure_radial;
-    time = nothing,
+    prof;
     h = 1e-8,
     g_grid_upscale = 1,
     n_radii = 1000,
     quadrature_points = 23,
+    t0 = zero(h),
 )
     IntegrationSetup(
         h,
-        time,
+        prof,
         integrand,
-        pure_radial,
         gauss(quadrature_points),
         ones(Int, 4),
         g_grid_upscale,
         n_radii,
+        t0,
     )
 end
 
@@ -226,14 +232,11 @@ function integrate_lagtransfer(
     rmin = inner_radius(transfer_functions),
     rmax = outer_radius(transfer_functions),
     g_scale = 1,
-    t0 = 0,
-    time_function = r -> -t0,
     kwargs...,
 )
     setup = integration_setup(
         prof,
         transfer_functions;
-        time = prof isa AbstractDiscProfile ? (r -> coordtime_at(prof, r) - t0) : (time_function),
         kwargs...,
     )
     output = zeros(eltype(g_grid), (length(g_grid), length(t_grid)))
@@ -298,11 +301,10 @@ end
 
 function _integrate_transfer_problem!(
     output::AbstractVector,
-    setup::IntegrationSetup{T,Nothing},
+    setup::IntegrationSetup{T},
     transfer_function_radial_interpolation,
     r_limits,
     g_grid;
-    pure_radial = setup.pure_radial,
     g_scale = 1,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
@@ -318,7 +320,7 @@ function _integrate_transfer_problem!(
 
         Δrₑ = rₑ - r_prev
         # integration weight for this annulus
-        θ = Δrₑ * rₑ * pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
+        θ = Δrₑ * rₑ * radial_component(setup, rₑ) * π / (branch.gmax - branch.gmin)
 
         for j in eachindex(g_grid_view)
             glo = g_grid[j] / g_scale
@@ -346,7 +348,6 @@ function _integrate_transfer_problem!(
     r_limits,
     g_grid,
     t_grid;
-    pure_radial = setup.pure_radial,
     g_scale = 1,
 ) where {T}
     g_grid_view = @views g_grid[1:end-1]
@@ -363,10 +364,10 @@ function _integrate_transfer_problem!(
 
         Δrₑ = rₑ - r_prev
         # integration weight for this annulus
-        θ = Δrₑ * rₑ * pure_radial(rₑ) * π / (branch.gmax - branch.gmin)
+        θ = Δrₑ * rₑ * radial_component(setup, rₑ) * π / (branch.gmax - branch.gmin)
 
         # time delay for this annuli
-        t_source_disc = setup.time(rₑ)
+        t_source_disc = time_component(setup, rₑ)
 
         @inbounds for j in eachindex(g_grid_view)
             glo = clamp(g_grid[j] / g_scale, branch.gmin, branch.gmax)
