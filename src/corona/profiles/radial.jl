@@ -225,3 +225,86 @@ function emissivity_interp_limits(prof::TimeDependentRadialDiscProfile{T}, ρ) w
         (zero(T), zero(T))
     end
 end
+
+"""
+    struct RingCoronaProfile{T} <: AbstractDiscProfile
+
+A specialised disc profile that can stores the various
+[`TimeDependentRadialDiscProfile`](@ref) for the ring-like extended corona.
+"""
+struct RingCoronaProfile{T} <: AbstractDiscProfile
+    left_arm::TimeDependentRadialDiscProfile{T}
+    right_arm::TimeDependentRadialDiscProfile{T}
+end
+
+function emissivity_at(prof::RingCoronaProfile{T}, ρ) where {T}
+    emissivity_at(prof.left_arm, ρ) + emissivity_at(prof.right_arm, ρ)
+end
+
+function emissivity_interp(prof::RingCoronaProfile{T}, ρ) where {T}
+    left_arm = emissivity_interp(prof.left_arm, ρ)
+    right_arm = emissivity_interp(prof.right_arm, ρ)
+    function _add_arms(t)
+        left = if t >= left_arm.t[1] && t <= left_arm.t[end]
+            left_arm(t)
+        else
+            zero(T)
+        end
+        right = if t >= right_arm.t[1] && t <= right_arm.t[end]
+            right_arm(t)
+        else
+            zero(T)
+        end
+
+        left + right
+    end
+end
+
+function emissivity_interp_limits(prof::RingCoronaProfile, ρ)
+    l_min, l_max = emissivity_interp_limits(prof.left_arm, ρ)
+    r_min, r_max = emissivity_interp_limits(prof.right_arm, ρ)
+    min(l_min, r_min), max(l_max, r_max)
+end
+
+struct DiscCoronaProfile{T} <: AbstractDiscProfile
+    radii::Vector{T}
+    rings::Vector{RingCoronaProfile{T}}
+end
+
+function Base.show(io::IO, ::MIME"text/plain", @nospecialize(prof::DiscCoronaProfile))
+    print(io, """DiscCoronaProfile
+      . N rings      : $(length(prof.radii))
+      . r (min, max) : $(extrema(prof.radii))
+    """
+    )
+end
+
+function _ring_weighting(prof::DiscCoronaProfile, i)
+    δr = prof.radii[2] - prof.radii[1]
+    prof.radii[i] * δr
+end
+
+function emissivity_at(prof::DiscCoronaProfile{T}, ρ) where {T}
+    sum(eachindex(prof.radii)) do i
+        emissivity_at(prof.rings[i], ρ) * _ring_weighting(prof, i)
+    end
+end
+
+function emissivity_interp(prof::DiscCoronaProfile{T}, ρ) where {T}
+    funcs = [emissivity_interp(ring, ρ) for ring in prof.rings]
+    function _sum_ring_contributions(t)
+        sum(eachindex(funcs)) do i
+            funcs[i](t) * _ring_weighting(prof, i)
+        end
+    end
+end
+
+function emissivity_interp_limits(prof::DiscCoronaProfile, ρ)
+    _min, _max = emissivity_interp_limits(prof.rings[1], ρ)
+    for i in 2:lastindex(prof.rings)
+        l_min, l_max = emissivity_interp_limits(prof.rings[i], ρ)  
+        _min = min(_min, l_min)
+        _max = max(_max, l_max)
+    end
+    (_min, _max)
+end

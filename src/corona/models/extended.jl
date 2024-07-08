@@ -1,21 +1,3 @@
-struct DiscCorona{T} <: AbstractCoronaModel{T}
-    "Radius of the disc"
-    r::T
-    "Height of the base of the cylinder above the disc"
-    h::T
-end
-
-function sample_position_velocity(m::AbstractMetric, model::DiscCorona{T}) where {T}
-    x = rand() * model.r
-    r = sqrt(x^2 + model.h^2)
-    # (x, y) flipped because coordinates are off the Z axis
-    θ = atan(x, model.h)
-    x = SVector{4,T}(0, r, θ, 0)
-    gcomp = metric_components(m, SVector(x[2], x[3]))
-    v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
-    x, v
-end
-
 struct RingCorona{T} <: AbstractCoronaModel{T}
     "Radius of the ring"
     r::T
@@ -48,46 +30,6 @@ struct LongitudalArms{T}
     right_r::Vector{T}
     right_t::Vector{T}
     right_ε::Vector{T}
-end
-
-"""
-    struct RingCoronaProfile{T} <: AbstractDiscProfile
-
-A specialised disc profile that can stores the various
-[`TimeDependentRadialDiscProfile`](@ref) for the ring-like extended corona.
-"""
-struct RingCoronaProfile{T} <: AbstractDiscProfile
-    left_arm::TimeDependentRadialDiscProfile{T}
-    right_arm::TimeDependentRadialDiscProfile{T}
-end
-
-function emissivity_at(prof::RingCoronaProfile{T}, ρ) where {T}
-    emissivity_at(prof.left_arm, ρ) + emissivity_at(prof.right_arm, ρ)
-end
-
-function emissivity_interp(prof::RingCoronaProfile{T}, ρ) where {T}
-    left_arm = emissivity_interp(prof.left_arm, ρ)
-    right_arm = emissivity_interp(prof.right_arm, ρ)
-    function _add_arms(t)
-        left = if t >= left_arm.t[1] && t <= left_arm.t[end]
-            left_arm(t)
-        else
-            zero(T)
-        end
-        right = if t >= right_arm.t[1] && t <= right_arm.t[end]
-            right_arm(t)
-        else
-            zero(T)
-        end
-
-        left + right
-    end
-end
-
-function emissivity_interp_limits(prof::RingCoronaProfile, ρ)
-    l_min, l_max = emissivity_interp_limits(prof.left_arm, ρ)
-    r_min, r_max = emissivity_interp_limits(prof.right_arm, ρ)
-    min(l_min, r_min), max(l_max, r_max)
 end
 
 function _make_time_dependent_radial_emissivity(arms::Vector{LongitudalArms{T}}) where {T}
@@ -240,16 +182,16 @@ end
 # TODO: refactor the time-integration to make things like below possible without copy pasting the function
 function _integrate_transfer_problem!(
     output::AbstractMatrix,
-    setup::IntegrationSetup{T,<:RingCoronaProfile},
+    setup::IntegrationSetup{T,Profile},
     transfer_function_radial_interpolation,
     r_limits,
     g_grid,
     t_grid;
     g_scale = 1,
-) where {T}
+) where {T, Profile <: Union{<:RingCoronaProfile, DiscCoronaProfile}}
     g_grid_view = @views g_grid[1:end-1]
 
-    r_itterator = Grids._geometric_grid(r_limits..., setup.n_radii)
+    r_itterator = collect(Grids._geometric_grid(r_limits..., setup.n_radii))
     r2 = first(iterate(r_itterator, 2))
     # prime the first r_prev so that the bin width is r2 - r1
     r_prev = r_limits[1] - (r2 - r_limits[1])
@@ -327,5 +269,39 @@ function _integrate_transfer_problem!(
         r_prev = rₑ
     end
 end
+
+struct DiscCorona{T} <: AbstractCoronaModel{T}
+    "Radius of the disc"
+    r::T
+    "Height of the base of the cylinder above the disc"
+    h::T
+end
+
+function sample_position_velocity(m::AbstractMetric, model::DiscCorona{T}) where {T}
+    x = rand() * model.r
+    r = sqrt(x^2 + model.h^2)
+    # (x, y) flipped because coordinates are off the Z axis
+    θ = atan(x, model.h)
+    x = SVector{4,T}(0, r, θ, 0)
+    gcomp = metric_components(m, SVector(x[2], x[3]))
+    v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
+    x, v
+end
+
+function emissivity_profile(
+    setup::EmissivityProfileSetup{true},
+    m::AbstractMetric,
+    d::AbstractAccretionGeometry,
+    model::DiscCorona;
+    n_rings = 10,
+    kwargs...,
+)
+    radii = range(1e-2, model.r, n_rings)
+    ring_profiles = map(radii) do r
+        emissivity_profile(setup, m, d, RingCorona(r, model.h); kwargs...)
+    end
+    DiscCoronaProfile(collect(radii), ring_profiles)
+end
+
 
 export RingCorona, DiscCorona
