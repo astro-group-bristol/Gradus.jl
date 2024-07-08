@@ -272,10 +272,12 @@ struct DiscCoronaProfile{T} <: AbstractDiscProfile
 end
 
 function Base.show(io::IO, ::MIME"text/plain", @nospecialize(prof::DiscCoronaProfile))
-    print(io, """DiscCoronaProfile
-      . N rings      : $(length(prof.radii))
-      . r (min, max) : $(extrema(prof.radii))
-    """
+    print(
+        io,
+        """DiscCoronaProfile
+  . N rings      : $(length(prof.radii))
+  . r (min, max) : $(extrema(prof.radii))
+""",
     )
 end
 
@@ -301,8 +303,8 @@ end
 
 function emissivity_interp_limits(prof::DiscCoronaProfile, ρ)
     _min, _max = emissivity_interp_limits(prof.rings[1], ρ)
-    for i in 2:lastindex(prof.rings)
-        l_min, l_max = emissivity_interp_limits(prof.rings[i], ρ)  
+    for i = 2:lastindex(prof.rings)
+        l_min, l_max = emissivity_interp_limits(prof.rings[i], ρ)
         _min = min(_min, l_min)
         _max = max(_max, l_max)
     end

@@ -116,7 +116,7 @@ Find the offset ``r_\\text{o}`` on the observer's image plane that gives impact 
 that trace a geodesic to intersect the disc geometry at an emission radius ``r_\\text{e}``.
 
 Returns ``NaN`` if no offset exists. This may occur of the geometry is not present at this location
-(though this more commonly gives a bracketing interval error), or if the emission radius is within 
+(though this more commonly gives a bracketing interval error), or if the emission radius is within
 the event horizon.
 """
 find_offset_for_radius(
@@ -238,7 +238,7 @@ function impact_parameters_for_radius_obscured(
 end
 
 """
-If dot product between surface normal and the final velocity vector is positive, 
+If dot product between surface normal and the final velocity vector is positive,
 the point is visible.
 """
 function _is_visible(m::AbstractMetric, d, gp::AbstractGeodesicPoint, n::SVector{3})
@@ -254,7 +254,7 @@ function _is_visible(m::AbstractMetric, d, gp::AbstractGeodesicPoint, n::SVector
     X2 = to_cartesian(gp_new.x)
     dist = sum(i -> i^2, X1 .- X2)
 
-    # return _fast_dot(v_geodesic, n_rot) < 0 && 
+    # return _fast_dot(v_geodesic, n_rot) < 0 &&
     return isapprox(dist, 0, atol = 1e-12)
 end
 
@@ -286,7 +286,7 @@ function jacobian_∂αβ_∂gr(
         gp = unpack_solution(sol)
         ρ = _equatorial_project(gp.x)
 
-        # if within the inner radius of the disc, the redshift might be more or 
+        # if within the inner radius of the disc, the redshift might be more or
         # less undefined, or at the very least discontinuous, causing havoc with
         # the gradients. furthermore, we shouldn't expect to have any geodesics that
         # fall within the inner radius thanks to the root finder. so what we do
@@ -360,7 +360,7 @@ function _make_target_objective(
         _solve_reinit!(integ, vcat(x0, v))
     end
 
-    # map impact parameters to a closest approach 
+    # map impact parameters to a closest approach
     function _target_objective(impact_params)
         α = impact_params[1]
         β = impact_params[2]

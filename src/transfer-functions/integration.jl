@@ -25,20 +25,18 @@ struct IntegrationSetup{T,P,F}
     t0::T
 end
 
-radial_component(setup::IntegrationSetup, r) =
-    setup.profile.radial(r)
+radial_component(setup::IntegrationSetup, r) = setup.profile.radial(r)
 radial_component(setup::IntegrationSetup{T,<:AbstractDiscProfile}, r) where {T} =
     emissivity_at(setup.profile, r)
 
-time_component(setup::IntegrationSetup, r) =
-    setup.profile.time(r)
+time_component(setup::IntegrationSetup, r) = setup.profile.time(r)
 time_component(setup::IntegrationSetup{T,<:AbstractDiscProfile}, r) where {T} =
     coordtime_at(setup.profile, r) - setup.t0
 
 integration_setup(prof::AbstractDiscProfile, transfer_functions; kwargs...) =
     IntegrationSetup(_lineprofile_integrand, prof; kwargs...)
 integration_setup(radial::Function, transfer_functions; time = nothing, kwargs...) =
-    IntegrationSetup(_lineprofile_integrand, (;radial = radial, time = time); kwargs...)
+    IntegrationSetup(_lineprofile_integrand, (; radial = radial, time = time); kwargs...)
 
 function IntegrationSetup(
     integrand,
@@ -234,11 +232,7 @@ function integrate_lagtransfer(
     g_scale = 1,
     kwargs...,
 )
-    setup = integration_setup(
-        prof,
-        transfer_functions;
-        kwargs...,
-    )
+    setup = integration_setup(prof, transfer_functions; kwargs...)
     output = zeros(eltype(g_grid), (length(g_grid), length(t_grid)))
     integrate_lagtransfer!(
         output,

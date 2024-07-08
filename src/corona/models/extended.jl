@@ -188,7 +188,7 @@ function _integrate_transfer_problem!(
     g_grid,
     t_grid;
     g_scale = 1,
-) where {T, Profile <: Union{<:RingCoronaProfile, DiscCoronaProfile}}
+) where {T,Profile<:Union{<:RingCoronaProfile,DiscCoronaProfile}}
     g_grid_view = @views g_grid[1:end-1]
 
     r_itterator = collect(Grids._geometric_grid(r_limits..., setup.n_radii))
@@ -243,9 +243,9 @@ function _integrate_transfer_problem!(
 
                 # find which bin to dump in
                 (tl1, tl2), (tu1, tu2) = _time_bins(setup, branch, g_fine_lo, g_fine_hi)
-                t_lower_branch = (tl1 + tl2) / 2 
+                t_lower_branch = (tl1 + tl2) / 2
                 t_upper_branch = (tu1 + tu2) / 2
-                
+
                 imax = lastindex(t_grid)
                 # loop over all times and find the offsets to dump flux into
                 for time in range(t_ε_limts..., 100)
