@@ -23,7 +23,7 @@
     <img alt="Docs" src="https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg"/>
 </a>
 
-Spacetime generic, general relativistic ray-tracing (GRRT) in Julia.
+Spacetime generic, general relativistic ray-tracing (GRRT) in Julia. See our [documentation](https://astro-group-bristol.github.io/Gradus.jl/dev/) for more details and usage.
 
 <p align="center"> <i> This package is in development and subject to rapid breaking changes, with documentation updates lagging behind features.</i> </p>
 
