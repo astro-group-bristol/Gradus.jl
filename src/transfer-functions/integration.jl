@@ -1,5 +1,7 @@
 _lineprofile_integrand(_, g) = g^2
 
+_NO_DISC_TIME(_) = 0
+
 function quadrature_integrate(f, a::T, b::T; rule = gauss(5)) where {T}
     total = zero(T)
     X, W = rule
@@ -29,13 +31,13 @@ radial_component(setup::IntegrationSetup, r) = setup.profile.radial(r)
 radial_component(setup::IntegrationSetup{T,<:AbstractDiscProfile}, r) where {T} =
     emissivity_at(setup.profile, r)
 
-time_component(setup::IntegrationSetup, r) = setup.profile.time(r)
+time_component(setup::IntegrationSetup, r) = setup.profile.time(r) - setup.t0
 time_component(setup::IntegrationSetup{T,<:AbstractDiscProfile}, r) where {T} =
     coordtime_at(setup.profile, r) - setup.t0
 
 integration_setup(prof::AbstractDiscProfile, transfer_functions; kwargs...) =
     IntegrationSetup(_lineprofile_integrand, prof; kwargs...)
-integration_setup(radial::Function, transfer_functions; time = nothing, kwargs...) =
+integration_setup(radial::Function, transfer_functions; time = _NO_DISC_TIME, kwargs...) =
     IntegrationSetup(_lineprofile_integrand, (; radial = radial, time = time); kwargs...)
 
 function IntegrationSetup(

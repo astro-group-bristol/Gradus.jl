@@ -196,6 +196,8 @@ function _integrate_transfer_problem!(
     # prime the first r_prev so that the bin width is r2 - r1
     r_prev = r_limits[1] - (r2 - r_limits[1])
 
+    N_t_steps = 100
+
     for rₑ in r_itterator
         branch = transfer_function_radial_interpolation(rₑ)
         S_lower = _lower_branch(setup, branch)
@@ -208,7 +210,7 @@ function _integrate_transfer_problem!(
         # interpolate the emissivity as function of time
         t_ε_interp = emissivity_interp(setup.profile, rₑ)
         t_ε_limts = emissivity_interp_limits(setup.profile, rₑ)
-        δt = (t_ε_limts[2] - t_ε_limts[1]) / 100
+        δt = (t_ε_limts[2] - t_ε_limts[1]) / N_t_steps
 
         @inbounds for j in eachindex(g_grid_view)
             glo = clamp(g_grid[j] / g_scale, branch.gmin, branch.gmax)
@@ -248,7 +250,7 @@ function _integrate_transfer_problem!(
 
                 imax = lastindex(t_grid)
                 # loop over all times and find the offsets to dump flux into
-                for time in range(t_ε_limts..., 100)
+                for time in range(t_ε_limts..., N_t_steps)
                     tlower = t_lower_branch + time - setup.t0
                     i1 = @views searchsortedfirst(t_grid, tlower)
 
@@ -300,7 +302,7 @@ function emissivity_profile(
     ring_profiles = map(radii) do r
         emissivity_profile(setup, m, d, RingCorona(r, model.h); kwargs...)
     end
-    DiscCoronaProfile(collect(radii), ring_profiles)
+    DiscCoronaProfile(collect(radii), ring_profiles, _ -> 0)
 end
 
 

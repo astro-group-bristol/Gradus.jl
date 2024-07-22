@@ -266,9 +266,14 @@ function emissivity_interp_limits(prof::RingCoronaProfile, ρ)
     min(l_min, r_min), max(l_max, r_max)
 end
 
-struct DiscCoronaProfile{T} <: AbstractDiscProfile
+struct DiscCoronaProfile{T,F} <: AbstractDiscProfile
     radii::Vector{T}
     rings::Vector{RingCoronaProfile{T}}
+    propagation_velocity::F
+end
+
+function with_propagation_velocity(d::DiscCoronaProfile, func::Function)
+    DiscCoronaProfile(d.radii, d.rings, func)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", @nospecialize(prof::DiscCoronaProfile))
@@ -294,17 +299,24 @@ end
 
 function emissivity_interp(prof::DiscCoronaProfile{T}, ρ) where {T}
     funcs = [emissivity_interp(ring, ρ) for ring in prof.rings]
+    dts = [prof.propagation_velocity(radius) for radius in prof.radii]
     function _sum_ring_contributions(t)
         sum(eachindex(funcs)) do i
-            funcs[i](t) * _ring_weighting(prof, i)
+            funcs[i](t - dts[i]) * _ring_weighting(prof, i)
         end
     end
 end
 
 function emissivity_interp_limits(prof::DiscCoronaProfile, ρ)
-    _min, _max = emissivity_interp_limits(prof.rings[1], ρ)
+    function _limits_with_velocity(radius, ring)
+        dt = prof.propagation_velocity(radius)
+        _min, _max = emissivity_interp_limits(ring, ρ)
+        (_min + dt, _max + dt)
+    end
+
+    _min, _max = _limits_with_velocity(prof.radii[1], prof.rings[1])
     for i = 2:lastindex(prof.rings)
-        l_min, l_max = emissivity_interp_limits(prof.rings[i], ρ)
+        l_min, l_max = _limits_with_velocity(prof.radii[i], prof.rings[i])
         _min = min(_min, l_min)
         _max = max(_max, l_max)
     end
