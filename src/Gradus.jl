@@ -418,6 +418,7 @@ include("tracing/callbacks.jl")
 include("tracing/utility.jl")
 include("tracing/precision-solvers.jl")
 include("tracing/radiative-transfer-problem.jl")
+include("tracing/photon-rings.jl")
 
 include("tracing/method-implementations/auto-diff.jl")
 
