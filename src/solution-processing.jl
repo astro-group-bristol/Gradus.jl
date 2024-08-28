@@ -78,7 +78,16 @@ function unpack_solution(::AbstractMetric, sol::SciMLBase.AbstractODESolution{T}
         # get the auxiliary values if we have any
         aux = unpack_auxiliary(us[end])
 
-        GeodesicPoint(get_status_code(sol.prob.p), t_init, t, x_init, x, v_init, v, aux)
+        GeodesicPoint(
+            get_status_code(sol.prob.p),
+            t_init,
+            t,
+            x_init,
+            x,
+            v_init,
+            v,
+            merge_auxiliary(sol.prob.p, aux),
+        )
     end
 end
 
@@ -123,7 +132,7 @@ function unpack_solution_full(
                 ui,
                 v_start,
                 vi,
-                aux,
+                merge_auxiliary(sol.prob.p, aux),
             )
         end
     end

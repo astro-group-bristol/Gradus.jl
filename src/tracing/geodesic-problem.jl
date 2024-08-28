@@ -1,3 +1,11 @@
+"""
+    merge_auxiliary(::AbstractIntegrationParameters, aux)
+    
+Used to merge auxiliary traced parameters from the integration into 
+the aux field of the solution.
+"""
+merge_auxiliary(::AbstractIntegrationParameters, aux) = aux
+
 struct IntegrationParameters{M} <: AbstractIntegrationParameters{M}
     metric::M
     status::MutStatusCode
