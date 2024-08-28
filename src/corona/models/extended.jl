@@ -111,7 +111,7 @@ function _calculate_ring_arms(
         )
 
         # regular sorting
-        mask = [status(i) == StatusCodes.IntersectedWithGeometry for i in all_gps]
+        mask = [i.status == StatusCodes.IntersectedWithGeometry for i in all_gps]
         gps = all_gps[mask]
         δs_filtered = @views δs[mask]
 

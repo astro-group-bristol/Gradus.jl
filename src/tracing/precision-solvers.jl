@@ -76,7 +76,7 @@ function _find_offset_for_radius(
 )
     function _measure(gp::GeodesicPoint{T}) where {T}
         r = _equatorial_project(gp.x)
-        if status(gp) != StatusCodes.IntersectedWithGeometry
+        if gp.status != StatusCodes.IntersectedWithGeometry
             r = -2r
         end
         rₑ - r

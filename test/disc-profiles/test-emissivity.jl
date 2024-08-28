@@ -14,7 +14,7 @@ sols = @time tracegeodesics(
     sampler = EvenSampler(BothHemispheres(), RandomGenerator()),
     save_on = false,
 )
-gps = filter(i -> status(i) == StatusCodes.IntersectedWithGeometry, unpack_solution(sols))
+gps = filter(i -> i.status == StatusCodes.IntersectedWithGeometry, unpack_solution(sols))
 
 # ensure error is thrown if not sorted
 @test_throws "" RadialDiscProfile(m, lp, gps; N = 100, grid = Gradus.Grids.GeometricGrid())

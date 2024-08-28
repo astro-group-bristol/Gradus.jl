@@ -1,6 +1,6 @@
 function count_inner_boundary(m, simsols)
     points = unpack_solution.(m, simsols.u)
-    count(i -> status(i) == StatusCodes.WithinInnerBoundary, points)
+    count(i -> i.status == StatusCodes.WithinInnerBoundary, points)
 end
 
 function returntype(f, args...)
