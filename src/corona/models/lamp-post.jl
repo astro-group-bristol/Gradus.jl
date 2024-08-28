@@ -96,7 +96,7 @@ function _point_source_symmetric_emissivity_profile(
     )
 
     # filter only those that intersected, and sort radially
-    I = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
+    I = [status(i) == StatusCodes.IntersectedWithGeometry for i in gps]
     points = gps[I]
     δs = δs[I]
     rs = [_equatorial_project(i.x) for i in points]

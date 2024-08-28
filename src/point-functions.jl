@@ -127,6 +127,6 @@ end
 
 # some utility methods
 FilterStatusCode(code::StatusCodes.T, default = NaN) =
-    FilterPointFunction((m, gp, λ) -> gp.status == code, default)
+    FilterPointFunction((m, gp, λ) -> status(gp) == code, default)
 
 export apply, PointFunction, FilterPointFunction, FilterStatusCode

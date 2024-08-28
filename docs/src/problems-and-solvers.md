@@ -107,7 +107,7 @@ points = unpack_solution(sols)
 lengths = map(p -> p.aux[1], points)
 
 # filter only those that fell into the black hole
-I = map(i -> i.status == StatusCodes.WithinInnerBoundary, points)
+I = map(i -> status(i) == StatusCodes.WithinInnerBoundary, points)
 
 plot(α[I], lengths[I], xlabel = "α", ylabel = "path-length")
 ```

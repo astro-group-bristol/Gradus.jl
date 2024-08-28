@@ -495,7 +495,7 @@ export AbstractMetric,
     AbstractDiscProfile,
     AbstractDirectionSampler
 
-export unpack_solution, unpack_solution_full
+export unpack_solution, unpack_solution_full, status
 
 export metric_components
 

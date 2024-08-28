@@ -3,7 +3,7 @@
     struct GeodesicPoint <: AbstractGeodesicPoint
 
 Fields:
-- `status::StatusCodes.T`: Return code of the integrator for this geodesic.
+- `p::P<:AbstractIntegrationParameters`: Integration parameters
 - `λ_min::T`: Start affine time
 - `λ_max::T`: End affine time
 - `x_init::SVector{4,T}`: Start four position
@@ -12,9 +12,9 @@ Fields:
 - `v::SVector{4,T}`: End four velocity
 - `aux::A`: Auxillary values (polarisation, intensities, etc.)
 """
-struct GeodesicPoint{T,A} <: AbstractGeodesicPoint{T}
-    "Return code of the integrator for this geodesic."
-    status::StatusCodes.T
+struct GeodesicPoint{T,P<:AbstractIntegrationParameters,A} <: AbstractGeodesicPoint{T}
+    "Integration parameters"
+    p::P
     "Start affine time"
     λ_min::T
     "End affine time"
@@ -30,6 +30,8 @@ struct GeodesicPoint{T,A} <: AbstractGeodesicPoint{T}
     "Auxillary values (polarisation, intensities, etc.)"
     aux::A
 end
+
+status(gp::AbstractGeodesicPoint) = get_status_code(gp.p)
 
 function Base.show(io::IO, gp::GeodesicPoint)
     print(io, "GeodesicPoint($(gp.x))")
@@ -78,7 +80,8 @@ function unpack_solution(::AbstractMetric, sol::SciMLBase.AbstractODESolution{T}
         # get the auxiliary values if we have any
         aux = unpack_auxiliary(us[end])
 
-        GeodesicPoint(get_status_code(sol.prob.p), t_init, t, x_init, x, v_init, v, aux)
+        # have to deepcopy the parameters, because some algorithms reuse their memory
+        GeodesicPoint(deepcopy(sol.prob.p), t_init, t, x_init, x, v_init, v, aux)
     end
 end
 
@@ -116,7 +119,9 @@ function unpack_solution_full(
             ti = ts[i]
             aux = unpack_auxiliary(us[i])
             GeodesicPoint(
-                get_status_code(sol.prob.p),
+                # have to deepcopy the parameters, because some algorithms reuse 
+                # their memory
+                deepcopy(sol.prob.p),
                 t_start,
                 ti,
                 u_start,

@@ -10,6 +10,12 @@ set_status_code!(params::IntegrationParameters, status::StatusCodes.T) =
 get_status_code(params::IntegrationParameters) = params.status[1]
 get_metric(params::IntegrationParameters) = params.metric
 
+function Base.show(io::IO, @nospecialize(p::AbstractIntegrationParameters))
+    status = get_status_code(p)
+    name = Base.typename(typeof(p)).name
+    print(io, "$name(status=$status)")
+end
+
 """
     geodesic_ode_problem(
         trace::AbstractTrace,

@@ -35,7 +35,7 @@ disc. Default: `NaN`.
 """
 function filter_intersected(T::Type = Float64)
     FilterPointFunction(
-        (m, gp, max_time; kwargs...) -> gp.status == StatusCodes.IntersectedWithGeometry,
+        (m, gp, max_time; kwargs...) -> status(gp) == StatusCodes.IntersectedWithGeometry,
         T(NaN),
     )
 end

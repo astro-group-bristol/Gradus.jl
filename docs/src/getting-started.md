@@ -199,7 +199,7 @@ points = reshape(points, (100, 100))
 
 times = map(points) do gp
     # check if went off the integration chart on the inner boundary
-    if gp.status == StatusCodes.WithinInnerBoundary
+    if status(gp) == StatusCodes.WithinInnerBoundary
         # get the time coordinate
         gp.x[1]
     else

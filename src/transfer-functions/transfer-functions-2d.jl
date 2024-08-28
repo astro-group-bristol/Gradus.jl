@@ -216,7 +216,7 @@ function lagtransfer(
     )
 
     # get the indices of all geodesics which intersected with the disc
-    I = [i.status == StatusCodes.IntersectedWithGeometry for i in o_to_d]
+    I = [status(i) == StatusCodes.IntersectedWithGeometry for i in o_to_d]
     areas = unnormalized_areas(plane)[I]
 
     LagTransferFunction(max_t, u, areas, ce, o_to_d[I])

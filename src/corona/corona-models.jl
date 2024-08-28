@@ -185,6 +185,6 @@ function tracecorona(
         callback = callback,
         kwargs...,
     )
-    mask = [i.status == StatusCodes.IntersectedWithGeometry for i in gps]
+    mask = [status(i) == StatusCodes.IntersectedWithGeometry for i in gps]
     CoronaGeodesics(trace, m, g, model, gps[mask], source_vels[mask])
 end
