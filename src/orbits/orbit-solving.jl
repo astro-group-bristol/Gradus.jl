@@ -143,12 +143,12 @@ function interpolate_plunging_velocities(
     max_time = 50_000,
     contra_rotating = false,
     reltol = 1e-9,
+    δr = (reltol * 10),
     kwargs...,
 ) where {T}
     isco = Gradus.isco(m)
 
     # rule of thumb to achieve desired error
-    δr = (reltol * 10)
     u = @SVector([0.0, isco - δr, deg2rad(90), 0.0])
     v = Gradus.CircularOrbits.plunging_fourvelocity(
         m,
