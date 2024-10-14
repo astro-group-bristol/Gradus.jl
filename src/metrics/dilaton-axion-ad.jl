@@ -22,12 +22,12 @@ A(a, θ, δ, W, Δhat) = δ^2 - Δhat * (W * a * sin(θ))^2
     R = M
 
     # check these for the normalisation term R
-    βb = β / b
-    βa = β / a
-    βab = β / (a * b)
+    βb = β == zero(β) ? zero(β) : β / b
+    βa = β == zero(β) ? zero(β) : β / a
+    βab = β == zero(β) ? zero(β) : β / (a * b)
 
     Σ₀ = Σ(r, a, θ)
-    Δ₀ = Δ(r, R, a)
+    Δ₀ = Δ(r, 2R, a)
     Δhat₀ = Δhat(Δ₀, β, b, r, βb, R)
     Σhat₀ = Σhat(Σ₀, β, b, r, βb, a, θ, R)
     δ₀ = δ(r, b, a)
@@ -68,7 +68,9 @@ end
 
 metric_components(m::DilatonAxion{T}, rθ) where {T} =
     __DilatonAxionAD.metric_components(m.M, m.a, m.β, m.b, rθ)
-inner_radius(m::DilatonAxion{T}) where {T} =
-    m.M + m.b + √((m.M + m.b)^2 - m.a^2 + m.β^2 - (m.M - 2m.b) * m.M * (m.β / m.b)^2)
+function inner_radius(m::DilatonAxion{T}) where {T}
+    βb = m.β == zero(m.β) ? zero(m.β) : m.β / m.b
+    m.M + m.b + √((m.M + m.b)^2 - m.a^2 + m.β^2 - (m.M - 2m.b) * m.M * βb^2)
+end
 
 export DilatonAxion
