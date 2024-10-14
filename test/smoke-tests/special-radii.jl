@@ -12,7 +12,7 @@ using StaticArrays
         KerrMetric(1.0, -0.998),
         JohannsenMetric(M = 1.0, a = 0.998, α13 = 1.0),
         JohannsenMetric(M = 1.0, a = 0.998, α22 = 1.0),
-        DilatonAxion(M = 1.0, a = 0.998, β = 0.2, b = 1.0),
+        DilatonAxion(M = 1.0, a = 0.6, β = -0.5, b = 0.1),
     )
 
     @testset "iscos" begin
@@ -26,7 +26,7 @@ using StaticArrays
                 8.99437445480357,
                 2.8482863127671534,
                 1.1306596884484472,
-                6.880202293032178,
+                32.95283734688169,
             ],
         )
             isco_r = Gradus.isco(m)
