@@ -5,42 +5,41 @@ García et al. (1995).
 module __DilatonAxionAD
 using ..StaticArrays
 
-@fastmath Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
-@fastmath Δ(r, a, rg) = r^2 - 2rg * r + a^2
-@fastmath A(r, a, Δ, θ) = (r^2 + a^2)^2 - a^2 * Δ * sin(θ)^2
+Σ(r, a, θ) = r^2 + a^2 * cos(θ)^2
+Δ(r, R, a) = r^2 + a^2 - R * r
+# the a here is actually the dimensionless spin parameter a / R ?
+Σhat(Σ, β, b, r, βb, a, θ, R) = Σ - (β^2 + 2b * r) + R^2 * βb * (βb - 2 * a * cos(θ))
+Δhat(Δ, β, b, r, βb, R) = Δ - (β^2 + 2b * r) - R * (R + 2b) * βb^2
 
-@fastmath W(βab, θ, βa) = 1 + (βab * (2 * cos(θ) - βab) + βa^2) * csc(θ)^2
-@fastmath Σ̂(Σ, β, b, r, βb, a, θ, rg) =
-    Σ - (β^2 + 2b * r) + rg^2 * βb * (βb - 2 * (a / rg) * cos(θ))
-@fastmath Δ̂(Δ, β, b, r, βb, rg) = Δ - (β^2 + 2b * r) - rg * (rg + 2b) * βb^2
-@fastmath Â(δ, a, Δ̂, W, θ) = δ^2 - a^2 * Δ̂ * W^2 * sin(θ)^2
-@fastmath δ(r, b, a) = r^2 - 2b * r + a^2
+δ(r, b, a) = r^2 - 2b * r + a^2
+
+W(θ, βab, βa) = 1 + (βab * (2 * cos(θ) - βab) + βa^2) * csc(θ)^2
+A(a, θ, δ, W, Δhat) = δ^2 - Δhat * (W * a * sin(θ))^2
 
 @fastmath function metric_components(M, a, β, b, rθ)
     (r, θ) = rθ
 
-    rg = M
+    R = M
 
-    Δ₀ = Δ(r, a, rg)
-    Σ₀ = Σ(r, a, θ)
-
-    βa = β / a
+    # check these for the normalisation term R
     βb = β / b
-    βab = rg * β / (a * b)
+    βa = β / a
+    βab = β / (a * b)
 
-    Δ̂₀ = Δ̂(Δ₀, β, b, r, βb, rg)
-    Σ̂₀ = Σ̂(Σ₀, β, b, r, βb, a, θ, rg)
+    Σ₀ = Σ(r, a, θ)
+    Δ₀ = Δ(r, R, a)
+    Δhat₀ = Δhat(Δ₀, β, b, r, βb, R)
+    Σhat₀ = Σhat(Σ₀, β, b, r, βb, a, θ, R)
     δ₀ = δ(r, b, a)
-    W₀ = W(βab, θ, βa)
+    W₀ = W(θ, βab, βa)
+    A₀ = A(a, θ, δ₀, W₀, Δhat₀)
 
-    Â₀ = Â(δ₀, a, Δ̂₀, W₀, θ)
+    tt = -(Δhat₀ - a^2 * sin(θ)^2) / Σhat₀
+    rr = Σhat₀ / Δhat₀
+    θθ = Σhat₀
+    ϕϕ = A₀ * sin(θ)^2 / Σhat₀
 
-    tt = -(Δ̂₀ - a^2 * sin(θ)^2) / Σ̂₀
-    rr = Σ̂₀ / Δ̂₀
-    θθ = Σ̂₀
-    ϕϕ = Â₀ * sin(θ)^2 / Σ̂₀
-
-    tϕ = -a * (δ₀ - Δ̂₀ * W₀) * sin(θ)^2 / Σ̂₀
+    tϕ = -a * (δ₀ - Δhat₀ * W₀) * sin(θ)^2 / Σhat₀
     @SVector [tt, rr, θθ, ϕϕ, tϕ]
 end
 
@@ -60,7 +59,7 @@ Einstein-Maxwell-Dilaton-Axion metric.
     "Singularity mass."
     M = 1.0
     "Singularity spin."
-    a = 0.0
+    a = 0.5
     "Dilaton coupling strength."
     β = 0.0
     "Axion coupling strength."
@@ -69,6 +68,7 @@ end
 
 metric_components(m::DilatonAxion{T}, rθ) where {T} =
     __DilatonAxionAD.metric_components(m.M, m.a, m.β, m.b, rθ)
-inner_radius(m::DilatonAxion{T}) where {T} = m.M + √(m.M^2 - m.a^2)
+inner_radius(m::DilatonAxion{T}) where {T} =
+    m.M + m.b + √((m.M + m.b)^2 - m.a^2 + m.β^2 - (m.M - 2m.b) * m.M * (m.β / m.b)^2)
 
 export DilatonAxion
