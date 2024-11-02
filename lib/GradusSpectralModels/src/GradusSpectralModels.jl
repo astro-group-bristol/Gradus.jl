@@ -21,13 +21,13 @@ function Base.copy(m::LineProfile)
     table = Gradus.CunninghamTransferTable(m.table.table.params, m.table.table.grids)
     setup = Gradus.IntegrationSetup(
         m.table.setup.h,
-        m.table.setup.time,
+        m.table.setup.profile,
         m.table.setup.integrand,
-        m.table.setup.pure_radial,
         m.table.setup.quadrature_rule,
         deepcopy(m.table.setup.index_cache),
         m.table.setup.g_grid_upscale,
         m.table.setup.n_radii,
+        m.table.setup.t0,
     )
     typeof(m)(
         (; setup = setup, table = table),
@@ -57,13 +57,18 @@ function SpectralFitting.invoke!(output, domain, model::LineProfile)
     else
         model.rin
     end
+    rout = if model.rout < rmin
+        rmin
+    else
+        model.rout
+    end
     Gradus.integrate_lineprofile!(
         output,
         model.table.setup,
         grid,
         domain;
         rmin = rmin,
-        rmax = model.rout,
+        rmax = rout,
         g_scale = model.E₀,
     )
     output
