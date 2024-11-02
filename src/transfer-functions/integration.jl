@@ -11,7 +11,7 @@ function quadrature_integrate(f, a::T, b::T; rule = gauss(5)) where {T}
         xᵢ = X[i]
         wᵢ = W[i]
         u = muladd((xᵢ + 1), q, a)
-        total += wᵢ * f(u)
+        total = muladd(wᵢ, f(u), total)
     end
     total * q
 end
