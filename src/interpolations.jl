@@ -1,13 +1,13 @@
-struct NaNLinearInterpolator{X,Y}
-    x::Vector{X}
-    y::Vector{Y}
+struct NaNLinearInterpolator{V1,V2,Y}
+    t::V1
+    u::V2
     default::Y
 end
 
-function _interpolate(interp::NaNLinearInterpolator{X}, x::X) where {X}
-    idx = clamp(searchsortedlast(interp.x, x), 1, length(interp.x) - 1)
-    x1, x2 = interp.x[idx], interp.x[idx+1]
-    y1, y2 = interp.y[idx], interp.y[idx+1]
+function _interpolate(interp::NaNLinearInterpolator, x)
+    idx = clamp(searchsortedlast(interp.t, x), 1, length(interp.t) - 1)
+    x1, x2 = interp.t[idx], interp.t[idx+1]
+    y1, y2 = interp.u[idx], interp.u[idx+1]
 
     w = (x - x1) / (x2 - x1)
     y = (1 - w) * y1 + w * y2
@@ -39,9 +39,9 @@ for our needs.
 """
 function _make_interpolation(x, y)
     @assert size(x) == size(y) "size(x) = $(size(x)), size(y) = $(size(y))"
-    @assert issorted(x) "x must be sorted!"
-    # NaNLinearInterpolator(x, y, zero(eltype(y)))
-    DataInterpolations.LinearInterpolation(y, x)
+    # @assert issorted(x) "x must be sorted!"
+    NaNLinearInterpolator(x, y, zero(eltype(y)))
+    # DataInterpolations.LinearInterpolation(y, x)
 end
 
 @inline function _enforce_interpolation_bounds(r::Number, r_min::Number, r_max::Number)
