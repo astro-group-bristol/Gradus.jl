@@ -1,7 +1,7 @@
 name = "GradusSpectralModels"
 uuid = "0bd1f26a-7f13-41ad-b364-0116c59c8ea1"
 authors = ["fjebaker <fergusbkr@gmail.com>"]
-version = "0.1.6"
+version = "0.1.7"
 
 [deps]
 Gradus = "c5b7b928-ea15-451c-ad6f-a331a0f3e4b7"
