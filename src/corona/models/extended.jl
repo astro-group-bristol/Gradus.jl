@@ -125,9 +125,9 @@ function _calculate_ring_arms(
             m,
             d,
             v,
-            gps[1:min_ρ_index-1],
-            ρs[1:min_ρ_index-1],
-            δs_filtered[1:min_ρ_index-1],
+            gps[1:(min_ρ_index-1)],
+            ρs[1:(min_ρ_index-1)],
+            δs_filtered[1:(min_ρ_index-1)],
         )
         right = @views _process_ring_traces(
             setup,
@@ -175,7 +175,7 @@ function _process_ring_traces(setup::EmissivityProfileSetup, m, d, v, gps, rs, �
     points = gps[J]
     δs_sorted = δs[J]
     r, ε = _point_source_emissivity(m, d, setup.spectrum, v, rs[J], δs_sorted, points)
-    t = [i.x[1] for i in @views(points[1:end-1])]
+    t = [i.x[1] for i in @views(points[1:(end-1)])]
     (; t, r, ε = abs.(ε))
 end
 
@@ -189,7 +189,7 @@ function _integrate_transfer_problem!(
     t_grid;
     g_scale = 1,
 ) where {T,Profile<:Union{<:RingCoronaProfile,DiscCoronaProfile}}
-    g_grid_view = @views g_grid[1:end-1]
+    g_grid_view = @views g_grid[1:(end-1)]
 
     r_itterator = collect(Grids._geometric_grid(r_limits..., setup.n_radii))
     r2 = first(iterate(r_itterator, 2))

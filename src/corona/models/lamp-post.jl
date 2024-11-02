@@ -106,7 +106,7 @@ function _point_source_symmetric_emissivity_profile(
     δs = δs[J]
 
     r, ε = _point_source_emissivity(m, d, setup.spectrum, v, rs_sorted, δs, points)
-    t = [i.x[1] for i in @views(points[1:end-1])]
+    t = [i.x[1] for i in @views(points[1:(end-1)])]
 
     RadialDiscProfile(r, t, ε)
 end
@@ -124,7 +124,7 @@ function _point_source_emissivity(
     _disc_velocity = _keplerian_velocity_projector(m, d)
 
     # radial bin size
-    _points = @views(points[1:end-1])
+    _points = @views(points[1:(end-1)])
 
     ε = map(enumerate(_points)) do (i, p)
         v_disc = _disc_velocity(p.x)
@@ -136,7 +136,7 @@ function _point_source_emissivity(
         point_source_equatorial_disc_emissivity(spec, δs[i], gs, A, γ)
     end
 
-    r = r[1:end-1]
+    r = r[1:(end-1)]
     r, ε
 end
 

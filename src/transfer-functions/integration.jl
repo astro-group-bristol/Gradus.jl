@@ -304,17 +304,16 @@ function _integrate_transfer_problem!(
     g_grid;
     g_scale = 1,
 ) where {T}
-    g_grid_view = @views g_grid[1:end-1]
+    g_grid_view = @views g_grid[1:(end-1)]
 
     r_itterator = Grids._inverse_grid(r_limits..., setup.n_radii)
     r2 = first(iterate(r_itterator, 2))
     # prime the first r_prev so that the bin width is r2 - r1
     r_prev = r_limits[1] - (r2 - r_limits[1])
 
-    @inbounds for rₑ in r_itterator
+    for rₑ in r_itterator
         branch = transfer_function_radial_interpolation(rₑ)
         S = _both_branches(setup, branch)
-
         Δrₑ = rₑ - r_prev
         # integration weight for this annulus
         θ = Δrₑ * rₑ * radial_component(setup, rₑ) * π / (branch.gmax - branch.gmin)
@@ -347,7 +346,7 @@ function _integrate_transfer_problem!(
     t_grid;
     g_scale = 1,
 ) where {T}
-    g_grid_view = @views g_grid[1:end-1]
+    g_grid_view = @views g_grid[1:(end-1)]
 
     r_itterator = Grids._geometric_grid(r_limits..., setup.n_radii)
     r2 = first(iterate(r_itterator, 2))

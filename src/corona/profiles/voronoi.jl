@@ -162,7 +162,7 @@ function _cut_polygon(radius, poly; inner = true)
     clines = getcycliclines(poly)
     (i1, t1) = _circ_path_intersect(radius, clines)
     if t1 > 0
-        (i2, t2) = _circ_path_intersect(radius, @view(clines[i1+1:end]))
+        (i2, t2) = _circ_path_intersect(radius, @view(clines[(i1+1):end]))
         if inner
             _circ_cut(radius, clines, i1, t1, i2 + i1, t2; outer = false)
         else
@@ -187,12 +187,12 @@ function _circ_cut(radius, clines, i1, t1, i2, t2; outer = true)
         points = first.(@view(clines[1:i1]))
         push!(points, A)
         push!(points, B)
-        points = vcat(points, first.(@view(clines[i2+1:end])))
+        points = vcat(points, first.(@view(clines[(i2+1):end])))
 
         return GeometryBasics.Polygon(points)
     else
         # outside circle
-        points = first.(@view(clines[i1+1:i2]))
+        points = first.(@view(clines[(i1+1):i2]))
         push!(points, B)
         push!(points, A)
 

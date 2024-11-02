@@ -149,12 +149,12 @@ end
     xscale --> :log10
     yscale --> :log10
 
-    y = p.ε[2:end-1]
+    y = p.ε[2:(end-1)]
 
     if !isnothing(normalize)
         y = normalize(y)
     end
-    p.radii[2:end-1], y
+    p.radii[2:(end-1)], y
 end
 
 @recipe function f(ctf::CunninghamTransferData; h = 1e-4)
@@ -184,5 +184,5 @@ end
     y = y[2:end]
     em_index = @. dydx * x / y
 
-    x[1:end-1], -em_index[1:end-1]
+    x[1:(end-1)], -em_index[1:(end-1)]
 end

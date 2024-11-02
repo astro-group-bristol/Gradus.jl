@@ -127,7 +127,7 @@ end
 
 function _normalize!(flux::AbstractVector{T}, grid) where {T}
     Σflux = zero(T)
-    @inbounds for i = 1:length(grid)-1
+    @inbounds for i = 1:(length(grid)-1)
         ḡ = (grid[i+1] + grid[i])
         flux[i] = flux[i] / ḡ
         Σflux += flux[i]
@@ -140,7 +140,7 @@ end
 
 function _normalize!(flux::AbstractMatrix{T}, grid) where {T}
     Σflux = zero(T)
-    @views @inbounds for i = 1:length(grid)-1
+    @views @inbounds for i = 1:(length(grid)-1)
         ḡ = (grid[i+1] + grid[i])
         @. flux[i, :] = flux[i, :] / ḡ
         Σflux += sum(flux[i, :])

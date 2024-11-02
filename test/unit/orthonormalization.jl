@@ -69,7 +69,7 @@ function numerical_lnrframe(m, u)
     reduce(hcat, vecs)
 end
 
-for M = 0.2:0.8:2.0, a = -M:0.5:M
+for M = 0.2:0.8:2.0, a = (-M):0.5:M
     m = KerrMetric(M, a)
     r = Gradus.inner_radius(m) + 4.2
     for θ in angles
@@ -101,7 +101,7 @@ function numerical_lnrbasis(m, u)
     reduce(hcat, vecs)
 end
 
-for M = 0.2:0.8:2.0, a = -M:0.5:M
+for M = 0.2:0.8:2.0, a = (-M):0.5:M
     m = KerrMetric(M, a)
     r = Gradus.inner_radius(m) + 0.3
     for θ in angles
