@@ -7,11 +7,12 @@ function quadrature_integrate(f, a::T, b::T; rule = gauss(5)) where {T}
     X, W = rule
 
     q = (b - a) / 2
-    for i in eachindex(X)
+
+    total = sum(eachindex(X)) do i
         xᵢ = X[i]
         wᵢ = W[i]
         u = muladd((xᵢ + 1), q, a)
-        total = muladd(wᵢ, f(u), total)
+        wᵢ * f(u)
     end
     total * q
 end
