@@ -60,7 +60,7 @@
     },
     "SystemRequirements": null
   },
-  "keywords": ["astrophysics", "general-relativity", "black-holes", "ray-tracing", "grrt", "gravity", "simulation"],
+  "keywords": ["astrophysics", "general-relativity", "black-holes", "ray-tracing", "grrt", "gravity", "simulation", "julia"],
   "readme": "https://github.com/astro-group-bristol/Gradus.jl/blob/main/README.md"
 }
 
