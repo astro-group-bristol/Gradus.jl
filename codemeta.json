@@ -1,13 +1,14 @@
 {
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
-  "identifier": "gradus",
+  "identifier": "https://zenodo.org/records/14134274",
   "description": "Extensible spacetime agnostic general relativistic ray-tracing (GRRT): Gradus.jl is a suite of tools related to tracing geodesics and calculating observational signatures of accreting compact objects. Gradus.jl requires only a specification of the non-zero metric components of a chosen spacetime in order to solve the geodesic equation and compute a wide variety of trajectories and orbits. Various algorithms for calculating physical quantities are implemented generically, so they may be used with different classes of spacetime with minimal implementation.",
   "name": "Gradus.jl",
   "codeRepository": "https://github.com/astro-group-bristol/Gradus.jl",
   "issueTracker": "https://github.com/astro-group-bristol/Gradus.jl/issues",
   "license": "https://spdx.org/licenses/GPL-3.0",
   "version": "0.4.26",
+  "developmentStatus": "active",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "Julia",
@@ -53,7 +54,7 @@
   "softwareRequirements": {
     "1": {
       "@type": "SoftwareApplication",
-      "identifier": "julia",
+      "identifier": "https://epubs.siam.org/doi/10.1137/141000671",
       "name": "Julia",
       "version": ">= 1.11.0"
     },
