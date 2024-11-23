@@ -29,21 +29,24 @@ end
 
 """
 struct ThickDisc{T,F,P} <: AbstractThickAccretionDisc{T}
+    inner_radius::T
+    outer_radius::T
     f::F
     params::P
 end
 
 ThickDisc(::Number, ::Number) =
     error("Invalid constructor (you probably meant ThinDisc, not ThickDisc).")
+ThickDisc(cross_section; kwargs...) = ThickDisc(cross_section, nothing; kwargs...)
 
-function ThickDisc(cross_section::F) where {F}
-    # todo: float bit generic???
-    ThickDisc{Float64,F,Nothing}(cross_section, nothing)
-end
-
-function ThickDisc(cross_section::F, parameters::P) where {F,P}
-    # todo: float bit generic???
-    ThickDisc{Float64,F,P}(cross_section, parameters)
+# todo: float bit generic???
+function ThickDisc(
+    cross_section::F,
+    parameters::P;
+    inner_radius = zero(Float64),
+    outer_radius = Inf64,
+) where {F,P}
+    ThickDisc{Float64,F,P}(inner_radius, outer_radius, cross_section, parameters)
 end
 
 cross_section(d::ThickDisc, ρ) = d.f(ρ, d.params...)
