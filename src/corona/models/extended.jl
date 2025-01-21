@@ -1,18 +1,56 @@
-struct RingCorona{T} <: AbstractCoronaModel{T}
+module SourceVelocities
+
+using ..Gradus: AbstractMetric, CircularOrbits, SVector
+
+"""
+    co_rotating(m::AbstractMetric, x::SVector{4})
+
+Calculates the a source velocity assuming the cylinder described by the point
+`x` co-rotates with the accretion disc below. This assumes Keplerian orbits, and
+uses [`CircularOrbits`](@ref) to perform the calculation.
+"""
+function co_rotating(m::AbstractMetric, x::SVector{4})
+    CircularOrbits.fourvelocity(m, SVector(x[2], x[3]))
+end
+
+"""
+    stationary(m::AbstractMetric, x::SVector{4})
+
+Assumes the source is stationay, and calculates a velocity vector with
+components
+```math
+v^\\mu = (v^t, 0, 0, 0),
+```
+where the time-component is determined by the metric to satisfy
+```math
+g_{\\mu\\nu} v^\\mu v^\\nu = -1.
+```
+"""
+function stationary(m::AbstractMetric, x)
+    gcomp = metric_components(m, SVector(x[2], x[3]))
+    inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
+end
+
+end # module
+
+struct RingCorona{T,VelFunc} <: AbstractCoronaModel{T}
+    "The source velocity function."
+    vf::VelFunc
     "Radius of the ring"
     r::T
     "Height of the base of the cylinder above the disc"
     h::T
 end
 
+RingCorona(r, h) = RingCorona(SourceVelocities.co_rotating, r, h)
+RingCorona(; r = 5.0, h = 5.0, vf = SourceVelocities.co_rotating) = RingCorona(vf, r, h)
+
 function sample_position_velocity(m::AbstractMetric, model::RingCorona{T}) where {T}
     r = sqrt(model.r^2 + model.h^2)
     # (x, y) flipped because coordinates are off the Z axis
     θ = atan(model.r, model.h)
     x = SVector{4,T}(0, r, θ, 0)
-    gcomp = metric_components(m, SVector(x[2], x[3]))
-    v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
-    x, v
+    x, model.vf(m, x)
 end
 
 """
@@ -272,12 +310,17 @@ function _integrate_transfer_problem!(
     end
 end
 
-struct DiscCorona{T} <: AbstractCoronaModel{T}
+struct DiscCorona{T,VelFunc} <: AbstractCoronaModel{T}
+    "Velocity function"
+    vf::VelFunc
     "Radius of the disc"
     r::T
     "Height of the base of the cylinder above the disc"
     h::T
 end
+
+DiscCorona(; vf = SourceVelocities.co_rotating, r = 5.0, h = 5.0) =
+    DiscCorona{typeof(vf)}(vf, r, h)
 
 function sample_position_velocity(m::AbstractMetric, model::DiscCorona{T}) where {T}
     x = rand() * model.r
@@ -285,9 +328,7 @@ function sample_position_velocity(m::AbstractMetric, model::DiscCorona{T}) where
     # (x, y) flipped because coordinates are off the Z axis
     θ = atan(x, model.h)
     x = SVector{4,T}(0, r, θ, 0)
-    gcomp = metric_components(m, SVector(x[2], x[3]))
-    v = inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
-    x, v
+    x, model.vf(m, x)
 end
 
 function emissivity_profile(
@@ -300,7 +341,7 @@ function emissivity_profile(
 )
     radii = range(1e-2, model.r, n_rings)
     ring_profiles = map(radii) do r
-        emissivity_profile(setup, m, d, RingCorona(r, model.h); kwargs...)
+        emissivity_profile(setup, m, d, RingCorona(model.vf, r, model.h); kwargs...)
     end
     DiscCoronaProfile(collect(radii), ring_profiles, _ -> 0)
 end
