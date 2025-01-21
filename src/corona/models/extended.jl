@@ -33,8 +33,17 @@ end
 
 end # module
 
+"""
+    RingCorona
+
+A ring-like corona, representing an infinitely thin thing at some radius and
+height above the accretion disc.
+
+$(FIELDS)
+"""
 struct RingCorona{T,VelFunc} <: AbstractCoronaModel{T}
-    "The source velocity function."
+    "Source velocity function. May be any one of [`SourceVelocities`](@ref) or a
+    custom implementation."
     vf::VelFunc
     "Radius of the ring"
     r::T
@@ -310,8 +319,18 @@ function _integrate_transfer_problem!(
     end
 end
 
+"""
+    DiscCorona
+
+A disk-like corona with no height but some radial extent.
+
+Depending on the algorithm chosen, emissivity profiles for this corona are
+either calculated via Monte-Carlo sampling, or by treating the extended source
+as many concentric [`RingCorona`](@ref).
+"""
 struct DiscCorona{T,VelFunc} <: AbstractCoronaModel{T}
-    "Velocity function"
+    "Source velocity function. May be any one of [`SourceVelocities`](@ref) or a
+    custom implementation."
     vf::VelFunc
     "Radius of the disc"
     r::T
