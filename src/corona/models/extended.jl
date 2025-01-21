@@ -38,8 +38,6 @@ end # module
 
 A ring-like corona, representing an infinitely thin thing at some radius and
 height above the accretion disc.
-
-$(FIELDS)
 """
 struct RingCorona{T,VelFunc} <: AbstractCoronaModel{T}
     "Source velocity function. May be any one of [`SourceVelocities`](@ref) or a
