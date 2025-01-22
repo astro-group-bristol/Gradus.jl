@@ -132,12 +132,10 @@ function _calculate_ring_arms(
     callback = domain_upper_hemisphere(),
     kwargs...,
 ) where {T}
-    # TODO: assume co-rotating with the disc portion below it
-    # for now, assume stationary corona
     x, v = Gradus.sample_position_velocity(m, model)
 
     # trace the left half of the local sky
-    left_δs = deg2rad.(range(setup.δmin, setup.δmax, setup.n_samples))
+    left_δs = deg2rad.(range(setup.δmin, setup.δmax, setup.n_samples ÷ (2 * num_β_slices)))
     right_δs = left_δs .+ π
     δs = vcat(right_δs, left_δs)
 
