@@ -44,17 +44,20 @@ end
         v_disc,
     )
 
-Compute the emissivity of a disc element with (proper) area `A` at coordinates `x` with metric
-`m` and coronal spectrum `spec`. Since the emissivity is dependent on the incident flux, the photon (geodesic) count `N` must
-be specified, along with the ratio of energies `g` (computed with [`energy_ratio`](@ref)) and the spectrum `spec`. 
+Compute the emissivity of a disc element with (proper) area `A` at coordinates
+`x` with metric `m` and coronal spectrum `spec`. Since the emissivity is
+dependent on the incident flux, the photon (geodesic) count `N` must be
+specified, along with the ratio of energies `g` (computed with
+[`energy_ratio`](@ref)) and the spectrum `spec`.
 
 The mathematical definition is
 ```math
-\\varepsilon = \\frac{N}{A g^\\Gamma \\gamma}, 
+\\varepsilon = \\frac{N}{A g^\\Gamma \\gamma},
 ```
 
-where ``\\gamma`` is the Lorentz factor due to the velocity of the local disc frame. The velocity is currently
-always considered to be the Keplerian velocity.
+where ``\\gamma`` is the Lorentz factor due to the velocity of the local disc
+frame. The velocity is currently always considered to be the Keplerian
+velocity.
 
 Wilkins & Fabian (2012) and Gonzalez et al. (2017).
 """
@@ -88,8 +91,8 @@ for an illuminating coronal model `model`.
 Returns a [`RadialDiscProfile`](@ref) via (Monte-Carlo or uniform) sampling
 of the [`AbstractCoronaModel`](@ref) position and velocity distribution.
 
-This function will attempt to automatically switch to use a better scheme to 
-calculate the emissivity profiles if one is available. If not, the default 
+This function will attempt to automatically switch to use a better scheme to
+calculate the emissivity profiles if one is available. If not, the default
 algorithm is to estimate photon count ``N`` and calculate the emissivity with [`source_to_disc_emissivity`](@ref).
 
 Common keyword arguments:
@@ -116,15 +119,16 @@ plot(profile)
 
 ## Notes
 
-The sampling is performed using an [`AbstractDirectionSampler`](@ref), 
-which samples angles on the emitters sky along which a geodesic is traced. 
-The effects of the spacetime and the observer's velocity are taken into account 
-by using [`tetradframe`](@ref) and the corresponding coordinate transformation 
-for local to global coordinates.
+The sampling is performed using an [`AbstractDirectionSampler`](@ref), which
+samples angles on the emitters sky along which a geodesic is traced.  The
+effects of the spacetime and the observer's velocity are taken into account by
+using [`tetradframe`](@ref) and the corresponding coordinate transformation for
+local to global coordinates.
 
-This function assumes axis symmetry, and therefore always interpolates the emissivity
-as a function of the radial coordinate on the disc. If non-symmetric profiles are 
-desired, consider using [`tracecorona`](@ref) with a profile constructor, e.g. [`VoronoiDiscProfile`](@ref).
+This function assumes axis symmetry, and therefore always interpolates the
+emissivity as a function of the radial coordinate on the disc. If non-symmetric
+profiles are desired, consider using [`tracecorona`](@ref) with a profile
+constructor, e.g. [`VoronoiDiscProfile`](@ref).
 """
 function emissivity_profile(
     m::AbstractMetric{T},
@@ -182,8 +186,8 @@ Similar to [`polar_angle_to_velfunc`](@ref), except now the generator function
 returned will rotate and offset all velocity vectors. This is equivalent to
 reorientating the local sky in the global coordinates.
 
-The `θ₀` parameter is the offset from the global `θ=0` direction, and `β` is the
-amount to rotate the sky by around it's zenith.
+The `θ₀` parameter is the offset from the global `θ=0` direction, and `β` is
+the amount to rotate the sky by around it's zenith.
 """
 function rotated_polar_angle_to_velfunc(
     m::AbstractMetric,

@@ -213,7 +213,7 @@ function _ring_corona_emissivity_slice(
 end
 
 function _process_ring_traces(setup::EmissivityProfileSetup, m, d, v, gps, rs, δs)
-    # no need to filter intersected, as we have already done that before calling this process function    J = sortperm(rs)
+    # no need to filter intersected, as we have already done that before calling this process function
     J = sortperm(rs)
     points = gps[J]
     δs_sorted = δs[J]
