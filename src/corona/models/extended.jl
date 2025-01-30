@@ -1,6 +1,6 @@
 module SourceVelocities
 
-using ..Gradus: AbstractMetric, CircularOrbits, SVector
+using ..Gradus: AbstractMetric, CircularOrbits, SVector, metric_components, constrain_all
 
 """
     co_rotating(m::AbstractMetric, x::SVector{4})
@@ -10,7 +10,8 @@ Calculates the a source velocity assuming the cylinder described by the point
 uses [`CircularOrbits`](@ref) to perform the calculation.
 """
 function co_rotating(m::AbstractMetric, x::SVector{4})
-    CircularOrbits.fourvelocity(m, SVector(x[2], x[3]))
+    v = CircularOrbits.fourvelocity(m, SVector(x[2], sin(x[3])))
+    constrain_all(m, x, v, 1.0)
 end
 
 """
@@ -26,7 +27,7 @@ where the time-component is determined by the metric to satisfy
 g_{\\mu\\nu} v^\\mu v^\\nu = -1.
 ```
 """
-function stationary(m::AbstractMetric, x)
+function stationary(m::AbstractMetric{T}, x) where {T}
     gcomp = metric_components(m, SVector(x[2], x[3]))
     inv(√(-gcomp[1])) * SVector{4,T}(1, 0, 0, 0)
 end
