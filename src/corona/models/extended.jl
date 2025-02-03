@@ -163,24 +163,28 @@ function _calculate_ring_arms(
         # sortable and monotonic r as a function of θ on the local sky
         ρs = map(i -> _equatorial_project(i.x), gps)
         _, min_ρ_index = findmin(ρs)
+        _, max_ρ_index = findmax(ρs)
+
+        min_ρ_index, max_ρ_index =
+            min(min_ρ_index, max_ρ_index), max(min_ρ_index, max_ρ_index)
 
         left = @views _process_ring_traces(
             setup,
             m,
             d,
             v,
-            gps[1:(min_ρ_index-1)],
-            ρs[1:(min_ρ_index-1)],
-            δs_filtered[1:(min_ρ_index-1)],
+            vcat(gps[1:(min_ρ_index-1)], gps[max_ρ_index+1:end]),
+            vcat(ρs[1:(min_ρ_index-1)], ρs[max_ρ_index+1:end]),
+            vcat(δs_filtered[1:(min_ρ_index-1)], δs_filtered[max_ρ_index+1:end]),
         )
         right = @views _process_ring_traces(
             setup,
             m,
             d,
             v,
-            gps[min_ρ_index:end],
-            ρs[min_ρ_index:end],
-            δs_filtered[min_ρ_index:end],
+            gps[min_ρ_index:max_ρ_index],
+            ρs[min_ρ_index:max_ρ_index],
+            δs_filtered[min_ρ_index:max_ρ_index],
         )
         LongitudalArms(β, left.r, left.t, left.ε, right.r, right.t, right.ε)
     end
