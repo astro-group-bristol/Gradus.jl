@@ -111,9 +111,7 @@ end
 getproperarea(vdp::VoronoiDiscProfile, m::AbstractMetric) =
     map(p -> getproperarea(p, m), vdp.polys)
 
-function unpack_polys(
-    polys::AbstractVector{GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V}},
-) where {T,L,V}
+function unpack_polys(polys::AbstractVector{GeometryBasics.Polygon{2,T}}) where {T}
     map(polys) do poly
         map(SVector{2,T}, getpoints(poly))
     end

@@ -60,9 +60,7 @@ getorientation(line::GeometryBasics.AbstractPolygon, p) = getorientation(line.po
     end
 end
 
-function getcycliclines(
-    poly::GeometryBasics.Polygon{2,T,GeometryBasics.Point2{T},L,V},
-) where {T,L,V}
+function getcycliclines(poly::GeometryBasics.Polygon{2})
     lines = poly.exterior.points
     vcat(lines, GeometryBasics.Line(lines[end].points[2], lines[1].points[1]))
 end
