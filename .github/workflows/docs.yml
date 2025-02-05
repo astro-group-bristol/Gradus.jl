@@ -8,6 +8,7 @@ on:
     paths:
       - docs/**.md
       - docs/**.jl
+    workflow_dispatch: null
 
 jobs:
   docs:
