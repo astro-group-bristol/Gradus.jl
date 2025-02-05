@@ -23,6 +23,7 @@ jobs:
           julia -e 'import Pkg ; Pkg.update() ; Pkg.Registry.add("https://github.com/astro-group-bristol/AstroRegistry")'
           julia --project=docs -e '
             using Pkg
+            Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - run: julia --project=docs docs/make.jl
         env:
