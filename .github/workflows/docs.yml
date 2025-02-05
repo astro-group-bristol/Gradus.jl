@@ -19,11 +19,9 @@ jobs:
         with:
           version: '1.11'
       - run: |
+          julia -e 'import Pkg ; Pkg.update() ; Pkg.Registry.add("https://github.com/astro-group-bristol/AstroRegistry")'
           julia --project=docs -e '
             using Pkg
-            # add Buckets.jl
-            Pkg.add(url="https://github.com/fjebaker/Buckets.jl")
-            Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - run: julia --project=docs docs/make.jl
         env:
