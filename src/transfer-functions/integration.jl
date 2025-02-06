@@ -202,8 +202,46 @@ end
 
 _trapezoidal_weight(X, x, i) = i == 1 ? X[i+1] - x : x - X[i-1]
 
+"""
+    integrate_lineprofile(
+        prof::AbstractDiscProfile, 
+        transfer_functions, 
+        g_grid;
+        kwargs...
+    )
+    integrate_lineprofile(
+        emssivity::Function,
+        transfer_functions, 
+        g_grid;
+        kwargs...
+    )
+
+Integrate a set of [`InterpolatingTransferBranches`](@ref) (calculated using
+[`transferfunctions`](@ref)) with either an [`AbstractDiscProfile`](@ref) or
+function representing the emissivity profile of the disc.
+
+The emissivity function must be of the form `r -> f(r)::tyepof(r)`, i.e.
+represent the emissivty as a function of only radius, returning a single value
+for each ring.
+"""
+integrate_lineprofile
+
+@inline function integrate_lineprofile(
+    prof::AbstractDiscProfile,
+    transfer_functions,
+    g_grid;
+    kwargs...,
+)
+    integrate_lineprofile(
+        r -> emissivity_at(prof, r),
+        transfer_functions,
+        g_grid;
+        kwargs...,
+    )
+end
+
 function integrate_lineprofile(
-    prof,
+    prof::Function,
     transfer_functions,
     g_grid;
     rmin = inner_radius(transfer_functions),

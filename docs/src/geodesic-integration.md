@@ -28,4 +28,23 @@ where the dot refers to the derivative with respect to ``\lambda``. In general, 
 Gradus.constrain_time
 ```
 
-## Using callbacks
+## Methods
+
+```@docs
+TransferFunctionMethod
+BinningMethod
+```
+
+## Image planes
+
+```@docs
+AbstractImagePlane
+PolarPlane
+CartesianPlane
+```
+
+```@docs
+Gradus.image_plane
+Gradus.trajectory_count
+Gradus.unnormalized_areas
+```

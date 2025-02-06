@@ -49,7 +49,7 @@ function lag_frequency(
     x,
     d::AbstractAccretionGeometry,
     model::AbstractCoronaModel;
-    Nr = 6000,
+    n_radii = 6000,
     bins = collect(range(0.0, 1.5, 500)),
     tbins = collect(range(0, 1000.0, 2000)),
     spectrum = PowerLawSpectrum(2),
@@ -70,7 +70,7 @@ function lag_frequency(
         bins,
         tbins;
         t0 = t0,
-        Nr = Nr,
+        n_radii = n_radii,
         h = tf_setup.h,
     )
     flux[flux.==0] .= NaN
