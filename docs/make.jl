@@ -20,6 +20,7 @@ makedocs(
             "Problems and solvers" => "problems-and-solvers.md",
             "Point functions" => "point-functions.md",
             "Disc emissivity" => "emissivity.md",
+            "Line profiles" => "lineprofiles.md",
         ],
         "Geodesics and integration" => [
             "Implementing new metrics" => "custom-metrics.md",
