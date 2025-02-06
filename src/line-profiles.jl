@@ -131,21 +131,21 @@ function lineprofile(
     numrₑ = 100,
     verbose = false,
     h = 2e-8,
-    Nr = 1000,
+    n_radii = 1000,
     kwargs...,
 )
     _warn_disc_integration_limits(d, minrₑ, maxrₑ)
-    radii = Grids._inverse_grid(minrₑ, maxrₑ, numrₑ)
-    itfs = interpolated_transfer_branches(m, u, d, radii; verbose = verbose, kwargs...)
-    flux = integrate_lineprofile(
-        ε,
-        itfs,
-        bins;
-        h = h,
-        n_radii = Nr,
-        rmin = minimum(radii),
-        rmax = maximum(radii),
+    tfs = transferfunctions(
+        m,
+        u,
+        d;
+        numrₑ = numrₑ,
+        verbose = verbose,
+        minrₑ = minrₑ,
+        maxrₑ = maxrₑ,
+        kwargs...,
     )
+    flux = integrate_lineprofile(ε, tfs, bins; h = h, n_radii = n_radii)
     bins, flux
 end
 

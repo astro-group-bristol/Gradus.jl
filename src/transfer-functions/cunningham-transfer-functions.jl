@@ -540,10 +540,39 @@ function make_transfer_function_table(
     Gradus.CunninghamTransferTable((a_range, θ_range), grids)
 end
 
+"""
+    transferfunctions(
+        m::AbstractMetric, 
+        x, 
+        d::AbstractAccretionDisc;
+        minrₑ = isco(m) + 1e-2,
+        maxrₑ = 50,
+        numrₑ = 100,
+        radii = Grids._inverse_grid(minrₑ, maxrₑ, numrₑ),
+        kwargs...,
+    )
+
+Pre-compute Cunningham transfer functions for the given model components.
+Returns an [`InterpolatingTransferBranches`](@ref) instance.
+"""
+function transferfunctions(
+    m::AbstractMetric,
+    x,
+    d::AbstractAccretionDisc;
+    minrₑ = isco(m) + 1e-2,
+    maxrₑ = 50,
+    numrₑ = 100,
+    radii = Grids._inverse_grid(minrₑ, maxrₑ, numrₑ),
+    kwargs...,
+)
+    interpolated_transfer_branches(m, x, d, radii; kwargs...)
+end
+
 export CunninghamTransferData,
     TransferBranches,
     InterpolatingTransferBranches,
     splitbranches,
     interpolate_branches,
     cunningham_transfer_function,
-    make_transfer_function_table
+    make_transfer_function_table,
+    transferfunctions
