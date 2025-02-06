@@ -6,8 +6,8 @@ on:
       - main
       - fergus/doc-debug
     paths:
-      - docs/**.md
-      - docs/**.jl
+      - docs/**
+      - .github/workflows/docs.yml
     workflow_dispatch: null
 
 jobs:
