@@ -401,7 +401,37 @@ struct EnsembleEndpointThreads end
 
 
 abstract type AbstractComputationalMethod end
+
+"""
+    TransferFunctionMethod()
+
+Computing the underlying relativistic effects using Cunningham transfer
+functions. This method has a number of limitations related to the assumptions:
+- The disc must be axis-symmetric.
+- The accretion disc must have a velocity structure that depends only on radius.
+- The domain of integration must be in or above the equatorial plane (no false
+  images).
+
+The transfer function approach is often faster and converges to higher numerical
+accuracy than the other methods. They can also be pre-computed for use in
+spectral models for fitting.
+"""
 struct TransferFunctionMethod <: AbstractComputationalMethod end
+
+"""
+    BinningMethod()
+
+Compute the underlying relativistic effects by 'binning' the observer's plane
+into a number of regions, and tracing a single geodesic for each photon.
+Conceptually, this is like tracing a single photon for each pixel, however the
+regions need not be equi-rectangular, and may take on other shapes, see
+[`AbstractImagePlane`](@ref).
+
+This method is slow and computationally expensive, but has the benefit that it
+makes no assumptions about the model being computed.
+
+It is internally used for testing conceptually more complex integration methods.
+"""
 struct BinningMethod <: AbstractComputationalMethod end
 
 include("orthonormalization.jl")

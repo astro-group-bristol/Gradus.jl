@@ -16,6 +16,74 @@ function _warn_disc_integration_limits(d::ThinDisc, minrₑ, maxrₑ)
     end
 end
 
+"""
+    lineprofile(m::AbstractMetric, x::SVector, d::AbstractAccretionGeometry; kwargs...)
+    lineprofile(
+        m::AbstractMetric, 
+        x::SVector, 
+        d::AbstractAccretionDisc, 
+        profile::AbstractDiscProfile; 
+        kwargs...
+    )
+
+Compute a line profile for a given set of model components. Returns both the
+grid and flux.
+
+The dispatch that includes a `profile` can be used with an
+[`AbstractDiscProfile`](@ref), conventionally calculated by a coronal model.
+
+If no profile is specified, the emissivity is assumed to be a power-law
+``\\varepsilon(r) = r^{-3}``.
+
+This function accepts a number of keyword arguments depending on method used to
+compute the line profile. Common arguments with their defaults are:
+
+- `bins = collect(range(0.1, 1.5, 180))`: the (energy) bins used as the domain of the line profile.
+- `method = TransferFunctionMethod()`: used to select which method to use when
+   computing the line profile. Alternatives include [`BinningMethod`](@ref).
+
+The [`TransferFunctionMethod`](@ref) dispatch additionally accepts the following keyword arguments:
+
+- `minrₑ = isco(m)`: the innermost transfer function radius to compute / inner
+   radius of line profile integration.
+- `maxrₑ = 50`: the outermost transfer function radius to compute / outer radius
+   of line profile integration.
+- `numrₑ = 100`: the number of transfer functions to calculate.
+- `verbose = false`: show a progress bar.
+- `h = 2e-8`: an integration padding value to avoid numerical instabilities. See
+   Dauser et al., 2010 for details.
+- `Nr = 1000`: the number of radial steps used to interpolate between transfer
+   function branches when integrating.
+
+The [`BinningMethod`](@ref) dispatch additionally accepts the following keyword arguments:
+
+- `λ_max = 2 * x[2]`: the maximum integration time (affine parameter).
+- `redshift_pf = ConstPointFunctions.redshift(m, x)`: the function used to
+   compute redshift values.
+- `verbose = false`: show a progress bar.
+- `minrₑ = isco(m)`:` the inner radius of the line profile.
+- `maxrₑ = T(50)`:` the outer radius of the line profile.
+- `plane = PolarPlane(GeometricGrid(); Nr = 450, Nθ = 1300, r_max = 5maxrₑ)`:
+   the image plane used in the calculation.
+
+All other keyword arguments are passed to [`tracegeodesics`](@ref).
+
+There is an additional dispatch that does not accept `bins` as a keyword argument:
+
+    lineprofile(
+        bins,
+        ε::Function,
+        m::AbstractMetric,
+        u,
+        d::AbstractAccretionGeometry;
+        kwargs...
+    )
+
+This dispatch is special as it be used to pass any arbitrary function to act as
+the emissivity profile of the disc.
+"""
+lineprofile
+
 @inline function lineprofile(
     m::AbstractMetric,
     u,

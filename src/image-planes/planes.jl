@@ -1,8 +1,50 @@
+"""
+    AbstractImagePlane
+
+An plane abstraction used to represent the observer's image plane. These are
+particularly relevant for [`BinningMethod`](@ref) computations.
+
+Concerete implementations include:
+- [`PolarPlane`](@ref)
+- [`CartesianPlane`](@ref)
+
+An `AbstractImagePlane` must implement the following functions:
+- [`image_plane`](@ref)
+- [`trajectory_count`](@ref)
+- [`unnormalized_areas`](@ref)
+"""
 abstract type AbstractImagePlane{G} end
+
+"""
+    image_plane(plane::AbstractImagePlane)
+    image_plane(plane::AbstractImagePlane, x::SVector{4})
+
+Return two vectors, representing the ``\\alpha`` and ``\\beta`` impact
+parameters that parameterise the image plane. Each pair of ``\\alpha`` and
+``\\beta`` must correspond to an [`unnormalized_areas`](@ref).
+
+"""
 image_plane(plane::AbstractImagePlane) = image_plane(plane, SVector(0, 10000, π / 2, 0))
 # todo: remove this, as i don't think it will be needed
 image_plane(plane::AbstractImagePlane, x) = error("Not implemented for $plane")
+
+"""
+    trajectory_count(plane::AbstractImagePlane)
+
+Return an integer that counts how many unique geodesics need to be calculated to
+map the plane. This should be equal to `length(first(image_plane(plane)))`, and
+is used to pre-allocate buffers.
+"""
 trajectory_count(plane::AbstractImagePlane) = error("Not implemented for $plane")
+
+"""
+    unnormalized_areas(plane::AbstractImagePlane)
+
+Return a vector where each element is the area (number) of a given geodesic
+element on the image plane. For a pixel image plane, each area will be a
+constant `1`. These are used to weight the contributions of each region when
+calculating observational results.
+"""
 unnormalized_areas(plane::AbstractImagePlane) = error("Not implemented for $plane")
 
 function impact_parameters(plane::AbstractImagePlane, x)
@@ -10,6 +52,21 @@ function impact_parameters(plane::AbstractImagePlane, x)
     vec(αs), vec(βs)
 end
 
+
+"""
+    function PolarPlane(
+        grid::AbstractImpactParameterGrid;
+        Nr = 400,
+        Nθ = 100,
+        r_min = 1.0,
+        r_max = 250.0,
+        θ_min = 0.0,
+        θ_max = 2π,
+    )
+
+Divide the image plane into a polar grid centered at ``\\alpha = 0`` and
+``\\beta = 0``.
+"""
 struct PolarPlane{G,T} <: AbstractImagePlane{G}
     grid::G
     Nr::Int
@@ -57,6 +114,19 @@ function unnormalized_areas(plane::PolarPlane)
     repeat(A, inner = (1, plane.Nθ))
 end
 
+"""
+    function CartesianPlane(
+        grid::AbstractImpactParameterGrid;
+        Nx = 150,
+        Ny = 150,
+        x_min = 0.0,
+        x_max = 150.0,
+        y_min = 0.0,
+        y_max = 150.0,
+    )
+
+Represent the image plane as equi-rectangular regions.
+"""
 struct CartesianPlane{G,T} <: AbstractImagePlane{G}
     grid::G
     Nx::Int
