@@ -20,7 +20,7 @@ jobs:
         with:
           version: '1.11'
       - run: |
-          julia -e 'import Pkg ; Pkg.update() ; Pkg.Registry.add("https://github.com/astro-group-bristol/AstroRegistry")'
+          julia -e 'import Pkg ; Pkg.update() ; Pkg.Registry.add(url = "https://github.com/astro-group-bristol/AstroRegistry")'
           julia --project=docs -e '
             using Pkg
             Pkg.develop(PackageSpec(path=pwd()))
