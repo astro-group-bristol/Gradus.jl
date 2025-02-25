@@ -204,14 +204,14 @@ _trapezoidal_weight(X, x, i) = i == 1 ? X[i+1] - x : x - X[i-1]
 
 """
     integrate_lineprofile(
-        prof::AbstractDiscProfile, 
-        transfer_functions, 
+        prof::AbstractDiscProfile,
+        transfer_functions,
         g_grid;
         kwargs...
     )
     integrate_lineprofile(
         emssivity::Function,
-        transfer_functions, 
+        transfer_functions,
         g_grid;
         kwargs...
     )

@@ -7,7 +7,7 @@ end
 DEFAULT_ROOT_SOLVER() = NonLinearAlg()
 
 """
-    root_solve(f_objective, initial_value, args) 
+    root_solve(f_objective, initial_value, args)
 
 Wrapper to different root solving backends to make root solve fast and efficient
 """
@@ -177,6 +177,15 @@ end
     quote
         $(exprs...)
     end
+end
+
+function quadrature_domain(a, b, X::AbstractVector)
+    q = (b - a) / 2
+    ((xi + 1) * q + a for xi in X)
+end
+
+function quadrature_sum(values::AbstractVector, weights::AbstractVector)
+    sum(i * j for (i, j) in zip(values, weighs))
 end
 
 export cartesian_squared_distance, cartesian_distance, spherical_to_cartesian

@@ -162,7 +162,7 @@ function RadialDiscProfile(
 end
 
 """
-    TimeDependentRadialDiscProfile{T,I}
+    TimeDependentRadialDiscProfile{T}
 
 Time dependent radial disc profile. Each entry in the radii, emissivity, and
 time function maps to a specific contribution, along with the appropriate

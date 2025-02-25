@@ -148,7 +148,7 @@ function emissivity_profile(
     setup::EmissivityProfileSetup{true},
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
-    model::Union{LampPostModel,BeamedPointSource};
+    model::Union{<:LampPostModel,<:BeamedPointSource};
     kwargs...,
 )
     _point_source_symmetric_emissivity_profile(setup, m, d, model; kwargs...)
