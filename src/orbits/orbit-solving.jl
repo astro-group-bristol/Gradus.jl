@@ -100,7 +100,6 @@ struct PlungingInterpolation{M,_interp_type}
     m::M
     t::_interp_type
     r::_interp_type
-    θ::_interp_type
     ϕ::_interp_type
 
     function PlungingInterpolation(m::M, sol) where {M<:AbstractMetric{T}} where {T}
@@ -111,7 +110,6 @@ struct PlungingInterpolation{M,_interp_type}
 
         vt = sol[5, :][I]
         vr = sol[6, :][I]
-        vθ = sol[7, :][I]
         vϕ = sol[8, :][I]
 
         r_interp = _make_interpolation(r, vt)
@@ -119,7 +117,6 @@ struct PlungingInterpolation{M,_interp_type}
             m,
             r_interp,
             _make_interpolation(r, vr),
-            _make_interpolation(r, vθ),
             _make_interpolation(r, vϕ),
         )
     end
@@ -133,9 +130,8 @@ function (pintrp::PlungingInterpolation)(r)
     r_bounded = _enforce_interpolation_bounds(r, pintrp)
     vt = pintrp.t(r_bounded)
     vr = pintrp.r(r_bounded)
-    vθ = pintrp.r(r_bounded)
     vϕ = pintrp.ϕ(r_bounded)
-    SVector(vt, vr, vθ, vϕ)
+    SVector(vt, vr, 0, vϕ)
 end
 
 function interpolate_plunging_velocities(
