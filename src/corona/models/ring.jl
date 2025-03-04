@@ -24,12 +24,24 @@ struct _RingCoronaCache{T,S<:EmissivityProfileSetup{true},A}
 end
 
 function Base.copy(cache::_RingCoronaCache)
-    _RingCoronaCache(cache.setup, cache.x, cache.v, deepcopy(cache.angles), deepcopy(cache.gps), Ref(cache._index[]), cache.N)
+    _RingCoronaCache(
+        cache.setup,
+        cache.x,
+        cache.v,
+        deepcopy(cache.angles),
+        deepcopy(cache.gps),
+        Ref(cache._index[]),
+        cache.N,
+    )
 end
 
-function _add_to_cache!(cache::_RingCoronaCache{T,S,A}, ang::T, gp::GeodesicPoint{T,A}) where {T,S,A}
+function _add_to_cache!(
+    cache::_RingCoronaCache{T,S,A},
+    ang::T,
+    gp::GeodesicPoint{T,A},
+) where {T,S,A}
     cache._index[] += 1
-    i = cache._index[]
+    i::Int = cache._index[]
 
     if i > lastindex(cache.angles)
         # TODO: some kind of warning?
@@ -41,8 +53,11 @@ function _add_to_cache!(cache::_RingCoronaCache{T,S,A}, ang::T, gp::GeodesicPoin
     cache.gps[i] = gp
 end
 
-function _RingCoronaCache(setup::EmissivityProfileSetup, m::AbstractMetric, model::RingCorona;
-    h = 1e-7
+function _RingCoronaCache(
+    setup::EmissivityProfileSetup,
+    m::AbstractMetric,
+    model::RingCorona;
+    h = 1e-7,
 )
     x, v = sample_position_velocity(m, model)
 
@@ -51,7 +66,9 @@ function _RingCoronaCache(setup::EmissivityProfileSetup, m::AbstractMetric, mode
 
     N = (setup.n_samples - 2 * EXTREMIZER_ITERS)
     if (N <= 0)
-        error("Too few samples for selected method. Pass `n_samples` of more than $(2 * EXTREMIZER_ITERS)")
+        error(
+            "Too few samples for selected method. Pass `n_samples` of more than $(2 * EXTREMIZER_ITERS)",
+        )
     end
     if !iseven(N)
         error("`n_samples` must be an even number for this method (given $N)")
@@ -96,10 +113,9 @@ Given an already traced set of angles, use the best estimate of where the maxima
 as and then bisect to try and find a better maxima.
 """
 function _golden_bracket!(
-        cache::_RingCoronaCache{T},
+    cache::_RingCoronaCache{T},
     tracer::Function,
-    target::Val{Target}
-    ;
+    target::Val{Target};
     kwargs...,
 ) where {T,Target}
 
@@ -111,11 +127,15 @@ function _golden_bracket!(
         error("Unknown target: $Target")
     end
 
+    # TODO: this should be a seperate function
     # find the true index from the sample index
-    sample_gps = (i for i in @views(cache.gps[1:cache.N]) if i.status == StatusCodes.IntersectedWithGeometry)
+    sample_gps = (
+        i for i in @views(cache.gps[1:cache.N]) if
+        i.status == StatusCodes.IntersectedWithGeometry
+    )
     best_estimate = _equatorial_project(first(sample_gps).x)
     best_angle = first(cache.angles)
-    for i in 1:cache.N
+    for i = 1:cache.N
         gp = cache.gps[i]
         if gp.status == StatusCodes.IntersectedWithGeometry
             rho = _equatorial_project(gp.x)
@@ -137,12 +157,11 @@ function _golden_bracket!(
         end
     end
 
-    offset = 11
-    delta = π / cache.N
+    delta = π / min(cache.N, 60)
 
     # take a bracketing interval
-    a = best_angle - delta * offset
-    b = best_angle + delta * offset
+    a = best_angle - delta
+    b = best_angle + delta
     c_value = 0.0
 
     n = 0
@@ -174,8 +193,8 @@ function _golden_bracket!(
         end
 
         iters += 1
-        if !too_many_iters && (iters > 5 * EXTREMIZER_ITERS)
-            @warn "Too many iterations solving for $Target"
+        if !too_many_iters && (iters > EXTREMIZER_ITERS)
+            @warn "Too many iterations solving for $Target" maxlog = 1
             too_many_iters = true
         end
     end
@@ -197,7 +216,7 @@ function _ring_arm_traces!(
     m::AbstractMetric{T},
     d::AbstractAccretionGeometry,
     β_angle;
-    solver_opts...
+    solver_opts...,
 ) where {T}
     _velfunc = rotatorfunctor(m, cache.x, cache.v, β_angle)
 
@@ -221,7 +240,7 @@ function _ring_arm_traces!(
         _solve_reinit!(integ, vcat(cache.x, init_v))
     end
 
-    for i in 1:cache.N
+    for i = 1:cache.N
         cache.gps[i] = _tracer(cache.angles[i])
     end
     # update the index
@@ -232,30 +251,30 @@ function _ring_arm_traces!(
     _golden_bracket!(cache, _tracer, Val{:maxima}())
 end
 
-"""
-    function emissity_arms(
-        m::AbstractMetric,
-        d::AbstractAccretionDisc,
-        model::RingCorona,
-        β_angle,
-    )
+function unpack_traces(cache::_RingCoronaCache)
+    last_index::Int = cache._index[]
+    @views cache.angles[1:last_index], cache.gps[1:last_index]
+end
 
-Calculate [`LongitudalArms`](@ref) for a [`RingCorona`](@ref) for a given
-``\\beta`` angle. Here, ``\\beta`` is the angle relative to the radial
-coordinate vector of the slice of geodesics being calculated (the 'slices of
-the orange' or 'beachball').
-"""
-function _ring_corona_emissivity_arms(
+function _ring_arm!(
     cache::_RingCoronaCache,
     m::AbstractMetric,
-    d::AbstractAccretionDisc,
-    β_angle,
+    d::AbstractAccretionGeometry,
+    β_angle;
+    solver_opts...,
 )
-    all_gps, δs = arms_between(setup, m, d, model, x, v, β_angle)
-    # regular sorting
+    _ring_arm_traces!(cache, m, d, β_angle; solver_opts...)
+
+    all_angles, all_gps = unpack_traces(cache)
+
+    # TODO: make the `_ring_arm_traces!` do this filtering automatically
     mask = [i.status == StatusCodes.IntersectedWithGeometry for i in all_gps]
     gps = all_gps[mask]
-    δs_filtered = δs[mask]
+    angles = mod2pi.(all_angles[mask])
+
+    I = sortperm(angles)
+    angles = angles[I]
+    gps = gps[I]
 
     ρs = map(i -> Gradus._equatorial_project(i.x), gps)
 
@@ -266,24 +285,64 @@ function _ring_corona_emissivity_arms(
 
     min_ρ_index, max_ρ_index = min(min_ρ_index, max_ρ_index), max(min_ρ_index, max_ρ_index)
 
+    # TODO: do we need views here? should go through this and work out where the memory gets copied
     left = @views Gradus._process_ring_traces(
-        setup,
+        cache.setup,
         m,
         d,
-        v,
+        cache.v,
         vcat(gps[1:(min_ρ_index-1)], gps[max_ρ_index+1:end]),
         vcat(ρs[1:(min_ρ_index-1)], ρs[max_ρ_index+1:end]),
-        vcat(δs_filtered[1:(min_ρ_index-1)], δs_filtered[max_ρ_index+1:end]),
+        vcat(angles[1:(min_ρ_index-1)], angles[max_ρ_index+1:end]),
     )
     right = @views Gradus._process_ring_traces(
-        setup,
+        cache.setup,
         m,
         d,
-        v,
+        cache.v,
         gps[min_ρ_index:max_ρ_index],
         ρs[min_ρ_index:max_ρ_index],
-        δs_filtered[min_ρ_index:max_ρ_index],
+        angles[min_ρ_index:max_ρ_index],
     )
+
     Gradus.LongitudalArms(β_angle, left.r, left.t, left.ε, right.r, right.t, right.ε)
 end
 
+"""
+    function corona_arms(
+        setup::EmissivityProfileSetup{true},
+        m::AbstractMetric,
+        d::AbstractAccretionDisc,
+        model::RingCorona,
+        βs,
+    )
+
+Calculate [`LongitudalArms`](@ref) for a [`RingCorona`](@ref) for a given set
+or range of ``\\beta`` angles. Here, ``\\beta`` is the angle relative to the
+radial coordinate vector of the slice of geodesics being calculated (the
+'slices of the orange' or 'beachball').
+
+This function parallelises over CPU threads.
+"""
+function corona_arms(
+    setup::EmissivityProfileSetup{true},
+    m::AbstractMetric,
+    d::AbstractAccretionDisc,
+    model::RingCorona,
+    βs,
+)
+    cache = _RingCoronaCache(setup, m, model)
+
+    # copy one cache for each thread
+    caches = [copy(cache) for i = 1:Threads.nthreads()-1]
+    push!(caches, cache)
+
+    function _func(β)
+        thread_cache = caches[Threads.threadid()]
+        arm = _ring_arm!(thread_cache, m, d, β)
+        thread_cache._index[] = 0
+        arm
+    end
+
+    arms = _threaded_map(_func, βs)
+end
