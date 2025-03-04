@@ -339,10 +339,13 @@ function corona_arms(
     caches = [copy(cache) for i = 1:Threads.nthreads()-1]
     push!(caches, cache)
 
+    progress_bar = init_progress_bar("β slices: ", length(βs), verbose)
+
     function _func(β)
         thread_cache = caches[Threads.threadid()]
-        arm = _ring_arm!(thread_cache, m, d, β)
+        arm = _ring_arm!(thread_cache, m, d, β; kwargs...)
         thread_cache._index[] = 0
+        ProgressMeter.next!(progress_bar)
         arm
     end
 
