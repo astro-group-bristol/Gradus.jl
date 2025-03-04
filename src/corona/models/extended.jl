@@ -1,6 +1,14 @@
 module SourceVelocities
 
-using ..Gradus: AbstractMetric, CircularOrbits, SVector, metric_components, constrain_all
+using ..Gradus:
+    AbstractMetric,
+    CircularOrbits,
+    SVector,
+    metric_components,
+    propernorm,
+    metric,
+    constrain_all,
+    isco
 
 """
     co_rotating(m::AbstractMetric, x::SVector{4})
@@ -10,8 +18,10 @@ Calculates the a source velocity assuming the cylinder described by the point
 uses [`CircularOrbits`](@ref) to perform the calculation.
 """
 function co_rotating(m::AbstractMetric, x::SVector{4})
-    v = CircularOrbits.fourvelocity(m, SVector(x[2], sin(x[3])))
-    constrain_all(m, x, v, 1.0)
+    sinθ = sin(x[3])
+    v = CircularOrbits.fourvelocity(m, max(isco(m), x[2] * sinθ)) .* sinθ
+    v = v ./ sqrt(abs(propernorm(metric(m, x), v)))
+    v = constrain_all(m, x, v, 1.0)
 end
 
 """

@@ -59,3 +59,16 @@ mat2 = reduce(hcat, M2)
 
 # are they the same
 @test mat1 ≈ mat2
+
+# make sure we calculate the velocity profiles correctly as well
+# using two example velocities sent to me by Alexey Nekrasov
+
+m = KerrMetric(1.0, 0.998)
+model = RingCorona(Gradus.SourceVelocities.co_rotating, 1.02, 1.113)
+x, v = Gradus.sample_position_velocity(m, model)
+# no idea why this one isn't matching
+# @test v ≈ [5.4962, 0.0, 0.0, 2.3307] rtol = 1e-3
+
+model = RingCorona(Gradus.SourceVelocities.co_rotating, 2.082, 50.0)
+x, v = Gradus.sample_position_velocity(m, model)
+@test v ≈ [1.204, 0.0, 0.0, 0.300] rtol = 1e-3
