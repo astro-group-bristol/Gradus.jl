@@ -110,7 +110,7 @@ function _point_source_symmetric_emissivity_profile(
     δs = δs[J]
 
     r, ε = _point_source_emissivity(m, d, setup.spectrum, v, rs_sorted, δs, points)
-    t = [i.x[1] for i in @views(points[1:(end-1)])]
+    t = [i.x[1] for i in points]
 
     RadialDiscProfile(r, t, ε)
 end
@@ -127,20 +127,26 @@ function _point_source_emissivity(
     # function for obtaining keplerian velocities
     _disc_velocity = _keplerian_velocity_projector(m, d)
 
-    # radial bin size
-    _points = @views(points[1:(end-1)])
-
-    ε = map(enumerate(_points)) do (i, p)
+    ε = map(enumerate(points)) do (i, p)
         v_disc = _disc_velocity(p.x)
         gs = energy_ratio(m, p, source_velocity, v_disc)
         γ = lorentz_factor(m, p.x, v_disc)
-        Δr = abs(r[i+1] - r[i])
-        A = _proper_area(m, p.x) * Δr
 
-        point_source_equatorial_disc_emissivity(spec, δs[i], gs, A, γ)
+        i1, i2, i3, i4 = if i == 1
+            1, 2, 1, 2
+        elseif i != lastindex(points)
+            i, i + 1, i, i - 1
+        else
+            i, i - 1, i, i - 1
+        end
+
+        Δr = (abs(r[i1] - r[i2]) + abs(r[i3] - r[i4])) / 2
+        weight = (abs(δs[i1] - δs[i2]) + abs(δs[i3] - δs[i4])) / 4
+
+        A = _proper_area(m, p.x) * Δr
+        weight * point_source_equatorial_disc_emissivity(spec, δs[i], gs, A, γ)
     end
 
-    r = r[1:(end-1)]
     r, ε
 end
 
