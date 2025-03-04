@@ -109,7 +109,7 @@ A geodesic is the shortest path connecting two points in space. For flat space, 
 curved space, geodesics are analogous to straight lines between points (e.g. the great circle on a sphere).
 
 The geodesic equation calculates the acceleration experienced by a particle at position ``x^\\mu = (t, r, \\theta, \\phi)`` travelling
-with tangential velocity ``v^\\nu = \\text{d} x / \\text{d} \\lambda`` due to the curvature of spacetime. The curvature is calculated from the metric, encoded in the 
+with tangential velocity ``v^\\nu = \\text{d} x / \\text{d} \\lambda`` due to the curvature of spacetime. The curvature is calculated from the metric, encoded in the
 [Christoffel symbols](https://en.wikipedia.org/wiki/Christoffel_symbols). The acceleration is then calculated via
 
 ```math
@@ -128,7 +128,7 @@ geodesic_equation(m::AbstractMetric, x, v) =
 """
     _constrain(m::AbstractMetric, x, v; μ=0)
 
-Calculate the time component ``v^t`` of a velocity vector `v`, which would _constrain the vector at a position `x` as a 
+Calculate the time component ``v^t`` of a velocity vector `v`, which would _constrain the vector at a position `x` as a
 geodesic with invariant mass `μ`.
 
 The velocity vector needs to only specify the ``v^r``, ``v^\\theta``, and ``v^\\phi`` component, as the ``v^t`` is constrained in GR by
@@ -369,7 +369,7 @@ Note that [`sample_position_velocity`](@ref) has a number of its own requirement
 function's documentation). This function must be implemented as a fallback for other methods.
 
 If special symmetries exist, these may be used in the implementations of higher-order functions, such as
-[`emissivity_profile`](@ref). 
+[`emissivity_profile`](@ref).
 """
 abstract type AbstractCoronaModel{T} end
 
@@ -499,6 +499,7 @@ include("corona/flux-calculations.jl")
 include("corona/emissivity.jl")
 include("corona/models/lamp-post.jl")
 include("corona/models/extended.jl")
+include("corona/models/ring.jl")
 include("corona/spectra.jl")
 
 
