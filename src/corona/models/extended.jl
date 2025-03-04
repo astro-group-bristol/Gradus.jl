@@ -121,9 +121,9 @@ function _make_time_dependent_radial_emissivity(arms::Vector{LongitudalArms{T}})
     RingCoronaProfile(left, right)
 end
 
-function DEFAULT_β_ANGLES()
-    angles_coarse = range(0, π, 100)
-    theta_angles = vcat(angles_coarse, range(0.82, 2.0, 100)) |> sort
+function DEFAULT_β_ANGLES(; n_regular = 100, n_refined = 100)
+    angles_coarse = range(0, π, n_regular)
+    theta_angles = vcat(angles_coarse, range(0.62, 2.2, n_refined)) |> sort
     theta_angles
 end
 
