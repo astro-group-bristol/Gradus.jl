@@ -111,110 +111,22 @@ function _make_time_dependent_radial_emissivity(arms::Vector{LongitudalArms{T}})
     RingCoronaProfile(left, right)
 end
 
+function DEFAULT_β_ANGLES()
+    angles_coarse = range(0, π, 100)
+    theta_angles = vcat(angles_coarse, range(0.82, 2.0, 100)) |> sort
+    theta_angles
+end
+
 function emissivity_profile(
     setup::EmissivityProfileSetup{true},
     m::AbstractMetric,
     d::AbstractAccretionGeometry,
     model::RingCorona;
+    βs = DEFAULT_β_ANGLES(),
     kwargs...,
 )
-    arms = _calculate_ring_arms(setup, m, d, model; kwargs...)
+    arms = corona_arms(setup, m, d, model, βs; kwargs...)
     _make_time_dependent_radial_emissivity(arms)
-end
-
-function _calculate_ring_arms(
-    setup::EmissivityProfileSetup{true},
-    m::AbstractMetric{T},
-    d::AbstractAccretionGeometry,
-    model::RingCorona;
-    num_β_slices::Int = 13,
-    β_min = 0,
-    β_max = π,
-    callback = domain_upper_hemisphere(),
-    kwargs...,
-) where {T}
-    x, v = Gradus.sample_position_velocity(m, model)
-
-    # trace the left half of the local sky
-    left_δs = deg2rad.(range(setup.δmin, setup.δmax, setup.n_samples ÷ (2 * num_β_slices)))
-    right_δs = left_δs .+ π
-    δs = vcat(right_δs, left_δs)
-
-    map(range(β_min, β_max, num_β_slices)) do β
-        all_gps = _ring_corona_emissivity_slice(
-            setup,
-            m,
-            d,
-            model,
-            δs,
-            x,
-            v,
-            β;
-            callback = callback,
-            kwargs...,
-        )
-
-        # regular sorting
-        mask = [i.status == StatusCodes.IntersectedWithGeometry for i in all_gps]
-        gps = all_gps[mask]
-        δs_filtered = @views δs[mask]
-
-        # split the sky into a left and right side, such that each side has strictly
-        # sortable and monotonic r as a function of θ on the local sky
-        ρs = map(i -> _equatorial_project(i.x), gps)
-        _, min_ρ_index = findmin(ρs)
-        _, max_ρ_index = findmax(ρs)
-
-        min_ρ_index, max_ρ_index =
-            min(min_ρ_index, max_ρ_index), max(min_ρ_index, max_ρ_index)
-
-        left = @views _process_ring_traces(
-            setup,
-            m,
-            d,
-            v,
-            vcat(gps[1:(min_ρ_index-1)], gps[max_ρ_index+1:end]),
-            vcat(ρs[1:(min_ρ_index-1)], ρs[max_ρ_index+1:end]),
-            vcat(δs_filtered[1:(min_ρ_index-1)], δs_filtered[max_ρ_index+1:end]),
-        )
-        right = @views _process_ring_traces(
-            setup,
-            m,
-            d,
-            v,
-            gps[min_ρ_index:max_ρ_index],
-            ρs[min_ρ_index:max_ρ_index],
-            δs_filtered[min_ρ_index:max_ρ_index],
-        )
-        LongitudalArms(β, left.r, left.t, left.ε, right.r, right.t, right.ε)
-    end
-end
-
-# one slice of the orange
-function _ring_corona_emissivity_slice(
-    setup::EmissivityProfileSetup,
-    m::AbstractMetric,
-    d::AbstractAccretionGeometry,
-    model::RingCorona,
-    δs,
-    x,
-    v,
-    β;
-    kwargs...,
-)
-    θ₀ = atan(model.r, model.h)
-    velfunc = rotated_polar_angle_to_velfunc(m, x, v, δs, β; θ₀ = θ₀)
-    tracegeodesics(
-        m,
-        x,
-        velfunc,
-        d,
-        setup.λmax;
-        save_on = false,
-        ensemble = Gradus.EnsembleEndpointThreads(),
-        trajectories = length(δs),
-        kwargs...,
-    )
 end
 
 function _process_ring_traces(setup::EmissivityProfileSetup, m, d, v, gps, rs, δs)

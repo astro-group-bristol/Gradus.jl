@@ -329,7 +329,9 @@ function corona_arms(
     m::AbstractMetric,
     d::AbstractAccretionDisc,
     model::RingCorona,
-    βs,
+    βs;
+    verbose = false,
+    kwargs...,
 )
     cache = _RingCoronaCache(setup, m, model)
 
