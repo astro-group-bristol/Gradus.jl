@@ -141,7 +141,13 @@ end
 
 function _process_ring_traces(setup::EmissivityProfileSetup, m, d, v, gps, rs, δs)
     # no need to filter intersected, as we have already done that before calling this process function
-    J = sortperm(rs)
+    J = sortperm(δs)
+
+    J = unique(i -> rs[i], J)
+    # now need to find the cycle permutation to make the minimal radius the first element
+    _, index = findmax(i -> rs[i], J)
+    J = vcat(J[index+1:end], J[1:index-1])
+
     points = gps[J]
     δs_sorted = δs[J]
     r, ε = _point_source_emissivity(m, d, setup.spectrum, v, rs[J], δs_sorted, points)
