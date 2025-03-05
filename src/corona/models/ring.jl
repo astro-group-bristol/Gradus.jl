@@ -195,7 +195,7 @@ function _golden_bracket!(
         d_gp, d_value = _objective(d)
 
         if comparator(c_value, d_value)
-            if (c_value != best_estimate)
+            if comparator(c_value, best_estimate)
                 n += 1
                 _add_to_cache!(cache, c, c_gp)
             elseif too_many_iters
@@ -203,7 +203,7 @@ function _golden_bracket!(
             end
             b = d
         else
-            if (d_value != best_estimate)
+            if comparator(d_value, best_estimate)
                 n += 1
                 _add_to_cache!(cache, d, d_gp)
             elseif too_many_iters
