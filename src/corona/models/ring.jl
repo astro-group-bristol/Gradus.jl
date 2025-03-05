@@ -112,6 +112,43 @@ function rotatorfunctor(m::AbstractMetric{T}, x::SVector, v::SVector, β) where 
     end
 end
 
+function determine_bracket(
+    N::Int,
+    angles::Vector,
+    gps::Vector{<:GeodesicPoint{T}},
+    comparator::Function,
+) where {T}
+    a = first(angles)
+    b = first(angles)
+    estimate::Union{Nothing,T} = nothing
+    for i = 1:N
+        gp = gps[i]
+
+        if gp.status == StatusCodes.IntersectedWithGeometry
+            rho = _equatorial_project(gp.x)
+
+            if isnothing(estimate) || comparator(rho, estimate)
+                estimate = rho
+                a = b = angles[i]
+
+                if i < N && gps[i+1].status != StatusCodes.IntersectedWithGeometry
+                    # this will likely be a better upper limit
+                    b = angles[i+1]
+                end
+
+                if i > 1 && gps[i-1].status != StatusCodes.IntersectedWithGeometry
+                    # this will likely be a better lower limit
+                    a = angles[i-1]
+                end
+            end
+        end
+    end
+
+    best_estimate::T = estimate
+    delta = π / min(N, 32)
+    a - 2 * delta, b + 2 * delta, best_estimate
+end
+
 """
 Given an already traced set of angles, use the best estimate of where the maxima
 as and then bisect to try and find a better maxima.
@@ -122,7 +159,6 @@ function _golden_bracket!(
     target::Val{Target};
     kwargs...,
 ) where {T,Target}
-
     comparator = if Target == :minima
         (a, b) -> a < b
     elseif Target == :maxima
@@ -131,24 +167,8 @@ function _golden_bracket!(
         error("Unknown target: $Target")
     end
 
-    # TODO: this should be a seperate function
-    # find the true index from the sample index
-    sample_gps = (
-        i for i in @views(cache.gps[1:cache.N]) if
-        i.status == StatusCodes.IntersectedWithGeometry
-    )
-    best_estimate = _equatorial_project(first(sample_gps).x)
-    best_angle = first(cache.angles)
-    for i = 1:cache.N
-        gp = cache.gps[i]
-        if gp.status == StatusCodes.IntersectedWithGeometry
-            rho = _equatorial_project(gp.x)
-            if comparator(rho, best_estimate)
-                best_estimate = rho
-                best_angle = cache.angles[i]
-            end
-        end
-    end
+    a, b, best_estimate = determine_bracket(cache.N, cache.angles, cache.gps, comparator)
+    a_init, b_init = a, b
 
     function _objective(θ)
         gp = tracer(θ)
@@ -161,11 +181,7 @@ function _golden_bracket!(
         end
     end
 
-    delta = π / min(cache.N, 60)
-
     # take a bracketing interval
-    a = best_angle - delta
-    b = best_angle + delta
     c_value = 0.0
 
     n = 0
