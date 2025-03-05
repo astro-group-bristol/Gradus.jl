@@ -70,7 +70,7 @@ as the PDF that samples ``\\theta`` uniformly.
 Dauser et al. (2013)
 """
 function point_source_equatorial_disc_emissivity(spec::AbstractCoronalSpectrum, θ, g, A, γ)
-    sin(θ) * coronal_spectrum(spec, g) / (A * γ)
+    abs(sin(θ)) * coronal_spectrum(spec, g) / (A * γ)
 end
 
 
