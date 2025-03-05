@@ -276,6 +276,20 @@ function unpack_traces(cache::_RingCoronaCache)
     @views cache.angles[1:last_index], cache.gps[1:last_index]
 end
 
+function _split_arms_indices(angles, ρs)
+    # split the sky into a left and right side, such that each side has strictly
+    # sortable and monotonic r as a function of θ on the local sky
+    _, min_ρ_index = findmin(ρs)
+    _, max_ρ_index = findmax(ρs)
+
+    min_ρ_index, max_ρ_index = min(min_ρ_index, max_ρ_index), max(min_ρ_index, max_ρ_index)
+
+    r1 = vcat(collect(max_ρ_index+1:lastindex(ρs)), collect(1:min_ρ_index-1))
+    r2 = collect(min_ρ_index:max_ρ_index)
+
+    r1, r2
+end
+
 function _ring_arm!(
     cache::_RingCoronaCache,
     m::AbstractMetric,
@@ -303,7 +317,7 @@ function _ring_arm!(
     _, min_ρ_index = findmin(ρs)
     _, max_ρ_index = findmax(ρs)
 
-    min_ρ_index, max_ρ_index = min(min_ρ_index, max_ρ_index), max(min_ρ_index, max_ρ_index)
+    r1, r2 = _split_arms_indices(angles, ρs)
 
     # TODO: do we need views here? should go through this and work out where the memory gets copied
     left = @views Gradus._process_ring_traces(
@@ -311,18 +325,18 @@ function _ring_arm!(
         m,
         d,
         cache.v,
-        vcat(gps[1:(min_ρ_index-1)], gps[max_ρ_index+1:end]),
-        vcat(ρs[1:(min_ρ_index-1)], ρs[max_ρ_index+1:end]),
-        vcat(angles[1:(min_ρ_index-1)], angles[max_ρ_index+1:end]),
+        gps[r1],
+        ρs[r1],
+        angles[r1],
     )
     right = @views Gradus._process_ring_traces(
         cache.setup,
         m,
         d,
         cache.v,
-        gps[min_ρ_index:max_ρ_index],
-        ρs[min_ρ_index:max_ρ_index],
-        angles[min_ρ_index:max_ρ_index],
+        gps[r2],
+        ρs[r2],
+        angles[r2],
     )
 
     Gradus.LongitudalArms(β_angle, left.r, left.t, left.ε, right.r, right.t, right.ε)
