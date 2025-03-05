@@ -279,10 +279,11 @@ end
 function _split_arms_indices(angles, ρs)
     # split the sky into a left and right side, such that each side has strictly
     # sortable and monotonic r as a function of θ on the local sky
-    _, min_ρ_index = findmin(ρs)
-    _, max_ρ_index = findmax(ρs)
+    _, _min_ρ_index = findmin(ρs)
+    _, _max_ρ_index = findmax(ρs)
 
-    min_ρ_index, max_ρ_index = min(min_ρ_index, max_ρ_index), max(min_ρ_index, max_ρ_index)
+    min_ρ_index, max_ρ_index =
+        min(_min_ρ_index, _max_ρ_index), max(_min_ρ_index, _max_ρ_index)
 
     r1 = vcat(collect(max_ρ_index+1:lastindex(ρs)), collect(1:min_ρ_index-1))
     r2 = collect(min_ρ_index:max_ρ_index)
