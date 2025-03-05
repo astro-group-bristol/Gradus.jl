@@ -1,4 +1,3 @@
-const EXTREMIZER_ITERS = 90
 const INVPHI = (sqrt(5) - 1) / 2
 
 """
@@ -21,6 +20,8 @@ struct _RingCoronaCache{T,S<:EmissivityProfileSetup{true},A}
     _index::Ref{Int}
     "Number of geodesics for all the arms"
     N::Int
+    "Maximal number of iterations that the extremiser should make"
+    extrema_iter::Int
 end
 
 function Base.copy(cache::_RingCoronaCache)
@@ -32,6 +33,7 @@ function Base.copy(cache::_RingCoronaCache)
         deepcopy(cache.gps),
         Ref(cache._index[]),
         cache.N,
+        cache.extrema_iter,
     )
 end
 
@@ -58,16 +60,17 @@ function _RingCoronaCache(
     m::AbstractMetric,
     model::RingCorona;
     h = 1e-7,
+    extrema_iter = 80,
 )
     x, v = sample_position_velocity(m, model)
 
     # TODO: infer this
     GPType = GeodesicPoint{eltype(x),Nothing}
 
-    N = (setup.n_samples - 2 * EXTREMIZER_ITERS)
+    N = (setup.n_samples - 2 * extrema_iter)
     if (N <= 0)
         error(
-            "Too few samples for selected method. Pass `n_samples` of more than $(2 * EXTREMIZER_ITERS)",
+            "Too few samples for selected method. Pass `n_samples` of more than $(2 * extrema_iter)",
         )
     end
     if !iseven(N)
@@ -85,8 +88,9 @@ function _RingCoronaCache(
         angles[i] = a
         angles[i+num_per_arm] = mod2pi(a + π)
     end
+    sort!(@views(angles[1:N]))
 
-    _RingCoronaCache(setup, x, v, angles, gps, Ref(0), N)
+    _RingCoronaCache(setup, x, v, angles, gps, Ref(0), N, extrema_iter)
 end
 
 """
@@ -167,7 +171,7 @@ function _golden_bracket!(
     n = 0
     iters = 0
     too_many_iters = false
-    while (n < EXTREMIZER_ITERS)
+    while (n < cache.extrema_iter)
         c = b - (b - a) * INVPHI
         d = a + (b - a) * INVPHI
 
@@ -193,7 +197,7 @@ function _golden_bracket!(
         end
 
         iters += 1
-        if !too_many_iters && (iters > EXTREMIZER_ITERS)
+        if !too_many_iters && (iters > cache.extrema_iter)
             @warn "Too many iterations solving for $Target" maxlog = 1
             too_many_iters = true
         end
