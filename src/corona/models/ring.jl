@@ -413,6 +413,16 @@ struct PointSlice{T}
     t::Vector{T}
 end
 
+function empty_point_slice(; n = 1000, T = Float64)
+    PointSlice(
+        Vector{T}(undef, n),
+        Vector{T}(undef, n),
+        Vector{T}(undef, n),
+        Vector{T}(undef, n),
+        Vector{T}(undef, n),
+    )
+end
+
 """
     RingPointApproximationSlices
 
@@ -424,6 +434,74 @@ struct RingPointApproximationSlices{T}
     βs::Vector{T}
     "The slice of traces corresponding to a given β"
     traces::Vector{PointSlice{T}}
+end
+
+"""
+    function interpolate_slice(
+        pas::RingPointApproximationSlices{T},
+        β;
+        kwargs...
+    )
+
+Same as [`interpolate_slice!`](@ref) except will allocate the output for the
+caller. The `kwargs` are forwarded to [`empty_point_slice`](@ref).
+"""
+function interpolate_slice(pas::RingPointApproximationSlices, β::Number; kwargs...)
+    slice = empty_point_slice(; kwargs..., T = typeof(β))
+    interpolate_slice!(slice, pas, β)
+end
+
+"""
+    function interpolate_slice!(
+        slice::PointSlice{T},
+        pas::RingPointApproximationSlices{T},
+        β,
+    )
+
+Interpolate a new slice into `slice` for ``\\beta`` given a set of calculated
+slices in [`RingPointApproximationSlices`](@ref).
+"""
+function interpolate_slice!(
+    slice::PointSlice{T},
+    pas::RingPointApproximationSlices,
+    β::T,
+) where {T}
+    idx = clamp(searchsortedlast(pas.βs, β), 1, length(pas.βs) - 1)
+    x1, x2 = pas.βs[idx], pas.βs[idx+1]
+    # interpolation weight
+    w = (β - x1) / (x2 - x1)
+
+    s1 = pas.traces[idx]
+    s2 = pas.traces[idx+1]
+
+    l1, u1 = extrema(s1.θ)
+    l2, u2 = extrema(s2.θ)
+
+
+    # interpolate the slice over the common support
+    g1 = Gradus.NaNLinearInterpolator(s1.θ, s1.g, NaN)
+    g2 = Gradus.NaNLinearInterpolator(s2.θ, s2.g, NaN)
+
+    γ1 = Gradus.NaNLinearInterpolator(s1.θ, s1.γ, NaN)
+    γ2 = Gradus.NaNLinearInterpolator(s2.θ, s2.γ, NaN)
+
+    r1 = Gradus.NaNLinearInterpolator(s1.θ, s1.r, NaN)
+    r2 = Gradus.NaNLinearInterpolator(s2.θ, s2.r, NaN)
+
+    t1 = Gradus.NaNLinearInterpolator(s1.θ, s1.t, NaN)
+    t2 = Gradus.NaNLinearInterpolator(s2.θ, s2.t, NaN)
+
+    i::Int = 1
+    for th in range(min(l1, l2), max(u1, u2), length(slice.θ))
+        slice.θ[i] = th
+        slice.g[i] = _linear_interpolate(g1(th), g2(th), w)
+        slice.γ[i] = _linear_interpolate(γ1(th), γ2(th), w)
+        slice.r[i] = _linear_interpolate(r1(th), r2(th), w)
+        slice.t[i] = _linear_interpolate(t1(th), t2(th), w)
+        i += 1
+    end
+
+    slice
 end
 
 function arrange_slice!(
