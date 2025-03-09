@@ -477,9 +477,7 @@ end
 Computes the angular difference between two angles using modulo arithmetic.
 """
 function ang_diff(a1, a2)
-    b1 = a1 > π / 2 ? π - (a1 % π) : a1
-    b2 = a2 > π / 2 ? π - (a2 % π) : a2
-    abs(b1 - b2)
+    abs((a1 - a2 + π) / (2π) - π)
 end
 """
     PointSlice
