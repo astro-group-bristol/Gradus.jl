@@ -281,19 +281,96 @@ function unpack_traces(cache::_RingCoronaCache)
     @views cache.angles[1:last_index], cache.gps[1:last_index]
 end
 
+function canonical_orders!(slices, rs)
+    for I in slices
+        sort!(I, by = i -> rs[i])
+    end
+    slices
+end
+
+# TODO: these are all incredibly allocating, when we could pre-allocate a
+# buffer and reuse it
+function _split_branches_further(inds, rs; cutoff_r = 1e3, delta = 0.01, min_length = 3)
+    N = lastindex(inds)
+    prev, first_i::Int = @views findmin(rs[inds])
+    splits = Int[1, first_i]
+    increasing::Bool = true
+
+    for j = 0:N-1
+        k = (j + first_i) % N + 1
+        r = rs[inds[k]]
+
+        if r > cutoff_r
+            increasing = false
+            prev = r
+            continue
+        end
+        if increasing && (r < prev - delta)
+            increasing = false
+            push!(splits, k > 1 ? k - 1 : lastindex(inds))
+        elseif !increasing && (r > prev + delta)
+            increasing = true
+            push!(splits, k > 1 ? k - 1 : lastindex(inds))
+        end
+        prev = r
+    end
+
+    sort!(splits)
+
+    if length(splits) > 2
+        slices = Vector{Int}[]
+        i1 = first(splits)
+        for i2 in splits[2:end]
+            if i2 - i1 >= min_length
+                if (N - i2) <= min_length
+                    i2 = N
+                end
+                push!(slices, inds[i1:i2])
+                i1 = i2
+            end
+        end
+        if i1 < N
+            push!(slices, inds[i1:end])
+        end
+        slices
+    else
+        [inds]
+    end
+end
+
 function _split_arms_indices(angles, ρs)
     # split the sky into a left and right side, such that each side has strictly
     # sortable and monotonic r as a function of θ on the local sky
-    _, _min_ρ_index = findmin(ρs)
-    _, _max_ρ_index = findmax(ρs)
+
+    # some values may be NaN so need to avoid those
+    _start_index = findfirst(!isnan, ρs)
+
+    _min_ρ_index = _start_index
+    _max_ρ_index = _start_index
+    _r_min = ρs[_start_index]
+    _r_max = ρs[_start_index]
+
+    for (i, r) in enumerate(ρs)
+        r == NaN && continue
+        if r < _r_min
+            _min_ρ_index = i
+            _r_min = r
+        end
+        if r > _r_max
+            _max_ρ_index = i
+            _r_max = r
+        end
+    end
 
     min_ρ_index, max_ρ_index =
         min(_min_ρ_index, _max_ρ_index), max(_min_ρ_index, _max_ρ_index)
 
-    r1 = vcat(collect(1:min_ρ_index-1), collect(max_ρ_index+1:lastindex(ρs)))
+    r1 = vcat(collect(max_ρ_index+1:lastindex(ρs)), collect(1:min_ρ_index-1))
     r2 = collect(min_ρ_index:max_ρ_index)
 
-    r1, r2
+    l1 = canonical_orders!(_split_branches_further(r1, ρs), ρs)
+    l2 = canonical_orders!(_split_branches_further(r2, ρs), ρs)
+    vcat(l1, l2)
 end
 
 function _ring_arm!(
@@ -395,6 +472,16 @@ end
 ## BREAK
 
 """
+    ang_diff(a1, a2)
+
+Computes the angular difference between two angles using modulo arithmetic.
+"""
+function ang_diff(a1, a2)
+    b1 = a1 > π / 2 ? π - (a1 % π) : a1
+    b2 = a2 > π / 2 ? π - (a2 % π) : a2
+    abs(b1 - b2)
+end
+"""
     PointSlice
 
 A struct containing the raw values from a given ``\\beta`` slice trace.
@@ -411,6 +498,73 @@ struct PointSlice{T}
     # TODO: use AD to calculate δr instead of finite difference
     "Corona to disc time"
     t::Vector{T}
+end
+
+struct TimeDependentEmissivityBranch{T}
+    "Latitudal angles"
+    θ::Vector{T}
+    "Radial coordinate"
+    r::Vector{T}
+    "Corona to disc time."
+    t::Vector{T}
+    "Emissivity"
+    ε::Vector{T}
+end
+
+function _branch_emissivity(
+    m::AbstractMetric,
+    rs::AbstractVector,
+    θs::AbstractVector,
+    gs::AbstractVector,
+    γs::AbstractVector,
+    spectrum,
+)
+    # TODO: this shares a lot of overlap code with other emissivity
+    # implementations, and should be refactored to reuse more existing code
+    map(eachindex(rs)) do i
+        i1, i2, i3, i4 = if i == 1
+            1, 2, 1, 2
+        elseif i != lastindex(rs)
+            i, i + 1, i, i - 1
+        else
+            i, i - 1, i, i - 1
+        end
+
+        i1 = min(lastindex(rs), i1)
+        i2 = min(lastindex(rs), i2)
+        i3 = min(lastindex(rs), i3)
+        i4 = min(lastindex(rs), i4)
+
+        Δr = (abs(rs[i1] - rs[i2]) + abs(rs[i3] - rs[i4])) / 2
+        weight = (ang_diff(θs[i1], θs[i2]) + ang_diff(θs[i3], θs[i4])) / 4
+
+        A = _proper_area(m, rs[i] + Δr / 2, π / 2) * Δr
+        weight * point_source_equatorial_disc_emissivity(spectrum, θs[i], gs[i], A, γs[i])
+    end
+end
+
+"""
+    split_into_branches(m::AbstractMetric, slice::PointSlice, spectrum)
+
+Split a given [`PointSlice`](@ref) into a number of
+[`TimeDependentEmissivityBranch`](@ref) by cutting the curves of `(θ, r)` into
+bijective branches.
+
+Returns a vector of [`TimeDependentEmissivityBranch`](@ref).
+"""
+function split_into_branches(m::AbstractMetric, slice::PointSlice, spectrum)
+    splits = _split_arms_indices(slice.θ, slice.r)
+    map(splits) do I
+        θs = slice.θ[I]
+        gs = slice.g[I]
+        γs = slice.γ[I]
+        rs = slice.r[I]
+        ts = slice.t[I]
+
+        em = _branch_emissivity(m, rs, θs, gs, γs, spectrum)
+
+        TimeDependentEmissivityBranch(θs, rs, ts, em)
+    end
 end
 
 function empty_point_slice(; n = 1000, T = Float64)
