@@ -16,6 +16,9 @@ struct _RingCoronaCache{T,S<:EmissivityProfileSetup{true},A}
     angles::Vector{T}
     "Geodesic points calculated"
     gps::Vector{GeodesicPoint{T,A}}
+    "An optimising numeric buffer that is the same length of `gps` for storing
+    partial results."
+    _buffer::Vector{T}
     "Used to track which angles and gps we have written so far. `_index == 0` means the array is empty."
     _index::Ref{Int}
     "Number of geodesics for all the arms"
@@ -31,6 +34,7 @@ function Base.copy(cache::_RingCoronaCache)
         cache.v,
         deepcopy(cache.angles),
         deepcopy(cache.gps),
+        deepcopy(cache._buffer),
         Ref(cache._index[]),
         cache.N,
         cache.extrema_iter,
@@ -78,6 +82,7 @@ function _RingCoronaCache(
     end
 
     angles = zeros(eltype(x), setup.n_samples)
+    _buffer = zeros(eltype(x), setup.n_samples)
     gps = Vector{GPType}(undef, setup.n_samples)
 
     num_per_arm = div(N, 2)
@@ -90,7 +95,7 @@ function _RingCoronaCache(
     end
     sort!(@views(angles[1:N]))
 
-    _RingCoronaCache(setup, x, v, angles, gps, Ref(0), N, extrema_iter)
+    _RingCoronaCache(setup, x, v, angles, gps, _buffer, Ref(0), N, extrema_iter)
 end
 
 """
@@ -385,4 +390,128 @@ function corona_arms(
     end
 
     arms = _threaded_map(_func, βs)
+end
+
+## BREAK
+
+"""
+    PointSlice
+
+A struct containing the raw values from a given ``\\beta`` slice trace.
+"""
+struct PointSlice{T}
+    "Latitudal angles"
+    θ::Vector{T}
+    "Redshift"
+    g::Vector{T}
+    "Lorentz factor"
+    γ::Vector{T}
+    "Radial coordinate"
+    r::Vector{T}
+    # TODO: use AD to calculate δr instead of finite difference
+    "Corona to disc time"
+    t::Vector{T}
+end
+
+"""
+    RingPointApproximationSlices
+
+Used to hold all of the different [`PointSlice`](@ref) slices for their
+respective values of ``\\beta``.
+"""
+struct RingPointApproximationSlices{T}
+    "The slice angle."
+    βs::Vector{T}
+    "The slice of traces corresponding to a given β"
+    traces::Vector{PointSlice{T}}
+end
+
+function arrange_slice!(
+    cache::_RingCoronaCache,
+    m::AbstractMetric,
+    d::AbstractAccretionDisc,
+)
+    all_angles, all_gps = unpack_traces(cache)
+
+    # calculate the projected radial coordinate into the buffer
+    for (i, gp) in enumerate(all_gps)
+        cache._buffer[i] = _equatorial_project(gp.x)
+    end
+    all_rs = cache._buffer[1:length(all_gps)]
+
+    J = sortperm(all_angles)
+
+    permute!(all_angles, J)
+    permute!(all_rs, J)
+    permute!(all_gps, J)
+
+    # TODO: do we really need uniqueness here?
+    # unique!(i -> all_rs[i], J)
+
+    # function for obtaining keplerian velocities
+    _disc_velocity = _keplerian_velocity_projector(m, d)
+
+    gammas = similar(all_rs)
+    gs = map(enumerate(all_gps)) do dat
+        i, p = dat
+        v_disc = _disc_velocity(p.x)
+        gammas[i] = lorentz_factor(m, p.x, v_disc)
+        energy_ratio(m, p, cache.v, v_disc)
+    end
+
+    mask = [i.status == StatusCodes.IntersectedWithGeometry for i in all_gps]
+    ts = [i.x[1] for i in all_gps]
+
+    # mask the traces that didn't hit the disc
+    # but not on angles, since we use those for interpolating
+    @. gs[!mask] = all_rs[!mask] = ts[!mask] = gammas[!mask] = NaN
+    PointSlice(copy(all_angles), gs, gammas, copy(all_rs), ts)
+end
+
+"""
+    function corona_slices(
+        setup::EmissivityProfileSetup{true},
+        m::AbstractMetric,
+        d::AbstractAccretionDisc,
+        model::RingCorona,
+        βs,
+    )
+
+Calculates a [`RingPointApproximationSlices`](@ref) for a [`RingCorona`](@ref) for a
+given set or range of ``\\beta`` angles. Here, ``\\beta`` is the angle relative
+to the radial coordinate vector of the slice of geodesics being calculated (the
+'slices of the orange' or 'beachball').
+
+This function parallelises over CPU threads.
+"""
+function corona_slices(
+    setup::EmissivityProfileSetup{true},
+    m::AbstractMetric,
+    d::AbstractAccretionDisc,
+    model::RingCorona,
+    βs;
+    verbose = false,
+    kwargs...,
+)
+    cache = _RingCoronaCache(setup, m, model)
+    # copy one cache for each thread
+    caches = [copy(cache) for i = 1:Threads.nthreads()-1]
+    push!(caches, cache)
+
+    progress_bar = init_progress_bar("β slices: ", length(βs), verbose)
+    function _func(β)
+        thread_cache = caches[Threads.threadid()]
+        _ring_arm_traces!(thread_cache, m, d, β; kwargs...)
+
+        slice = @views arrange_slice!(thread_cache, m, d)
+
+        # reset for next iteration
+        thread_cache._index[] = 0
+        ProgressMeter.next!(progress_bar)
+
+        slice
+    end
+
+    traces = Gradus._threaded_map(_func, βs)
+    RingPointApproximationSlices(βs, traces)
 end
