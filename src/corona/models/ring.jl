@@ -742,3 +742,49 @@ function corona_slices(
     traces = Gradus._threaded_map(_func, βs)
     RingPointApproximationSlices(βs, traces)
 end
+
+
+struct RingApproximation{T}
+    βs::Vector{T}
+    branches::Vector{Vector{TimeDependentEmissivityBranch{T}}}
+end
+
+function emissivity_at(ra::RingApproximation, r)
+    sum(enumerate(ra.branches)) do dat
+        i, branches = dat
+        i1, i2 = if i >= (length(ra.branches) - 1)
+            (i - 1, i)
+        else
+            (i, i + 1)
+        end
+
+        v = sum(branches) do branch
+            first_i = findfirst(!isnan, branch.r)
+            last_i = findlast(!isnan, branch.r)
+            if !isnothing(first_i) &&
+               !isnothing(last_i) &&
+               (r >= branch.r[first_i]) &&
+               (r <= branch.r[last_i])
+                Gradus._make_interpolation(branch.r, branch.ε)(r)
+            else
+                zero(typeof(r))
+            end
+        end
+
+        v
+    end
+end
+
+function make_approximation(
+    m::AbstractMetric,
+    slices::RingPointApproximationSlices,
+    spectrum;
+    βs = collect(range(extrema(slices.βs)..., 1000)),
+)
+    slice = empty_point_slice()
+    branches = map(βs) do beta
+        interpolate_slice!(slice, slices, beta)
+        split_into_branches(m, slice, spectrum)
+    end
+    RingApproximation(βs, branches)
+end
