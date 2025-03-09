@@ -285,7 +285,7 @@ function _split_arms_indices(angles, ρs)
     min_ρ_index, max_ρ_index =
         min(_min_ρ_index, _max_ρ_index), max(_min_ρ_index, _max_ρ_index)
 
-    r1 = vcat(collect(max_ρ_index+1:lastindex(ρs)), collect(1:min_ρ_index-1))
+    r1 = vcat(collect(1:min_ρ_index-1), collect(max_ρ_index+1:lastindex(ρs)))
     r2 = collect(min_ρ_index:max_ρ_index)
 
     r1, r2
