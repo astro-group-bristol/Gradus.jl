@@ -658,22 +658,22 @@ function arrange_slice!(
     m::AbstractMetric,
     d::AbstractAccretionDisc,
 )
-    all_angles, all_gps = unpack_traces(cache)
+    _all_angles, _all_gps = unpack_traces(cache)
 
     # calculate the projected radial coordinate into the buffer
-    for (i, gp) in enumerate(all_gps)
+    for (i, gp) in enumerate(_all_gps)
         cache._buffer[i] = _equatorial_project(gp.x)
     end
-    all_rs = cache._buffer[1:length(all_gps)]
+    _all_rs = cache._buffer[1:length(_all_gps)]
 
-    J = sortperm(all_angles)
+    J = sortperm(_all_angles)
+    unique!(i -> _all_rs[i], J)
 
-    permute!(all_angles, J)
-    permute!(all_rs, J)
-    permute!(all_gps, J)
+    all_angles = _all_angles[J]
+    all_rs = _all_rs[J]
+    all_gps = _all_gps[J]
 
     # TODO: do we really need uniqueness here?
-    # unique!(i -> all_rs[i], J)
 
     # function for obtaining keplerian velocities
     _disc_velocity = _keplerian_velocity_projector(m, d)
@@ -692,7 +692,7 @@ function arrange_slice!(
     # mask the traces that didn't hit the disc
     # but not on angles, since we use those for interpolating
     @. gs[!mask] = all_rs[!mask] = ts[!mask] = gammas[!mask] = NaN
-    PointSlice(copy(all_angles), gs, gammas, copy(all_rs), ts)
+    PointSlice(all_angles, gs, gammas, all_rs, ts)
 end
 
 """
