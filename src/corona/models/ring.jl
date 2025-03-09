@@ -511,35 +511,37 @@ struct TimeDependentEmissivityBranch{T}
     ε::Vector{T}
 end
 
-function _branch_emissivity(
-    m::AbstractMetric,
-    rs::AbstractVector,
-    θs::AbstractVector,
-    gs::AbstractVector,
-    γs::AbstractVector,
-    spectrum,
-)
+function _branch_emissivity(m::AbstractMetric, slice::PointSlice, I::Vector{Int}, spectrum)
     # TODO: this shares a lot of overlap code with other emissivity
     # implementations, and should be refactored to reuse more existing code
-    map(eachindex(rs)) do i
-        i1, i2, i3, i4 = if i == 1
+    map(eachindex(I)) do j
+        j1, j2, j3, j4 = if j == 1
             1, 2, 1, 2
-        elseif i != lastindex(rs)
-            i, i + 1, i, i - 1
+        elseif j != lastindex(I)
+            j, j + 1, j, j - 1
         else
-            i, i - 1, i, i - 1
+            j, j - 1, j, j - 1
         end
 
-        i1 = min(lastindex(rs), i1)
-        i2 = min(lastindex(rs), i2)
-        i3 = min(lastindex(rs), i3)
-        i4 = min(lastindex(rs), i4)
+        # index conversion
+        i = I[j]
+        i1 = I[min(lastindex(I), j1)]
+        i2 = I[min(lastindex(I), j2)]
+        i3 = I[min(lastindex(I), j3)]
+        i4 = I[min(lastindex(I), j4)]
 
-        Δr = (abs(rs[i1] - rs[i2]) + abs(rs[i3] - rs[i4])) / 2
-        weight = (ang_diff(θs[i1], θs[i2]) + ang_diff(θs[i3], θs[i4])) / 4
+        Δr = (abs(slice.r[i1] - slice.r[i2]) + abs(slice.r[i3] - slice.r[i4])) / 2
+        weight =
+            (ang_diff(slice.θ[i1], slice.θ[i2]) + ang_diff(slice.θ[i3], slice.θ[i4])) / 4
 
-        A = _proper_area(m, rs[i] + Δr / 2, π / 2) * Δr
-        weight * point_source_equatorial_disc_emissivity(spectrum, θs[i], gs[i], A, γs[i])
+        A = _proper_area(m, slice.r[i] + Δr / 2, π / 2) * Δr
+        weight * point_source_equatorial_disc_emissivity(
+            spectrum,
+            slice.θ[i],
+            slice.g[i],
+            A,
+            slice.γ[i],
+        )
     end
 end
 
@@ -555,15 +557,8 @@ Returns a vector of [`TimeDependentEmissivityBranch`](@ref).
 function split_into_branches(m::AbstractMetric, slice::PointSlice, spectrum)
     splits = _split_arms_indices(slice.θ, slice.r)
     map(splits) do I
-        θs = slice.θ[I]
-        gs = slice.g[I]
-        γs = slice.γ[I]
-        rs = slice.r[I]
-        ts = slice.t[I]
-
-        em = _branch_emissivity(m, rs, θs, gs, γs, spectrum)
-
-        TimeDependentEmissivityBranch(θs, rs, ts, em)
+        em = _branch_emissivity(m, slice, I, spectrum)
+        TimeDependentEmissivityBranch(slice.θ[I], slice.r[I], slice.t[I], em)
     end
 end
 
