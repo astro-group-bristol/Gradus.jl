@@ -167,11 +167,12 @@ function emissivity_profile(
     )
 end
 
-function _proper_area(m, x::SVector{4})
-    gcomp = Gradus.metric_components(m, SVector(x[2], x[3]))
+function _proper_area(m::AbstractMetric, r::Number, θ::Number)
+    gcomp = Gradus.metric_components(m, SVector(r, θ))
     det_g = √(gcomp[2] * gcomp[4])
     2π * det_g
 end
+_proper_area(m::AbstractMetric, x::SVector{4}) = _proper_area(m, x[2], x[3])
 
 function polar_angle_to_velfunc(m::AbstractMetric, x, v, δs; ϕ = zero(eltype(x)))
     function _polar_angle_velfunc(i)

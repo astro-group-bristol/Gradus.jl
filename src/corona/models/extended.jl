@@ -144,9 +144,10 @@ function _process_ring_traces(setup::EmissivityProfileSetup, m, d, v, gps, rs, �
     J = sortperm(rs)
     points = gps[J]
     δs_sorted = δs[J]
-    r, ε = _point_source_emissivity(m, d, setup.spectrum, v, rs[J], δs_sorted, points)
-    t = [i.x[1] for i in @views(points[1:(end-1)])]
-    (; t, r, ε = abs.(ε))
+
+    r, ε, g = _point_source_emissivity(m, d, setup.spectrum, v, rs[J], δs_sorted, points)
+    t = [i.x[1] for i in points]
+    (; t, r, ε = abs.(ε), θ = δs_sorted, g)
 end
 
 # TODO: refactor the time-integration to make things like below possible without copy pasting the function
