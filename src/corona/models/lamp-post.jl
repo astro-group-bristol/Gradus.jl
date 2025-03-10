@@ -70,7 +70,7 @@ as the PDF that samples ``\\theta`` uniformly.
 Dauser et al. (2013)
 """
 function point_source_equatorial_disc_emissivity(spec::AbstractCoronalSpectrum, θ, g, A, γ)
-    sin(θ) * coronal_spectrum(spec, g) / (A * γ)
+    abs(sin(θ)) * coronal_spectrum(spec, g) / (A * γ)
 end
 
 
@@ -109,7 +109,7 @@ function _point_source_symmetric_emissivity_profile(
     points = points[J]
     δs = δs[J]
 
-    r, ε = _point_source_emissivity(m, d, setup.spectrum, v, rs_sorted, δs, points)
+    r, ε, _ = _point_source_emissivity(m, d, setup.spectrum, v, rs_sorted, δs, points)
     t = [i.x[1] for i in points]
 
     RadialDiscProfile(r, t, ε)
@@ -127,10 +127,13 @@ function _point_source_emissivity(
     # function for obtaining keplerian velocities
     _disc_velocity = _keplerian_velocity_projector(m, d)
 
+    all_g = Vector{T}(undef, length(points))
     ε = map(enumerate(points)) do (i, p)
         v_disc = _disc_velocity(p.x)
         gs = energy_ratio(m, p, source_velocity, v_disc)
         γ = lorentz_factor(m, p.x, v_disc)
+
+        all_g[i] = gs
 
         i1, i2, i3, i4 = if i == 1
             1, 2, 1, 2
@@ -147,7 +150,7 @@ function _point_source_emissivity(
         weight * point_source_equatorial_disc_emissivity(spec, δs[i], gs, A, γ)
     end
 
-    r, ε
+    r, ε, all_g
 end
 
 function emissivity_profile(
