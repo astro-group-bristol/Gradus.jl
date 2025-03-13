@@ -748,15 +748,8 @@ struct RingApproximation{T}
 end
 
 function emissivity_at(ra::RingApproximation, r)
-    sum(enumerate(ra.branches)) do dat
-        i, branches = dat
-        i1, i2 = if i >= (length(ra.branches) - 1)
-            (i - 1, i)
-        else
-            (i, i + 1)
-        end
-
-        v = sum(branches) do branch
+    sum(ra.branches) do branches
+        sum(branches) do branch
             first_i = findfirst(!isnan, branch.r)
             last_i = findlast(!isnan, branch.r)
             if !isnothing(first_i) &&
@@ -768,8 +761,6 @@ function emissivity_at(ra::RingApproximation, r)
                 zero(typeof(r))
             end
         end
-
-        v
     end
 end
 
