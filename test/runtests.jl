@@ -24,6 +24,7 @@ end
 @time @testset "metric-geometry" verbose = true begin
     include("unit/orthonormalization.jl")
     include("unit/metrics.kerr-newman.jl")
+    include("unit/coordinates.jl")
     include("test-special-radii.jl")
 end
 

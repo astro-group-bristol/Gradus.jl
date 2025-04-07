@@ -188,4 +188,17 @@ function quadrature_sum(values::AbstractVector, weights::AbstractVector)
     sum(i * j for (i, j) in zip(values, weighs))
 end
 
+"""
+    oblate_spheroid_to_spherical(x, h, a)
+
+Transform a point at `x` along the x-axis, `h` along the `z` axis to a
+spherical vector in Boyer-Lindquist coordinates, taking account of the spin of
+the spacetime due to the oblate spheroidal coordinates.
+"""
+function oblate_spheroid_to_spherical(x, h, a)
+    cosθ = sqrt((sqrt(4 * a^2 * h^2 + (h^2 + x^2 - a^2)^2) + a^2 - h^2 - x^2) / (2 * a^2))
+    r = h / cosθ
+    r, acos(cosθ)
+end
+
 export cartesian_squared_distance, cartesian_distance, spherical_to_cartesian
