@@ -777,3 +777,124 @@ function make_approximation(
     end
     RingApproximation(βs, branches)
 end
+
+# TODO: move me
+struct TimeDependentEmissivityProfile{T} <: AbstractDiscProfile
+    rs::Vector{T}
+    ts::Vector{T}
+    matrix::Matrix{T}
+end
+
+function emissivity_interp(prof::TimeDependentEmissivityProfile, r)
+    ri = min(searchsortedfirst(prof.rs, r), lastindex(prof.rs))
+    @views Gradus._make_interpolation(prof.ts, prof.matrix[:, ri])
+end
+
+function emissivity_interp_limits(prof::TimeDependentEmissivityProfile, r)
+    ri = min(searchsortedfirst(prof.rs, r), lastindex(prof.rs))
+    slice = @views prof.matrix[:, ri]
+    first_i = findfirst(!isnan, slice)
+    last_i = findlast(!isnan, slice)
+    if isnothing(first_i) || isnothing(last_i)
+        (zero(r), zero(r))
+    else
+        (prof.ts[first_i], prof.ts[last_i])
+    end
+end
+
+
+# TODO: refactor the time-integration to make things like below possible without copy pasting the function
+function _integrate_transfer_problem!(
+    output::AbstractMatrix,
+    setup::IntegrationSetup{T,Profile},
+    transfer_function_radial_interpolation,
+    r_limits,
+    g_grid,
+    t_grid;
+    g_scale = 1,
+) where {
+    T,
+    Profile<:Union{<:RingCoronaProfile,DiscCoronaProfile,TimeDependentEmissivityProfile},
+}
+    g_grid_view = @views g_grid[1:(end-1)]
+
+    r_itterator = collect(Grids._geometric_grid(r_limits..., setup.n_radii))
+    r2 = first(iterate(r_itterator, 2))
+    # prime the first r_prev so that the bin width is r2 - r1
+    r_prev = r_limits[1] - (r2 - r_limits[1])
+
+    N_t_steps = 100
+
+    for rₑ in r_itterator
+        branch = transfer_function_radial_interpolation(rₑ)
+        S_lower = _lower_branch(setup, branch)
+        S_upper = _upper_branch(setup, branch)
+
+        Δrₑ = rₑ - r_prev
+        # integration weight for this annulus
+        θ = Δrₑ * rₑ * π / (branch.gmax - branch.gmin)
+
+        # interpolate the emissivity as function of time
+        t_ε_interp = emissivity_interp(setup.profile, rₑ)
+        t_ε_limts = emissivity_interp_limits(setup.profile, rₑ)
+        δt = (t_ε_limts[2] - t_ε_limts[1]) / N_t_steps
+
+        @inbounds for j in eachindex(g_grid_view)
+            glo = clamp(g_grid[j] / g_scale, branch.gmin, branch.gmax)
+            ghi = clamp(g_grid[j+1] / g_scale, branch.gmin, branch.gmax)
+            # skip if bin not relevant
+            if glo == ghi
+                continue
+            end
+
+            Δg = (ghi - glo) / setup.g_grid_upscale
+
+            for i = 1:setup.g_grid_upscale
+                g_fine_lo = glo + (i - 1) * Δg
+                g_fine_hi = g_fine_lo + Δg
+
+                k1 = integrate_bin(
+                    setup,
+                    S_lower,
+                    g_fine_lo,
+                    g_fine_hi,
+                    branch.gmin,
+                    branch.gmax,
+                )
+                k2 = integrate_bin(
+                    setup,
+                    S_upper,
+                    g_fine_lo,
+                    g_fine_hi,
+                    branch.gmin,
+                    branch.gmax,
+                )
+
+                # find which bin to dump in
+                (tl1, tl2), (tu1, tu2) = _time_bins(setup, branch, g_fine_lo, g_fine_hi)
+                t_lower_branch = (tl1 + tl2) / 2
+                t_upper_branch = (tu1 + tu2) / 2
+
+                imax = lastindex(t_grid)
+                # loop over all times and find the offsets to dump flux into
+                for time in range(t_ε_limts..., N_t_steps)
+                    tlower = t_lower_branch + time - setup.t0
+                    i1 = @views searchsortedfirst(t_grid, tlower)
+
+                    tupper = t_upper_branch + time - setup.t0
+                    i2 = @views searchsortedfirst(t_grid, tupper)
+
+                    em = t_ε_interp(time)
+                    if i1 <= imax
+                        output[j, i1] += k1 * θ * em * δt
+                    end
+                    if i2 <= imax
+                        output[j, i2] += k2 * θ * em * δt
+                    end
+                end
+            end
+        end
+
+        r_prev = rₑ
+    end
+end
