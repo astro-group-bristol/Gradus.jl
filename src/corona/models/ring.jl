@@ -585,34 +585,15 @@ end
 
 """
     function interpolate_slice(
-        pas::RingPointApproximationSlices{T},
-        β;
-        kwargs...
-    )
-
-Same as [`interpolate_slice!`](@ref) except will allocate the output for the
-caller. The `kwargs` are forwarded to [`empty_point_slice`](@ref).
-"""
-function interpolate_slice(pas::RingPointApproximationSlices, β::Number; kwargs...)
-    slice = empty_point_slice(; kwargs..., T = typeof(β))
-    interpolate_slice!(slice, pas, β)
-end
-
-"""
-    function interpolate_slice!(
         slice::PointSlice{T},
         pas::RingPointApproximationSlices{T},
         β,
     )
 
-Interpolate a new slice into `slice` for ``\\beta`` given a set of calculated
-slices in [`RingPointApproximationSlices`](@ref).
+Interpolate a new slice for ``\\beta`` given a set of calculated slices in
+[`RingPointApproximationSlices`](@ref).
 """
-function interpolate_slice!(
-    slice::PointSlice{T},
-    pas::RingPointApproximationSlices,
-    β::T,
-) where {T}
+function interpolate_slice(pas::RingPointApproximationSlices, β::T) where {T}
     idx = clamp(searchsortedlast(pas.βs, β), 1, length(pas.βs) - 1)
     x1, x2 = pas.βs[idx], pas.βs[idx+1]
     # interpolation weight
@@ -621,9 +602,9 @@ function interpolate_slice!(
     s1 = pas.traces[idx]
     s2 = pas.traces[idx+1]
 
-    l1, u1 = extrema(s1.θ)
-    l2, u2 = extrema(s2.θ)
+    new_thetas = sort!(unique!(vcat(s1.θ, s2.θ)))
 
+    slice = empty_point_slice(; n = length(new_thetas), T = T)
 
     # interpolate the slice over the common support
     g1 = Gradus.NaNLinearInterpolator(s1.θ, s1.g, NaN)
@@ -639,7 +620,7 @@ function interpolate_slice!(
     t2 = Gradus.NaNLinearInterpolator(s2.θ, s2.t, NaN)
 
     i::Int = 1
-    for th in range(min(l1, l2), max(u1, u2), length(slice.θ))
+    for th in new_thetas
         slice.θ[i] = th
         slice.g[i] = _linear_interpolate(g1(th), g2(th), w)
         slice.γ[i] = _linear_interpolate(γ1(th), γ2(th), w)
@@ -770,9 +751,8 @@ function make_approximation(
     spectrum;
     βs = collect(range(extrema(slices.βs)..., 1000)),
 )
-    slice = empty_point_slice()
     branches = map(βs) do beta
-        interpolate_slice!(slice, slices, beta)
+        slice = interpolate_slice(slices, beta)
         split_into_branches(m, slice, spectrum)
     end
     RingApproximation(βs, branches)
