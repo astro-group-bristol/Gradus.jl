@@ -201,4 +201,30 @@ function oblate_spheroid_to_spherical(x, h, a)
     r, acos(cosθ)
 end
 
+"""
+    sliding_window(f::Function, v::AbstractVector; k = 5)
+
+Apply a function over a sliding window of `k` elements either side. This
+function does not guarantee the slice passed to `f` is `2k` element long, as at
+the edges this will tend towards only `k` edges. Any computed mean must
+therefore be sensitive to the length of the slice.
+
+The resulting vector will have exactly `length(v)` elements.
+"""
+function sliding_window(f::Function, v::AbstractVector; k = 5)
+    map(eachindex(v)) do i
+        start = max(i - k, 1)
+        finish = min(i + k, lastindex(v))
+        slice = @views v[start:finish]
+        f(slice)
+    end
+end
+
+"""
+    sliding_minimum(v::AbstractVector; kwargs...)
+
+Select the minimum of a [`sliding_window`](@ref).
+"""
+sliding_minimum(v::AbstractVector; kwargs...) = sliding_window(minimum, v; kwargs...)
+
 export cartesian_squared_distance, cartesian_distance, spherical_to_cartesian
