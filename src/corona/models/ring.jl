@@ -505,7 +505,7 @@ struct PointSlice{T}
     γ::Vector{T}
     "Radial coordinate"
     r::Vector{T}
-    # TODO: use AD to calculate δr instead of finite difference
+    drdθ::Vector{T}
     "Corona to disc time"
     t::Vector{T}
 end
@@ -525,27 +525,22 @@ function _branch_emissivity(m::AbstractMetric, slice::PointSlice, I::Vector{Int}
     # TODO: this shares a lot of overlap code with other emissivity
     # implementations, and should be refactored to reuse more existing code
     map(eachindex(I)) do j
-        j1, j2, j3, j4 = if j == 1
-            1, 2, 1, 2
-        elseif j != lastindex(I)
-            j, j + 1, j, j - 1
+        j1, j2 = if j == lastindex(I)
+            j - 1, j
         else
-            j, j - 1, j, j - 1
+            j, j + 1
         end
 
         # index conversion
         i = I[j]
         i1 = I[min(lastindex(I), j1)]
         i2 = I[min(lastindex(I), j2)]
-        i3 = I[min(lastindex(I), j3)]
-        i4 = I[min(lastindex(I), j4)]
 
-        Δr = (abs(slice.r[i1] - slice.r[i2]) + abs(slice.r[i3] - slice.r[i4])) / 2
-        weight =
-            (ang_diff(slice.θ[i1], slice.θ[i2]) + ang_diff(slice.θ[i3], slice.θ[i4])) / 4
+        Δr = (abs(slice.r[i1] - slice.r[i2]))
+        Δθ = ang_diff(slice.θ[i1], slice.θ[i2]) / 2
 
-        A = _proper_area(m, slice.r[i] + Δr / 2, π / 2) * Δr
-        weight * point_source_equatorial_disc_emissivity(
+        A = _proper_area(m, slice.r[i] + Δr / 2, π / 2) * slice.drdθ[i]
+        point_source_equatorial_disc_emissivity(
             spectrum,
             slice.θ[i],
             slice.g[i],
@@ -574,6 +569,7 @@ end
 
 function empty_point_slice(; n = 1000, T = Float64)
     PointSlice(
+        Vector{T}(undef, n),
         Vector{T}(undef, n),
         Vector{T}(undef, n),
         Vector{T}(undef, n),
@@ -631,6 +627,9 @@ function interpolate_slice(pas::RingPointApproximationSlices, β::T) where {T}
     t1 = Gradus.NaNLinearInterpolator(s1.θ, s1.t, NaN)
     t2 = Gradus.NaNLinearInterpolator(s2.θ, s2.t, NaN)
 
+    drdθ1 = Gradus.NaNLinearInterpolator(s1.θ, s1.drdθ, NaN)
+    drdθ2 = Gradus.NaNLinearInterpolator(s2.θ, s2.drdθ, NaN)
+
     i::Int = 1
     for th in new_thetas
         slice.θ[i] = th
@@ -638,16 +637,55 @@ function interpolate_slice(pas::RingPointApproximationSlices, β::T) where {T}
         slice.γ[i] = _linear_interpolate(γ1(th), γ2(th), w)
         slice.r[i] = _linear_interpolate(r1(th), r2(th), w)
         slice.t[i] = _linear_interpolate(t1(th), t2(th), w)
+        slice.drdθ[i] = _linear_interpolate(drdθ1(th), drdθ2(th), w)
         i += 1
     end
 
     slice
 end
 
+function _drdθ(
+    cache::_RingCoronaCache,
+    m::AbstractMetric,
+    d::AbstractAccretionDisc,
+    θs,
+    mask,
+    β;
+    solver_opts...,
+)
+    _velfunc = Gradus.rotatorfunctor(m, cache.x, cache.v, β)
+
+    function _trace_r(θ)
+        sol = tracegeodesics(
+            m,
+            cache.x,
+            _velfunc(θ),
+            d,
+            1_000_000;
+            save_on = false,
+            callback = domain_upper_hemisphere(),
+            chart = chart_for_metric(m, 1_000_000.0),
+            integrator_verbose = false,
+            solver_opts...,
+        )
+        _equatorial_project(unpack_solution(sol).x)
+    end
+
+    map(eachindex(θs)) do i
+        if !mask[i]
+            NaN
+        else
+            abs(ForwardDiff.derivative(_trace_r, θs[i]))
+        end
+    end
+end
+
 function arrange_slice!(
     cache::_RingCoronaCache,
     m::AbstractMetric,
     d::AbstractAccretionDisc,
+    β;
+    solver_opts...,
 )
     _all_angles, _all_gps = unpack_traces(cache)
 
@@ -678,10 +716,13 @@ function arrange_slice!(
     mask = [i.status == StatusCodes.IntersectedWithGeometry for i in all_gps]
     ts = [i.x[1] for i in all_gps]
 
+    # TODO: do the autodiff ∂r / ∂θ
+    derivs = _drdθ(cache, m, d, all_angles, mask, β; solver_opts...)
+
     # mask the traces that didn't hit the disc
     # but not on angles, since we use those for interpolating
     @. gs[!mask] = all_rs[!mask] = ts[!mask] = gammas[!mask] = NaN
-    PointSlice(all_angles, gs, gammas, all_rs, ts)
+    PointSlice(all_angles, gs, gammas, all_rs, derivs, ts)
 end
 
 """
@@ -707,21 +748,22 @@ function corona_slices(
     model::RingCorona,
     βs;
     verbose = false,
-    kwargs...,
+    solver_opts...,
 )
     cache = _RingCoronaCache(setup, m, model)
     # copy one cache for each thread
-    caches = [copy(cache) for i = 1:Threads.nthreads()-1]
+    caches = [copy(cache) for i = 1:(Threads.nthreads()-1)]
     push!(caches, cache)
 
     progress_bar = init_progress_bar("β slices: ", length(βs), verbose)
     function _func(β)
         thread_cache = caches[Threads.threadid()]
-        _ring_arm_traces!(thread_cache, m, d, β; kwargs...)
 
-        slice = @views arrange_slice!(thread_cache, m, d)
+        _ring_arm_traces!(thread_cache, m, d, β; solver_opts...)
 
-        # reset for next iteration
+        slice = arrange_slice!(thread_cache, m, d, β; solver_opts...)
+
+        # reset thread local for next iteration
         thread_cache._index[] = 0
         ProgressMeter.next!(progress_bar)
 
