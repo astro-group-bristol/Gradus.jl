@@ -653,29 +653,41 @@ function _drdθ(
     β;
     solver_opts...,
 )
+
+    T = Val{:drdθ}
+    Dual(x; dx = zero) = ForwardDiff.Dual{T}(x, dx(x))
+
     _velfunc = Gradus.rotatorfunctor(m, cache.x, cache.v, β)
+    xinit =
+        SVector{4}(Dual(cache.x[1]), Dual(cache.x[2]), Dual(cache.x[3]), Dual(cache.x[4]))
+
+    # init a reusable integrator
+    integ = _init_integrator(
+        m,
+        xinit,
+        _velfunc(Dual(0.0)),
+        d,
+        # TODO: make this a parameter
+        1_000_000.0;
+        save_on = false,
+        callback = domain_upper_hemisphere(),
+        chart = chart_for_metric(m, 1_000_000.0),
+        integrator_verbose = false,
+        solver_opts...,
+    )
 
     function _trace_r(θ)
-        sol = tracegeodesics(
-            m,
-            cache.x,
-            _velfunc(θ),
-            d,
-            1_000_000;
-            save_on = false,
-            callback = domain_upper_hemisphere(),
-            chart = chart_for_metric(m, 1_000_000.0),
-            integrator_verbose = false,
-            solver_opts...,
-        )
-        _equatorial_project(unpack_solution(sol).x)
+        v = _velfunc(θ)
+        gp = _solve_reinit!(integ, vcat(xinit, v))
+        _equatorial_project(gp.x)
     end
 
     map(eachindex(θs)) do i
         if !mask[i]
             NaN
         else
-            abs(ForwardDiff.derivative(_trace_r, θs[i]))
+            _d = ForwardDiff.extract_derivative(T, _trace_r(Dual(θs[i], dx = one)))
+            abs(_d)
         end
     end
 end
