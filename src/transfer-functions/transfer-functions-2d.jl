@@ -124,7 +124,7 @@ function bin_transfer_function(
         bucket(energy, time_delays, flux, energy_bins, time_bins; reduction = sum)
 
     @. transfer_function = transfer_function / (de * dt)
-    transfer_function[transfer_function.==0.0] .= NaN
+    transfer_function[transfer_function .== 0.0] .= NaN
     time_bins, energy_bins, transfer_function
 end
 

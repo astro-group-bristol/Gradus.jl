@@ -117,7 +117,18 @@ function rotatorfunctor(m::AbstractMetric{T}, x::SVector, v::SVector, β) where 
     end
 end
 
-function determine_bracket(
+"""
+    _determine_bracket(N, angles, gps, comparator)
+
+Determines the initial bracketing interval for a finding the minima or maxima
+of a function. Unlike a regular bracketing method, this function tries to
+ignore those geodesics that did not intersect with the disc.
+
+The function uses the equatorial projected radius on the disc, and returns the
+bracketing angles, along with the best estimate of the radius. A minimal delta
+is applied to the angles to broaden the range of possible values.
+"""
+function _determine_bracket(
     N::Int,
     angles::Vector,
     gps::Vector{<:GeodesicPoint{T}},
@@ -172,7 +183,7 @@ function _golden_bracket!(
         error("Unknown target: $Target")
     end
 
-    a, b, best_estimate = determine_bracket(cache.N, cache.angles, cache.gps, comparator)
+    a, b, best_estimate = _determine_bracket(cache.N, cache.angles, cache.gps, comparator)
     a_init, b_init = a, b
 
     function _objective(θ)
@@ -252,7 +263,7 @@ function _ring_arm_traces!(
         _velfunc(0.0),
         d,
         # TODO: make this a parameter
-        1_000_000.0,
+        1_000_000.0;
         save_on = false,
         callback = domain_upper_hemisphere(),
         chart = chart_for_metric(m, 1_000_000.0),
@@ -296,7 +307,7 @@ function _split_branches_further(inds, rs; cutoff_r = 1e3, delta = 0.01, min_len
     splits = Int[1, first_i]
     increasing::Bool = true
 
-    for j = 0:N-1
+    for j = 0:(N-1)
         k = (j + first_i) % N + 1
         r = rs[inds[k]]
 
@@ -318,6 +329,7 @@ function _split_branches_further(inds, rs; cutoff_r = 1e3, delta = 0.01, min_len
     sort!(splits)
 
     if length(splits) > 2
+        # merge slices that are smaller than the minimum length together
         slices = Vector{Int}[]
         i1 = first(splits)
         for i2 in splits[2:end]
@@ -453,7 +465,7 @@ function corona_arms(
     cache = _RingCoronaCache(setup, m, model)
 
     # copy one cache for each thread
-    caches = [copy(cache) for i = 1:Threads.nthreads()-1]
+    caches = [copy(cache) for i = 1:(Threads.nthreads()-1)]
     push!(caches, cache)
 
     progress_bar = init_progress_bar("β slices: ", length(βs), verbose)
@@ -652,8 +664,6 @@ function arrange_slice!(
     all_rs = _all_rs[J]
     all_gps = _all_gps[J]
 
-    # TODO: do we really need uniqueness here?
-
     # function for obtaining keplerian velocities
     _disc_velocity = _keplerian_velocity_projector(m, d)
 
@@ -737,7 +747,7 @@ function emissivity_at(ra::RingApproximation, r)
                !isnothing(last_i) &&
                (r >= branch.r[first_i]) &&
                (r <= branch.r[last_i])
-                Gradus._make_interpolation(branch.r, branch.ε)(r)
+                _make_interpolation(branch.r, branch.ε)(r)
             else
                 zero(typeof(r))
             end
