@@ -377,8 +377,8 @@ function _split_arms_indices(angles, ρs)
     min_ρ_index, max_ρ_index =
         min(_min_ρ_index, _max_ρ_index), max(_min_ρ_index, _max_ρ_index)
 
-    r1 = vcat(collect(max_ρ_index+1:lastindex(ρs)), collect(1:min_ρ_index-1))
-    r2 = collect(min_ρ_index:max_ρ_index)
+    r1 = vcat(collect((max_ρ_index+1):lastindex(ρs)), collect(1:(min_ρ_index-1)))
+    r2 = collect((min_ρ_index+1):max_ρ_index)
 
     l1 = canonical_orders!(_split_branches_further(r1, ρs), ρs)
     l2 = canonical_orders!(_split_branches_further(r2, ρs), ρs)
