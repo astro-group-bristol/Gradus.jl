@@ -73,7 +73,7 @@ function lag_frequency(
         n_radii = n_radii,
         h = tf_setup.h,
     )
-    flux[flux.==0] .= NaN
+    flux[flux .== 0] .= NaN
 
     tbins, bins, flux
 end

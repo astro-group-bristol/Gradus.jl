@@ -19,7 +19,7 @@ function calculate_2d_transfer_function(m, x, model, itb, prof, radii)
         rmax = maximum(radii),
     )
 
-    flux[flux.==0] .= NaN
+    flux[flux .== 0] .= NaN
     bins, tbins, flux
 end
 

@@ -117,7 +117,18 @@ function rotatorfunctor(m::AbstractMetric{T}, x::SVector, v::SVector, β) where 
     end
 end
 
-function determine_bracket(
+"""
+    _determine_bracket(N, angles, gps, comparator)
+
+Determines the initial bracketing interval for a finding the minima or maxima
+of a function. Unlike a regular bracketing method, this function tries to
+ignore those geodesics that did not intersect with the disc.
+
+The function uses the equatorial projected radius on the disc, and returns the
+bracketing angles, along with the best estimate of the radius. A minimal delta
+is applied to the angles to broaden the range of possible values.
+"""
+function _determine_bracket(
     N::Int,
     angles::Vector,
     gps::Vector{<:GeodesicPoint{T}},
@@ -172,7 +183,7 @@ function _golden_bracket!(
         error("Unknown target: $Target")
     end
 
-    a, b, best_estimate = determine_bracket(cache.N, cache.angles, cache.gps, comparator)
+    a, b, best_estimate = _determine_bracket(cache.N, cache.angles, cache.gps, comparator)
     a_init, b_init = a, b
 
     function _objective(θ)
@@ -252,7 +263,7 @@ function _ring_arm_traces!(
         _velfunc(0.0),
         d,
         # TODO: make this a parameter
-        1_000_000.0,
+        1_000_000.0;
         save_on = false,
         callback = domain_upper_hemisphere(),
         chart = chart_for_metric(m, 1_000_000.0),
@@ -296,7 +307,7 @@ function _split_branches_further(inds, rs; cutoff_r = 1e3, delta = 0.01, min_len
     splits = Int[1, first_i]
     increasing::Bool = true
 
-    for j = 0:N-1
+    for j = 0:(N-1)
         k = (j + first_i) % N + 1
         r = rs[inds[k]]
 
@@ -318,6 +329,7 @@ function _split_branches_further(inds, rs; cutoff_r = 1e3, delta = 0.01, min_len
     sort!(splits)
 
     if length(splits) > 2
+        # merge slices that are smaller than the minimum length together
         slices = Vector{Int}[]
         i1 = first(splits)
         for i2 in splits[2:end]
@@ -365,8 +377,8 @@ function _split_arms_indices(angles, ρs)
     min_ρ_index, max_ρ_index =
         min(_min_ρ_index, _max_ρ_index), max(_min_ρ_index, _max_ρ_index)
 
-    r1 = vcat(collect(max_ρ_index+1:lastindex(ρs)), collect(1:min_ρ_index-1))
-    r2 = collect(min_ρ_index:max_ρ_index)
+    r1 = vcat(collect((max_ρ_index+1):lastindex(ρs)), collect(1:(min_ρ_index-1)))
+    r2 = collect((min_ρ_index+1):max_ρ_index)
 
     l1 = canonical_orders!(_split_branches_further(r1, ρs), ρs)
     l2 = canonical_orders!(_split_branches_further(r2, ρs), ρs)
@@ -453,7 +465,7 @@ function corona_arms(
     cache = _RingCoronaCache(setup, m, model)
 
     # copy one cache for each thread
-    caches = [copy(cache) for i = 1:Threads.nthreads()-1]
+    caches = [copy(cache) for i = 1:(Threads.nthreads()-1)]
     push!(caches, cache)
 
     progress_bar = init_progress_bar("β slices: ", length(βs), verbose)
@@ -493,7 +505,7 @@ struct PointSlice{T}
     γ::Vector{T}
     "Radial coordinate"
     r::Vector{T}
-    # TODO: use AD to calculate δr instead of finite difference
+    drdθ::Vector{T}
     "Corona to disc time"
     t::Vector{T}
 end
@@ -513,27 +525,22 @@ function _branch_emissivity(m::AbstractMetric, slice::PointSlice, I::Vector{Int}
     # TODO: this shares a lot of overlap code with other emissivity
     # implementations, and should be refactored to reuse more existing code
     map(eachindex(I)) do j
-        j1, j2, j3, j4 = if j == 1
-            1, 2, 1, 2
-        elseif j != lastindex(I)
-            j, j + 1, j, j - 1
+        j1, j2 = if j == lastindex(I)
+            j - 1, j
         else
-            j, j - 1, j, j - 1
+            j, j + 1
         end
 
         # index conversion
         i = I[j]
         i1 = I[min(lastindex(I), j1)]
         i2 = I[min(lastindex(I), j2)]
-        i3 = I[min(lastindex(I), j3)]
-        i4 = I[min(lastindex(I), j4)]
 
-        Δr = (abs(slice.r[i1] - slice.r[i2]) + abs(slice.r[i3] - slice.r[i4])) / 2
-        weight =
-            (ang_diff(slice.θ[i1], slice.θ[i2]) + ang_diff(slice.θ[i3], slice.θ[i4])) / 4
+        Δr = (abs(slice.r[i1] - slice.r[i2]))
+        Δθ = ang_diff(slice.θ[i1], slice.θ[i2]) / 2
 
-        A = _proper_area(m, slice.r[i] + Δr / 2, π / 2) * Δr
-        weight * point_source_equatorial_disc_emissivity(
+        A = _proper_area(m, slice.r[i] + Δr / 2, π / 2) * (abs(slice.drdθ[i1]) + abs(slice.drdθ[i2])) / 2
+        point_source_equatorial_disc_emissivity(
             spectrum,
             slice.θ[i],
             slice.g[i],
@@ -562,6 +569,7 @@ end
 
 function empty_point_slice(; n = 1000, T = Float64)
     PointSlice(
+        Vector{T}(undef, n),
         Vector{T}(undef, n),
         Vector{T}(undef, n),
         Vector{T}(undef, n),
@@ -619,6 +627,9 @@ function interpolate_slice(pas::RingPointApproximationSlices, β::T) where {T}
     t1 = Gradus.NaNLinearInterpolator(s1.θ, s1.t, NaN)
     t2 = Gradus.NaNLinearInterpolator(s2.θ, s2.t, NaN)
 
+    drdθ1 = Gradus.NaNLinearInterpolator(s1.θ, s1.drdθ, NaN)
+    drdθ2 = Gradus.NaNLinearInterpolator(s2.θ, s2.drdθ, NaN)
+
     i::Int = 1
     for th in new_thetas
         slice.θ[i] = th
@@ -626,16 +637,67 @@ function interpolate_slice(pas::RingPointApproximationSlices, β::T) where {T}
         slice.γ[i] = _linear_interpolate(γ1(th), γ2(th), w)
         slice.r[i] = _linear_interpolate(r1(th), r2(th), w)
         slice.t[i] = _linear_interpolate(t1(th), t2(th), w)
+        slice.drdθ[i] = _linear_interpolate(drdθ1(th), drdθ2(th), w)
         i += 1
     end
 
     slice
 end
 
+function _drdθ(
+    cache::_RingCoronaCache,
+    m::AbstractMetric,
+    d::AbstractAccretionDisc,
+    θs,
+    mask,
+    β;
+    solver_opts...,
+)
+
+    T = Val{:drdθ}
+    Dual(x; dx = zero) = ForwardDiff.Dual{T}(x, dx(x))
+
+    _velfunc = Gradus.rotatorfunctor(m, cache.x, cache.v, β)
+    xinit =
+        SVector{4}(Dual(cache.x[1]), Dual(cache.x[2]), Dual(cache.x[3]), Dual(cache.x[4]))
+
+    # init a reusable integrator
+    integ = _init_integrator(
+        m,
+        xinit,
+        _velfunc(Dual(0.0)),
+        d,
+        # TODO: make this a parameter
+        1_000_000.0;
+        save_on = false,
+        callback = domain_upper_hemisphere(),
+        chart = chart_for_metric(m, 1_000_000.0),
+        integrator_verbose = false,
+        solver_opts...,
+    )
+
+    function _trace_r(θ)
+        v = _velfunc(θ)
+        gp = _solve_reinit!(integ, vcat(xinit, v))
+        _equatorial_project(gp.x)
+    end
+
+    map(eachindex(θs)) do i
+        if !mask[i]
+            NaN
+        else
+            _d = ForwardDiff.extract_derivative(T, _trace_r(Dual(θs[i], dx = one)))
+            abs(_d)
+        end
+    end
+end
+
 function arrange_slice!(
     cache::_RingCoronaCache,
     m::AbstractMetric,
     d::AbstractAccretionDisc,
+    β;
+    solver_opts...,
 )
     _all_angles, _all_gps = unpack_traces(cache)
 
@@ -652,8 +714,6 @@ function arrange_slice!(
     all_rs = _all_rs[J]
     all_gps = _all_gps[J]
 
-    # TODO: do we really need uniqueness here?
-
     # function for obtaining keplerian velocities
     _disc_velocity = _keplerian_velocity_projector(m, d)
 
@@ -668,10 +728,13 @@ function arrange_slice!(
     mask = [i.status == StatusCodes.IntersectedWithGeometry for i in all_gps]
     ts = [i.x[1] for i in all_gps]
 
+    # TODO: do the autodiff ∂r / ∂θ
+    derivs = _drdθ(cache, m, d, all_angles, mask, β; solver_opts...)
+
     # mask the traces that didn't hit the disc
     # but not on angles, since we use those for interpolating
     @. gs[!mask] = all_rs[!mask] = ts[!mask] = gammas[!mask] = NaN
-    PointSlice(all_angles, gs, gammas, all_rs, ts)
+    PointSlice(all_angles, gs, gammas, all_rs, derivs, ts)
 end
 
 """
@@ -697,21 +760,22 @@ function corona_slices(
     model::RingCorona,
     βs;
     verbose = false,
-    kwargs...,
+    solver_opts...,
 )
     cache = _RingCoronaCache(setup, m, model)
     # copy one cache for each thread
-    caches = [copy(cache) for i = 1:Threads.nthreads()-1]
+    caches = [copy(cache) for i = 1:(Threads.nthreads()-1)]
     push!(caches, cache)
 
     progress_bar = init_progress_bar("β slices: ", length(βs), verbose)
     function _func(β)
         thread_cache = caches[Threads.threadid()]
-        _ring_arm_traces!(thread_cache, m, d, β; kwargs...)
 
-        slice = @views arrange_slice!(thread_cache, m, d)
+        _ring_arm_traces!(thread_cache, m, d, β; solver_opts...)
 
-        # reset for next iteration
+        slice = arrange_slice!(thread_cache, m, d, β; solver_opts...)
+
+        # reset thread local for next iteration
         thread_cache._index[] = 0
         ProgressMeter.next!(progress_bar)
 
@@ -737,7 +801,7 @@ function emissivity_at(ra::RingApproximation, r)
                !isnothing(last_i) &&
                (r >= branch.r[first_i]) &&
                (r <= branch.r[last_i])
-                Gradus._make_interpolation(branch.r, branch.ε)(r)
+                _make_interpolation(branch.r, branch.ε)(r)
             else
                 zero(typeof(r))
             end

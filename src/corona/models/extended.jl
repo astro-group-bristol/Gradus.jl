@@ -45,6 +45,14 @@ end
 end # module
 
 """
+    DEFAULT_β_ANGLES(n = 100)
+
+The default ``\\beta`` angles used to calculate slices of an extended corona
+point approximation.
+"""
+DEFAULT_β_ANGLES(n = 100) = sort!(collect(range(0, π - (π / n), n)))
+
+"""
     RingCorona
 
 A ring-like corona, representing an infinitely thin thing at some radius and
@@ -121,11 +129,6 @@ function _make_time_dependent_radial_emissivity(arms::Vector{LongitudalArms{T}})
     RingCoronaProfile(left, right)
 end
 
-function DEFAULT_β_ANGLES(; n_regular = 100, n_refined = 100)
-    angles_coarse = range(0, π, n_regular)
-    theta_angles = vcat(angles_coarse, range(0.62, 2.2, n_refined)) |> sort
-    theta_angles
-end
 
 function emissivity_profile(
     setup::EmissivityProfileSetup{true},

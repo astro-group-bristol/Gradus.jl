@@ -270,6 +270,8 @@ function jacobian_∂αβ_∂gr(
 )
     domain_limiter = d isa AbstractThickAccretionDisc ? domain_upper_hemisphere() : nothing
 
+    # TODO: use the reusable integrator Dual trick
+
     # these type hints are crucial for forward diff to be type stable
     function _jacobian_f(impact_params::SVector{2,T})::SVector{2,T} where {T}
         v = map_impact_parameters(m, x, impact_params[1], impact_params[2])
