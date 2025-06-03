@@ -13,10 +13,9 @@ e^\\nu = \\sqrt{\\frac{\\Delta \\Sigma}{A}}.
 ```
 
 """
-eⱽ(M, r, a, θ) = √(
-    __BoyerLindquistFO.Σ(r, a, θ) * __BoyerLindquistFO.Δ(M, r, a) /
-    __BoyerLindquistFO.A(M, r, a, θ),
-)
+eⱽ(M, r, a, θ) =
+    √(__BoyerLindquistFO.Σ(r, a, θ) * __BoyerLindquistFO.Δ(M, r, a) /
+      __BoyerLindquistFO.A(M, r, a, θ),)
 
 """
     eᶲ(M, r, a, θ)

@@ -196,6 +196,9 @@ spherical vector in Boyer-Lindquist coordinates, taking account of the spin of
 the spacetime due to the oblate spheroidal coordinates.
 """
 function oblate_spheroid_to_spherical(x, h, a)
+    if isapprox(a, 0)
+        return sqrt(x^2 + h^2), atan(x, h)
+    end
     cosθ = sqrt((sqrt(4 * a^2 * h^2 + (h^2 + x^2 - a^2)^2) + a^2 - h^2 - x^2) / (2 * a^2))
     r = h / cosθ
     r, acos(cosθ)
