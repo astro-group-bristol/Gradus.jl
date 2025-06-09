@@ -502,7 +502,7 @@ include("corona/models/lamp-post.jl")
 include("corona/models/extended.jl")
 include("corona/models/ring.jl")
 include("corona/spectra.jl")
-
+include("corona/adaptive-sample.jl")
 
 include("special-radii.jl")
 include("redshift.jl")
