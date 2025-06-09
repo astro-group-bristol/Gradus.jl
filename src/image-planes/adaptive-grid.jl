@@ -295,7 +295,7 @@ function _get_facing!(
     cell_index::Int,
     direction::Int,
     level::Int,
-    locations::Int,
+    locations::Vector{Int},
 )
     children = grid.children[cell_index]
 
