@@ -63,7 +63,8 @@ inv(metric)
         g4 = g_comp[4],
         g5 = g_comp[5]
 
-        Δ = inv(g1 * g2 * g3 * g4 - (g5^2) * g2 * g3)
+        _term = g1 * g2 * g3 * g4 - (g5^2) * g2 * g3
+        Δ = inv(_term)
         SVector{5}(
             (g2 * g3 * g4) * Δ,
             (g1 * g3 * g4 - (g5^2) * g3) * Δ,
