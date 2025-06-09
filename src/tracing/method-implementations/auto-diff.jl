@@ -181,6 +181,8 @@ const _static_dual_eval =
     Base.get_extension(ForwardDiff, :ForwardDiffStaticArraysExt).static_dual_eval
 const _extract_jacobian =
     Base.get_extension(ForwardDiff, :ForwardDiffStaticArraysExt).extract_jacobian
+const _extract_gradient =
+    Base.get_extension(ForwardDiff, :ForwardDiffStaticArraysExt).extract_gradient
 
 """
     metric_jacobian(m::AbstractStaticAxisSymmetric{T}, rθ)
