@@ -46,12 +46,19 @@ refine_all!(sky::AdaptiveSky, to_refine::Vector{Int})
 
 Refine all cells in `to_refine` using a multi-threaded loop.
 """
-function refine_all!(sky::AdaptiveSky, to_refine::Vector{Int})
+function refine_all!(sky::AdaptiveSky, to_refine::Vector{Int}; verbose = false)
+    progress_bar = init_progress_bar(
+        "Refining $(length(to_refine)) cell(s): ",
+        length(to_refine),
+        verbose,
+    )
     Threads.@threads for index in to_refine
         cell = sky.grid.cells[index]
         th = acos(cell.pos[1])
         value = sky.calculate_value(th, cell.pos[2])
         sky.values[index] = value
+        # update progress
+        ProgressMeter.next!(progress_bar)
     end
 end
 
@@ -94,15 +101,26 @@ function trace_initial!(sky::AdaptiveSky; level = 3)
 end
 
 """
-    trace_step!(sky::AdaptiveSky)
+    trace_step!(sky::AdaptiveSky; check_refine = sky.check_refine, verbose = false)
 
 Apply the refinement metric across each cell boundary and refine the cells
 where the metric is `true`.
+
+A different refinemenet metric from the default can be used by passing the
+`check_refine` kwarg, using the same function signature as documented in
+[`AdaptiveSky`](@ref).
+
+If `verbose` is true, a progress bar will be displayed during refinement.
 """
-function trace_step!(sky::AdaptiveSky{T,V}) where {T,V}
+function trace_step!(
+    sky::AdaptiveSky{T,V};
+    check_refine = sky.check_refine,
+    verbose = false,
+) where {T,V}
     N = lastindex(sky.grid.cells)
 
     to_refine = Set{Int}()
+    # TODO: multi-thread using a divide and conquer approach
     for cell_index = 1:N
         # skip those we've already refined
         if Grids.has_children(sky.grid, cell_index)
@@ -111,12 +129,8 @@ function trace_step!(sky::AdaptiveSky{T,V}) where {T,V}
 
         bordering = Grids.get_bordering(sky.grid, cell_index)
 
-        r1 = sky.values[cell_index].r
-        g1 = sky.values[cell_index].g
-        J1 = sky.values[cell_index].J
-
         for index in bordering
-            if sky.check_refine(sky, cell_index, index)
+            if check_refine(sky, cell_index, index)
                 push!(to_refine, index)
             end
         end
@@ -142,7 +156,7 @@ function trace_step!(sky::AdaptiveSky{T,V}) where {T,V}
 
     if !isempty(to_trace)
         all_trace = reduce(vcat, to_trace)
-        refine_all!(sky, all_trace)
+        refine_all!(sky, all_trace; verbose = verbose)
     end
 
     sky
