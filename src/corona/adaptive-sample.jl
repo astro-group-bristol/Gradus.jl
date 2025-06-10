@@ -12,11 +12,14 @@ struct CoronaGridValues{T}
 end
 
 _to_vector(v::CoronaGridValues) = SVector{5}(v.t, v.r, v.ϕ, v.g, v.J)
-_from_vector(v::SVector{5}) = CoronaGridValues(v[1], v[2], v[3], v[4], v[5])
+_from_vector(v::AbstractVector) = CoronaGridValues(v[1], v[2], v[3], v[4], v[5])
 
-make_null(::Type{<:CoronaGridValues}) = CoronaGridValues(NaN, NaN, NaN, NaN, NaN)
+make_null(::Type{T}) where {T<:CoronaGridValues} = T(NaN, NaN, NaN, NaN, NaN)
 
-vector_average(weight::Vector{<:Number}, values::Vector{<:CoronaGridValues}) = _from_vector(sum(i -> i[1] * _to_vector(i[2]), zip(weights, values)))
+vector_average(
+    weights::AbstractVector{<:Number},
+    values::AbstractVector{<:CoronaGridValues},
+) = _from_vector(sum(i -> i[1] * _to_vector(i[2]), zip(weights, values)))
 
 function _make_emissivity_tracer(
     m::AbstractMetric,
@@ -39,7 +42,7 @@ function _make_emissivity_tracer(
             save_on = false,
             callback = domain_upper_hemisphere(),
             chart = chart_for_metric(m, 2*t_max),
-            kwargs...
+            kwargs...,
         )
         unpack_solution(sol)
     end
@@ -68,11 +71,16 @@ function _make_emissivity_tracer(
         res = ForwardDiff.value.(_Tag, ydual)
         jac = _extract_jacobian(_Tag, SVector{2}(ydual[1], ydual[2]), x0)
 
-        CoronaGridValues(res[3], res[1], res[2], res[4], abs(inv(det(jac))) * sin(th))
+        CoronaGridValues{T}(res[3], res[1], res[2], res[4], abs(inv(det(jac))) * sin(th))
     end
 end
 
-function check_refine(sky::AdaptiveSky{T,<:CoronaGridValues}, i1::Int, i2::Int; percentage = 2) where {T}
+function check_refine(
+    sky::AdaptiveSky{T,<:CoronaGridValues},
+    i1::Int,
+    i2::Int;
+    percentage = 2,
+) where {T}
     v1 = sky.values[i1]
     v2 = sky.values[i2]
 
@@ -86,7 +94,16 @@ function check_refine(sky::AdaptiveSky{T,<:CoronaGridValues}, i1::Int, i2::Int; 
     g_too_coarse || J_too_coarse
 end
 
-function AdaptiveSky(m::AbstractMetric, corona::AbstractCoronaModel, d::AbstractAccretionDisc; kwargs...)
-    AdaptiveSky(CoronaGridValues, _make_emissivity_tracer(m, corona, d; kwargs...), check_refine)
+function AdaptiveSky(
+    m::AbstractMetric{T},
+    corona::AbstractCoronaModel,
+    d::AbstractAccretionDisc;
+    kwargs...,
+) where {T}
+    AdaptiveSky(
+        CoronaGridValues{T},
+        _make_emissivity_tracer(m, corona, d; kwargs...),
+        check_refine,
+    )
 end
 

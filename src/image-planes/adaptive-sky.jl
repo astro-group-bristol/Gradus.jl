@@ -17,7 +17,7 @@ The values for a given cell can be access with `sky.values[i]`.
 For the interpolation schemes to work, the following function must also be
 defined for the value type:
 ```julia
-vector_average(weight::Vector{<:Number}, values::Vector{V})::V where{V}
+vector_average(weight::AbstractVector{<:Number}, values::AbstractVector{V})::V where{V}
 # Return something that represents a null / NaN of the given type
 make_null(V::Type)::V
 ```
