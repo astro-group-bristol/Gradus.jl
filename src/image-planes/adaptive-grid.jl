@@ -363,8 +363,7 @@ Returns `true` if the cell at `cell_index` contains the point `(x, y)`.
 function Base.contains(grid::AdaptiveGrid, cell_index::Int, x, y)
     cell = grid.cells[cell_index]
 
-    fraction = 3^(cell.level)
-    Δx, Δy = extent(grid) ./ (fraction * 2)
+    Δx, Δy = get_cell_width(grid, cell_index) ./ 2
 
     x_good = ((cell.pos[1] - Δx) < x) && ((cell.pos[1] + Δx) > x)
     y_good = ((cell.pos[2] - Δy) < y) && ((cell.pos[2] + Δy) > y)
@@ -377,8 +376,8 @@ function _relative_location(grid::AdaptiveGrid, cell_index::Int, x, y)
         return nothing
     end
 
-    fraction = 3^(cell.level + 1)
-    Δx, Δy = extent(grid) ./ (fraction * 2)
+    # divide by 3 to get child size, then by 2 to get +/-
+    Δx, Δy = get_cell_width(grid, cell_index) ./ 6
 
     x_offset = ((cell.pos[1]) - Δx > x) ? -1 : ((cell.pos[1]) + Δx < x) ? 1 : 0
     y_offset = ((cell.pos[2]) - Δy > y) ? -1 : ((cell.pos[2]) + Δy < y) ? 1 : 0
@@ -412,4 +411,11 @@ function get_parent_index(grid::AdaptiveGrid, x, y)
     end
 
     current_cell
+end
+
+function get_cell_width(grid::AdaptiveGrid, cell_index::Int)
+    cell = grid.cells[cell_index]
+    fraction = 3^cell.level
+    Δx, Δy = extent(grid) ./ fraction
+    Δx, Δy
 end
