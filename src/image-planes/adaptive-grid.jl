@@ -267,7 +267,7 @@ function refine!(grid::AdaptiveGrid, cell_index::Int)
     end
 end
 
-_add_facing!(grid, index) = push!(grid._buffer, index)
+_add_facing!(buffer, index) = push!(buffer, index)
 
 """
     _get_position(location::Int, direction::Int)
@@ -291,6 +291,7 @@ end
 _get_position(cell::AdaptiveCell, direction::Int) = _get_position(cell.location, direction)
 
 function _get_facing!(
+    buffer::AbstractVector{Int},
     grid::AdaptiveGrid,
     cell_index::Int,
     direction::Int,
@@ -300,7 +301,7 @@ function _get_facing!(
     children = grid.children[cell_index]
 
     if isnothing(children)
-        _add_facing!(grid, cell_index)
+        _add_facing!(buffer, cell_index)
         return
     end
 
@@ -310,10 +311,10 @@ function _get_facing!(
     if self.level < level
         position = _get_position(locations[self.level+1], direction)
         index = FACINGS[direction][position]
-        _get_facing!(grid, children[index], direction, level, locations)
+        _get_facing!(buffer, grid, children[index], direction, level, locations)
     else
         for index in FACINGS[direction]
-            _get_facing!(grid, children[index], direction, level, locations)
+            _get_facing!(buffer, grid, children[index], direction, level, locations)
         end
     end
 end
@@ -329,20 +330,29 @@ the given cell). Returns a vector of indices.
 This function uses an internal buffer to avoid excessive allocations. It is
 consequently **not thread safe**, and if it must be called twice, the caller
 should copy the memory between calls to avoid overwriting the previous values.
+
+To make this threadsafe, you can pass the `buffer` keyword.
 """
-function get_bordering(grid::AdaptiveGrid, cell_index::Int)
-    empty!(grid._buffer)
+function get_bordering(grid::AdaptiveGrid, cell_index::Int; buffer = grid._buffer)
+    empty!(buffer)
 
     cell = grid.cells[cell_index]
     neighbours = grid.neighbours[cell_index]
 
     for i = 1:4
         if neighbours[i] != 0
-            _get_facing!(grid, neighbours[i], FACING_LOOKUP[i], cell.level, cell.locations)
+            _get_facing!(
+                buffer,
+                grid,
+                neighbours[i],
+                FACING_LOOKUP[i],
+                cell.level,
+                cell.locations,
+            )
         end
     end
 
-    grid._buffer
+    buffer
 end
 
 """
