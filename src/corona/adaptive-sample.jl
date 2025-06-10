@@ -7,7 +7,7 @@ struct CoronaGridValues{T}
     ϕ::T
     "Redshift"
     g::T
-    "|∂(theta, phi) / ∂(r, ϕ)| * sin(theta)"
+    "|∂(r, ϕ) / ∂(theta, phi)| / sin(theta)"
     J::T
 end
 
@@ -71,7 +71,7 @@ function _make_emissivity_tracer(
         res = ForwardDiff.value.(_Tag, ydual)
         jac = _extract_jacobian(_Tag, SVector{2}(ydual[1], ydual[2]), x0)
 
-        CoronaGridValues{T}(res[3], res[1], res[2], res[4], abs(inv(det(jac))) * sin(th))
+        CoronaGridValues{T}(res[3], res[1], res[2], res[4], abs(det(jac)) / sin(th))
     end
 end
 
@@ -200,7 +200,7 @@ function bin_emissivity_grid(
     ϕ_bins,
     sky::AdaptiveSky{T,<:CoronaGridValues},
 ) where {T}
-    bin_emissivity_grid!(
+    _, out = bin_emissivity_grid!(
         zeros(eltype(r_bins), (length(r_bins), length(ϕ_bins))),
         zeros(eltype(r_bins), (length(r_bins), length(ϕ_bins))),
         m,
@@ -209,6 +209,7 @@ function bin_emissivity_grid(
         ϕ_bins,
         sky,
     )
+    out
 end
 
 """
@@ -262,7 +263,7 @@ function bin_emissivity_grid!(
         ϕ_i = searchsortedlast(ϕ_bins, mod2pi(v.ϕ))
         if (r_i != 0) && (ϕ_i != 0)
             # TODO: allow generic spectrum
-            output[r_i, ϕ_i] += ΔΩ * v.J # / (v.g^2 * area(v.r))
+            output[r_i, ϕ_i] += ΔΩ * v.J * (v.g^2 * area(v.r))
             solid_angle[r_i, ϕ_i] += ΔΩ
         end
     end
@@ -273,7 +274,7 @@ function bin_emissivity_grid!(
         end
     end
 
-    output
+    solid_angle, output
 end
 
 """
