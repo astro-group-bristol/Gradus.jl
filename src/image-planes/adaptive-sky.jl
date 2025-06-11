@@ -46,19 +46,38 @@ refine_all!(sky::AdaptiveSky, to_refine::Vector{Int})
 
 Refine all cells in `to_refine` using a multi-threaded loop.
 """
-function refine_all!(sky::AdaptiveSky, to_refine::Vector{Int}; verbose = false)
+function refine_all!(
+    sky::AdaptiveSky,
+    to_refine::Vector{Int};
+    verbose = false,
     progress_bar = init_progress_bar(
         "Refining $(length(to_refine)) cell(s): ",
         length(to_refine),
         verbose,
-    )
+    ),
+    showvalues = nothing,
+)
+    prog = if isnothing(progress_bar)
+        progress_bar = init_progress_bar(
+            "Refining $(length(to_refine)) cell(s): ",
+            length(to_refine),
+            verbose,
+        )
+    else
+        progress_bar
+    end
+
     Threads.@threads for index in to_refine
         cell = sky.grid.cells[index]
         th = acos(cell.pos[1])
         value = sky.calculate_value(th, cell.pos[2])
         sky.values[index] = value
         # update progress
-        ProgressMeter.next!(progress_bar)
+        if isnothing(showvalues)
+            ProgressMeter.next!(prog)
+        else
+            ProgressMeter.next!(prog; showvalues = showvalues(length(to_refine)))
+        end
     end
 end
 
@@ -115,7 +134,7 @@ If `verbose` is true, a progress bar will be displayed during refinement.
 function trace_step!(
     sky::AdaptiveSky{T,V};
     check_refine = sky.check_refine,
-    verbose = false,
+    kwargs...,
 ) where {T,V}
     N = lastindex(sky.grid.cells)
 
@@ -156,7 +175,7 @@ function trace_step!(
 
     if !isempty(to_trace)
         all_trace = reduce(vcat, to_trace)
-        refine_all!(sky, all_trace; verbose = verbose)
+        refine_all!(sky, all_trace; kwargs...)
     end
 
     sky
