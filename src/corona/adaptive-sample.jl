@@ -21,58 +21,74 @@ vector_average(
     values::AbstractVector{<:CoronaGridValues},
 ) = _from_vector(sum(i -> i[1] * _to_vector(i[2]), zip(weights, values)))
 
+const Tag_Make_Emissivity = Val{:_make_emissivity_tracer}
+_make_emiss_Dual(x; d1 = zero(typeof(x)), d2 = zero(typeof(x))) =
+    ForwardDiff.Dual{Tag_Make_Emissivity}(x, d1, d2)
 function _make_emissivity_tracer(
-    m::AbstractMetric,
+    m::AbstractMetric{NumT},
     corona::AbstractCoronaModel,
     d::AbstractAccretionDisc;
     t_max = 1_000_000.0,
-    kwargs...,
-)
+    solver_opts...,
+) where {NumT}
+    dual_zero = _make_emiss_Dual(zero(NumT))
+
     x_src, v_src = sample_position_velocity(m, corona)
 
-    function trace_angles(th, ph)
-        v = sky_angles_to_velocity(m, x_src, v_src, th, ph)
-        # TODO: make this a reusable integrator
-        sol = tracegeodesics(
-            m,
-            x_src,
-            v,
-            d,
-            t_max;
-            save_on = false,
-            callback = domain_upper_hemisphere(),
-            chart = chart_for_metric(m, 2*t_max),
-            kwargs...,
-        )
-        unpack_solution(sol)
-    end
+    xinit = SVector{4,typeof(dual_zero)}(
+        _make_emiss_Dual(x_src[1]),
+        _make_emiss_Dual(x_src[2]),
+        _make_emiss_Dual(x_src[3]),
+        _make_emiss_Dual(x_src[4]),
+    )
 
     # function for obtaining keplerian velocities
     _disc_velocity = _keplerian_velocity_projector(m, d)
 
-    function trace_jacobian(th::T, ph::T) where {T}
-        function _f(x_)
-            gp = trace_angles(x_[1], x_[2])
-            if gp.status != StatusCodes.IntersectedWithGeometry
-                SVector{4,eltype(x_)}(NaN, NaN, NaN, NaN)
-            else
-                v_disc = _disc_velocity(gp.x)
-                _redshift = energy_ratio(m, gp, v_src, v_disc)
-                r = _equatorial_project(gp.x)
-                SVector{4,eltype(x_)}(r, gp.x[4], gp.x[1], _redshift)
-            end
+    function trace_jacobian(integ, th::T, ph::T) where {T}
+        th_dual = _make_emiss_Dual(th; d1 = one(T))
+        ph_dual = _make_emiss_Dual(ph; d2 = one(T))
+
+        v = sky_angles_to_velocity(m, x_src, v_src, th_dual, ph_dual)
+        gp = _solve_reinit!(integ, vcat(xinit, v))
+
+        if gp.status != StatusCodes.IntersectedWithGeometry
+            return CoronaGridValues{T}(NaN, NaN, NaN, NaN, NaN)
         end
 
-        x0 = SVector(th, ph)
+        v_disc = _disc_velocity(gp.x)
+        _redshift = energy_ratio(m, gp, v_src, v_disc)
+        r = _equatorial_project(gp.x)
 
-        _Tag = typeof(ForwardDiff.Tag(_f, T))
-        ydual = _static_dual_eval(_Tag, _f, x0)
+        y_dual = SVector{4,typeof(th_dual)}(r, gp.x[4], gp.x[1], _redshift)
 
-        res = ForwardDiff.value.(_Tag, ydual)
-        jac = _extract_jacobian(_Tag, SVector{2}(ydual[1], ydual[2]), x0)
+        res = ForwardDiff.value.(Tag_Make_Emissivity, y_dual)
+        jac = _extract_jacobian(
+            Tag_Make_Emissivity,
+            SVector{2}(y_dual[1], y_dual[2]),
+            SVector{2}(th_dual, ph_dual),
+        )
 
         CoronaGridValues{T}(res[3], res[1], res[2], res[4], abs(inv(det(jac))) * sin(th))
     end
+
+    _v_temp = sky_angles_to_velocity(m, x_src, v_src, _make_emiss_Dual(0.1), dual_zero)
+
+    # init a reusable integrator
+    integrator = _init_integrator(
+        m,
+        xinit,
+        _v_temp,
+        d,
+        _make_emiss_Dual(t_max);
+        save_on = false,
+        callback = domain_upper_hemisphere(),
+        chart = chart_for_metric(m, 2 * t_max),
+        integrator_verbose = false,
+        solver_opts...,
+    )
+
+    integrator, trace_jacobian
 end
 
 function check_refine(
@@ -100,11 +116,16 @@ function AdaptiveSky(
     d::AbstractAccretionDisc;
     kwargs...,
 ) where {T}
-    AdaptiveSky(
-        CoronaGridValues{T},
-        _make_emissivity_tracer(m, corona, d; kwargs...),
-        check_refine,
-    )
+    integ, calc = _make_emissivity_tracer(m, corona, d; kwargs...)
+
+    # one integrator copy for each thread
+    _integrators = typeof(integ)[deepcopy(integ) for _ = 1:(Threads.nthreads()-1)]
+    push!(_integrators, integ)
+
+    # tracing function
+    _trace(th, ph) = calc(_integrators[Threads.threadid()], th, ph)
+
+    AdaptiveSky(CoronaGridValues{T}, _trace, check_refine)
 end
 
 """
