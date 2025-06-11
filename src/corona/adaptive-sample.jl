@@ -336,5 +336,279 @@ function interpolate_emissivity_grid!(output::AbstractMatrix{T}, r_bins, ϕ_bins
             output[i, j] = abs(itp(ϕ))
         end
     end
+
     output
+end
+
+"""
+    empty_fraction(r, ϕ, block)
+
+Count the number of empty entries in `block` (i.e. `==(0)`) and return the
+fraction of empty entries to total entries.
+"""
+empty_fraction(r, ϕ, block) = count(!=(0), block) / length(block)
+
+"""
+    function evaluate_refinement_metric(
+        m::AbstractMetric,
+        d::AbstractAccretionGeometry,
+        sky::AdaptiveSky,
+        r_bins,
+        phi_bins;
+        split = 6,
+        metric = empty_fraction,
+    )
+
+Bins the [`AdaptiveSky`](@ref) into the ``(r, \\phi)`` plane, whereupon a
+stencil of dimensions `size(plane) / split` is used to split the plane into a
+number of blocks. For each block, `metric` is evaluated.
+
+A 2D matrix is returned with element type `@NamedTuple(;r, ϕ, score)`, where the
+`r` and `ϕ` are the ranges of `r` and `ϕ` that the block applies to, and `score`
+is the evaluated metric for that block.
+"""
+function evaluate_refinement_metric(
+    m::AbstractMetric,
+    d::AbstractAccretionGeometry,
+    sky::AdaptiveSky,
+    r_bins,
+    phi_bins;
+    split = 6,
+    metric = empty_fraction,
+)
+    N = length(r_bins)
+    output = bin_emissivity_grid(m, d, r_bins, phi_bins, sky)
+    stencil_size = div(N, split)
+
+    function _eval_metric(i, j)
+        r = i:(i+stencil_size)
+        ϕ = j:(j+stencil_size)
+        block = @views output[i:(i+stencil_size), j:(j+stencil_size)]
+        (; r, ϕ, score = metric(r, ϕ, block))
+    end
+
+    axis_itt = 1:(stencil_size÷4):(N-stencil_size)
+
+    [_eval_metric(i, j) for i in axis_itt, j in axis_itt]
+end
+
+"""
+    function step_block!(
+        m::AbstractMetric,
+        d::AbstractAccretionGeometry,
+        sky::AdaptiveSky;
+        check_threshold = true,
+        threshold = 0.2,
+        N = 500,
+        top = 3,
+        split = 6,
+        percentage = 10,
+        metric = empty_fraction,
+        kwargs...,
+    )
+
+Refine the sky using a block-based strategy, where the block that scores the
+lowest `metric` is refined. The intended use is to fill in gaps on the ``(r,
+\\phi)`` plane on the disc.
+
+
+Grids the sky into `N` ``r`` and ``\\phi`` bins, then uses
+[`evaluate_refinement_metric`](@ref) to determine a given `metric` on the sky.
+Selects the `top` number of lowest scoring cells for refinement.
+
+If `check_threshold = true`, filters to keep only those blocks who's score is
+less than `threshold`. With the [`empty_fraction`](@ref), this will act to
+insure a given fraction of the cell is covered.
+
+Returns `true` if some cells did not meet the threshold, else `false`.
+
+The cells are then refined to an accuracy of `percentage`. All other kwargs are
+forwarded to [`trace_step!`](@ref).
+"""
+function step_block!(
+    m::AbstractMetric,
+    d::AbstractAccretionGeometry,
+    sky::AdaptiveSky;
+    check_threshold = true,
+    threshold = 0.2,
+    N = 500,
+    top = 3,
+    split = 6,
+    percentage = 10,
+    metric = empty_fraction,
+    kwargs...,
+)
+    r_bins = collect(Grids._geometric_grid(isco(m), 1000.0, N))
+    phi_bins = range(0, 2π, N)
+
+    _counts = evaluate_refinement_metric(
+        m,
+        d,
+        sky,
+        r_bins,
+        phi_bins;
+        split = split,
+        metric = metric,
+    )
+
+    _counts = filter(i -> i.score != 0, vec(_counts))
+    sort!(_counts; by = i -> i.score)
+
+    if check_threshold
+        _counts = filter(i -> i.score < threshold, _counts)
+        if length(_counts) == 0
+            return false
+        end
+    end
+
+    lims = map(1:min(length(_counts), top)) do index
+        r_min, r_max = @views extrema(r_bins[_counts[index].r])
+        phi_min, phi_max = @views extrema(phi_bins[_counts[index].ϕ])
+        (; r = (r_min, r_max), ϕ = (phi_min, phi_max))
+    end
+
+    refiner = fine_refine_function(; percentage = percentage) do v
+        for lim in lims
+            in_r = (v.r >= lim.r[1]) && (v.r <= lim.r[2])
+            in_ϕ = (mod2pi(v.ϕ) >= lim.ϕ[1]) && (mod2pi(v.ϕ) <= lim.ϕ[2])
+            if in_r && in_ϕ
+                return true
+            end
+        end
+        false
+    end
+
+    trace_step!(sky; check_refine = refiner, kwargs...)
+    true
+end
+
+"""
+    refine_function(f)
+
+Used to define a new `check_refine` function for an [`AdaptiveSky`](@ref). This
+can be passed e.g. to [`refine_all`](@ref).
+
+The function `f` is given each cell's value and should return `true` if the
+cell should be refined, else `false`.
+
+# Warning
+
+This function currently only works with `AdaptiveSky` when the value type is
+[`CoronaGridValues`](@ref), as it first checks if the radii are `NaN`.
+"""
+function refine_function(f)
+    function _refine(sky::AdaptiveSky{T,<:CoronaGridValues}, i1, i2) where {T}
+        v1 = sky.values[i1]
+        v2 = sky.values[i2]
+        if isnan(v1.r) && isnan(v2.r)
+            return false
+        end
+        f(v1) || f(v2)
+    end
+end
+
+"""
+    fine_refine_function(f)
+
+Like [`refine_function`](@ref) but calls the original refine function in
+[`AdaptiveSky`](@ref) first. This is "fine" in the sense that it applies
+fine-grained refinement criteria.
+"""
+function fine_refine_function(f; kwargs...)
+    function _refine(sky, i1, i2)
+        if check_refine(sky, i1, i2; kwargs...)
+            v1 = sky.values[i1]
+            v2 = sky.values[i2]
+            f(v1) || f(v2)
+        else
+            false
+        end
+    end
+end
+
+"""
+    function adaptive_solve!(
+        m::AbstractMetric,
+        d::AbstractAccretionDisc,
+        sky::AdaptiveSky;
+        verbose = true,
+        limit = 50,
+        kwargs...,
+    )
+
+Adaptively solve an illumination profile on the accretion disc for the corona's
+[`AdaptiveSky`](@ref) using repeated calls to [`step_block!`](@ref) until the
+threshold is satisfied for all blocks.
+
+This method traces the initial setup using [`trace_initial!`](@ref), followed
+by `trace_calls + 1` calls to [`trace_step!`](@ref).
+
+All `kwargs` are forwarded to [`step_block!`](@ref). The `limit` keyword can be
+used to limit the number of iterations of [`step_block!`](@ref).
+
+If `verbose=true` a progress indicator is printed to the terminal.
+
+Returns the total number of refinement iterations taken.
+"""
+function adaptive_solve!(
+    m::AbstractMetric,
+    d::AbstractAccretionDisc,
+    sky::AdaptiveSky;
+    verbose = true,
+    limit = 50,
+    trace_calls = 2,
+    kwargs...,
+)
+    i::Int = 0
+    progress = ProgressMeter.ProgressUnknown(
+        desc = "Geodesics",
+        color = :none,
+        showspeed = true,
+        enabled = verbose,
+    )
+
+    function showvals(N)
+        () -> [("Refining", N), ("Iteration", i)]
+    end
+
+    # trace the initial sky
+    Gradus.trace_initial!(sky)
+    # this happens outside the loop as the first is so fast it tends to ruin
+    # the output of the progress bar
+    Gradus.trace_step!(sky)
+    i += 1
+
+    for _ = 1:trace_calls
+        Gradus.trace_step!(sky; progress_bar = progress, showvalues = showvals)
+        i += 1
+    end
+
+    # ensure the distant radii are well refined
+    Gradus.trace_step!(
+        sky;
+        check_refine = fine_refine_function(v -> v.r > 800; percentage = 10),
+        progress_bar = progress,
+        showvalues = showvals,
+    )
+    i += 1
+
+    while step_block!(
+        m,
+        d,
+        sky;
+        split = 5,
+        top = 4,
+        progress_bar = progress,
+        showvalues = showvals,
+        kwargs...,
+    )
+        i += 1
+        if i >= limit
+            break
+        end
+    end
+
+    Gradus.ProgressMeter.finish!(progress)
+
+    i
 end
