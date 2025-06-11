@@ -208,7 +208,7 @@ function fill_sky_values(
         end
     end
 
-    reshape(output, (length(phi_grid), length(theta_grid)))
+    reshape(output, (length(theta_grid), length(phi_grid)))
 end
 
 """
