@@ -56,8 +56,7 @@ struct TracingConfiguration{
             (V <: AbstractVector && eltype(V) <: SVector) ? length(velocity) : trajectories
         _ensemble = restrict_ensemble(m, ensemble)
 
-        _, λ1, λ2 = (promote(first(position), λ_min, λ_max)...,)
-        λ_tuple = (λ1, λ2)
+        λ_tuple = (promote(λ_min, λ_max)...,)
         new{
             T,
             typeof(m),
