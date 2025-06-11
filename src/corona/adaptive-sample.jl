@@ -232,7 +232,7 @@ function bin_emissivity_grid(
     ϕ_bins,
     sky::AdaptiveSky{T,<:CoronaGridValues},
 ) where {T}
-    _, out = bin_emissivity_grid!(
+    solid_angle, output = bin_emissivity_grid!(
         zeros(eltype(r_bins), (length(r_bins), length(ϕ_bins))),
         zeros(eltype(r_bins), (length(r_bins), length(ϕ_bins))),
         m,
@@ -241,7 +241,14 @@ function bin_emissivity_grid(
         ϕ_bins,
         sky,
     )
-    out
+
+    for i in eachindex(solid_angle)
+        if solid_angle[i] > 0
+            output[i] /= solid_angle[i]
+        end
+    end
+
+    output
 end
 
 """
@@ -271,13 +278,13 @@ function bin_emissivity_grid!(
     @assert size(output) == size(solid_angle)
     @assert size(output) == (length(r_bins), length(ϕ_bins))
 
-    _disc_velocity = Gradus._keplerian_velocity_projector(m, d)
+    _disc_velocity = _keplerian_velocity_projector(m, d)
     # calculates area with all relativistic corrections
     function area(r)
-        x = SVector(0.0, r, π/2, 0.0)
+        x = SVector{4,typeof(r)}(0, r, π/2, 0)
         v_disc = _disc_velocity(x)
-        _A = Gradus._proper_area(m, r, π/2)
-        _lf = Gradus.lorentz_factor(m, x, v_disc)
+        _A = _proper_area(m, r, π/2)
+        _lf = lorentz_factor(m, x, v_disc)
         _lf * _A
     end
 
@@ -297,12 +304,6 @@ function bin_emissivity_grid!(
             # TODO: allow generic spectrum
             output[r_i, ϕ_i] += ΔΩ * v.J * (v.g^2 * area(v.r))
             solid_angle[r_i, ϕ_i] += ΔΩ
-        end
-    end
-
-    for i in eachindex(solid_angle)
-        if solid_angle[i] > 0
-            output[i] /= solid_angle[i]
         end
     end
 
