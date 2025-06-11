@@ -56,7 +56,7 @@ function _emissivity_jacobian!(integ, parameters, th::T, ph::T) where {T}
         SVector{2}(th_dual, ph_dual),
     )
 
-    CoronaGridValues{T}(res[3], res[1], res[2], res[4], abs(inv(det(jac))) * sin(th))
+    CoronaGridValues{T}(res[3], res[1], res[2], res[4], abs(det(jac)) / sin(th))
 end
 
 function _make_emissivity_tracer(
@@ -295,7 +295,7 @@ function bin_emissivity_grid!(
         ϕ_i = searchsortedlast(ϕ_bins, mod2pi(v.ϕ))
         if (r_i != 0) && (ϕ_i != 0)
             # TODO: allow generic spectrum
-            output[r_i, ϕ_i] += ΔΩ * inv(v.J) * (v.g^2 * area(v.r))
+            output[r_i, ϕ_i] += ΔΩ * v.J * (v.g^2 * area(v.r))
             solid_angle[r_i, ϕ_i] += ΔΩ
         end
     end
