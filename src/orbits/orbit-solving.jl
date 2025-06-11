@@ -131,7 +131,7 @@ function (pintrp::PlungingInterpolation)(r)
     vt = pintrp.t(r_bounded)
     vr = pintrp.r(r_bounded)
     vϕ = pintrp.ϕ(r_bounded)
-    SVector(vt, vr, 0, vϕ)
+    SVector{4,typeof(r)}(vt, vr, 0, vϕ)
 end
 
 function interpolate_plunging_velocities(
