@@ -243,6 +243,8 @@ function _solve_reinit!(integrator, u0, p = nothing)
     # if new parameters have been passed, update them
     if !isnothing(p)
         integrator.p = update_integration_parameters!(integrator.sol.prob.p, p)
+    else
+        set_status_code!(integrator.p, StatusCodes.NoStatus)
     end
     sol = unpack_solution(solve!(integrator))
     return sol
