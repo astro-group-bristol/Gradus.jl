@@ -11,6 +11,7 @@ struct TracingConfiguration{
     SolverType,
     EnsembleType,
     TrajectoriesType,
+    DomainType,
 }
     metric::MetricType
     position::PositionType
@@ -22,7 +23,7 @@ struct TracingConfiguration{
     solver::SolverType
     ensemble::EnsembleType
     trajectories::TrajectoriesType
-    λ_domain::Tuple{T,T}
+    λ_domain::DomainType
     abstol::T
     reltol::T
     verbose::Bool
@@ -54,6 +55,8 @@ struct TracingConfiguration{
         _trajectories =
             (V <: AbstractVector && eltype(V) <: SVector) ? length(velocity) : trajectories
         _ensemble = restrict_ensemble(m, ensemble)
+
+        λ_tuple = (promote(λ_min, λ_max)...,)
         new{
             T,
             typeof(m),
@@ -65,6 +68,7 @@ struct TracingConfiguration{
             typeof(solver),
             typeof(_ensemble),
             typeof(_trajectories),
+            typeof(λ_tuple),
         }(
             m,
             position,
@@ -75,7 +79,7 @@ struct TracingConfiguration{
             solver,
             _ensemble,
             _trajectories,
-            (λ_min, λ_max),
+            λ_tuple,
             abstol,
             reltol,
             verbose,
@@ -111,7 +115,7 @@ end
         solver,
         ensemble,
         _trajectories,
-        D <: Number ? D(0) : λs[1],
+        D <: Number ? zero(D) : λs[1],
         D <: Number ? λs : λs[2],
         abstol,
         reltol,

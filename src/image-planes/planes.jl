@@ -55,7 +55,7 @@ end
 
 """
     function PolarPlane(
-        grid::AbstractImpactParameterGrid;
+        grid::Abstract2DGrid;
         Nr = 400,
         Nθ = 100,
         r_min = 1.0,
@@ -79,7 +79,7 @@ struct PolarPlane{G,T} <: AbstractImagePlane{G}
 end
 
 function PolarPlane(
-    grid::AbstractImpactParameterGrid;
+    grid::Abstract2DGrid;
     Nr = 400,
     Nθ = 100,
     r_min = 1.0,
@@ -116,7 +116,7 @@ end
 
 """
     function CartesianPlane(
-        grid::AbstractImpactParameterGrid;
+        grid::Abstract2DGrid;
         Nx = 150,
         Ny = 150,
         x_min = 0.0,
@@ -138,7 +138,7 @@ struct CartesianPlane{G,T} <: AbstractImagePlane{G}
 end
 
 function CartesianPlane(
-    grid::AbstractImpactParameterGrid;
+    grid::Abstract2DGrid;
     Nx = 150,
     Ny = 150,
     x_min = 0.0,

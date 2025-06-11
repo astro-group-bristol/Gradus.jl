@@ -454,6 +454,7 @@ include("tracing/method-implementations/auto-diff.jl")
 
 include("image-planes/grids.jl")
 include("image-planes/planes.jl")
+include("image-planes/adaptive-sky.jl")
 
 include("rendering/cache.jl")
 include("rendering/rendering.jl")
@@ -501,7 +502,7 @@ include("corona/models/lamp-post.jl")
 include("corona/models/extended.jl")
 include("corona/models/ring.jl")
 include("corona/spectra.jl")
-
+include("corona/adaptive-sample.jl")
 
 include("special-radii.jl")
 include("redshift.jl")
