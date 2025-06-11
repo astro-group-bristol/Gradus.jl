@@ -148,7 +148,7 @@ function ensemble_solve_tracing_problem(
     )
 end
 # thread reusing dispatch
-@inline function ensemble_solve_tracing_problem(
+function ensemble_solve_tracing_problem(
     ensemble::EnsembleEndpointThreads,
     problem::EnsembleProblem{<:ODEProblem{S}},
     config::TracingConfiguration;
@@ -194,7 +194,7 @@ end
     output
 end
 
-@inline function _init_integrator(
+function _init_integrator(
     problem;
     solver = Tsit5(),
     abstol = DEFAULT_TOLERANCE,
@@ -216,7 +216,7 @@ end
     )
 end
 
-@inline function _init_integrator(
+function _init_integrator(
     m::AbstractMetric{T},
     args...;
     μ = zero(T),
@@ -230,7 +230,7 @@ end
 end
 
 
-@inline function _solve_reinit!(integrator, u0, p = nothing)
+function _solve_reinit!(integrator, u0, p = nothing)
     reinit!(
         integrator,
         u0,
