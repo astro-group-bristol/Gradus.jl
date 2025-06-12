@@ -595,6 +595,16 @@ function adaptive_solve!(
     )
     i += 1
 
+    r_isco = Gradus.isco(m)
+
+    Gradus.trace_step!(
+        sky;
+        check_refine = fine_refine_function(v -> (v.r > r_isco) && (v.r < 2.0); percentage = 50),
+        progress_bar = progress,
+        showvalues = showvals,
+    )
+    i += 1
+
     while step_block!(
         m,
         d,
