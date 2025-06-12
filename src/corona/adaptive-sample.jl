@@ -230,7 +230,8 @@ function bin_emissivity_grid(
     d::AbstractAccretionDisc,
     r_bins,
     ϕ_bins,
-    sky::AdaptiveSky{T,<:CoronaGridValues},
+    sky::AdaptiveSky{T,<:CoronaGridValues};
+    kwargs...
 ) where {T}
     solid_angle, output = bin_emissivity_grid!(
         zeros(eltype(r_bins), (length(r_bins), length(ϕ_bins))),
@@ -239,7 +240,8 @@ function bin_emissivity_grid(
         d,
         r_bins,
         ϕ_bins,
-        sky,
+        sky;
+        kwargs...
     )
 
     for i in eachindex(solid_angle)
@@ -273,7 +275,8 @@ function bin_emissivity_grid!(
     d::AbstractAccretionDisc,
     r_bins,
     ϕ_bins,
-    sky::AdaptiveSky{T,V},
+    sky::AdaptiveSky{T,V};
+    Γ = 2,
 ) where {T,V<:CoronaGridValues}
     @assert size(output) == size(solid_angle)
     @assert size(output) == (length(r_bins), length(ϕ_bins))
@@ -302,7 +305,7 @@ function bin_emissivity_grid!(
         ϕ_i = searchsortedlast(ϕ_bins, mod2pi(v.ϕ))
         if (r_i != 0) && (ϕ_i != 0)
             # TODO: allow generic spectrum
-            output[r_i, ϕ_i] += ΔΩ * v.J * (v.g^2 * area(v.r))
+            output[r_i, ϕ_i] += ΔΩ * v.J * (v.g^Γ * area(v.r))
             solid_angle[r_i, ϕ_i] += ΔΩ
         end
     end
