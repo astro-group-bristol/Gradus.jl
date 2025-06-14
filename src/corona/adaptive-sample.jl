@@ -231,7 +231,7 @@ function bin_emissivity_grid(
     r_bins,
     ϕ_bins,
     sky::AdaptiveSky{T,<:CoronaGridValues};
-    kwargs...
+    kwargs...,
 ) where {T}
     solid_angle, output = bin_emissivity_grid!(
         zeros(eltype(r_bins), (length(r_bins), length(ϕ_bins))),
@@ -241,7 +241,7 @@ function bin_emissivity_grid(
         r_bins,
         ϕ_bins,
         sky;
-        kwargs...
+        kwargs...,
     )
 
     for i in eachindex(solid_angle)
@@ -575,19 +575,19 @@ function adaptive_solve!(
     end
 
     # trace the initial sky
-    Gradus.trace_initial!(sky)
+    trace_initial!(sky)
     # this happens outside the loop as the first is so fast it tends to ruin
     # the output of the progress bar
-    Gradus.trace_step!(sky)
+    trace_step!(sky)
     i += 1
 
     for _ = 1:trace_calls
-        Gradus.trace_step!(sky; progress_bar = progress, showvalues = showvals)
+        trace_step!(sky; progress_bar = progress, showvalues = showvals)
         i += 1
     end
 
     # ensure the distant radii are well refined
-    Gradus.trace_step!(
+    trace_step!(
         sky;
         check_refine = fine_refine_function(v -> v.r > 800; percentage = 10),
         progress_bar = progress,
@@ -595,11 +595,14 @@ function adaptive_solve!(
     )
     i += 1
 
-    r_isco = Gradus.isco(m)
+    r_isco = isco(m)
 
-    Gradus.trace_step!(
+    trace_step!(
         sky;
-        check_refine = fine_refine_function(v -> (v.r > r_isco) && (v.r < 2.0); percentage = 50),
+        check_refine = fine_refine_function(
+            v -> (v.r > r_isco) && (v.r < 2.0);
+            percentage = 50,
+        ),
         progress_bar = progress,
         showvalues = showvals,
     )
@@ -621,7 +624,7 @@ function adaptive_solve!(
         end
     end
 
-    Gradus.ProgressMeter.finish!(progress)
+    ProgressMeter.finish!(progress)
 
     i
 end
