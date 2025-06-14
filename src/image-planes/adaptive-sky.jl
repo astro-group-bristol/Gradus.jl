@@ -134,6 +134,7 @@ If `verbose` is true, a progress bar will be displayed during refinement.
 function trace_step!(
     sky::AdaptiveSky{T,V};
     check_refine = sky.check_refine,
+    limit = 5_000_000,
     kwargs...,
 ) where {T,V}
     N = lastindex(sky.grid.cells)
@@ -174,6 +175,12 @@ function trace_step!(
     end
 
     if !isempty(to_trace)
+        if length(to_trace) > limit
+            throw(
+                "Convergence failed. Limit $limit exceeded: too many trajectories to trace (N = $(length(to_trace))).",
+            )
+        end
+
         all_trace = reduce(vcat, to_trace)
         refine_all!(sky, all_trace; kwargs...)
     end
