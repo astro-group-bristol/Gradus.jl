@@ -8,13 +8,13 @@ struct LineProfile{D,T} <: AbstractTableModel{T,Additive}
     "Spin"
     a::T
     "Observer inclination (degrees off of the spin axis)."
-    θ::T
+    θ_obs::T
     "Inner radius of the accretion disc."
-    rin::T
+    inner_r::T
     "Outer radius of the accretion disc."
-    rout::T
+    outer_r::T
     "Central emission line energy (keV)."
-    E₀::T
+    lineE::T
 end
 
 function Base.copy(m::LineProfile)
@@ -39,37 +39,29 @@ function LineProfile(
     profile,
     table::Gradus.CunninghamTransferTable;
     K = FitParam(1.0),
-    a = FitParam(0.998),
-    θ = FitParam(45.0),
-    rin = FitParam(1.0),
-    rout = FitParam(100.0, upper_limit = 100.0),
-    E₀ = FitParam(1.0),
+    a = FitParam(0.998, upper_limit = 1.0),
+    θ_obs = FitParam(45.0, upper_limit = 90.0),
+    inner_r = FitParam(1.0),
+    outer_r = FitParam(100.0, upper_limit = 500.0),
+    lineE = FitParam(6.4),
     kwargs...,
 )
-    setup = integration_setup(profile, table((get_value(a), get_value(θ))); kwargs...)
-    LineProfile((; setup = setup, table = table), K, a, θ, rin, rout, E₀)
+    setup = integration_setup(profile, table((get_value(a), get_value(θ_obs))); kwargs...)
+    LineProfile((; setup = setup, table = table), K, a, θ_obs, inner_r, outer_r, lineE)
 end
 
 function SpectralFitting.invoke!(output, domain, model::LineProfile)
-    grid = model.table.table((model.a, model.θ))
-    rmin = if model.rin < grid.r_grid[1]
-        grid.r_grid[1]
-    else
-        model.rin
-    end
-    rout = if model.rout < rmin
-        rmin
-    else
-        model.rout
-    end
+    grid = model.table.table((model.a, model.θ_obs))
+    rmin = (model.inner_r < grid.r_grid[1]) ? grid.r_grid[1] : model.inner_r
+    outer_r = (model.outer_r < rmin) ? rmin : model.outer_r
     Gradus.integrate_lineprofile!(
         output,
         model.table.setup,
         grid,
         domain;
         rmin = rmin,
-        rmax = rout,
-        g_scale = model.E₀,
+        rmax = outer_r,
+        g_scale = model.lineE,
     )
     output
 end
