@@ -395,6 +395,12 @@ function evaluate_refinement_metric(
     [_eval_metric(i, j) for i in axis_itt, j in axis_itt]
 end
 
+@enum StepBlockCodes begin
+    converged
+    not_converged
+    limit_exceeded
+end
+
 """
     function step_block!(
         m::AbstractMetric,
@@ -438,6 +444,7 @@ function step_block!(
     top = 3,
     split = 6,
     percentage = 10,
+    limit = 200_000,
     metric = empty_fraction,
     kwargs...,
 )
@@ -460,7 +467,7 @@ function step_block!(
     if check_threshold
         _counts = filter(i -> i.score < threshold, _counts)
         if length(_counts) == 0
-            return false
+            return converged
         end
     end
 
@@ -481,15 +488,24 @@ function step_block!(
         false
     end
 
-    trace_step!(sky; check_refine = refiner, kwargs...)
-    true
+    to_refine = find_need_refine(sky, refiner)
+    if length(to_refine) > limit
+        @warn (
+            "Convergence failed. Limit $limit exceeded: too many cells to refine (N = $(length(to_refine)))."
+        )
+        return limit_exceeded
+    end
+
+    refine_and_trace!(sky, to_refine; kwargs...)
+    not_converged
 end
 
 """
     refine_function(f)
 
 Used to define a new `check_refine` function for an [`AdaptiveSky`](@ref). This
-can be passed e.g. to [`refine_all`](@ref).
+can be passed e.g. to [`find_need_refine`](@ref) or
+[`refine_and_trace!`](@ref).
 
 The function `f` is given each cell's value and should return `true` if the
 cell should be refined, else `false`.
@@ -608,16 +624,18 @@ function adaptive_solve!(
     )
     i += 1
 
-    while step_block!(
-        m,
-        d,
-        sky;
-        split = 5,
-        top = 4,
-        progress_bar = progress,
-        showvalues = showvals,
-        kwargs...,
-    )
+    status = not_converged
+    while status == not_converged
+        status = step_block!(
+            m,
+            d,
+            sky;
+            split = 5,
+            top = 4,
+            progress_bar = progress,
+            showvalues = showvals,
+            kwargs...,
+        )
         i += 1
         if i >= limit
             break
