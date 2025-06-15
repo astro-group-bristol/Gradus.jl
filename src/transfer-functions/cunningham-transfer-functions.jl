@@ -324,7 +324,7 @@ function _cunningham_transfer_function!(
     θ_offset = setup.θ_offset
     for (i, θ) in enumerate(θiterator)
         θ_corrected = θ + 1e-4
-        insert_data!(data, i, θ_corrected, workhorse(θ; r_hint = data.rs[i]))
+        insert_data!(data, i, θ_corrected, workhorse(θ_corrected; r_hint = data.rs[i]))
     end
 
     gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
