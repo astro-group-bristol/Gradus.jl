@@ -3,8 +3,11 @@ _lineprofile_integrand(_, g) = g^2
 _NO_DISC_TIME(_) = 0
 
 function quadrature_integrate(f, a::T, b::T; rule = gauss(5)) where {T}
+    total = zero(T)
     X, W = rule
+
     q = (b - a) / 2
+
     total = sum(eachindex(X)) do i
         xᵢ = X[i]
         wᵢ = W[i]
