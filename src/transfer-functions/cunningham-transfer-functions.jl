@@ -431,6 +431,7 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
             θ += 1e-4
         end
         vs = workhorse(θ; r_hint = r_hint)
+        r_hint = vs[1]
         insert_data!(data, i, θ, vs)
         data.gs[i]
     end
