@@ -177,7 +177,7 @@ end
 
 function _setup_workhorse_jacobian_with_kwargs(
     setup::_TransferFunctionSetup,
-    m::AbstractMetric{T},
+    m::AbstractMetric,
     x,
     d::AbstractAccretionDisc,
     rₑ;
@@ -186,7 +186,7 @@ function _setup_workhorse_jacobian_with_kwargs(
     redshift_pf = ConstPointFunctions.redshift(m, x),
     jacobian_disc = d,
     tracer_kwargs...,
-) where {T}
+)
     # underscores to avoid boxing variables
     function _jacobian_function(α_, β_)
         jacobian_∂αβ_∂gr(
@@ -200,8 +200,7 @@ function _setup_workhorse_jacobian_with_kwargs(
             tracer_kwargs...,
         )
     end
-    function _workhorse(θ; r_hint = zero(T))
-        initial_r = r_hint > 1e-1 ? r_hint : offset_max / 2
+    function _workhorse(θ)
         r, gp = find_offset_for_radius(
             m,
             x,
@@ -210,7 +209,6 @@ function _setup_workhorse_jacobian_with_kwargs(
             θ;
             zero_atol = setup.zero_atol,
             offset_max = offset_max,
-            initial_r = initial_r,
             max_time = max_time,
             root_solver = setup.root_solver,
             β₀ = setup.β₀,
@@ -245,10 +243,10 @@ function _rear_workhorse(
         jacobian_disc = jacobian_disc,
         kwargs...,
     )
-    function _thin_disc_workhorse(θ::T; kwargs...)::NTuple{4,T} where {T}
-        g, gp, r = workhorse(θ; kwargs...)
+    function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
+        g, gp, r = workhorse(θ)
         α, β = _rθ_to_αβ(r, θ; α₀ = setup.α₀, β₀ = setup.β₀)
-        (r, g, jacobian_function(α, β), gp.x[1])
+        g, jacobian_function(α, β), gp.x[1]
     end
 end
 
@@ -275,8 +273,8 @@ function _rear_workhorse(
             jacobian_disc = d,
             kwargs...,
         )
-    function _thick_disc_workhorse(θ::T; kwargs...)::NTuple{5,T} where {T}
-        g, gp, r = datum_workhorse(θ; kwargs...)
+    function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
+        g, gp, r = datum_workhorse(θ)
         r₊ = try
             r_thick, _ = _find_offset_for_radius(
                 m,
@@ -297,8 +295,8 @@ function _rear_workhorse(
             )
             r_thick
         catch
-            # if we fail, for whatever reason, to root solve on the thick discs,
-            # we don't care, we just need a NaN value and then set that point to
+            # if we fail, for whatever reason, to root solve on the thick discs, 
+            # we don't care, we just need a NaN value and then set that point to 
             # "not visible"
             NaN
         end
@@ -310,21 +308,21 @@ function _rear_workhorse(
         else
             false, NaN
         end
-        (r, g, J, gp.x[1], is_visible)
+        (g, J, gp.x[1], is_visible)
     end
 end
 
 function _cunningham_transfer_function!(
-    data::_TransferDataAccumulator{T},
+    data::_TransferDataAccumulator,
     setup::_TransferFunctionSetup,
     workhorse,
     θiterator,
     rₑ,
-) where {T}
+)
     θ_offset = setup.θ_offset
     for (i, θ) in enumerate(θiterator)
         θ_corrected = θ + 1e-4
-        insert_data!(data, i, θ_corrected, workhorse(θ; r_hint = data.rs[i]))
+        insert_data!(data, i, θ_corrected, workhorse(θ))
     end
 
     gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
@@ -368,14 +366,11 @@ function cunningham_transfer_function(
     ;
     chart = chart_for_metric(m, 10 * x[2]),
     max_time = 10 * x[2],
-    # used to give hints about where the previous emission radius projected on
-    # the image plane
-    radii_hints = T[],
     solver_kwargs...,
 ) where {T}
     M = setup.N + 2 * setup.N_extrema
     K = setup.N ÷ 5
-    data = _TransferDataAccumulator(T, M, setup.N; radii_hints = radii_hints)
+    data = _TransferDataAccumulator(T, M, setup.N)
     # sample so that the expected minima and maxima (0 and π)
     θiterator = Iterators.flatten((
         range(0 - 2setup.θ_offset, 0 + 2setup.θ_offset, K),
@@ -393,9 +388,7 @@ function cunningham_transfer_function(
         solver_kwargs...,
     )
     gmin, gmax = _cunningham_transfer_function!(data, setup, workhorse, θiterator, rₑ)
-    data.rs,
     CunninghamTransferData(
-        # create copies of the data
         data.data[2, :],
         data.data[3, :],
         data.data[4, :],
@@ -412,15 +405,6 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
     i::Int = data.cutoff
     N = (lastindex(data) - data.cutoff) ÷ 2 - 1
 
-    # work out hints from what we already know
-    N_so_far = count(data.mask)
-    thetas = @views data.θs[1:N_so_far]
-    gs = @views data.gs[1:N_so_far]
-    _, i_gmin = findmin(gs)
-    _, i_gmax = findmax(gs)
-    r_min_hint = data.rs[i_gmin]
-    r_max_hint = data.rs[i_gmax]
-
     function _gmin_finder(θ)
         if i >= lastindex(data)
             error("i >= lastindex(data): $i >= $(lastindex(data))")
@@ -430,9 +414,7 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
         if abs(θ) < 1e-4 || abs(abs(θ) - π) < 1e-4
             θ += 1e-4
         end
-        vs = workhorse(θ; r_hint = r_hint)
-        r_hint = vs[1]
-        insert_data!(data, i, θ, vs)
+        insert_data!(data, i, θ, workhorse(θ))
         data.gs[i]
     end
     function _gmax_finder(θ)
@@ -440,19 +422,17 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
     end
 
     # stride either side of our best guess so far
-    r_hint = r_min_hint
     res_min = Optim.optimize(
         _gmin_finder,
-        thetas[i_gmin] - offset,
-        thetas[i_gmin] + offset,
+        0 - offset,
+        0 + offset,
         GoldenSection(),
         iterations = N,
     )
-    r_hint = r_max_hint
     res_max = Optim.optimize(
         _gmax_finder,
-        thetas[i_gmax] - offset,
-        thetas[i_gmax] + offset,
+        π - offset,
+        π + offset,
         GoldenSection(),
         iterations = N,
     )
@@ -482,32 +462,25 @@ function interpolated_transfer_branches(
     solver_kwargs...,
 ) where {T}
     progress_bar = init_progress_bar("Transfer functions:", length(radii), verbose)
-    # create a cache of radii hints for each thread
-    radii_hints = [T[] for _ = 1:Threads.nthreads()]
-    function 𝔉(rₑ)
-        thread_hints = radii_hints[Threads.threadid()]
-        Rs, ctf = cunningham_transfer_function(
-            setup,
-            m,
-            x,
-            d,
-            rₑ,
-            ;
-            radii_hints = thread_hints,
-            verbose = verbose,
-            solver_kwargs...,
-        )
-        # save the radii for the next run
-        empty!(thread_hints)
-        append!(thread_hints, Rs)
-        itp = interpolate_branches(ctf; h = setup.h)
-        ProgressMeter.next!(progress_bar)
-        itp
-    end
+    # IILF for calculating the interpolated branches
+    𝔉 =
+        rₑ -> begin
+            ctf = cunningham_transfer_function(
+                setup,
+                m,
+                x,
+                d,
+                rₑ,
+                ;
+                verbose = verbose,
+                solver_kwargs...,
+            )
+            itp = interpolate_branches(ctf; h = setup.h)
+            ProgressMeter.next!(progress_bar)
+            itp
+        end
     # calculate interpolated transfer functions for each emission radius
-    branches = InterpolatingTransferBranches(_threaded_map(𝔉, radii))
-    finish!(progress_bar)
-    branches
+    InterpolatingTransferBranches(_threaded_map(𝔉, radii))
 end
 
 function transfer_function_grid(
@@ -569,8 +542,8 @@ end
 
 """
     transferfunctions(
-        m::AbstractMetric,
-        x,
+        m::AbstractMetric, 
+        x, 
         d::AbstractAccretionDisc;
         minrₑ = isco(m) + 1e-2,
         maxrₑ = 50,

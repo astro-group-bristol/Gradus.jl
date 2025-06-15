@@ -1,23 +1,17 @@
 mutable struct _TransferDataAccumulator{T}
     data::Matrix{T}
-    image_plane_offset::Vector{T}
     cutoff::Int
     mask::BitVector
 end
 
-function _TransferDataAccumulator(T::Type, M::Int, cutoff::Int; dims = 4, radii_hints = T[])
+function _TransferDataAccumulator(T::Type, M::Int, cutoff::Int; dims = 4)
     mat = zeros(T, (dims, M))
-    offsets = isempty(radii_hints) ? zeros(T, M) : radii_hints
     mask = BitVector(undef, M)
-    # make sure it is zeroed
-    mask .= false
-    _TransferDataAccumulator(mat, offsets, cutoff, mask)
+    _TransferDataAccumulator(mat, cutoff, mask)
 end
 
 function Base.getproperty(t::_TransferDataAccumulator, f::Symbol)
-    if f === :rs
-        getfield(t, :image_plane_offset)
-    elseif f === :θs
+    if f === :θs
         @views getfield(t, :data)[1, :]
     elseif f === :gs
         @views getfield(t, :data)[2, :]
@@ -74,17 +68,15 @@ function _search_visibility_range(vec)
     i1, i2
 end
 
-function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{4})
+function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{3})
     data.mask[i] = true
-    # store the radius on the image plane that was solved
-    data.rs[i] = vals[1]
-    data.data[:, i] .= (θ, vals[2:end]...)
+    data.data[:, i] .= (θ, vals...)
     data
 end
-function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{5})
-    insert_data!(data, i, θ, vals(1:4))
-    # check visible
-    if vals[5] == 0
+function insert_data!(data::_TransferDataAccumulator, i, θ, vals::NTuple{4})
+    data.mask[i] = true
+    data.data[:, i] .= (θ, vals[1:3]...)
+    if vals[4] == 0
         data.Js[i] = NaN
     end
     data
