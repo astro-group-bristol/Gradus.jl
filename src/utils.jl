@@ -4,7 +4,8 @@ Base.@kwdef struct NonLinearAlg{A} <: AbstractRootAlgorithm
     alg::A = SimpleNonlinearSolve.SimpleBroyden()
 end
 
-DEFAULT_ROOT_SOLVER() = NonLinearAlg()
+# DEFAULT_ROOT_SOLVER() = NonLinearAlg()
+DEFAULT_ROOT_SOLVER() = RootsAlg()
 
 """
     root_solve(f_objective, initial_value, args)
@@ -56,7 +57,6 @@ function root_solve(
     sol = solve(prob, alg.alg, abstol = abstol, reltol = abstol, maxiters = 500, kwargs...)
     sol.u[1], sol.resid[1]
 end
-
 
 @inline function _symmetric_matrix(comps::AbstractVector{T})::SMatrix{4,4,T} where {T}
     @SMatrix [

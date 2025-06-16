@@ -31,6 +31,26 @@ struct GeodesicPoint{T,A} <: AbstractGeodesicPoint{T}
     aux::A
 end
 
+function ForwardDiff.value(::Type{T}, gp::GeodesicPoint{<:ForwardDiff.Dual{T}}) where {T}
+    _de_dual(v::SVector{4}) = SVector{4}(
+        ForwardDiff.value(T, v[1]),
+        ForwardDiff.value(T, v[2]),
+        ForwardDiff.value(T, v[3]),
+        ForwardDiff.value(T, v[4]),
+    )
+
+    GeodesicPoint(
+        gp.status,
+        ForwardDiff.value(T, gp.λ_min),
+        ForwardDiff.value(T, gp.λ_max),
+        _de_dual(gp.x_init),
+        _de_dual(gp.x),
+        _de_dual(gp.v_init),
+        _de_dual(gp.v),
+        gp.aux,
+    )
+end
+
 function Base.show(io::IO, gp::GeodesicPoint)
     print(io, "GeodesicPoint($(gp.x))")
 end
@@ -51,9 +71,9 @@ end
     unpack_solution([m], sol)
 
 Unpack a solution (`SciMLBase.AbstractODESolution`) as a [`GeodesicPoint`](@ref), optionally specifying
-the metric under which quantities are transformed. 
+the metric under which quantities are transformed.
 
-If the solution stores any additional parameters (e.g. intensity in radiative transfer), these will be packed 
+If the solution stores any additional parameters (e.g. intensity in radiative transfer), these will be packed
 into the `aux` field of [`GeodesicPoint`](@ref).
 
 ## Example use
