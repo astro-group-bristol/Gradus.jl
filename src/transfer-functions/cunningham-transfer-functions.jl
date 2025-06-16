@@ -15,6 +15,7 @@ struct _TransferFunctionSetup{T,A}
     β₀::T
     N::Int
     N_extrema::Int
+    # TODO: remove me
     root_solver::A
 end
 
@@ -182,7 +183,6 @@ function _setup_workhorse_jacobian_with_kwargs(
     d::AbstractAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
-    offset_max = 0.4rₑ + 10,
     redshift_pf = ConstPointFunctions.redshift(m, x),
     jacobian_disc = d,
     tracer_kwargs...,
@@ -208,17 +208,13 @@ function _setup_workhorse_jacobian_with_kwargs(
             rₑ,
             θ;
             zero_atol = setup.zero_atol,
-            offset_max = offset_max,
             max_time = max_time,
-            root_solver = setup.root_solver,
             β₀ = setup.β₀,
             α₀ = setup.α₀,
             tracer_kwargs...,
         )
         if isnan(r)
-            error(
-                "Transfer function integration failed (rₑ=$rₑ, θ=$θ, offset_max = $offset_max).",
-            )
+            error("Transfer function integration failed (rₑ=$rₑ, θ=$θ).")
         end
         g = redshift_pf(m, gp, max_time)
         (g, gp, r)
@@ -243,10 +239,10 @@ function _rear_workhorse(
         jacobian_disc = jacobian_disc,
         kwargs...,
     )
-    function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
-        g, gp, r = workhorse(θ)
+    function _disc_workhorse(θ::T; whkwargs...)::NTuple{3,T} where {T}
+        g, gp, r = workhorse(θ; whkwargs...)
         α, β = _rθ_to_αβ(r, θ; α₀ = setup.α₀, β₀ = setup.β₀)
-        g, jacobian_function(α, β), gp.x[1]
+        (g, jacobian_function(α, β), gp.x[1])
     end
 end
 
@@ -257,7 +253,6 @@ function _rear_workhorse(
     d::AbstractThickAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
-    offset_max = 0.4rₑ + 10,
     kwargs...,
 )
     plane = datumplane(d, rₑ)
@@ -269,12 +264,11 @@ function _rear_workhorse(
             plane,
             rₑ;
             max_time = max_time,
-            offset_max = offset_max,
             jacobian_disc = d,
             kwargs...,
         )
-    function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
-        g, gp, r = datum_workhorse(θ)
+    function _thick_workhorse(θ::T; whkwargs...)::NTuple{4,T} where {T}
+        g, gp, r = datum_workhorse(θ; whkwargs...)
         r₊ = try
             r_thick, _ = _find_offset_for_radius(
                 m,
@@ -284,8 +278,6 @@ function _rear_workhorse(
                 θ;
                 initial_r = r,
                 zero_atol = setup.zero_atol,
-                root_solver = setup.root_solver,
-                offset_max = offset_max,
                 max_time = max_time,
                 β₀ = setup.β₀,
                 α₀ = setup.α₀,
@@ -295,8 +287,8 @@ function _rear_workhorse(
             )
             r_thick
         catch
-            # if we fail, for whatever reason, to root solve on the thick discs, 
-            # we don't care, we just need a NaN value and then set that point to 
+            # if we fail, for whatever reason, to root solve on the thick discs,
+            # we don't care, we just need a NaN value and then set that point to
             # "not visible"
             NaN
         end
@@ -313,12 +305,12 @@ function _rear_workhorse(
 end
 
 function _cunningham_transfer_function!(
-    data::_TransferDataAccumulator,
+    data::_TransferDataAccumulator{T},
     setup::_TransferFunctionSetup,
     workhorse,
     θiterator,
     rₑ,
-)
+) where {T}
     θ_offset = setup.θ_offset
     for (i, θ) in enumerate(θiterator)
         θ_corrected = θ + 1e-4
@@ -542,8 +534,8 @@ end
 
 """
     transferfunctions(
-        m::AbstractMetric, 
-        x, 
+        m::AbstractMetric,
+        x,
         d::AbstractAccretionDisc;
         minrₑ = isco(m) + 1e-2,
         maxrₑ = 50,
