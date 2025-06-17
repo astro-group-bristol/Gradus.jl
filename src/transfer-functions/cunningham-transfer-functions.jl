@@ -396,15 +396,14 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
     i::Int = data.cutoff
     N = (lastindex(data) - data.cutoff) ÷ 2 - 1
 
+    _, min_i = @views findmin(data.gs[1:i])
+    _, max_i = @views findmax(data.gs[1:i])
+
     function _gmin_finder(θ)
         if i >= lastindex(data)
             error("i >= lastindex(data): $i >= $(lastindex(data))")
         end
         i += 1
-        # avoid poles
-        if abs(θ) < 1e-4 || abs(abs(θ) - π) < 1e-4
-            θ += 1e-4
-        end
         insert_data!(data, i, θ, workhorse(θ))
         data.gs[i]
     end
@@ -413,23 +412,45 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
     end
 
     # stride either side of our best guess so far
-    res_min = Optim.optimize(
+    res_min = bracket_minimize(
         _gmin_finder,
-        0 - offset,
-        0 + offset,
-        GoldenSection(),
-        iterations = N,
+        data.θs[min_i] - offset,
+        data.θs[min_i] + offset,
+        N = N,
     )
-    res_max = Optim.optimize(
+    res_max = bracket_minimize(
         _gmax_finder,
-        π - offset,
-        π + offset,
-        GoldenSection(),
-        iterations = N,
+        data.θs[max_i] - offset,
+        data.θs[max_i] + offset,
+        N = N,
     )
 
     # unpack result, remembering that maximum is inverted
-    Optim.minimum(res_min), -Optim.minimum(res_max)
+    i, res_min, -res_max
+end
+
+function bracket_minimize(f, low, high; N)
+    y = one(low)
+    a = low
+    b = high
+    for _ = 1:(N÷2)
+        c = b - (b - a) * INVPHI
+        d = a + (b - a) * INVPHI
+        fc = f(c)
+        fd = f(d)
+        if isapprox(fc, fd, atol = 1e-7)
+            break
+        end
+
+        if fc < fd
+            y = min(y, fc)
+            b = d
+        else
+            y = min(y, fd)
+            a = c
+        end
+    end
+    y
 end
 
 function interpolated_transfer_branches(
