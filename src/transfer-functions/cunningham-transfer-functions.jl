@@ -316,8 +316,10 @@ function _cunningham_transfer_function!(
         insert_data!(data, i, θ, workhorse(θ))
     end
 
-    gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
-    gmin, gmax = _check_gmin_gmax(gmin_candidate, gmax_candidate, rₑ, data.gs)
+    # TODO: find where the largest difference in g is and refine
+
+    N, gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
+    gmin, gmax = @views _check_gmin_gmax(gmin_candidate, gmax_candidate, rₑ, data.gs[1:N])
     # we might not have used all of the memory we allocated so let's clean up
     remove_unused_elements!(data)
     # sort everything by angle
