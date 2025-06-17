@@ -498,25 +498,26 @@ function interpolated_transfer_branches(
 end
 
 function transfer_function_grid(
-    m::AbstractMetric,
+    m::AbstractMetric{T},
     x,
     d::AbstractAccretionGeometry,
     radii;
     Ng = 20,
+    h_grid = 1e-3,
     kwargs...,
-)
+) where {T}
     itfs = interpolated_transfer_branches(m, x, d, radii; kwargs...)
-    transfer_function_grid(itfs, Ng)
+    transfer_function_grid(itfs, Ng; h = h_grid)
 end
 
-function transfer_function_grid(itfs::InterpolatingTransferBranches, Ng::Int)
+function transfer_function_grid(itfs::InterpolatingTransferBranches, Ng::Int; h = 1e-3)
     g✶_grid = collect(range(0, 1, Ng))
     r_grid = itfs.radii
 
-    lower_f = [branch.lower_f(g) for g in g✶_grid, branch in itfs.branches]
-    upper_f = [branch.upper_f(g) for g in g✶_grid, branch in itfs.branches]
-    lower_t = [branch.lower_t(g) for g in g✶_grid, branch in itfs.branches]
-    upper_t = [branch.upper_t(g) for g in g✶_grid, branch in itfs.branches]
+    lower_f = [branch.lower_f(clamp(g, h, 1-h)) for g in g✶_grid, branch in itfs.branches]
+    upper_f = [branch.upper_f(clamp(g, h, 1-h)) for g in g✶_grid, branch in itfs.branches]
+    lower_t = [branch.lower_t(clamp(g, h, 1-h)) for g in g✶_grid, branch in itfs.branches]
+    upper_t = [branch.upper_t(clamp(g, h, 1-h)) for g in g✶_grid, branch in itfs.branches]
 
     CunninghamTransferGrid(
         r_grid,
