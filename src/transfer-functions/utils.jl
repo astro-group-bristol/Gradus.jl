@@ -27,11 +27,6 @@ end
 Base.eachindex(data::_TransferDataAccumulator) = eachindex(data.θs)
 Base.lastindex(data::_TransferDataAccumulator) = size(data.data, 2)
 
-function remove_unused_elements!(data::_TransferDataAccumulator)
-    data.data = data.data[:, data.mask]
-    data
-end
-
 function Base.sort!(data::_TransferDataAccumulator)
     I = sortperm(data.θs)
     Base.permutecols!!(data.data, I)

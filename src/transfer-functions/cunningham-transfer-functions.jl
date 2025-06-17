@@ -321,7 +321,8 @@ function _cunningham_transfer_function!(
     N, gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
     gmin, gmax = @views _check_gmin_gmax(gmin_candidate, gmax_candidate, rₑ, data.gs[1:N])
     # we might not have used all of the memory we allocated so let's clean up
-    remove_unused_elements!(data)
+    data.data = data.data[:, 1:N]
+
     # sort everything by angle
     sort!(data)
 
