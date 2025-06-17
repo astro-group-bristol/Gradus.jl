@@ -22,7 +22,7 @@ end
 function _TransferFunctionSetup(
     m::AbstractMetric{T},
     d::AbstractAccretionGeometry;
-    θ_offset = T(0.6),
+    θ_offset = T(0.3),
     zero_atol = T(1e-7),
     N = 80,
     N_extrema = 17,
