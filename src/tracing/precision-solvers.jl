@@ -141,7 +141,7 @@ function _find_offset_for_radius(
     worst_accuracy = 1e-3,
     initial_r = r_target,
     tape = nothing,
-    contrapoint_bias = 3,
+    contrapoint_bias = 2,
     max_iter = 50,
     kwargs...,
 )
@@ -153,37 +153,61 @@ function _find_offset_for_radius(
         (gp, _dr, _r - r_target)
     end
 
+    r_min = inner_radius(m)
+
     x = initial_r
     y = r_target
     contra = zero(r_target)
     # calculate next step
     point, df, y = step(x)
 
+    Δy = zero(y)
+
+    # keep cycle buffer
+    previous = fill(zero(x), 6)
+
     i::Int = 0
     while (!isapprox(y, 0, atol = zero_atol)) && (i <= max_iter)
         if !isnothing(tape)
-            push!(tape, (; x, y, df))
+            push!(tape, (; x, y, df, Δy))
         end
         # Newton-Raphson update
         next_x = x - y / df
         point, df, next_y = step(next_x)
 
-        if (next_y < 0) && (y > 0)
+        if (next_x < 0) || ((next_y < 0) && (y > 0))
             # know that the function is going to be monotonic, so a higher x
             # will be closer to the actual value when y < 0
             contra = max(contra, next_x)
-            # bisection
-            next_x = (contra * contrapoint_bias + x) / (1 + contrapoint_bias)
-            # update the next_y estimate
-            point, df, next_y = step(next_x)
-        elseif (next_y < 0) && (y < 0) && ((-y/df) < 0)
+
+            if (next_x < 0) || (_equatorial_project(point.x) < (r_min + 1))
+                # bisection
+                next_x = (contra * contrapoint_bias + x) / (1 + contrapoint_bias)
+                # update the next_y estimate
+                point, df, next_y = step(next_x)
+            end
+        end
+
+        if (next_y < 0) && (y < 0) && ((-y/df) < 0)
             @warn "Converge failed."
+            break
+        end
+
+        next_Δy = (y - next_y) / y
+        if (y > 0) && any(i -> isapprox(next_Δy, i, atol = zero_atol * 100), previous)
+            # cycle detected
+            # we're getting stuck with Newton-Raphson, finish off with bisection
+            x = find_zero(i -> step(i)[end], (contra, x), atol = zero_atol)
+            point, df, y = step(x)
             break
         end
 
         # update state
         x = next_x
+        Δy = next_Δy
         y = next_y
+
+        previous[(i%length(previous))+1] = Δy
         i += 1
     end
 
