@@ -132,7 +132,7 @@ end
 
 function _find_offset_for_radius(
     m::AbstractMetric,
-    x,
+    pos,
     d::AbstractAccretionGeometry,
     r_target,
     θₒ;
@@ -140,23 +140,29 @@ function _find_offset_for_radius(
     zero_atol = 1e-7,
     worst_accuracy = 1e-3,
     initial_r = r_target,
+    tape = nothing,
+    contrapoint_bias = 3,
     kwargs...,
 )
-    f = _make_image_plane_mapper(m, x, d; kwargs...)
+    _ = kwargs
+    f = _make_image_plane_mapper(m, pos, d)
 
     function step(r)
         gp, _r, _dr = f(r, θₒ)
         (gp, _dr, _r - r_target)
     end
 
-    x = r_target
+    x = initial_r
     y = r_target
     contra = zero(r_target)
     # calculate next step
     point, df, y = step(x)
 
     i::Int = 0
-    while (!isapprox(y, 0, atol = zero_atol)) && (i <= 200)
+    while (!isapprox(y, 0, atol = zero_atol)) && (i <= 50)
+        if !isnothing(tape)
+            push!(tape, (; x, y, df))
+        end
         # Newton-Raphson update
         next_x = x - y / df
         point, df, next_y = step(next_x)
@@ -166,10 +172,10 @@ function _find_offset_for_radius(
             # will be closer to the actual value when y < 0
             contra = max(contra, next_x)
             # bisection
-            next_x = (contra + x) / 2
+            next_x = (contra * contrapoint_bias + x) / (1 + contrapoint_bias)
             # update the next_y estimate
             point, df, next_y = step(next_x)
-        elseif (next_y < 0) && (y < 0) && ((-y/df) < 0 )
+        elseif (next_y < 0) && (y < 0) && ((-y/df) < 0)
             @warn "Converge failed."
             break
         end
@@ -180,6 +186,10 @@ function _find_offset_for_radius(
         i += 1
     end
 
+    if i >= 50
+        @warn "Exceeded max iter" maxlog=1
+    end
+
     if warn && (x < 0)
         @warn("Root finder found negative radius for r_target = $r_target, θ = $θₒ")
         return NaN, point
@@ -187,7 +197,7 @@ function _find_offset_for_radius(
 
     if !isapprox(y, 0, atol = worst_accuracy)
         warn && @warn(
-            "Poor offset radius found for r_target = $r_target, θ = $θₒ : measured $(y) with r = $(x)"
+            "Poor offset radius found for r_target = $r_target, θ = $θₒ : measured $(y) with x = $(x) : initial_r = $initial_r"
         )
         return NaN, point
     end
