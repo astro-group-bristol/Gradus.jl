@@ -142,6 +142,7 @@ function _find_offset_for_radius(
     initial_r = r_target,
     tape = nothing,
     contrapoint_bias = 3,
+    max_iter = 50,
     kwargs...,
 )
     _ = kwargs
@@ -159,7 +160,7 @@ function _find_offset_for_radius(
     point, df, y = step(x)
 
     i::Int = 0
-    while (!isapprox(y, 0, atol = zero_atol)) && (i <= 50)
+    while (!isapprox(y, 0, atol = zero_atol)) && (i <= max_iter)
         if !isnothing(tape)
             push!(tape, (; x, y, df))
         end
@@ -186,8 +187,8 @@ function _find_offset_for_radius(
         i += 1
     end
 
-    if i >= 50
-        @warn "Exceeded max iter" maxlog=1
+    if i >= max_iter
+        @warn "Exceeded max iter ($max_iter)" maxlog=1
     end
 
     if warn && (x < 0)
