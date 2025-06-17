@@ -355,8 +355,8 @@ function cunningham_transfer_function(
     d::AbstractAccretionDisc,
     rₑ::T,
     ;
-    chart = chart_for_metric(m, 10 * x[2]),
-    max_time = 10 * x[2],
+    chart = chart_for_metric(m, 2 * x[2]),
+    max_time = 2 * x[2],
     solver_kwargs...,
 ) where {T}
     M = setup.N + 2 * setup.N_extrema
