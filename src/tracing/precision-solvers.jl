@@ -139,7 +139,7 @@ function _find_offset_for_radius(
     warn = true,
     zero_atol = 1e-7,
     worst_accuracy = 1e-3,
-    initial_r = r_target,
+    initial_r = max(one(r_target) * 3, r_target),
     tape = nothing,
     contrapoint_bias = 2,
     max_iter = 50,
