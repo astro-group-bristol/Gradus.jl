@@ -42,7 +42,7 @@ function LineProfile(
     a = FitParam(0.998, upper_limit = 1.0),
     θ_obs = FitParam(45.0, upper_limit = 90.0),
     inner_r = FitParam(1.0),
-    outer_r = FitParam(100.0, upper_limit = 500.0),
+    outer_r = FitParam(100.0, upper_limit = 1000.0),
     lineE = FitParam(6.4),
     kwargs...,
 )
