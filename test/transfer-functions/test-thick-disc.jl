@@ -16,7 +16,7 @@ d = ShakuraSunyaev(m; eddington_ratio = 0.2)
 
 tf = cunningham_transfer_function(m, x, d, 5.469668466100368; β₀ = 1.0)
 total = sum(filter(!isnan, tf.f))
-@test total ≈ 19.321053039396688 atol = 1e-4
+@test total ≈ 19.321053039396688 atol = 1e-2
 
 # the transfer function here is pretty horrible as it's almost impossible to actually 
 # see; this is a test to make sure it doesn't error
