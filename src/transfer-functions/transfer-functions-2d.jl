@@ -88,17 +88,10 @@ function (itb::InterpolatingTransferBranches)(r)
 end
 
 function (grid::CunninghamTransferGrid)(r)
-    idx = max(
-        1,
-        min(
-            DataInterpolations.searchsortedlastcorrelated(grid.r_grid, r, 0),
-            length(grid.r_grid) - 1,
-        ),
-    )
+    idx = clamp(searchsortedlast(grid.r_grid, r), 1, length(grid.r_grid) - 1)
     r1, r2 = grid.r_grid[idx], grid.r_grid[idx+1]
     # interpolation weight
     θ = (r - r1) / (r2 - r1)
-
     gmin = _linear_interpolate(grid.g_min, idx, θ)
     gmax = _linear_interpolate(grid.g_max, idx, θ)
     upper_f, lower_f, upper_t, lower_t = _lazy_interpolate(grid, idx, θ)

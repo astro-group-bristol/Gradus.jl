@@ -42,11 +42,11 @@ AdaptiveSky(V::Type, calc_v, check_refine; pole_offset = 1e-6) = AdaptiveSky(
 )
 
 """
-refine_all!(sky::AdaptiveSky, to_refine::Vector{Int})
+trace_all!(sky::AdaptiveSky, to_refine::Vector{Int})
 
 Refine all cells in `to_refine` using a multi-threaded loop.
 """
-function refine_all!(
+function trace_all!(
     sky::AdaptiveSky,
     to_refine::Vector{Int};
     verbose = false,
@@ -120,25 +120,16 @@ function trace_initial!(sky::AdaptiveSky; level = 3)
 end
 
 """
-    trace_step!(sky::AdaptiveSky; check_refine = sky.check_refine, verbose = false)
+    find_need_refine(sky::AdaptiveSky, check_refine::Function)::Vector{Int}
 
-Apply the refinement metric across each cell boundary and refine the cells
-where the metric is `true`.
-
-A different refinemenet metric from the default can be used by passing the
-`check_refine` kwarg, using the same function signature as documented in
-[`AdaptiveSky`](@ref).
-
-If `verbose` is true, a progress bar will be displayed during refinement.
+Check all cells with `check_refine`, and return those cell IDs that would need
+to refined.
 """
-function trace_step!(
-    sky::AdaptiveSky{T,V};
-    check_refine = sky.check_refine,
-    kwargs...,
-) where {T,V}
+function find_need_refine(sky::AdaptiveSky, check_refine::Function)::Vector{Int}
     N = lastindex(sky.grid.cells)
 
     to_refine = Set{Int}()
+
     # TODO: multi-thread using a divide and conquer approach
     for cell_index = 1:N
         # skip those we've already refined
@@ -155,30 +146,68 @@ function trace_step!(
         end
     end
 
+    sort!(collect(to_refine))
+end
+
+"""
+    function refine_and_trace!(
+        sky::AdaptiveSky,
+        cell_ids::Vector{Int};
+        kwargs...,
+    )
+
+Given a list of cell IDs, refine them using [`refine!`](@ref), and then trace
+the children to populate their values.
+
+All kwargs are forwarded to [`trace_all!`](@ref).
+"""
+function refine_and_trace!(
+    sky::AdaptiveSky{T,V},
+    cell_ids::Vector{Int};
+    kwargs...,
+) where {T,V}
+    N = lastindex(sky.grid.cells)
+
+    to_trace = Int[]
+    sizehint!(to_trace, length(cell_ids) * 8)
+
     # now that all have been reaped, apply refining
-    to_trace = map(collect(to_refine)) do index
-        if Grids.has_children(sky.grid, index)
-            Int[]
-        else
-            _children = Grids.refine!(sky.grid, index)
-            for (j, _) in enumerate(_children)
-                if j == 5
-                    push!(sky.values, sky.values[index])
-                else
-                    push!(sky.values, make_null(V))
-                end
+    for index in cell_ids
+        @assert !Grids.has_children(sky.grid, index)
+        _children = Grids.refine!(sky.grid, index)
+        for (j, child_id) in enumerate(_children)
+            if j == 5
+                push!(sky.values, sky.values[index])
+            else
+                push!(to_trace, child_id)
+                push!(sky.values, make_null(V))
             end
-            # return all but the middle for tracing
-            Int[_children[[1, 2, 3, 4, 6, 7, 8, 9]]...]
         end
     end
 
     if !isempty(to_trace)
-        all_trace = reduce(vcat, to_trace)
-        refine_all!(sky, all_trace; kwargs...)
+
+        trace_all!(sky, to_trace; kwargs...)
     end
 
     sky
+end
+
+"""
+    trace_step!(sky::AdaptiveSky; check_refine = sky.check_refine, verbose = false)
+
+Apply the refinement metric across each cell boundary and refine the cells
+where the metric is `true`.
+
+A different refinemenet metric from the default can be used by passing the
+`check_refine` kwarg, using the same function signature as documented in
+[`AdaptiveSky`](@ref).
+
+If `verbose` is true, a progress bar will be displayed during refinement.
+"""
+function trace_step!(sky::AdaptiveSky; check_refine = sky.check_refine, kwargs...)
+    to_refine = find_need_refine(sky, check_refine)
+    refine_and_trace!(sky, to_refine; kwargs...)
 end
 
 vector_average(distances, values) = sum(i -> i[1] * i[2], zip(distances, values))

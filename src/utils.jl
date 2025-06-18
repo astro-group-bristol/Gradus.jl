@@ -57,7 +57,6 @@ function root_solve(
     sol.u[1], sol.resid[1]
 end
 
-
 @inline function _symmetric_matrix(comps::AbstractVector{T})::SMatrix{4,4,T} where {T}
     @SMatrix [
         comps[1] 0 0 comps[5]

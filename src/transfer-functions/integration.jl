@@ -158,9 +158,9 @@ end
 g_to_g✶(g, gmin, gmax) = @. (g - gmin) / (gmax - gmin)
 g✶_to_g(g✶, gmin, gmax) = @. (gmax - gmin) * g✶ + gmin
 
-function integrate_edge(S, lim, lim_g✶, gmin, gmax)
+function integrate_edge(S, lim, lim_g✶, gmin, gmax, h)
     gh = g✶_to_g(lim_g✶, gmin, gmax)
-    2 * S(gh) * abs(√gh - √lim)
+    S(gh) * abs(√gh - √lim) * sqrt(h)
 end
 
 # a very important `@inline`
@@ -179,24 +179,23 @@ end
 
     if g✶lo < h
         if g✶hi > h
-            lum += integrate_edge(S, glo, h, gmin, gmax)
+            lum += integrate_edge(S, glo, h, gmin, gmax, h)
             glo = g✶_to_g(h, gmin, gmax)
         else
-            return integrate_edge(S, glo, g✶hi, gmin, gmax)
+            return integrate_edge(S, glo, g✶hi, gmin, gmax, h)
         end
     end
 
     if g✶hi > 1 - h
         if g✶lo < 1 - h
-            lum += integrate_edge(S, ghi, 1 - h, gmin, gmax)
+            lum += integrate_edge(S, ghi, 1 - h, gmin, gmax, h)
             ghi = g✶_to_g(1 - h, gmin, gmax)
         else
-            return integrate_edge(S, ghi, g✶lo, gmin, gmax)
+            return integrate_edge(S, ghi, g✶lo, gmin, gmax, h)
         end
     end
 
-    res = quadrature_integrate(S, glo, ghi; rule = setup.quadrature_rule)
-    lum += res
+    lum += quadrature_integrate(S, glo, ghi; rule = setup.quadrature_rule)
     return lum
 end
 

@@ -65,34 +65,169 @@ function _find_offset_for_measure(
     r0, gp0, measure(gp0)
 end
 
+const Tag_Projection_Solver = Val{:_projection_solver}
+
+_make_projection_Dual(x; d1 = zero(typeof(x))) =
+    ForwardDiff.Dual{Tag_Projection_Solver}(x, d1)
+
+function _make_image_plane_mapper(
+    m::AbstractMetric,
+    x::SVector{4,T},
+    d::AbstractAccretionGeometry;
+    max_time = 2x[2],
+    β₀ = zero(T),
+    α₀ = zero(T),
+    solver_opts...,
+) where {T}
+    x_dual = SVector{4}(
+        _make_projection_Dual(x[1]),
+        _make_projection_Dual(x[2]),
+        _make_projection_Dual(x[3]),
+        _make_projection_Dual(x[4]),
+    )
+
+    v_temp = constrain_all(
+        m,
+        x_dual,
+        map_impact_parameters(m, x_dual, 1.0, 1.0),
+        zero(eltype(x_dual)),
+    )
+
+    # init a reusable integrator
+    integ = _init_integrator(
+        m,
+        x_dual,
+        v_temp,
+        d,
+        _make_projection_Dual(max_time);
+        save_on = false,
+        chart = chart_for_metric(m, 2 * x[2]),
+        integrator_verbose = false,
+        solver_opts...,
+    )
+
+    function _measure(r, θ)
+        # setup dual numbers
+        r_dual = _make_projection_Dual(r; d1 = one(r))
+
+        # perform tracing
+        α, β = _rθ_to_αβ(r_dual, θ; α₀ = α₀, β₀ = β₀)
+
+        v = constrain_all(
+            m,
+            x_dual,
+            map_impact_parameters(m, x_dual, α, β),
+            zero(eltype(x_dual)),
+        )
+        gp = _solve_reinit!(integ, vcat(x_dual, v))
+
+        r_disc_dual = _equatorial_project(gp.x)
+
+        r_disc = ForwardDiff.value(Tag_Projection_Solver, r_disc_dual)
+        dr_disc = ForwardDiff.extract_derivative(Tag_Projection_Solver, r_disc_dual)
+
+        (ForwardDiff.value(Tag_Projection_Solver, gp), r_disc, dr_disc)
+    end
+end
+
 function _find_offset_for_radius(
     m::AbstractMetric,
-    x,
+    pos,
     d::AbstractAccretionGeometry,
-    rₑ,
+    r_target,
     θₒ;
     warn = true,
+    zero_atol = 1e-7,
+    worst_accuracy = 1e-3,
+    initial_r = max(one(r_target) * 20, r_target),
+    tape = nothing,
+    contrapoint_bias = 2,
+    max_iter = 50,
     kwargs...,
 )
-    function _measure(gp::GeodesicPoint{T}) where {T}
-        r = _equatorial_project(gp.x)
-        if gp.status != StatusCodes.IntersectedWithGeometry
-            r = -2r
-        end
-        rₑ - r
-    end
-    r0, gp0, measure0 = _find_offset_for_measure(_measure, m, x, d, θₒ; kwargs...)
+    f = _make_image_plane_mapper(m, pos, d; kwargs...)
 
-    if warn && (r0 < 0)
-        @warn("Root finder found negative radius for rₑ = $rₑ, θₑ = $θₒ")
+    function step(r)
+        gp, _r, _dr = f(r, θₒ)
+        (gp, _dr, _r - r_target)
     end
-    if !isapprox(measure0, 0.0, atol = 1e-4)
+
+    r_min = inner_radius(m)
+
+    x = initial_r
+    y = r_target
+    # this method relies on the starting contrapoint being in the EH
+    contra = zero(r_target)
+    # calculate next step
+    point, df, y = step(x)
+
+    Δy = zero(y)
+
+    # keep cycle buffer
+    previous = fill(zero(x), 6)
+
+    i::Int = 0
+    while (!isapprox(y, 0, atol = zero_atol)) && (i <= max_iter)
+        if !isnothing(tape)
+            push!(tape, (; x, y, df, Δy))
+        end
+        # Newton-Raphson update
+        next_x = x - y / df
+        point, df, next_y = step(next_x)
+
+        if (next_x < 0) || ((next_y < 0) && (y > 0))
+            # know that the function is going to be monotonic, so a higher x
+            # will be closer to the actual value when y < 0
+            contra = max(contra, next_x)
+
+            if (next_x < 0) || (_equatorial_project(point.x) < (r_min + 1))
+                # bisection
+                next_x = (contra * contrapoint_bias + x) / (1 + contrapoint_bias)
+                # update the next_y estimate
+                point, df, next_y = step(next_x)
+            end
+        end
+
+        if (next_y < 0) && (y < 0) && ((-y/df) < 0)
+            @warn "Converge failed. If you are calculating transfer functions for thick discs, this is normal. If not, check your results! This warning will not log again." maxlog=1
+            break
+        end
+
+        next_Δy = (y - next_y) / y
+        if (y > 0) && any(i -> isapprox(next_Δy, i, atol = zero_atol * 100), previous)
+            # cycle detected
+            # we're getting stuck with Newton-Raphson, finish off with bisection
+            x = find_zero(i -> step(i)[end], (contra, x), atol = zero_atol)
+            point, df, y = step(x)
+            break
+        end
+
+        # update state
+        x = next_x
+        Δy = next_Δy
+        y = next_y
+
+        previous[(i%length(previous))+1] = Δy
+        i += 1
+    end
+
+    if i >= max_iter
+        @warn "Exceeded max iter ($max_iter)" maxlog=1
+    end
+
+    if warn && (x < 0)
+        @warn("Root finder found negative radius for r_target = $r_target, θ = $θₒ")
+        return NaN, point
+    end
+
+    if !isapprox(y, 0, atol = worst_accuracy)
         warn && @warn(
-            "Poor offset radius found for rₑ = $rₑ, θₑ = $θₒ : measured $(_measure(gp0)) with r = $(r0)"
+            "Poor offset radius found for r_target = $r_target, θ = $θₒ : measured $(y) with x = $(x) : initial_r = $initial_r"
         )
-        return NaN, gp0
+        return NaN, point
     end
-    r0, gp0
+
+    x, point
 end
 
 """

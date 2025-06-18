@@ -15,13 +15,14 @@ struct _TransferFunctionSetup{T,A}
     β₀::T
     N::Int
     N_extrema::Int
+    # TODO: remove me
     root_solver::A
 end
 
 function _TransferFunctionSetup(
     m::AbstractMetric{T},
     d::AbstractAccretionGeometry;
-    θ_offset = T(0.6),
+    θ_offset = T(0.3),
     zero_atol = T(1e-7),
     N = 80,
     N_extrema = 17,
@@ -182,9 +183,9 @@ function _setup_workhorse_jacobian_with_kwargs(
     d::AbstractAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
-    offset_max = 0.4rₑ + 10,
     redshift_pf = ConstPointFunctions.redshift(m, x),
     jacobian_disc = d,
+    tape = nothing,
     tracer_kwargs...,
 )
     # underscores to avoid boxing variables
@@ -208,17 +209,14 @@ function _setup_workhorse_jacobian_with_kwargs(
             rₑ,
             θ;
             zero_atol = setup.zero_atol,
-            offset_max = offset_max,
             max_time = max_time,
-            root_solver = setup.root_solver,
             β₀ = setup.β₀,
             α₀ = setup.α₀,
+            tape = tape,
             tracer_kwargs...,
         )
         if isnan(r)
-            error(
-                "Transfer function integration failed (rₑ=$rₑ, θ=$θ, offset_max = $offset_max).",
-            )
+            error("Transfer function integration failed (rₑ=$rₑ, θ=$θ).")
         end
         g = redshift_pf(m, gp, max_time)
         (g, gp, r)
@@ -243,10 +241,10 @@ function _rear_workhorse(
         jacobian_disc = jacobian_disc,
         kwargs...,
     )
-    function _disc_workhorse(θ::T)::NTuple{3,T} where {T}
-        g, gp, r = workhorse(θ)
+    function _disc_workhorse(θ::T; whkwargs...)::NTuple{3,T} where {T}
+        g, gp, r = workhorse(θ; whkwargs...)
         α, β = _rθ_to_αβ(r, θ; α₀ = setup.α₀, β₀ = setup.β₀)
-        g, jacobian_function(α, β), gp.x[1]
+        (g, jacobian_function(α, β), gp.x[1])
     end
 end
 
@@ -257,7 +255,6 @@ function _rear_workhorse(
     d::AbstractThickAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
-    offset_max = 0.4rₑ + 10,
     kwargs...,
 )
     plane = datumplane(d, rₑ)
@@ -269,12 +266,11 @@ function _rear_workhorse(
             plane,
             rₑ;
             max_time = max_time,
-            offset_max = offset_max,
             jacobian_disc = d,
             kwargs...,
         )
-    function _thick_workhorse(θ::T)::NTuple{4,T} where {T}
-        g, gp, r = datum_workhorse(θ)
+    function _thick_workhorse(θ::T; whkwargs...)::NTuple{4,T} where {T}
+        g, gp, r = datum_workhorse(θ; whkwargs...)
         r₊ = try
             r_thick, _ = _find_offset_for_radius(
                 m,
@@ -284,8 +280,6 @@ function _rear_workhorse(
                 θ;
                 initial_r = r,
                 zero_atol = setup.zero_atol,
-                root_solver = setup.root_solver,
-                offset_max = offset_max,
                 max_time = max_time,
                 β₀ = setup.β₀,
                 α₀ = setup.α₀,
@@ -295,8 +289,8 @@ function _rear_workhorse(
             )
             r_thick
         catch
-            # if we fail, for whatever reason, to root solve on the thick discs, 
-            # we don't care, we just need a NaN value and then set that point to 
+            # if we fail, for whatever reason, to root solve on the thick discs,
+            # we don't care, we just need a NaN value and then set that point to
             # "not visible"
             NaN
         end
@@ -313,22 +307,24 @@ function _rear_workhorse(
 end
 
 function _cunningham_transfer_function!(
-    data::_TransferDataAccumulator,
+    data::_TransferDataAccumulator{T},
     setup::_TransferFunctionSetup,
     workhorse,
     θiterator,
     rₑ,
-)
+) where {T}
     θ_offset = setup.θ_offset
     for (i, θ) in enumerate(θiterator)
-        θ_corrected = θ + 1e-4
-        insert_data!(data, i, θ_corrected, workhorse(θ))
+        insert_data!(data, i, θ, workhorse(θ))
     end
 
-    gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
-    gmin, gmax = _check_gmin_gmax(gmin_candidate, gmax_candidate, rₑ, data.gs)
+    # TODO: find where the largest difference in g is and refine
+
+    N, gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
+    gmin, gmax = @views _check_gmin_gmax(gmin_candidate, gmax_candidate, rₑ, data.gs[1:N])
     # we might not have used all of the memory we allocated so let's clean up
-    remove_unused_elements!(data)
+    data.data = data.data[:, 1:N]
+
     # sort everything by angle
     sort!(data)
 
@@ -364,8 +360,8 @@ function cunningham_transfer_function(
     d::AbstractAccretionDisc,
     rₑ::T,
     ;
-    chart = chart_for_metric(m, 10 * x[2]),
-    max_time = 10 * x[2],
+    chart = chart_for_metric(m, 2 * x[2]),
+    max_time = 2 * x[2],
     solver_kwargs...,
 ) where {T}
     M = setup.N + 2 * setup.N_extrema
@@ -405,15 +401,14 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
     i::Int = data.cutoff
     N = (lastindex(data) - data.cutoff) ÷ 2 - 1
 
+    _, min_i = @views findmin(data.gs[1:i])
+    _, max_i = @views findmax(data.gs[1:i])
+
     function _gmin_finder(θ)
         if i >= lastindex(data)
             error("i >= lastindex(data): $i >= $(lastindex(data))")
         end
         i += 1
-        # avoid poles
-        if abs(θ) < 1e-4 || abs(abs(θ) - π) < 1e-4
-            θ += 1e-4
-        end
         insert_data!(data, i, θ, workhorse(θ))
         data.gs[i]
     end
@@ -422,23 +417,45 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
     end
 
     # stride either side of our best guess so far
-    res_min = Optim.optimize(
+    res_min = bracket_minimize(
         _gmin_finder,
-        0 - offset,
-        0 + offset,
-        GoldenSection(),
-        iterations = N,
+        data.θs[min_i] - offset,
+        data.θs[min_i] + offset,
+        N = N,
     )
-    res_max = Optim.optimize(
+    res_max = bracket_minimize(
         _gmax_finder,
-        π - offset,
-        π + offset,
-        GoldenSection(),
-        iterations = N,
+        data.θs[max_i] - offset,
+        data.θs[max_i] + offset,
+        N = N,
     )
 
     # unpack result, remembering that maximum is inverted
-    Optim.minimum(res_min), -Optim.minimum(res_max)
+    i, res_min, -res_max
+end
+
+function bracket_minimize(f, low, high; N)
+    y = one(low)
+    a = low
+    b = high
+    for _ = 1:(N÷2)
+        c = b - (b - a) * INVPHI
+        d = a + (b - a) * INVPHI
+        fc = f(c)
+        fd = f(d)
+        if isapprox(fc, fd, atol = 1e-7)
+            break
+        end
+
+        if fc < fd
+            y = min(y, fc)
+            b = d
+        else
+            y = min(y, fd)
+            a = c
+        end
+    end
+    y
 end
 
 function interpolated_transfer_branches(
@@ -484,25 +501,26 @@ function interpolated_transfer_branches(
 end
 
 function transfer_function_grid(
-    m::AbstractMetric,
+    m::AbstractMetric{T},
     x,
     d::AbstractAccretionGeometry,
     radii;
     Ng = 20,
+    h_grid = 1e-3,
     kwargs...,
-)
+) where {T}
     itfs = interpolated_transfer_branches(m, x, d, radii; kwargs...)
-    transfer_function_grid(itfs, Ng)
+    transfer_function_grid(itfs, Ng; h = h_grid)
 end
 
-function transfer_function_grid(itfs::InterpolatingTransferBranches, Ng::Int)
+function transfer_function_grid(itfs::InterpolatingTransferBranches, Ng::Int; h = 1e-3)
     g✶_grid = collect(range(0, 1, Ng))
     r_grid = itfs.radii
 
-    lower_f = [branch.lower_f(g) for g in g✶_grid, branch in itfs.branches]
-    upper_f = [branch.upper_f(g) for g in g✶_grid, branch in itfs.branches]
-    lower_t = [branch.lower_t(g) for g in g✶_grid, branch in itfs.branches]
-    upper_t = [branch.upper_t(g) for g in g✶_grid, branch in itfs.branches]
+    lower_f = [branch.lower_f(clamp(g, h, 1-h)) for g in g✶_grid, branch in itfs.branches]
+    upper_f = [branch.upper_f(clamp(g, h, 1-h)) for g in g✶_grid, branch in itfs.branches]
+    lower_t = [branch.lower_t(clamp(g, h, 1-h)) for g in g✶_grid, branch in itfs.branches]
+    upper_t = [branch.upper_t(clamp(g, h, 1-h)) for g in g✶_grid, branch in itfs.branches]
 
     CunninghamTransferGrid(
         r_grid,
@@ -542,8 +560,8 @@ end
 
 """
     transferfunctions(
-        m::AbstractMetric, 
-        x, 
+        m::AbstractMetric,
+        x,
         d::AbstractAccretionDisc;
         minrₑ = isco(m) + 1e-2,
         maxrₑ = 50,

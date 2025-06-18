@@ -230,7 +230,8 @@ function bin_emissivity_grid(
     d::AbstractAccretionDisc,
     r_bins,
     ϕ_bins,
-    sky::AdaptiveSky{T,<:CoronaGridValues},
+    sky::AdaptiveSky{T,<:CoronaGridValues};
+    kwargs...,
 ) where {T}
     solid_angle, output = bin_emissivity_grid!(
         zeros(eltype(r_bins), (length(r_bins), length(ϕ_bins))),
@@ -239,7 +240,8 @@ function bin_emissivity_grid(
         d,
         r_bins,
         ϕ_bins,
-        sky,
+        sky;
+        kwargs...,
     )
 
     for i in eachindex(solid_angle)
@@ -273,7 +275,8 @@ function bin_emissivity_grid!(
     d::AbstractAccretionDisc,
     r_bins,
     ϕ_bins,
-    sky::AdaptiveSky{T,V},
+    sky::AdaptiveSky{T,V};
+    Γ = 2,
 ) where {T,V<:CoronaGridValues}
     @assert size(output) == size(solid_angle)
     @assert size(output) == (length(r_bins), length(ϕ_bins))
@@ -302,7 +305,7 @@ function bin_emissivity_grid!(
         ϕ_i = searchsortedlast(ϕ_bins, mod2pi(v.ϕ))
         if (r_i != 0) && (ϕ_i != 0)
             # TODO: allow generic spectrum
-            output[r_i, ϕ_i] += ΔΩ * v.J * (v.g^2 * area(v.r))
+            output[r_i, ϕ_i] += ΔΩ * v.J * (v.g^Γ * area(v.r))
             solid_angle[r_i, ϕ_i] += ΔΩ
         end
     end
@@ -392,6 +395,12 @@ function evaluate_refinement_metric(
     [_eval_metric(i, j) for i in axis_itt, j in axis_itt]
 end
 
+@enum StepBlockCodes begin
+    converged
+    not_converged
+    limit_exceeded
+end
+
 """
     function step_block!(
         m::AbstractMetric,
@@ -435,6 +444,7 @@ function step_block!(
     top = 3,
     split = 6,
     percentage = 10,
+    limit = 200_000,
     metric = empty_fraction,
     kwargs...,
 )
@@ -457,7 +467,7 @@ function step_block!(
     if check_threshold
         _counts = filter(i -> i.score < threshold, _counts)
         if length(_counts) == 0
-            return false
+            return converged
         end
     end
 
@@ -478,15 +488,24 @@ function step_block!(
         false
     end
 
-    trace_step!(sky; check_refine = refiner, kwargs...)
-    true
+    to_refine = find_need_refine(sky, refiner)
+    if length(to_refine) > limit
+        @warn (
+            "Convergence failed. Limit $limit exceeded: too many cells to refine (N = $(length(to_refine)))."
+        )
+        return limit_exceeded
+    end
+
+    refine_and_trace!(sky, to_refine; kwargs...)
+    not_converged
 end
 
 """
     refine_function(f)
 
 Used to define a new `check_refine` function for an [`AdaptiveSky`](@ref). This
-can be passed e.g. to [`refine_all`](@ref).
+can be passed e.g. to [`find_need_refine`](@ref) or
+[`refine_and_trace!`](@ref).
 
 The function `f` is given each cell's value and should return `true` if the
 cell should be refined, else `false`.
@@ -572,19 +591,19 @@ function adaptive_solve!(
     end
 
     # trace the initial sky
-    Gradus.trace_initial!(sky)
+    trace_initial!(sky)
     # this happens outside the loop as the first is so fast it tends to ruin
     # the output of the progress bar
-    Gradus.trace_step!(sky)
+    trace_step!(sky)
     i += 1
 
     for _ = 1:trace_calls
-        Gradus.trace_step!(sky; progress_bar = progress, showvalues = showvals)
+        trace_step!(sky; progress_bar = progress, showvalues = showvals)
         i += 1
     end
 
     # ensure the distant radii are well refined
-    Gradus.trace_step!(
+    trace_step!(
         sky;
         check_refine = fine_refine_function(v -> v.r > 800; percentage = 10),
         progress_bar = progress,
@@ -592,23 +611,38 @@ function adaptive_solve!(
     )
     i += 1
 
-    while step_block!(
-        m,
-        d,
+    r_isco = isco(m)
+
+    trace_step!(
         sky;
-        split = 5,
-        top = 4,
+        check_refine = fine_refine_function(
+            v -> (v.r > r_isco) && (v.r < 2.0);
+            percentage = 50,
+        ),
         progress_bar = progress,
         showvalues = showvals,
-        kwargs...,
     )
+    i += 1
+
+    status = not_converged
+    while status == not_converged
+        status = step_block!(
+            m,
+            d,
+            sky;
+            split = 5,
+            top = 4,
+            progress_bar = progress,
+            showvalues = showvals,
+            kwargs...,
+        )
         i += 1
         if i >= limit
             break
         end
     end
 
-    Gradus.ProgressMeter.finish!(progress)
+    ProgressMeter.finish!(progress)
 
     i
 end

@@ -539,7 +539,9 @@ function _branch_emissivity(m::AbstractMetric, slice::PointSlice, I::Vector{Int}
         Δr = (abs(slice.r[i1] - slice.r[i2]))
         Δθ = ang_diff(slice.θ[i1], slice.θ[i2]) / 2
 
-        A = _proper_area(m, slice.r[i] + Δr / 2, π / 2) * (abs(slice.drdθ[i1]) + abs(slice.drdθ[i2])) / 2
+        A =
+            _proper_area(m, slice.r[i] + Δr / 2, π / 2) *
+            (abs(slice.drdθ[i1]) + abs(slice.drdθ[i2])) / 2
         point_source_equatorial_disc_emissivity(
             spectrum,
             slice.θ[i],

@@ -41,7 +41,7 @@ freq1, τ1 = calc_lag_freq(m, d, model1, radii, itb)
 
 # smoke test
 @test sum(freq1) ≈ 2449.8787687490535 rtol = 1e-2
-@test τ1[132] ≈ 9.281677930459137 rtol = 1e-2
+@test τ1[132] ≈ 9.530536325472662 rtol = 1e-2
 
 # check it works for thick discs too
 d_thick = ShakuraSunyaev(m)

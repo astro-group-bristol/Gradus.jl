@@ -27,11 +27,6 @@ end
 Base.eachindex(data::_TransferDataAccumulator) = eachindex(data.θs)
 Base.lastindex(data::_TransferDataAccumulator) = size(data.data, 2)
 
-function remove_unused_elements!(data::_TransferDataAccumulator)
-    data.data = data.data[:, data.mask]
-    data
-end
-
 function Base.sort!(data::_TransferDataAccumulator)
     I = sortperm(data.θs)
     Base.permutecols!!(data.data, I)
@@ -103,18 +98,16 @@ function _check_gmin_gmax(_gmin, _gmax, rₑ, gs)
             error("Cannot use extrema")
         end
     end
+
+    # check if they are better than the estimates from the array
     if gmin > minimum(gs)
-        @warn (
-            "Inferred minima > array minimum rₑ = $rₑ (gmin = $gmin, extrema(gs) = $(extrema(gs)). Using minimum."
-        )
         gmin = minimum(gs)
     end
+
     if gmax < maximum(gs)
-        @warn (
-            "Inferred maximum < array maximum rₑ = $rₑ (gmax = $gmax, extrema(gs) = $(extrema(gs)). Using maximum."
-        )
         gmax = maximum(gs)
     end
+
     return gmin, gmax
 end
 
