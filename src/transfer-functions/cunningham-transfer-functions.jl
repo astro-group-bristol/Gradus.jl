@@ -185,6 +185,7 @@ function _setup_workhorse_jacobian_with_kwargs(
     max_time = 2 * x[2],
     redshift_pf = ConstPointFunctions.redshift(m, x),
     jacobian_disc = d,
+    tape = nothing,
     tracer_kwargs...,
 )
     # underscores to avoid boxing variables
@@ -211,6 +212,7 @@ function _setup_workhorse_jacobian_with_kwargs(
             max_time = max_time,
             β₀ = setup.β₀,
             α₀ = setup.α₀,
+            tape = tape,
             tracer_kwargs...,
         )
         if isnan(r)

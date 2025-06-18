@@ -139,14 +139,13 @@ function _find_offset_for_radius(
     warn = true,
     zero_atol = 1e-7,
     worst_accuracy = 1e-3,
-    initial_r = max(one(r_target) * 5, r_target),
+    initial_r = max(one(r_target) * 20, r_target),
     tape = nothing,
     contrapoint_bias = 2,
     max_iter = 50,
     kwargs...,
 )
-    _ = kwargs
-    f = _make_image_plane_mapper(m, pos, d)
+    f = _make_image_plane_mapper(m, pos, d; kwargs...)
 
     function step(r)
         gp, _r, _dr = f(r, θₒ)
