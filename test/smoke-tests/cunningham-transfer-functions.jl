@@ -4,7 +4,7 @@ using Gradus
 function test_ctf1(a, angle, rₑ)
     m = KerrMetric(1.0, a)
     d = ThinDisc(0.0, Inf)
-    x = SVector(0.0, 10_000, deg2rad(angle), 0.0)
+    x = SVector(0.0, 100_000, deg2rad(angle), 0.0)
     Gradus.cunningham_transfer_function(
         m,
         x,
@@ -21,21 +21,22 @@ function measure_ctf(ctf)
 end
 
 # test for different angles
-@test measure_ctf(test_ctf1(0.998, 3, 4.0)) ≈ 0.12161376109873144 atol = 1e-3
-@test measure_ctf(test_ctf1(0.998, 35, 4.0)) ≈ 0.10362951554307089 atol = 1e-3
-@test measure_ctf(test_ctf1(0.998, 74, 4.0)) ≈ 0.054070356518218586 atol = 1e-3
-@test measure_ctf(test_ctf1(0.998, 85, 4.0)) ≈ 0.034811715215212875 atol = 1e-3
+# update: 2025-06-18: new root finder
+@test measure_ctf(test_ctf1(0.998, 3, 4.0)) ≈ 0.1108266964593416 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 35, 4.0)) ≈ 0.10510590963059034 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 74, 4.0)) ≈ 0.05294589711510501 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 85, 4.0)) ≈ 0.03602870590038378 atol = 1e-3
 
 # different radii
-@test measure_ctf(test_ctf1(0.998, 30, 4.0)) ≈ 0.10779115390995794 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 30, 4.0)) ≈ 0.09877331327997838 atol = 1e-3
 @test measure_ctf(test_ctf1(0.998, 30, 7.0)) ≈ 0.1202759989850966 atol = 1e-3
-@test measure_ctf(test_ctf1(0.998, 30, 10.0)) ≈ 0.12461894214061674 atol = 1e-3
-@test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.1275864358885266 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 30, 10.0)) ≈ 0.12341554326819407 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.12875961522283233 atol = 1e-3
 
 # large radii
 @test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.13191798015557799 rtol = 1e-2
-@test measure_ctf(test_ctf1(0.998, 30, 800.0)) ≈ 0.13481966054586172 rtol = 1e-2
-@test measure_ctf(test_ctf1(0.998, 30, 1000.0)) ≈ 0.13570698595034328 rtol = 1e-2
+@test measure_ctf(test_ctf1(0.998, 30, 800.0)) ≈ 0.1271143314790187 rtol = 1e-2
+@test measure_ctf(test_ctf1(0.998, 30, 1000.0)) ≈ 0.12734230932681662 rtol = 1e-2
 
 # ones that have been problematic in the past
 # and should not raise any errors or warnings

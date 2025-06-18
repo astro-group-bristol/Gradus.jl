@@ -14,7 +14,6 @@ end
     include("smoke-tests/circular-orbits.jl")
     include("smoke-tests/disc-profiles.jl")
     include("smoke-tests/special-radii.jl")
-    include("smoke-tests/cunningham-transfer-functions.jl")
 end
 
 @time @testset "smoke-reverberation" verbose = true begin
@@ -44,6 +43,8 @@ end
 @time @testset "transfer-functions" verbose = true begin
     include("transfer-functions/test-2d.jl")
     include("transfer-functions/test-thick-disc.jl")
+    include("smoke-tests/cunningham-transfer-functions.jl")
+    include("transfer-functions/test-problem-cases.jl")
 end
 
 @time @testset "image-planes" verbose = true begin
