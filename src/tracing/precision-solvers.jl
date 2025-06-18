@@ -156,6 +156,7 @@ function _find_offset_for_radius(
 
     x = initial_r
     y = r_target
+    # this method relies on the starting contrapoint being in the EH
     contra = zero(r_target)
     # calculate next step
     point, df, y = step(x)
@@ -188,7 +189,7 @@ function _find_offset_for_radius(
         end
 
         if (next_y < 0) && (y < 0) && ((-y/df) < 0)
-            @warn "Converge failed."
+            @warn "Converge failed. If you are calculating transfer functions for thick discs, this is normal. If not, check your results! This warning will not log again." maxlog=1
             break
         end
 
