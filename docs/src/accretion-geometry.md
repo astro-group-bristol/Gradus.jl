@@ -29,7 +29,7 @@ cross_section
 ### Available accretion geometry
 
 ```@docs
-GeometricThinDisc
+ThinDisc
 ThickDisc
 ShakuraSunyaev
 ```

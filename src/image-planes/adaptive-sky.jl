@@ -34,6 +34,10 @@ struct AdaptiveSky{T,V,CalcV,RefineV}
     check_refine::RefineV
 end
 
+function Base.show(io::IO, ::MIME"text/plain", @nospecialize(sky::AdaptiveSky))
+    println(io, "AdaptiveSky[N=$(length(sky.values))]")
+end
+
 AdaptiveSky(V::Type, calc_v, check_refine; pole_offset = 1e-6) = AdaptiveSky(
     Grids.AdaptiveGrid(cos(pole_offset), cos(π - pole_offset), -π, π),
     V[],
@@ -305,3 +309,5 @@ function unpack_sky(sky::AdaptiveSky{T,V}) where {T,V}
     end
     X, Y, Z
 end
+
+export AdaptiveSky, trace_initial!, unpack_sky, trace_step!

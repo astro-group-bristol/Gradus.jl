@@ -127,7 +127,7 @@ plot_horizon!(m)
 Choosing the initial velocity in this manner lacks interpretation. We can instead use so-called _impact parameters_ $(\alpha, \beta)$. These may be thought of as follows: 
 
 ```@docs
-impact_parameters_to_three_velocity
+map_impact_parameters
 ```
 
 Finally, if you imagine a two dimensional image plane, where $x$ is the horizontal and $y$ the vertical coordinate, the $\alpha$ impact parameter corresponds to that closest approach along the $x$ axis, and $\beta$ along the $y$ axis.
@@ -487,7 +487,7 @@ plot!(bins, f_s_thin_disc, label = "Schwarzschild[thin]")
 
 ## Where to go from here?
 
-The documentation is a rich resource for information related to using Gradus, and tailoring the toolkit for your needs. Take a look at [Examples](@ref) for a number of quick recipes, or try [Implementing a new metric](@ref) and study a different spacetime.
+The documentation is a rich resource for information related to using Gradus, and tailoring the toolkit for your needs. Take a look at [Examples](@ref) for a number of quick recipes, or try [Implementing a new metric](@ref) and study a different spacetime. If you just want to have fun making images, check out [Adaptive tracing](@ref).
 
 
 [^1]: Johannsen, Tim. ‘Regular Black Hole Metric with Three Constants of Motion’. Physical Review D 88, no. 4 (1 August 2013): 044002. https://doi.org/10.1103/PhysRevD.88.044002.
