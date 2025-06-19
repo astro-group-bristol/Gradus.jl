@@ -118,6 +118,20 @@ function check_refine(
     g_too_coarse || J_too_coarse
 end
 
+"""
+    function AdaptiveSky(
+        m::AbstractMetric,
+        corona::AbstractCoronaModel,
+        d::AbstractAccretionDisc;
+        kwargs...,
+    )
+
+Initialise an adaptive sky with multi-threaded tracing located at the position
+of the `corona` with it's velocity (determined by
+[`sample_position_velocity`](@ref)).
+
+The refiement criteria is [`check_refine`](@ref).
+"""
 function AdaptiveSky(
     m::AbstractMetric{T},
     corona::AbstractCoronaModel,
@@ -646,3 +660,6 @@ function adaptive_solve!(
 
     i
 end
+
+
+export fill_sky_values
