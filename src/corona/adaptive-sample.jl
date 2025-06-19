@@ -112,8 +112,8 @@ function check_refine(
         return false
     end
 
-    g_too_coarse = !isapprox(v1.g, v2.g, atol = percentage / 100)
-    J_too_coarse = !isapprox(v1.J, v2.J, atol = percentage / 100)
+    g_too_coarse = !isapprox(v1.g, v2.g, rtol = percentage / 100)
+    J_too_coarse = !isapprox(v1.J, v2.J, rtol = percentage / 100)
 
     g_too_coarse || J_too_coarse
 end
