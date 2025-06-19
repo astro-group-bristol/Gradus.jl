@@ -12,7 +12,7 @@ function constrain_all(
 end
 
 constrain_all(m::AbstractMetric, x::SVector{4}, v::SVector{4,T}, μ) where {T<:Number} =
-    SVector{4,T}(_constrain(m, x, v, μ = μ), v[2], v[3], v[4])
+    SVector{4,T}(constrain(m, x, v, μ = μ), v[2], v[3], v[4])
 
 function wrap_constraint(m::AbstractMetric, position, velfunc::Function, μ)
     (i) -> constrain_all(m, position, velfunc(i), μ)

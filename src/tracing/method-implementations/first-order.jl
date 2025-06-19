@@ -7,7 +7,7 @@ are used, and are local observer ratios ``\\sin \\Theta`` and ``\\sin \\Phi`` re
 
 Require implementation of
 - [`inner_radius`](@ref)
-- [`_constrain`](@ref)
+- [`constrain`](@ref)
 - [`four_velocity`](@ref)
 - [`calc_lq`](@ref)
 - [`Vr`](@ref)
