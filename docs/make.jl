@@ -21,6 +21,7 @@ makedocs(
             "Point functions" => "point-functions.md",
             "Disc emissivity" => "emissivity.md",
             "Line profiles" => "lineprofiles.md",
+            "Adaptive tracing" => "adaptive-tracing.md",
         ],
         "Geodesics and integration" => [
             "Implementing new metrics" => "custom-metrics.md",
