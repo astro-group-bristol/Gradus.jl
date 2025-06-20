@@ -72,9 +72,9 @@ function trace_all!(
     end
 
     Threads.@threads for index in to_refine
+        # for index in to_refine
         cell = sky.grid.cells[index]
-        th = acos(cell.pos[1])
-        value = sky.calculate_value(th, cell.pos[2])
+        value = sky.calculate_value(cell.pos[1], cell.pos[2])
         sky.values[index] = value
         # update progress
         if isnothing(showvalues)
@@ -92,8 +92,7 @@ function Grids.refine!(sky::AdaptiveSky, cell_index::Int)
             push!(sky.values, sky.values[cell_index])
         else
             child = sky.grid.cells[child_index]
-            th = acos(child.pos[1])
-            value = sky.calculate_value(th, child.pos[2])
+            value = sky.calculate_value(child.pos[1], child.pos[2])
             push!(sky.values, value)
         end
     end
@@ -106,8 +105,7 @@ Initialise the sky to a given level of refinement.
 """
 function trace_initial!(sky::AdaptiveSky; level = 3)
     for cell in sky.grid.cells
-        th = acos(cell.pos[1])
-        value = sky.calculate_value(th, cell.pos[2])
+        value = sky.calculate_value(cell.pos[1], cell.pos[2])
         push!(sky.values, value)
     end
 
