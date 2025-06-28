@@ -318,11 +318,10 @@ function _cunningham_transfer_function!(
         insert_data!(data, i, θ, workhorse(θ))
     end
 
-    # TODO: find where the largest difference in g is and refine
-
-    N, gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
-    gmin, gmax = @views _check_gmin_gmax(gmin_candidate, gmax_candidate, rₑ, data.gs[1:N])
+    gmin_candidate, gmax_candidate = _search_extremal!(data, workhorse, θ_offset)
+    gmin, gmax = _check_gmin_gmax(gmin_candidate, gmax_candidate, rₑ, data.gs)
     # we might not have used all of the memory we allocated so let's clean up
+    N = count(data.mask)
     data.data = data.data[:, 1:N]
 
     # sort everything by angle
@@ -401,14 +400,15 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
     i::Int = data.cutoff
     N = (lastindex(data) - data.cutoff) ÷ 2 - 1
 
-    _, min_i = @views findmin(data.gs[1:i])
-    _, max_i = @views findmax(data.gs[1:i])
-
     function _gmin_finder(θ)
         if i >= lastindex(data)
             error("i >= lastindex(data): $i >= $(lastindex(data))")
         end
         i += 1
+        # avoid poles
+        if abs(θ) < 1e-4 || abs(abs(θ) - π) < 1e-4
+            θ += 1e-4
+        end
         insert_data!(data, i, θ, workhorse(θ))
         data.gs[i]
     end
@@ -417,45 +417,23 @@ function _search_extremal!(data::_TransferDataAccumulator, workhorse, offset)
     end
 
     # stride either side of our best guess so far
-    res_min = bracket_minimize(
+    res_min = Optim.optimize(
         _gmin_finder,
-        data.θs[min_i] - offset,
-        data.θs[min_i] + offset,
-        N = N,
+        0 - offset,
+        0 + offset,
+        GoldenSection(),
+        iterations = N,
     )
-    res_max = bracket_minimize(
+    res_max = Optim.optimize(
         _gmax_finder,
-        data.θs[max_i] - offset,
-        data.θs[max_i] + offset,
-        N = N,
+        π - offset,
+        π + offset,
+        GoldenSection(),
+        iterations = N,
     )
 
     # unpack result, remembering that maximum is inverted
-    i, res_min, -res_max
-end
-
-function bracket_minimize(f, low, high; N)
-    y = one(low)
-    a = low
-    b = high
-    for _ = 1:(N÷2)
-        c = b - (b - a) * INVPHI
-        d = a + (b - a) * INVPHI
-        fc = f(c)
-        fd = f(d)
-        if isapprox(fc, fd, atol = 1e-7)
-            break
-        end
-
-        if fc < fd
-            y = min(y, fc)
-            b = d
-        else
-            y = min(y, fd)
-            a = c
-        end
-    end
-    y
+    Optim.minimum(res_min), -Optim.minimum(res_max)
 end
 
 function interpolated_transfer_branches(
