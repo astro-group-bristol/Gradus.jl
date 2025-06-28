@@ -126,7 +126,7 @@ function lineprofile(
     d::AbstractAccretionGeometry,
     ::TransferFunctionMethod,
     ;
-    minrₑ = isco(m),
+    minrₑ = isco(m) + 1e-2, # delta to avoid numerical instabilities
     maxrₑ = 50,
     numrₑ = 100,
     verbose = false,
