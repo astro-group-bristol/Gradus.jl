@@ -141,5 +141,7 @@ function _normalize!(flux::AbstractMatrix{T}, grid) where {T}
     if Σflux > 0
         @. flux = flux / Σflux
     end
+    # normalize so that the maximal row sums to 1
+    flux = flux ./ maximum(sum(flux, dims = 2))
     flux
 end
