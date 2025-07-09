@@ -15,7 +15,7 @@ function (grid::GeometricGrid)(min, max, N)
 end
 
 function _geometric_grid(min, max, N)
-    K = (max / min)^(1 / N)
+    K = (max / min)^(1 / (N-1))
     (min * K^(i - 1) for i = 1:N)
 end
 
