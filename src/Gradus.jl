@@ -526,7 +526,8 @@ export AbstractMetric,
     AbstractAccretionGeometry,
     AbstractAccretionDisc,
     AbstractDiscProfile,
-    AbstractDirectionSampler
+    AbstractDirectionSampler,
+    AbstractCoronaModel
 
 export unpack_solution, unpack_solution_full
 

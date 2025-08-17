@@ -169,7 +169,7 @@ function _find_offset_for_radius(
     i::Int = 0
     while (!isapprox(y, 0, atol = zero_atol)) && (i <= max_iter)
         if !isnothing(tape)
-            push!(tape, (; x, y, df, Δy))
+            push!(tape, (; x, y, df, Δy, contra))
         end
         # Newton-Raphson update
         next_x = x - y / df
