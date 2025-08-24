@@ -560,6 +560,15 @@ function fine_refine_function(f; kwargs...)
     end
 end
 
+function refine_to_level(n)
+    function refiner(sky, i1, i2)
+        if isnan(sky.values[i1].r) && isnan(sky.values[i2].r)
+            return false
+        end
+        (sky.grid.cells[i2].level < n)
+    end
+end
+
 """
     function adaptive_solve!(
         m::AbstractMetric,
@@ -628,11 +637,12 @@ function adaptive_solve!(
 
     r_isco = isco(m)
 
+    # ensure innermost radii are well refined
     trace_step!(
         sky;
         check_refine = fine_refine_function(
             v -> (v.r > r_isco) && (v.r < 2.0);
-            percentage = 50,
+            percentage = 20,
         ),
         progress_bar = progress,
         showvalues = showvals,
@@ -656,6 +666,11 @@ function adaptive_solve!(
             break
         end
     end
+
+    # TODO: these should be interpolatable, but always good to be on the safe
+    # side
+    trace_step!(sky; check_refine = refine_to_level(4), verbose = true)
+    trace_step!(sky; check_refine = refine_to_level(5), verbose = true)
 
     ProgressMeter.finish!(progress)
 

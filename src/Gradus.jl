@@ -455,6 +455,7 @@ include("tracing/method-implementations/auto-diff.jl")
 include("image-planes/grids.jl")
 include("image-planes/planes.jl")
 include("image-planes/adaptive-sky.jl")
+include("image-planes/adaptive-plane.jl")
 
 include("rendering/cache.jl")
 include("rendering/rendering.jl")
