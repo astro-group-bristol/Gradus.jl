@@ -362,6 +362,25 @@ function interpolate_emissivity_grid!(output::AbstractMatrix{T}, r_bins, ϕ_bins
     output
 end
 
+struct AxisLimits
+    l1::UnitRange{Int}
+    l2::UnitRange{Int}
+end
+AxisLimits(l1::UnitRange{Int}) = AxisLimits(l1, 1:0)
+
+# TODO: this is allocating...
+_as_index(al::AxisLimits) = Int[al.l1..., al.l2...]
+
+function _is_in(al::AxisLimits, domain, x)
+    in_domain = (x >= domain[first(al.l1)]) && (x <= domain[last(al.l1)])
+    if length(al.l2) != 0
+        in_other_domain = (x >= domain[first(al.l2)]) && (x <= domain[last(al.l2)])
+        in_other_domain || in_domain
+    else
+        in_domain
+    end
+end
+
 """
     empty_fraction(r, ϕ, block)
 
@@ -399,19 +418,27 @@ function evaluate_refinement_metric(
     metric = empty_fraction,
 )
     N = length(r_bins)
+    @assert length(phi_bins) == N
+
     output = bin_emissivity_grid(m, d, r_bins, phi_bins, sky)
     stencil_size = div(N, split)
 
     function _eval_metric(i, j)
-        r = i:(i+stencil_size)
-        ϕ = j:(j+stencil_size)
-        block = @views output[i:(i+stencil_size), j:(j+stencil_size)]
+        r = AxisLimits(i:(i+stencil_size))
+        ϕ =
+        if j == 0
+            half = div(stencil_size, 2)
+            AxisLimits(1:half, N-half:N)
+        else
+            AxisLimits(j:(j+stencil_size))
+        end
+        block = @views output[_as_index(r), _as_index(ϕ)]
         (; r, ϕ, score = metric(r, ϕ, block))
     end
 
     axis_itt = 1:(stencil_size÷4):(N-stencil_size)
-
-    [_eval_metric(i, j) for i in axis_itt, j in axis_itt]
+    metrics = [_eval_metric(i, j) for i in axis_itt, j in axis_itt]
+    vcat([_eval_metric(i, 0) for i in axis_itt], vec(metrics))
 end
 
 @enum StepBlockCodes begin
@@ -467,7 +494,7 @@ function step_block!(
     metric = empty_fraction,
     kwargs...,
 )
-    r_bins = collect(Grids._geometric_grid(isco(m), 1000.0, N))
+    r_bins = logrange(isco(m), 1000.0, N)
     phi_bins = range(0, 2π, N)
 
     _counts = evaluate_refinement_metric(
@@ -480,7 +507,7 @@ function step_block!(
         metric = metric,
     )
 
-    _counts = filter(i -> i.score != 0, vec(_counts))
+    _counts = filter(i -> i.score != 0, _counts)
     sort!(_counts; by = i -> i.score)
 
     if check_threshold
@@ -491,15 +518,13 @@ function step_block!(
     end
 
     lims = map(1:min(length(_counts), top)) do index
-        r_min, r_max = @views extrema(r_bins[_counts[index].r])
-        phi_min, phi_max = @views extrema(phi_bins[_counts[index].ϕ])
-        (; r = (r_min, r_max), ϕ = (phi_min, phi_max))
+        (; r = _counts[index].r, ϕ = _counts[index].ϕ)
     end
 
     refiner = fine_refine_function(; percentage = percentage) do v
         for lim in lims
-            in_r = (v.r >= lim.r[1]) && (v.r <= lim.r[2])
-            in_ϕ = (mod2pi(v.ϕ) >= lim.ϕ[1]) && (mod2pi(v.ϕ) <= lim.ϕ[2])
+            in_r = _is_in(lim.r, r_bins, v.r)
+            in_ϕ = _is_in(lim.ϕ, phi_bins, mod2pi(v.ϕ))
             if in_r && in_ϕ
                 return true
             end
