@@ -348,6 +348,10 @@ function interpolate_emissivity_grid!(output::AbstractMatrix{T}, r_bins, ϕ_bins
         x = @views ϕ_bins[I]
         y = @views col[I]
 
+        # stack some either side so we have smooth
+        X = vcat(x .- 2π, x, x .+ 2π)
+        Y = vcat(y, y, y)
+
         itp = NaNLinearInterpolator(x, y, NaN)
 
         for (j, ϕ) in enumerate(ϕ_bins)
