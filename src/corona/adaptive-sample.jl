@@ -282,6 +282,9 @@ end
 Like [`bin_emissivity_grid`](@ref), but the output and temporary `solid_angle`
 grid can be pre-allocated. Asserts the dimensions of both are `(lenght(r_bins),
 length(ϕ_bins))`.
+
+If the keyword argument `Γ` is `nothing` then no redshift contributions are
+included in the calculation (intended for serialising data products).
 """
 function bin_emissivity_grid!(
     output,
@@ -318,14 +321,109 @@ function bin_emissivity_grid!(
 
         r_i = searchsortedlast(r_bins, v.r)
         ϕ_i = searchsortedlast(ϕ_bins, mod2pi(v.ϕ))
+
         if (r_i != 0) && (ϕ_i != 0)
             # TODO: allow generic spectrum
-            output[r_i, ϕ_i] += ΔΩ * v.J * (v.g^Γ * area(v.r))
+            redshift = if !isnothing(Γ)
+                v.g^Γ
+            else
+                one(v.g)
+            end
+
+            output[r_i, ϕ_i] += ΔΩ * v.J * (redshift * area(v.r))
             solid_angle[r_i, ϕ_i] += ΔΩ
         end
     end
 
     solid_angle, output
+end
+
+function bin_redshift_grid!(
+    output,
+    solid_angle,
+    r_bins,
+    ph_bins,
+    sky::AdaptiveSky{T,V};
+) where {T,V<:Gradus.CoronaGridValues}
+    @assert size(output) == size(solid_angle)
+    @assert size(output) == (length(r_bins), length(ph_bins))
+
+    r_max = maximum(r_bins)
+
+    for (index, v) in enumerate(sky.values)
+        if Gradus.Grids.has_children(sky.grid, index) || isnan(v.r) || v.r > r_max
+            continue
+        end
+
+        th = acos(sky.grid.cells[index].pos[1])
+        ΔΩ = prod(Gradus.Grids.get_cell_width(sky.grid, index)) / sin(th)
+
+        r_i = searchsortedlast(r_bins, v.r)
+        t_i = searchsortedlast(ph_bins, mod2pi(v.ϕ))
+
+        if (r_i != 0) && (t_i != 0)
+            output[r_i, t_i] += ΔΩ * v.g
+            solid_angle[r_i, t_i] += ΔΩ
+        end
+    end
+
+    solid_angle, output
+end
+
+function bin_redshift_grid(r_bins, ph_bins, sky::AdaptiveSky)
+    output = zeros(Float64, (length(r_bins), length(ph_bins)))
+    solid_angle = deepcopy(output)
+    bin_redshift_grid!(output, solid_angle, r_bins, ph_bins, sky)
+    for i in eachindex(solid_angle)
+        if solid_angle[i] > 0
+            output[i] /= solid_angle[i]
+        end
+    end
+    output
+end
+
+function bin_time_grid!(
+    output,
+    solid_angle,
+    r_bins,
+    ph_bins,
+    sky::AdaptiveSky{T,V};
+) where {T,V<:Gradus.CoronaGridValues}
+    @assert size(output) == size(solid_angle)
+    @assert size(output) == (length(r_bins), length(ph_bins))
+
+    r_max = maximum(r_bins)
+
+    for (index, v) in enumerate(sky.values)
+        if Gradus.Grids.has_children(sky.grid, index) || isnan(v.r) || v.r > r_max
+            continue
+        end
+
+        th = acos(sky.grid.cells[index].pos[1])
+        ΔΩ = prod(Gradus.Grids.get_cell_width(sky.grid, index)) / sin(th)
+
+        r_i = searchsortedlast(r_bins, v.r)
+        t_i = searchsortedlast(ph_bins, mod2pi(v.ϕ))
+
+        if (r_i != 0) && (t_i != 0)
+            output[r_i, t_i] += ΔΩ * v.t
+            solid_angle[r_i, t_i] += ΔΩ
+        end
+    end
+
+    solid_angle, output
+end
+
+function bin_time_grid(r_bins, ph_bins, sky::AdaptiveSky)
+    output = zeros(Float64, (length(r_bins), length(ph_bins)))
+    solid_angle = deepcopy(output)
+    bin_time_grid!(output, solid_angle, r_bins, ph_bins, sky)
+    for i in eachindex(solid_angle)
+        if solid_angle[i] > 0
+            output[i] /= solid_angle[i]
+        end
+    end
+    output
 end
 
 """
@@ -637,6 +735,7 @@ function adaptive_solve!(
         color = :none,
         showspeed = true,
         enabled = verbose,
+        dt=0.2,
     )
 
     function showvals(N)
@@ -698,8 +797,10 @@ function adaptive_solve!(
 
     # TODO: these should be interpolatable, but always good to be on the safe
     # side
-    trace_step!(sky; check_refine = refine_to_level(4), verbose = true)
-    trace_step!(sky; check_refine = refine_to_level(5), verbose = true)
+    trace_step!(sky; check_refine = refine_to_level(4), verbose = true, progress_bar = progress, showvalues = showvals)
+    i += 1
+    trace_step!(sky; check_refine = refine_to_level(5), verbose = true, progress_bar = progress, showvalues = showvals)
+    i += 1
 
     ProgressMeter.finish!(progress)
 
