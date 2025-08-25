@@ -523,10 +523,9 @@ function evaluate_refinement_metric(
 
     function _eval_metric(i, j)
         r = AxisLimits(i:(i+stencil_size))
-        ϕ =
-        if j == 0
+        ϕ = if j == 0
             half = div(stencil_size, 2)
-            AxisLimits(1:half, N-half:N)
+            AxisLimits(1:half, (N-half):N)
         else
             AxisLimits(j:(j+stencil_size))
         end
@@ -735,7 +734,7 @@ function adaptive_solve!(
         color = :none,
         showspeed = true,
         enabled = verbose,
-        dt=0.2,
+        dt = 0.2,
     )
 
     function showvals(N)
@@ -797,9 +796,21 @@ function adaptive_solve!(
 
     # TODO: these should be interpolatable, but always good to be on the safe
     # side
-    trace_step!(sky; check_refine = refine_to_level(4), verbose = true, progress_bar = progress, showvalues = showvals)
+    trace_step!(
+        sky;
+        check_refine = refine_to_level(4),
+        verbose = true,
+        progress_bar = progress,
+        showvalues = showvals,
+    )
     i += 1
-    trace_step!(sky; check_refine = refine_to_level(5), verbose = true, progress_bar = progress, showvalues = showvals)
+    trace_step!(
+        sky;
+        check_refine = refine_to_level(5),
+        verbose = true,
+        progress_bar = progress,
+        showvalues = showvals,
+    )
     i += 1
 
     ProgressMeter.finish!(progress)
