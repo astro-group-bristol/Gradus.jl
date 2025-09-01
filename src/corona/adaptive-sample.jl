@@ -9,12 +9,26 @@ struct CoronaGridValues{T}
     g::T
     "|∂(r, ϕ) / ∂(theta, phi)| / sin(theta)"
     J::T
+    # TODO: this should not be encoded with a float
+    status::T
 end
 
-_to_vector(v::CoronaGridValues) = SVector{5}(v.t, v.r, v.ϕ, v.g, v.J)
-_from_vector(v::AbstractVector) = CoronaGridValues(v[1], v[2], v[3], v[4], v[5])
+function _tmp_status_to_float(status)
+    if status == StatusCodes.IntersectedWithGeometry
+        1.0
+    elseif status == StatusCodes.WithinInnerBoundary
+        -3.0
+    elseif status == StatusCodes.OutOfDomain
+        7.0
+    else
+        0.0
+    end
+end
 
-make_null(::Type{T}) where {T<:CoronaGridValues} = T(NaN, NaN, NaN, NaN, NaN)
+_to_vector(v::CoronaGridValues) = SVector{6}(v.t, v.r, v.ϕ, v.g, v.J)
+_from_vector(v::AbstractVector) = CoronaGridValues(v[1], v[2], v[3], v[4], v[5], v[6])
+
+make_null(::Type{T}) where {T<:CoronaGridValues} = T(NaN, NaN, NaN, NaN, NaN, NaN)
 
 vector_average(
     weights::AbstractVector{<:Number},
@@ -40,7 +54,7 @@ function _emissivity_jacobian!(integ, parameters, th::T, ph::T) where {T}
     gp = _solve_reinit!(integ, vcat(parameters.xinit, v))
 
     if gp.status != StatusCodes.IntersectedWithGeometry
-        return CoronaGridValues{T}(NaN, NaN, NaN, NaN, NaN)
+        return CoronaGridValues{T}(NaN, NaN, NaN, NaN, NaN, _tmp_status_to_float(gp.status))
     end
 
     v_disc = parameters.disc_velocity(gp.x)
@@ -56,7 +70,14 @@ function _emissivity_jacobian!(integ, parameters, th::T, ph::T) where {T}
         SVector{2}(th_dual, ph_dual),
     )
 
-    CoronaGridValues{T}(res[3], res[1], res[2], res[4], abs(det(jac)) / sin(th))
+    CoronaGridValues{T}(
+        res[3],
+        res[1],
+        res[2],
+        res[4],
+        abs(det(jac)) / sin(th),
+        _tmp_status_to_float(gp.status),
+    )
 end
 
 function _make_emissivity_tracer(
