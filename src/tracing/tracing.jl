@@ -103,7 +103,7 @@ solve_tracing_problem(
         reltol = config.reltol,
         solver_opts...,
         # throw error if wrong keyword arguments passed
-        kwargshandle = KeywordArgError,
+        kwargshandle = SciMLBase.KeywordArgError,
         verbose = config.verbose,
     )
     sol
@@ -143,7 +143,7 @@ function ensemble_solve_tracing_problem(
         reltol = config.reltol,
         solver_opts...,
         # throw error if wrong keyword arguments passed
-        kwargshandle = KeywordArgError,
+        kwargshandle = SciMLBase.KeywordArgError,
         verbose = config.verbose,
     )
 end
@@ -211,7 +211,7 @@ function _init_integrator(
         save_on = save_on,
         solver_opts...,
         # throw error if wrong keyword arguments passed
-        kwargshandle = KeywordArgError,
+        kwargshandle = SciMLBase.KeywordArgError,
         verbose = verbose,
     )
 end
