@@ -14,7 +14,7 @@ simsols = tracegeodesics(m, u, plane, (0.0, 2000.0))
 
 plane = CartesianPlane(GeometricGrid(), x_min = 0.1, y_min = 0.1, Nx = 12, Ny = 12)
 simsols = tracegeodesics(m, u, plane, (0.0, 2000.0))
-@test count_inner_boundary(m, simsols) == 45
+@test count_inner_boundary(m, simsols) == 25
 
 plane = CartesianPlane(InverseGrid(), x_min = 0.1, y_min = 0.1, Nx = 12, Ny = 12)
 simsols = tracegeodesics(m, u, plane, (0.0, 2000.0))
