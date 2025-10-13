@@ -213,6 +213,11 @@ function _find_offset_for_radius(
 
     if i >= max_iter
         @warn "Exceeded max iter ($max_iter)" maxlog=1
+        if y > 10.0
+            @warn "Attempting to bracket since y = $y != 0" maxlog=1
+            x = find_zero(i -> step(i)[end], (contra, x), atol = zero_atol)
+            point, df, y = step(x)
+        end
     end
 
     if warn && (x < 0)

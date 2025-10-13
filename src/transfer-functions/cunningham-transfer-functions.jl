@@ -255,6 +255,7 @@ function _rear_workhorse(
     d::AbstractThickAccretionDisc,
     rₑ;
     max_time = 2 * x[2],
+    tape = nothing,
     kwargs...,
 )
     plane = datumplane(d, rₑ)
@@ -271,32 +272,24 @@ function _rear_workhorse(
         )
     function _thick_workhorse(θ::T; whkwargs...)::NTuple{4,T} where {T}
         g, gp, r = datum_workhorse(θ; whkwargs...)
-        r₊ = try
-            r_thick, _ = _find_offset_for_radius(
+
+        gp_thick = unpack_solution(
+            tracegeodesics(
                 m,
-                x,
+                gp.x_init,
+                gp.v_init,
                 d,
-                rₑ,
-                θ;
-                initial_r = r,
-                zero_atol = setup.zero_atol,
-                max_time = max_time,
-                β₀ = setup.β₀,
-                α₀ = setup.α₀,
-                tracer_kwargs...,
-                # don't echo warnings
-                warn = false,
-            )
-            r_thick
-        catch
-            # if we fail, for whatever reason, to root solve on the thick discs,
-            # we don't care, we just need a NaN value and then set that point to
-            # "not visible"
-            NaN
-        end
-        is_visible, J = if !isnan(r₊) && isapprox(r, r₊, atol = 1e-3)
+                1.1 * gp.λ_max;
+                save_on = false,
+                whkwargs...,
+            ),
+        )
+
+        skip_jacobian =
+            (gp_thick.status != gp.status) || !isapprox(gp.x, gp_thick.x, rtol = 1e-3)
+        is_visible, J = if !skip_jacobian
             # trace jacobian on updated impact parameters
-            α, β = _rθ_to_αβ(r₊, θ; α₀ = setup.α₀, β₀ = setup.β₀)
+            α, β = _rθ_to_αβ(r, θ; α₀ = setup.α₀, β₀ = setup.β₀)
             _J = jacobian_function(α, β)
             isfinite(_J), _J
         else
