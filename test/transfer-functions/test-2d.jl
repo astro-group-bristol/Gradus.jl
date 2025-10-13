@@ -63,4 +63,4 @@ flux = Gradus.integrate_lagtransfer(
 fluxsum = sum(flux)
 # normalisation is missing, so number is big
 @test fluxsum ≈ 1.0 atol = 1e-2
-@test sum(flux[40,:]) ≈ 0.021759503160585468 atol = 1e-4
+@test sum(flux[40, :]) ≈ 0.021759503160585468 atol = 1e-4

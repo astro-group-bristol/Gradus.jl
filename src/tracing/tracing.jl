@@ -173,7 +173,7 @@ function ensemble_solve_tracing_problem(
             save_on = save_on,
             solver_opts...,
         ),
-        1:n_threads
+        1:n_threads,
     )
     # pre-allocate all of the returns
     output =

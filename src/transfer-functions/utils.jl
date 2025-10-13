@@ -113,8 +113,8 @@ end
 
 function _rθ_to_αβ(r, θ; α₀ = 0, β₀ = 0)
     sinθ, cosθ = sincos(θ)
-    α = r * cosθ + α₀
-    β = r * sinθ + β₀
+    α = (r * cosθ) + α₀
+    β = (r * sinθ) + β₀
     (α, β)
 end
 
