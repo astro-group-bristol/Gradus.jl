@@ -160,6 +160,7 @@ function ensemble_solve_tracing_problem(
         error("Cannot use `EnsembleEndpointThreads` with `save_on`")
     end
     pf = problem.prob_func
+    n_threads = Threads.nthreads()
     # init one integrator for each thread
     integrators = map(
         _ -> _init_integrator(
@@ -172,7 +173,7 @@ function ensemble_solve_tracing_problem(
             save_on = save_on,
             solver_opts...,
         ),
-        1:Threads.nthreads(),
+        1:n_threads
     )
     # pre-allocate all of the returns
     output =
@@ -183,10 +184,10 @@ function ensemble_solve_tracing_problem(
 
     # solve
     Threads.@threads for i = 1:config.trajectories
-        integ = integrators[Threads.threadid()]
+        integ = integrators[_thread_id(n_threads)]
         p = pf(problem.prob, i, 0)
         output[i] = _solve_reinit!(integ, p.u0, p.p)
-        # update progress bar 
+        # update progress bar
         if !isnothing(progress_bar)
             ProgressMeter.next!(progress_bar)
         end

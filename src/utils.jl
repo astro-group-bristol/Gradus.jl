@@ -225,4 +225,12 @@ Select the minimum of a [`sliding_window`](@ref).
 """
 sliding_minimum(v::AbstractVector; kwargs...) = sliding_window(minimum, v; kwargs...)
 
+"""
+    _thread_id(n_threads::Int)::Int
+
+A more portable version of `Thread.threadid()`, since that function no longer
+returns an integer that is in `1:Threads.nthreads()` since Julia 1.12.
+"""
+_thread_id(n_threads::Int)::Int = mod1(Threads.threadid(), n_threads)
+
 export cartesian_squared_distance, cartesian_distance, spherical_to_cartesian

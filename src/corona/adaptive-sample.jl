@@ -165,10 +165,12 @@ function AdaptiveSky(
     integrators = typeof(integ)[deepcopy(integ) for _ = 1:(Threads.nthreads()-1)]
     push!(integrators, integ)
 
+    n_threads = Threads.nthreads()
+
     # tracing function
     function _trace(cos_th, ph)
         th = acos(cos_th)
-        t_id = Threads.threadid()
+        t_id = _thread_id(n_threads)
         _emissivity_jacobian!(integrators[t_id], ps, th, ph)
     end
 
