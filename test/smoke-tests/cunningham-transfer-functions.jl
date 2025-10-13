@@ -22,21 +22,21 @@ end
 
 # test for different angles
 # update: 2025-06-18: new root finder
-@test measure_ctf(test_ctf1(0.998, 3, 4.0)) ≈ 0.1108266964593416 atol = 1e-3
-@test measure_ctf(test_ctf1(0.998, 35, 4.0)) ≈ 0.10510590963059034 atol = 1e-3
-@test measure_ctf(test_ctf1(0.998, 74, 4.0)) ≈ 0.05294589711510501 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 3, 4.0)) ≈ 0.14048899037409682 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 35, 4.0)) ≈ 0.10846177995555085 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 74, 4.0)) ≈ 0.05550300700779827 atol = 1e-3
 @test measure_ctf(test_ctf1(0.998, 85, 4.0)) ≈ 0.03602870590038378 atol = 1e-3
 
 # different radii
-@test measure_ctf(test_ctf1(0.998, 30, 4.0)) ≈ 0.09877331327997838 atol = 1e-3
-@test measure_ctf(test_ctf1(0.998, 30, 7.0)) ≈ 0.1202759989850966 atol = 1e-3
-@test measure_ctf(test_ctf1(0.998, 30, 10.0)) ≈ 0.12341554326819407 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 30, 4.0)) ≈ 0.11958152396826184 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 30, 7.0)) ≈ 0.12205125501900763 atol = 1e-3
+@test measure_ctf(test_ctf1(0.998, 30, 10.0)) ≈ 0.1265019201038228 atol = 1e-3
 @test measure_ctf(test_ctf1(0.998, 30, 15.0)) ≈ 0.12875961522283233 atol = 1e-3
 
 # large radii
-@test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.13191798015557799 rtol = 1e-2
-@test measure_ctf(test_ctf1(0.998, 30, 800.0)) ≈ 0.1271143314790187 rtol = 1e-2
-@test measure_ctf(test_ctf1(0.998, 30, 1000.0)) ≈ 0.12734230932681662 rtol = 1e-2
+@test measure_ctf(test_ctf1(0.998, 30, 300.0)) ≈ 0.13378948600255888 rtol = 1e-2
+@test measure_ctf(test_ctf1(0.998, 30, 800.0)) ≈ 0.13470290875241375 rtol = 1e-2
+@test measure_ctf(test_ctf1(0.998, 30, 1000.0)) ≈ 0.13319637850028626 rtol = 1e-2
 
 # ones that have been problematic in the past
 # and should not raise any errors or warnings

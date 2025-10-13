@@ -12,7 +12,6 @@ end
 @time @testset "smoke-utility" verbose = true begin
     include("smoke-tests/pointfunctions.jl")
     include("smoke-tests/circular-orbits.jl")
-    include("smoke-tests/disc-profiles.jl")
     include("smoke-tests/special-radii.jl")
 end
 

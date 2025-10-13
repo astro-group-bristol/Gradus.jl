@@ -138,7 +138,7 @@ function _find_offset_for_radius(
     θₒ;
     warn = true,
     zero_atol = 1e-7,
-    worst_accuracy = 1e-3,
+    worst_accuracy = 1e-4 * r_target,
     initial_r = max(one(r_target) * 20, r_target),
     tape = nothing,
     contrapoint_bias = 2,
@@ -169,7 +169,7 @@ function _find_offset_for_radius(
     i::Int = 0
     while (!isapprox(y, 0, atol = zero_atol)) && (i <= max_iter)
         if !isnothing(tape)
-            push!(tape, (; x, y, df, Δy))
+            push!(tape, (; x, y, df, Δy, contra))
         end
         # Newton-Raphson update
         next_x = x - y / df
@@ -213,6 +213,11 @@ function _find_offset_for_radius(
 
     if i >= max_iter
         @warn "Exceeded max iter ($max_iter)" maxlog=1
+        if y > 10.0
+            @warn "Attempting to bracket since y = $y != 0" maxlog=1
+            x = find_zero(i -> step(i)[end], (contra, x), atol = zero_atol)
+            point, df, y = step(x)
+        end
     end
 
     if warn && (x < 0)

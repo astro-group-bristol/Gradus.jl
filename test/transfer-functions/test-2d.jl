@@ -22,14 +22,14 @@ tf = lagtransfer(
 )
 
 # check number of intersection points
-@test length(tf.observer_to_disc) == 335
+@test length(tf.observer_to_disc) == 337
 @test length(tf.coronal_geodesics.geodesic_points) == 58
 
 # ensure binning works as expected
 t, E, f = binflux(tf, N_t = 100, N_E = 100)
 
 fluxsum = sum(filter(!isnan, f))
-@test fluxsum ≈ 5.0139706835342395 atol = 1e-2
+@test fluxsum ≈ 3.9126785201177956 atol = 1e-2
 
 # test semi-analytic method
 
@@ -59,6 +59,8 @@ flux = Gradus.integrate_lagtransfer(
     rmax = maximum(radii),
 )
 
+
 fluxsum = sum(flux)
 # normalisation is missing, so number is big
 @test fluxsum ≈ 1.0 atol = 1e-2
+@test sum(flux[40, :]) ≈ 0.021759503160585468 atol = 1e-4

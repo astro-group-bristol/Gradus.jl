@@ -113,8 +113,8 @@ end
 
 function _rθ_to_αβ(r, θ; α₀ = 0, β₀ = 0)
     sinθ, cosθ = sincos(θ)
-    α = r * cosθ + α₀
-    β = r * sinθ + β₀
+    α = (r * cosθ) + α₀
+    β = (r * sinθ) + β₀
     (α, β)
 end
 
@@ -141,5 +141,7 @@ function _normalize!(flux::AbstractMatrix{T}, grid) where {T}
     if Σflux > 0
         @. flux = flux / Σflux
     end
+    # normalize so that the maximal row sums to 1
+    flux = flux ./ maximum(sum(flux, dims = 2))
     flux
 end

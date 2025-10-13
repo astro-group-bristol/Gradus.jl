@@ -470,8 +470,10 @@ function corona_arms(
 
     progress_bar = init_progress_bar("β slices: ", length(βs), verbose)
 
+    n_threads = Threads.nthreads()
+
     function _func(β)
-        thread_cache = caches[Threads.threadid()]
+        thread_cache = caches[_thread_id(n_threads)]
         arm = _ring_arm!(thread_cache, m, d, β; kwargs...)
         thread_cache._index[] = 0
         ProgressMeter.next!(progress_bar)
@@ -769,9 +771,11 @@ function corona_slices(
     caches = [copy(cache) for i = 1:(Threads.nthreads()-1)]
     push!(caches, cache)
 
+    n_threads = Threads.nthreads()
+
     progress_bar = init_progress_bar("β slices: ", length(βs), verbose)
     function _func(β)
-        thread_cache = caches[Threads.threadid()]
+        thread_cache = caches[_thread_id(n_threads)]
 
         _ring_arm_traces!(thread_cache, m, d, β; solver_opts...)
 

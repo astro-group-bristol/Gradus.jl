@@ -27,6 +27,7 @@ MuladdMacro.@muladd begin
         𝒜 = -(𝛺 * ginv[1] - ginv[5])
         ℬ = (𝛺 * ginv[5] - ginv[4])
 
+        # TODO: this feels like it can be simplified just in terms of Omega
         denom = ℬ^2 * ginv[1] + 2 * 𝒜 * ℬ * ginv[5] + 𝒜^2 * ginv[4]
         d = -sign(denom) * sqrt(inv(abs(denom)))
         ut = ℬ * d

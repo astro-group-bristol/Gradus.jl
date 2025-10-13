@@ -155,17 +155,13 @@ _rotate_about_spinaxis(n::SVector{3}, ϕ) = SVector(n[1] * cos(ϕ), n[1] * sin(�
 
 _zero_if_nan(x::T) where {T} = isnan(x) ? zero(T) : x
 
-@inline function _smooth_interpolate(
-    x::T,
-    x₀;
-    δx = T(2.5),
-    smoothing_offset = T(1e4),
-) where {T}
-    if x ≤ x₀
+function _smooth_interpolate(x::T, x₀; δx = T(2.5), smoothing_offset = T(1e4)) where {T}
+    if x ≤ (x₀ - δx/2)
         one(T)
-    elseif x₀ ≤ x ≤ x₀ + δx
+    elseif (x₀ - δx/2) ≤ x ≤ (x₀ + δx/2)
         t = (x - x₀) / δx
-        atan(smoothing_offset * t) * 2 / π
+        v = atan(smoothing_offset * t) / π + (1/2)
+        1 - v
     else
         zero(T)
     end
@@ -228,5 +224,13 @@ end
 Select the minimum of a [`sliding_window`](@ref).
 """
 sliding_minimum(v::AbstractVector; kwargs...) = sliding_window(minimum, v; kwargs...)
+
+"""
+    _thread_id(n_threads::Int)::Int
+
+A more portable version of `Thread.threadid()`, since that function no longer
+returns an integer that is in `1:Threads.nthreads()` since Julia 1.12.
+"""
+_thread_id(n_threads::Int)::Int = mod1(Threads.threadid(), n_threads)
 
 export cartesian_squared_distance, cartesian_distance, spherical_to_cartesian

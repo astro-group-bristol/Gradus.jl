@@ -455,6 +455,7 @@ include("tracing/method-implementations/auto-diff.jl")
 include("image-planes/grids.jl")
 include("image-planes/planes.jl")
 include("image-planes/adaptive-sky.jl")
+include("image-planes/adaptive-plane.jl")
 
 include("rendering/cache.jl")
 include("rendering/rendering.jl")
@@ -526,7 +527,8 @@ export AbstractMetric,
     AbstractAccretionGeometry,
     AbstractAccretionDisc,
     AbstractDiscProfile,
-    AbstractDirectionSampler
+    AbstractDirectionSampler,
+    AbstractCoronaModel
 
 export unpack_solution, unpack_solution_full
 

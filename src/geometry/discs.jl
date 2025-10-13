@@ -4,7 +4,7 @@ _gtol_error(gtol, x::SVector) = _gtol_error(gtol, x[2])
 # future fergus here: what on earth how is this the absolutely golden
 # gift-of-God heuristic, like any tweak to this function and no geodesic hits
 # the disc correctly
-_gtol_error(gtol, r) = @fastmath gtol * abs(r)^0.9
+_gtol_error(gtol, r) = @fastmath gtol * abs(r)
 
 """
     distance_to_disc(d::AbstractAccretionGeometry, u; kwargs...)

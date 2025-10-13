@@ -88,7 +88,7 @@ function flux_source_to_disc(
 
         γ = lorentz_factor(g_2, gp.x, v_disc)
         f_sd = inv(areas[i] / total_area)
-        # total reflected flux 
+        # total reflected flux
         g_sd^(1 + α) * E_d^(-α) * dA * f_sd / γ
     end
 
@@ -104,6 +104,10 @@ function energy_ratio(m::AbstractMetric, gp::GeodesicPoint, v_src, v_disc)
     # at the disc
     g_disc = metric(m, gp.x)
     e_disc = dotproduct(g_disc, gp.v, v_disc)
+
+    # TODO: this should be the otherway round to be consistent with g = E_end /
+    # E_start but changing this will require making sure all 1/g are replaced
+    # with g and vice versa in the emissivity calculations.
     e_src / e_disc
 end
 

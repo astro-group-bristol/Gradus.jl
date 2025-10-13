@@ -9,12 +9,26 @@ struct CoronaGridValues{T}
     g::T
     "|∂(r, ϕ) / ∂(theta, phi)| / sin(theta)"
     J::T
+    # TODO: this should not be encoded with a float
+    status::T
 end
 
-_to_vector(v::CoronaGridValues) = SVector{5}(v.t, v.r, v.ϕ, v.g, v.J)
-_from_vector(v::AbstractVector) = CoronaGridValues(v[1], v[2], v[3], v[4], v[5])
+function _tmp_status_to_float(status)
+    if status == StatusCodes.IntersectedWithGeometry
+        1.0
+    elseif status == StatusCodes.WithinInnerBoundary
+        -3.0
+    elseif status == StatusCodes.OutOfDomain
+        7.0
+    else
+        0.0
+    end
+end
 
-make_null(::Type{T}) where {T<:CoronaGridValues} = T(NaN, NaN, NaN, NaN, NaN)
+_to_vector(v::CoronaGridValues) = SVector{6}(v.t, v.r, v.ϕ, v.g, v.J)
+_from_vector(v::AbstractVector) = CoronaGridValues(v[1], v[2], v[3], v[4], v[5], v[6])
+
+make_null(::Type{T}) where {T<:CoronaGridValues} = T(NaN, NaN, NaN, NaN, NaN, NaN)
 
 vector_average(
     weights::AbstractVector{<:Number},
@@ -40,7 +54,7 @@ function _emissivity_jacobian!(integ, parameters, th::T, ph::T) where {T}
     gp = _solve_reinit!(integ, vcat(parameters.xinit, v))
 
     if gp.status != StatusCodes.IntersectedWithGeometry
-        return CoronaGridValues{T}(NaN, NaN, NaN, NaN, NaN)
+        return CoronaGridValues{T}(NaN, NaN, NaN, NaN, NaN, _tmp_status_to_float(gp.status))
     end
 
     v_disc = parameters.disc_velocity(gp.x)
@@ -56,7 +70,14 @@ function _emissivity_jacobian!(integ, parameters, th::T, ph::T) where {T}
         SVector{2}(th_dual, ph_dual),
     )
 
-    CoronaGridValues{T}(res[3], res[1], res[2], res[4], abs(det(jac)) / sin(th))
+    CoronaGridValues{T}(
+        res[3],
+        res[1],
+        res[2],
+        res[4],
+        abs(det(jac)) / sin(th),
+        _tmp_status_to_float(gp.status),
+    )
 end
 
 function _make_emissivity_tracer(
@@ -112,8 +133,8 @@ function check_refine(
         return false
     end
 
-    g_too_coarse = !isapprox(v1.g, v2.g, atol = percentage / 100)
-    J_too_coarse = !isapprox(v1.J, v2.J, atol = percentage / 100)
+    g_too_coarse = !isapprox(v1.g, v2.g, rtol = percentage / 100)
+    J_too_coarse = !isapprox(v1.J, v2.J, rtol = percentage / 100)
 
     g_too_coarse || J_too_coarse
 end
@@ -144,9 +165,12 @@ function AdaptiveSky(
     integrators = typeof(integ)[deepcopy(integ) for _ = 1:(Threads.nthreads()-1)]
     push!(integrators, integ)
 
+    n_threads = Threads.nthreads()
+
     # tracing function
-    function _trace(th, ph)
-        t_id = Threads.threadid()
+    function _trace(cos_th, ph)
+        th = acos(cos_th)
+        t_id = _thread_id(n_threads)
         _emissivity_jacobian!(integrators[t_id], ps, th, ph)
     end
 
@@ -281,6 +305,9 @@ end
 Like [`bin_emissivity_grid`](@ref), but the output and temporary `solid_angle`
 grid can be pre-allocated. Asserts the dimensions of both are `(lenght(r_bins),
 length(ϕ_bins))`.
+
+If the keyword argument `Γ` is `nothing` then no redshift contributions are
+included in the calculation (intended for serialising data products).
 """
 function bin_emissivity_grid!(
     output,
@@ -317,14 +344,109 @@ function bin_emissivity_grid!(
 
         r_i = searchsortedlast(r_bins, v.r)
         ϕ_i = searchsortedlast(ϕ_bins, mod2pi(v.ϕ))
+
         if (r_i != 0) && (ϕ_i != 0)
             # TODO: allow generic spectrum
-            output[r_i, ϕ_i] += ΔΩ * v.J * (v.g^Γ * area(v.r))
+            redshift = if !isnothing(Γ)
+                v.g^Γ
+            else
+                one(v.g)
+            end
+
+            output[r_i, ϕ_i] += ΔΩ * v.J * (redshift * area(v.r))
             solid_angle[r_i, ϕ_i] += ΔΩ
         end
     end
 
     solid_angle, output
+end
+
+function bin_redshift_grid!(
+    output,
+    solid_angle,
+    r_bins,
+    ph_bins,
+    sky::AdaptiveSky{T,V};
+) where {T,V<:Gradus.CoronaGridValues}
+    @assert size(output) == size(solid_angle)
+    @assert size(output) == (length(r_bins), length(ph_bins))
+
+    r_max = maximum(r_bins)
+
+    for (index, v) in enumerate(sky.values)
+        if Gradus.Grids.has_children(sky.grid, index) || isnan(v.r) || v.r > r_max
+            continue
+        end
+
+        th = acos(sky.grid.cells[index].pos[1])
+        ΔΩ = prod(Gradus.Grids.get_cell_width(sky.grid, index)) / sin(th)
+
+        r_i = searchsortedlast(r_bins, v.r)
+        t_i = searchsortedlast(ph_bins, mod2pi(v.ϕ))
+
+        if (r_i != 0) && (t_i != 0)
+            output[r_i, t_i] += ΔΩ * v.g
+            solid_angle[r_i, t_i] += ΔΩ
+        end
+    end
+
+    solid_angle, output
+end
+
+function bin_redshift_grid(r_bins, ph_bins, sky::AdaptiveSky)
+    output = zeros(Float64, (length(r_bins), length(ph_bins)))
+    solid_angle = deepcopy(output)
+    bin_redshift_grid!(output, solid_angle, r_bins, ph_bins, sky)
+    for i in eachindex(solid_angle)
+        if solid_angle[i] > 0
+            output[i] /= solid_angle[i]
+        end
+    end
+    output
+end
+
+function bin_time_grid!(
+    output,
+    solid_angle,
+    r_bins,
+    ph_bins,
+    sky::AdaptiveSky{T,V};
+) where {T,V<:Gradus.CoronaGridValues}
+    @assert size(output) == size(solid_angle)
+    @assert size(output) == (length(r_bins), length(ph_bins))
+
+    r_max = maximum(r_bins)
+
+    for (index, v) in enumerate(sky.values)
+        if Gradus.Grids.has_children(sky.grid, index) || isnan(v.r) || v.r > r_max
+            continue
+        end
+
+        th = acos(sky.grid.cells[index].pos[1])
+        ΔΩ = prod(Gradus.Grids.get_cell_width(sky.grid, index)) / sin(th)
+
+        r_i = searchsortedlast(r_bins, v.r)
+        t_i = searchsortedlast(ph_bins, mod2pi(v.ϕ))
+
+        if (r_i != 0) && (t_i != 0)
+            output[r_i, t_i] += ΔΩ * v.t
+            solid_angle[r_i, t_i] += ΔΩ
+        end
+    end
+
+    solid_angle, output
+end
+
+function bin_time_grid(r_bins, ph_bins, sky::AdaptiveSky)
+    output = zeros(Float64, (length(r_bins), length(ph_bins)))
+    solid_angle = deepcopy(output)
+    bin_time_grid!(output, solid_angle, r_bins, ph_bins, sky)
+    for i in eachindex(solid_angle)
+        if solid_angle[i] > 0
+            output[i] /= solid_angle[i]
+        end
+    end
+    output
 end
 
 """
@@ -347,6 +469,10 @@ function interpolate_emissivity_grid!(output::AbstractMatrix{T}, r_bins, ϕ_bins
         x = @views ϕ_bins[I]
         y = @views col[I]
 
+        # stack some either side so we have smooth
+        X = vcat(x .- 2π, x, x .+ 2π)
+        Y = vcat(y, y, y)
+
         itp = NaNLinearInterpolator(x, y, NaN)
 
         for (j, ϕ) in enumerate(ϕ_bins)
@@ -355,6 +481,25 @@ function interpolate_emissivity_grid!(output::AbstractMatrix{T}, r_bins, ϕ_bins
     end
 
     output
+end
+
+struct AxisLimits
+    l1::UnitRange{Int}
+    l2::UnitRange{Int}
+end
+AxisLimits(l1::UnitRange{Int}) = AxisLimits(l1, 1:0)
+
+# TODO: this is allocating...
+_as_index(al::AxisLimits) = Int[al.l1..., al.l2...]
+
+function _is_in(al::AxisLimits, domain, x)
+    in_domain = (x >= domain[first(al.l1)]) && (x <= domain[last(al.l1)])
+    if length(al.l2) != 0
+        in_other_domain = (x >= domain[first(al.l2)]) && (x <= domain[last(al.l2)])
+        in_other_domain || in_domain
+    else
+        in_domain
+    end
 end
 
 """
@@ -394,19 +539,26 @@ function evaluate_refinement_metric(
     metric = empty_fraction,
 )
     N = length(r_bins)
+    @assert length(phi_bins) == N
+
     output = bin_emissivity_grid(m, d, r_bins, phi_bins, sky)
     stencil_size = div(N, split)
 
     function _eval_metric(i, j)
-        r = i:(i+stencil_size)
-        ϕ = j:(j+stencil_size)
-        block = @views output[i:(i+stencil_size), j:(j+stencil_size)]
+        r = AxisLimits(i:(i+stencil_size))
+        ϕ = if j == 0
+            half = div(stencil_size, 2)
+            AxisLimits(1:half, (N-half):N)
+        else
+            AxisLimits(j:(j+stencil_size))
+        end
+        block = @views output[_as_index(r), _as_index(ϕ)]
         (; r, ϕ, score = metric(r, ϕ, block))
     end
 
     axis_itt = 1:(stencil_size÷4):(N-stencil_size)
-
-    [_eval_metric(i, j) for i in axis_itt, j in axis_itt]
+    metrics = [_eval_metric(i, j) for i in axis_itt, j in axis_itt]
+    vcat([_eval_metric(i, 0) for i in axis_itt], vec(metrics))
 end
 
 @enum StepBlockCodes begin
@@ -462,7 +614,7 @@ function step_block!(
     metric = empty_fraction,
     kwargs...,
 )
-    r_bins = collect(Grids._geometric_grid(isco(m), 1000.0, N))
+    r_bins = logrange(isco(m), 1000.0, N)
     phi_bins = range(0, 2π, N)
 
     _counts = evaluate_refinement_metric(
@@ -475,7 +627,7 @@ function step_block!(
         metric = metric,
     )
 
-    _counts = filter(i -> i.score != 0, vec(_counts))
+    _counts = filter(i -> i.score != 0, _counts)
     sort!(_counts; by = i -> i.score)
 
     if check_threshold
@@ -486,15 +638,13 @@ function step_block!(
     end
 
     lims = map(1:min(length(_counts), top)) do index
-        r_min, r_max = @views extrema(r_bins[_counts[index].r])
-        phi_min, phi_max = @views extrema(phi_bins[_counts[index].ϕ])
-        (; r = (r_min, r_max), ϕ = (phi_min, phi_max))
+        (; r = _counts[index].r, ϕ = _counts[index].ϕ)
     end
 
     refiner = fine_refine_function(; percentage = percentage) do v
         for lim in lims
-            in_r = (v.r >= lim.r[1]) && (v.r <= lim.r[2])
-            in_ϕ = (mod2pi(v.ϕ) >= lim.ϕ[1]) && (mod2pi(v.ϕ) <= lim.ϕ[2])
+            in_r = _is_in(lim.r, r_bins, v.r)
+            in_ϕ = _is_in(lim.ϕ, phi_bins, mod2pi(v.ϕ))
             if in_r && in_ϕ
                 return true
             end
@@ -559,6 +709,15 @@ function fine_refine_function(f; kwargs...)
     end
 end
 
+function refine_to_level(n)
+    function refiner(sky, i1, i2)
+        if isnan(sky.values[i1].r) && isnan(sky.values[i2].r)
+            return false
+        end
+        (sky.grid.cells[i2].level < n)
+    end
+end
+
 """
     function adaptive_solve!(
         m::AbstractMetric,
@@ -598,6 +757,7 @@ function adaptive_solve!(
         color = :none,
         showspeed = true,
         enabled = verbose,
+        dt = 0.2,
     )
 
     function showvals(N)
@@ -627,11 +787,12 @@ function adaptive_solve!(
 
     r_isco = isco(m)
 
+    # ensure innermost radii are well refined
     trace_step!(
         sky;
         check_refine = fine_refine_function(
             v -> (v.r > r_isco) && (v.r < 2.0);
-            percentage = 50,
+            percentage = 20,
         ),
         progress_bar = progress,
         showvalues = showvals,
@@ -655,6 +816,25 @@ function adaptive_solve!(
             break
         end
     end
+
+    # TODO: these should be interpolatable, but always good to be on the safe
+    # side
+    trace_step!(
+        sky;
+        check_refine = refine_to_level(4),
+        verbose = true,
+        progress_bar = progress,
+        showvalues = showvals,
+    )
+    i += 1
+    trace_step!(
+        sky;
+        check_refine = refine_to_level(5),
+        verbose = true,
+        progress_bar = progress,
+        showvalues = showvals,
+    )
+    i += 1
 
     ProgressMeter.finish!(progress)
 
