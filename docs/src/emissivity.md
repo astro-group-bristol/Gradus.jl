@@ -55,12 +55,6 @@ sample_position_velocity
 RadialDiscProfile
 ```
 
-## Voronoi disc profile
-
-```@docs
-VoronoiDiscProfile
-```
-
 ## Emissivity profile algorithms
 
 In this case, we must be careful to weight the emissivity accordingly:

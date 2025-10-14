@@ -14,7 +14,6 @@ using DiffEqCallbacks
 using StaticArrays
 using Optim
 using DataInterpolations
-using VoronoiCells
 using Roots
 import SimpleNonlinearSolve
 using ProgressMeter
@@ -338,9 +337,22 @@ end
 """
     AbstractDiscProfile
 
-Abstract type for binning structures over discs (e.g., radial bins, voronoi).
+Abstract type for binning structures over discs.
 """
 abstract type AbstractDiscProfile end
+
+emissivity_at(prof::AbstractDiscProfile, ::AbstractGeodesicPoint) =
+    error("Not implemented for $(typeof(prof))")
+
+coordtime_at(prof::AbstractDiscProfile, ::AbstractGeodesicPoint) =
+    error("Not implemented for $(typeof(prof))")
+
+emissivity_at(prof::AbstractDiscProfile, v::AbstractArray) =
+    map(i -> emissivity_at(prof, i), v)
+coordtime_at(prof::AbstractDiscProfile, v::AbstractArray) =
+    map(i -> coordtime_at(prof, i), v)
+
+export emissivity_at, coordtime_at
 
 """
     abstract type AbstractCoronaModel{T}
@@ -494,7 +506,8 @@ include("transfer-functions/integration.jl")
 
 include("corona/samplers.jl")
 include("corona/corona-models.jl")
-include("corona/disc-profiles.jl")
+include("corona/radial.jl")
+include("corona/analytic.jl")
 # needs the types from disc profiles so defer include
 include("transfer-functions/transfer-functions-2d.jl")
 include("corona/flux-calculations.jl")

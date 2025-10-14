@@ -111,14 +111,4 @@ function energy_ratio(m::AbstractMetric, gp::GeodesicPoint, v_src, v_disc)
     e_src / e_disc
 end
 
-function flux_source_to_disc(
-    m::AbstractMetric,
-    model::AbstractCoronaModel,
-    vdp::VoronoiDiscProfile;
-    kwargs...,
-)
-    areas = getareas(vdp)
-    flux_source_to_disc(m, model, vdp.geodesic_points, areas; kwargs...)
-end
-
 export flux_source_to_disc
