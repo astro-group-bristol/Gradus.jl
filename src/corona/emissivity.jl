@@ -128,7 +128,7 @@ local to global coordinates.
 This function assumes axis symmetry, and therefore always interpolates the
 emissivity as a function of the radial coordinate on the disc. If non-symmetric
 profiles are desired, consider using [`tracecorona`](@ref) with a profile
-constructor, e.g. [`VoronoiDiscProfile`](@ref).
+constructor.
 """
 function emissivity_profile(
     m::AbstractMetric{T},
