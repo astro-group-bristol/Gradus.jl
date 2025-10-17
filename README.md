@@ -4,6 +4,9 @@
 
 # Gradus.jl
 
+<a href="https://ascl.net/2503.035">
+    <img src="https://img.shields.io/badge/ascl-2503.035-blue.svg?colorB=262255" alt="ascl:2503.035" />
+</a>
 <a href="https://codecov.io/gh/astro-group-bristol/Gradus.jl">
     <img src="https://codecov.io/gh/astro-group-bristol/Gradus.jl/branch/main/graph/badge.svg?token=A91E22KZR5"/>
 </a>
@@ -15,7 +18,7 @@
 </a>
 <a href="https://doi.org/10.5281/zenodo.6471796">
     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.6471796.svg" alt="DOI">
-</a> 
+</a>
 <a href="https://astro-group-bristol.github.io/Gradus.jl/dev/">
     <img alt="Docs" src="https://img.shields.io/badge/docs-dev-blue.svg"/>
 </a>
@@ -71,11 +74,19 @@ julia> using Gradus
 
 See [GettingStarted](https://astro-group-bristol.github.io/Gradus.jl/dev/getting-started/) for setting up your first traces.
 
-## See also 
+## See also
 
 - [The Julia programming language](https://github.com/JuliaLang/Julia)
 - [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl)
 - [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
+
+## Citing
+
+If you use Gradus.jl in your work, please cite [Baker & Young (2025)](./CITATION.bib).
+
+There are various other ways to reference Gradus.jl:
+- [ascl:2503.035](https://ascl.net/2503.035)
+- [10.5281/zenodo.6471796](https://zenodo.org/records/6471796)
 
 <hr>
 
