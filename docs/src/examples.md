@@ -107,7 +107,7 @@ pf = ConstPointFunctions.redshift(m, x) ∘ ConstPointFunctions.filter_intersect
     d,
     # maximum integration time
     2000.0,
-    αlims = (-60, 60), 
+    αlims = (-60, 60),
     βlims = (-30, 35),
     image_width = 800,
     image_height = 400,
@@ -119,7 +119,7 @@ heatmap(α, β, img, aspect_ratio = 1)
 ```
 ![](./example-figures/example-redshift.png)
 
-## Redshift line-profile 
+## Redshift line-profile
 
 Using the redshift example, we can bin a redshift line-profile using [StatsBase.jl](https://juliastats.org/StatsBase.jl/stable/empirical/#StatsBase.Histogram). We'll calculate the iron line redshift profile, with a delta-emission at 6.4 keV.
 
@@ -132,7 +132,7 @@ redshift_data = filter(!isnan, vec(img))
 # transpose to iron-line
 data = redshift_data .* 6.4
 
-x_bins = range(0.0, 10.0, 100) 
+x_bins = range(0.0, 10.0, 100)
 lineprof = fit(Histogram, data, x_bins)
 
 plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)
@@ -195,7 +195,7 @@ tf = @time lagtransfer(
 # compute the continuum spectrum arrival time
 t0 = continuum_time(m, x, model)
 
-# bin into a 2d grid, returning the time and energy axis, 
+# bin into a 2d grid, returning the time and energy axis,
 # and the flux in each bin
 t, E, f = binflux(tf, N_E = 1500, N_t = 1500, t0 = t0)
 
@@ -231,11 +231,10 @@ gbins = collect(range(0.0, 1.4, 500))
 tbins = collect(range(0, 150.0, 500))
 
 flux = Gradus.integrate_lagtransfer(
-    prof, 
-    itb, 
-    radii, 
-    gbins, 
-    tbins; 
+    prof,
+    itb,
+    gbins,
+    tbins;
     t0 = t0,
     Nr = 6000
 )
@@ -277,7 +276,7 @@ a, b, img = @time rendergeodesics(
     verbose = true,
     pf = pf,
     # instruct the integrator to solve the covariant radiative transfer equation
-    αlims = (-25, 25), 
+    αlims = (-25, 25),
     βlims = (-15, 18),
     trace = Gradus.TraceRadiativeTransfer(I₀ = 0),
 )
@@ -335,8 +334,8 @@ using Gradus, Plots
 m = KerrMetric(1.0, 0.0)
 x = SVector(0.0, 1000.0, deg2rad(85), 0.0)
 
-# define the disc shape -- return a negative number 
-# where the disc should not be intersected, else the cross 
+# define the disc shape -- return a negative number
+# where the disc should not be intersected, else the cross
 # sectional height
 d = ThickDisc() do ρ
     if ρ < 9.0 || ρ > 11.0
@@ -353,7 +352,7 @@ end
     x,
     d,
     2000.0,
-    αlims = (-25, 25), 
+    αlims = (-25, 25),
     βlims = (-15, 18),
     verbose = true,
     pf = pf
@@ -470,11 +469,11 @@ as = range(0, 1.0, 100)
 
 img = calc_exclusion(as, ϵs)
 heatmap(
-    as, 
-    ϵs, 
-    img', 
-    colorbar = false, 
-    xlabel = "a", 
+    as,
+    ϵs,
+    img',
+    colorbar = false,
+    xlabel = "a",
     ylabel = "ϵ"
 )
 ```
@@ -573,16 +572,16 @@ end
 # convenience constructor
 HotSpot(R::T, r::T, ϕ::T) where {T} = HotSpot(R, SVector(r, π/2, ϕ))
 
-# we don't have an intersection criteria: instead, the calculations 
+# we don't have an intersection criteria: instead, the calculations
 # are treated as if we are always within geometry
 Gradus.is_finite_disc(::Type{<:HotSpot}) = false
 
 # Keplerian circular orbit fixed velocity
 function Gradus.fluid_velocity(
-    m::AbstractMetric, 
-    hs::HotSpot, 
-    x, 
-    r_isco, 
+    m::AbstractMetric,
+    hs::HotSpot,
+    x,
+    r_isco,
     λ
 )
     CircularOrbits.fourvelocity(m, hs.position[1])
@@ -610,11 +609,11 @@ x = SVector(0.0, 10_000.0, deg2rad(75), 0.0)
 hs = HotSpot(0.7, Gradus.isco(m) * 1.1, -1.0)
 
 a, b, img = rendergeodesics(
-    m, 
-    x, 
-    hs, 
-    20_000.0, 
-    verbose = true, 
+    m,
+    x,
+    hs,
+    20_000.0,
+    verbose = true,
     αlims = (-15, 15),
     βlims = (-10, 10),
     trace = Gradus.TraceRadiativeTransfer(I₀ = 0.0),
