@@ -74,7 +74,7 @@ pf = ConstPointFunctions.redshift(m, x) ∘ ConstPointFunctions.filter_intersect
     d,
     # maximum integration time
     2000.0,
-    αlims = (-60, 60), 
+    αlims = (-60, 60),
     βlims = (-30, 35),
     image_width = 800,
     image_height = 400,
@@ -90,7 +90,7 @@ redshift_data = filter(!isnan, vec(img))
 # transpose to iron-line
 data = redshift_data .* 6.4
 
-x_bins = range(0.0, 10.0, 100) 
+x_bins = range(0.0, 10.0, 100)
 lineprof = fit(Histogram, data, x_bins)
 
 plot(x_bins[1:end-1], lineprof.weights, seriestype = :steppre)</code></pre><p><img src="../example-figures/example-redshift-histogram.svg" alt/></p><h2 id="Line-profiles"><a class="docs-heading-anchor" href="#Line-profiles">Line profiles</a><a id="Line-profiles-1"></a><a class="docs-heading-anchor-permalink" href="#Line-profiles" title="Permalink"></a></h2><p>Line profiles may be calculated using two different methods – using image-plane binning and integrating Cunningham transfer functions – both of which are implemented in Gradus.jl. By default, the Cunningham transfer function method is used, however passing either <code>BinnedLineProfile()</code> or <code>CunninghamLineProfile()</code> as the first argument to <code>lineprofile</code> allows for explicit specification of the algorithm.</p><p>For a simple maximally-spinning Kerr black hole, the iron line profile (with a delta emission line at 6.4 keV) may be calculated with:</p><pre><code class="language-julia hljs">d = ThinDisc(0.0, 400.0)
@@ -133,7 +133,7 @@ tf = @time lagtransfer(
 # compute the continuum spectrum arrival time
 t0 = continuum_time(m, x, model)
 
-# bin into a 2d grid, returning the time and energy axis, 
+# bin into a 2d grid, returning the time and energy axis,
 # and the flux in each bin
 t, E, f = binflux(tf, N_E = 1500, N_t = 1500, t0 = t0)
 
@@ -162,11 +162,10 @@ gbins = collect(range(0.0, 1.4, 500))
 tbins = collect(range(0, 150.0, 500))
 
 flux = Gradus.integrate_lagtransfer(
-    prof, 
-    itb, 
-    radii, 
-    gbins, 
-    tbins; 
+    prof,
+    itb,
+    gbins,
+    tbins;
     t0 = t0,
     Nr = 6000
 )
@@ -201,7 +200,7 @@ a, b, img = @time rendergeodesics(
     verbose = true,
     pf = pf,
     # instruct the integrator to solve the covariant radiative transfer equation
-    αlims = (-25, 25), 
+    αlims = (-25, 25),
     βlims = (-15, 18),
     trace = Gradus.TraceRadiativeTransfer(I₀ = 0),
 )
@@ -238,8 +237,8 @@ heatmap(α, β, img)</code></pre><p><img src="../example-figures/example-interpo
 m = KerrMetric(1.0, 0.0)
 x = SVector(0.0, 1000.0, deg2rad(85), 0.0)
 
-# define the disc shape -- return a negative number 
-# where the disc should not be intersected, else the cross 
+# define the disc shape -- return a negative number
+# where the disc should not be intersected, else the cross
 # sectional height
 d = ThickDisc() do ρ
     if ρ &lt; 9.0 || ρ &gt; 11.0
@@ -256,7 +255,7 @@ end
     x,
     d,
     2000.0,
-    αlims = (-25, 25), 
+    αlims = (-25, 25),
     βlims = (-15, 18),
     verbose = true,
     pf = pf
@@ -337,11 +336,11 @@ as = range(0, 1.0, 100)
 
 img = calc_exclusion(as, ϵs)
 heatmap(
-    as, 
-    ϵs, 
-    img&#39;, 
-    colorbar = false, 
-    xlabel = &quot;a&quot;, 
+    as,
+    ϵs,
+    img&#39;,
+    colorbar = false,
+    xlabel = &quot;a&quot;,
     ylabel = &quot;ϵ&quot;
 )</code></pre><p><img src="../example-figures/example-exclusion.png" alt/></p><h2 id="Cunningham-transfer-functions"><a class="docs-heading-anchor" href="#Cunningham-transfer-functions">Cunningham transfer functions</a><a id="Cunningham-transfer-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Cunningham-transfer-functions" title="Permalink"></a></h2><p>Recreating Fig. 1 and 2 from <a href="https://iopscience.iop.org/article/10.3847/1538-4357/aa74c0">Bambi et al. (2017)</a> for the transfer functions of a Kerr black hole</p><pre><code class="language-julia hljs">using Gradus, Plots
 
@@ -401,16 +400,16 @@ end
 # convenience constructor
 HotSpot(R::T, r::T, ϕ::T) where {T} = HotSpot(R, SVector(r, π/2, ϕ))
 
-# we don&#39;t have an intersection criteria: instead, the calculations 
+# we don&#39;t have an intersection criteria: instead, the calculations
 # are treated as if we are always within geometry
 Gradus.is_finite_disc(::Type{&lt;:HotSpot}) = false
 
 # Keplerian circular orbit fixed velocity
 function Gradus.fluid_velocity(
-    m::AbstractMetric, 
-    hs::HotSpot, 
-    x, 
-    r_isco, 
+    m::AbstractMetric,
+    hs::HotSpot,
+    x,
+    r_isco,
     λ
 )
     CircularOrbits.fourvelocity(m, hs.position[1])
@@ -438,15 +437,15 @@ x = SVector(0.0, 10_000.0, deg2rad(75), 0.0)
 hs = HotSpot(0.7, Gradus.isco(m) * 1.1, -1.0)
 
 a, b, img = rendergeodesics(
-    m, 
-    x, 
-    hs, 
-    20_000.0, 
-    verbose = true, 
+    m,
+    x,
+    hs,
+    20_000.0,
+    verbose = true,
     αlims = (-15, 15),
     βlims = (-10, 10),
     trace = Gradus.TraceRadiativeTransfer(I₀ = 0.0),
     pf = PointFunction((m, gp, t) -&gt; gp.aux[1]),
 )
 
-heatmap(a, b, img)</code></pre><p><img src="../example-figures/example-hot-spot-slow.png" alt/></p><p>In the fast light regime, with an initial radial angle of <code>-2.6</code> gives a very different picture</p><p><img src="../example-figures/example-hot-spot-fast.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../getting-started/">« Getting started</a><a class="docs-footer-nextpage" href="../metrics/">Catalogue of metrics »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Tuesday 14 October 2025 15:05">Tuesday 14 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+heatmap(a, b, img)</code></pre><p><img src="../example-figures/example-hot-spot-slow.png" alt/></p><p>In the fast light regime, with an initial radial angle of <code>-2.6</code> gives a very different picture</p><p><img src="../example-figures/example-hot-spot-fast.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../getting-started/">« Getting started</a><a class="docs-footer-nextpage" href="../metrics/">Catalogue of metrics »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Friday 17 October 2025 07:37">Friday 17 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
