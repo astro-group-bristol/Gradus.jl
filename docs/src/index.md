@@ -44,10 +44,11 @@ We assume you already have Julia >1.6.
 All non-General dependencies for Gradus.jl are in the [AstroRegistry](https://github.com/astro-group-bristol/AstroRegistry) which can be added to Julia with:
 
 ```julia
+julia>] registry add https://github.com/JuliaRegistries/General
 julia>] registry add https://github.com/astro-group-bristol/AstroRegistry
 ```
 
-NB: the [Julia General Registry](https://github.com/JuliaRegistries/General) is required to install Gradus, however this should be configured by default with any Julia installation.
+NB: the [Julia General Registry](https://github.com/JuliaRegistries/General) is required to install Gradus, however this should be configured by default with any Julia installation. If you have a branch new Julia installation, adding the AstroRegistry can replace the General registry, and so the installation instructions add both.
 
 Gradus.jl can then be fetched easily:
 ```julia
@@ -57,7 +58,7 @@ julia> using Gradus
 
 See [GettingStarted](https://astro-group-bristol.github.io/Gradus.jl/dev/getting-started/) for setting up your first traces.
 
-## See also 
+## See also
 
 - [The Julia programming language](https://github.com/JuliaLang/Julia)
 - [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl)

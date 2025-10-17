@@ -1,5 +1,8 @@
 ## Getting started
 
+!!! warn
+    This is a relatively slow-paced but detailed look at general relativistic ray-tracing (GRRT) and how it is implemented in Gradus.jl. If you're looking to get started quick with Gradus.jl but already know about GRRT, check out [Examples](@ref) instead.
+
 ```@meta
 CurrentModule = Gradus
 ```
@@ -14,7 +17,7 @@ This short getting-started guide should hopefully tour you through some of the f
 geodesic_equation
 ```
 
-The workhorse of Gradus.jl is [`tracegeodesics`](@ref). This function is responsible to setting up ordinary differential equation and solving them, either sequentially, in parallel, or on different hardware. To get started, we must minimally choose a spacetime to trace in, an initial position and an initial velocity for our test photon. 
+The workhorse of Gradus.jl is [`tracegeodesics`](@ref). This function is responsible to setting up ordinary differential equation and solving them, either sequentially, in parallel, or on different hardware. To get started, we must minimally choose a spacetime to trace in, an initial position and an initial velocity for our test photon.
 
 To demonstrate of the features in the library, we will choose the simplest [Schwarzschild spacetime](https://en.wikipedia.org/wiki/Schwarzschild_metric), which describes a spherically symmetric black hole with mass $M$. We will implement this metric ourselves.
 
@@ -52,8 +55,8 @@ struct Schwarzschild{T} <: AbstractStaticAxisSymmetric{T}
 end
 ```
 
-- First we define a `struct` that will parameterise our spacetime. In this case, the mass $M$. We declare our struct to be a _subtype_ of [`AbstractStaticAxisSymmetric`](@ref) since we know our metric will be static (no time dependence) and axis-symmetric (no $\phi$ dependence). This describes the more general [Petrov type D](https://en.wikipedia.org/wiki/Petrov_classification) class of spacetimes, and allows Gradus.jl to make a number of simplifying assumptions under the hood about how this spacetime will behave. 
-- The `T` parameter is the number type of this metric, and dictates the precision of all numerics in the trace. Therefore, if `M` is a `Float32`, Gradus.jl will raise errors if you attempt 64-bit floating point operations when tracing. This is _by design_, since many GPU architectures prefer `Float32` for speed, especially when precision is less important, and throwing errors is preferable to debugging type coercions. 
+- First we define a `struct` that will parameterise our spacetime. In this case, the mass $M$. We declare our struct to be a _subtype_ of [`AbstractStaticAxisSymmetric`](@ref) since we know our metric will be static (no time dependence) and axis-symmetric (no $\phi$ dependence). This describes the more general [Petrov type D](https://en.wikipedia.org/wiki/Petrov_classification) class of spacetimes, and allows Gradus.jl to make a number of simplifying assumptions under the hood about how this spacetime will behave.
+- The `T` parameter is the number type of this metric, and dictates the precision of all numerics in the trace. Therefore, if `M` is a `Float32`, Gradus.jl will raise errors if you attempt 64-bit floating point operations when tracing. This is _by design_, since many GPU architectures prefer `Float32` for speed, especially when precision is less important, and throwing errors is preferable to debugging type coercions.
 
 ```julia
 function Gradus.metric_components(m::Schwarzschild, x)
@@ -119,12 +122,12 @@ using Plots
 
 # plot solution trajectory
 plot_paths(sol)
-# plot 
+# plot
 plot_horizon!(m)
 ```
 ![](./example-figures/getting-started-1-trajectories.svg)
 
-Choosing the initial velocity in this manner lacks interpretation. We can instead use so-called _impact parameters_ $(\alpha, \beta)$. These may be thought of as follows: 
+Choosing the initial velocity in this manner lacks interpretation. We can instead use so-called _impact parameters_ $(\alpha, \beta)$. These may be thought of as follows:
 
 ```@docs
 map_impact_parameters
@@ -160,7 +163,7 @@ julia -t6
 will spawn 6 worker threads for Gradus.jl to use. Passing `-tauto` will allow Julia to use as many threads as your hardware supports.
 
 !!! note
-    For more about parallelism in Gradus.jl, see [Parallelism and ensembles](@ref). 
+    For more about parallelism in Gradus.jl, see [Parallelism and ensembles](@ref).
 
 ## 3 Rendering an image
 
@@ -186,9 +189,9 @@ To help us process the solutions, Gradus.jl exports a number of utility function
 
 ```@docs
 unpack_solution
-``` 
- 
-The [`GeodesicPoint`](@ref) struct contains everything we might want to know about the start and endpoint of a geodesic solution, including four-velocities and the nature of the termination (fell into the black hole, went to infinity, collided with some geometry, etc.). 
+```
+
+The [`GeodesicPoint`](@ref) struct contains everything we might want to know about the start and endpoint of a geodesic solution, including four-velocities and the nature of the termination (fell into the black hole, went to infinity, collided with some geometry, etc.).
 
 We can easily filter those geodesic that fell into the black hole, and extract their final coordinate times $x^t({\lambda_\text{final}})$:
 
@@ -244,14 +247,14 @@ Point functions can also be used in other contexts. For example, [`rendergeodesi
 ```julia
 # this function returns the impact parameter axes
 α, β, image = rendergeodesics(
-    m, 
+    m,
     x,
     # no longer need to specify the velocities
     # these are automatically calculated
-    λ_max, 
-    pf = pf, 
+    λ_max,
+    pf = pf,
     # image parameters
-    image_width = 800, 
+    image_width = 800,
     image_height = 800,
     # the "zoom" -- use the impact parameter axes
     αlims = (-10, 10),
@@ -308,7 +311,7 @@ We then wrap our cross section function as a [`ThickDisc`](@ref) type:
 d = ThickDisc(r -> cross_section(r))
 ```
 
-The thick disc callback receives the full four-position, so we forward only the radial component. 
+The thick disc callback receives the full four-position, so we forward only the radial component.
 
 We now need to update our point function so that it filters those geodesics which intersected with the geometry instead of those that fell into the black hole. This is a standard function already implemented in [`ConstPointFunctions`](@ref); only a composition is needed:
 
@@ -323,15 +326,15 @@ We then make a handful of small changes to make our image more interesting, and 
 x = SVector(0.0, 1000.0, deg2rad(70), 0.0)
 
 α, β, image = rendergeodesics(
-    m, 
+    m,
     x,
     # add the disc argument
     d,
-    λ_max, 
+    λ_max,
     # new point function
-    pf = pf_geometry, 
+    pf = pf_geometry,
     # slightly wider image
-    image_width = 1200, 
+    image_width = 1200,
     image_height = 800,
     # zoom out a little
     αlims = (-20, 20),
@@ -351,7 +354,7 @@ A common quantity to look at when ray tracing is the _redshift_ of a photon; tha
 g = \frac{\left. k_\mu u^\mu \right\rvert_\text{obs}}{\left. k_\nu u^\nu \right\rvert_\text{em}},
 ```
 
-where the subscript denote the observer and emitters position respectively. Here, $k_\mu$ is the covariant momentum of the photon, and $u^\mu$ is the velocity of the disc patch, or of the observer respectively. 
+where the subscript denote the observer and emitters position respectively. Here, $k_\mu$ is the covariant momentum of the photon, and $u^\mu$ is the velocity of the disc patch, or of the observer respectively.
 
 We can choose any velocity profile we like, but for simplicity we use the velocity of the stable circular orbit at the corresponding radius where the photon hit the disc. The above formula for the redshift $g$ is already implemented with this velocity profile for us -- we need only specify which spacetime we are in and where our observer is positioned:
 
@@ -365,13 +368,13 @@ This is another [`PointFunction`](@ref), and is used in the same way. Rendering 
 
 ```julia
 α, β, image = rendergeodesics(
-    m, 
+    m,
     x,
     d,
-    λ_max, 
+    λ_max,
     # new point function
     pf = redshift_geometry,
-    image_width = 1200, 
+    image_width = 1200,
     image_height = 800,
     αlims = (-20, 20),
     βlims = (-15, 15),
@@ -395,13 +398,13 @@ j_redshift_geometry = j_redshift ∘ ConstPointFunctions.filter_intersected()
 
 α, β, image = rendergeodesics(
     # pass the new metric
-    j_m, 
+    j_m,
     x,
     d,
-    λ_max, 
+    λ_max,
     # and the new point function
     pf = j_redshift_geometry,
-    image_width = 1200, 
+    image_width = 1200,
     image_height = 800,
     αlims = (-20, 20),
     βlims = (-15, 15),
@@ -449,10 +452,10 @@ With that, we are ready to calculate the line profiles. To avoid having to reuse
 ```julia
 function calculate_line_profile(m, x, d, bins, plane)
     _, f = lineprofile(
-        m, 
-        x, 
-        d, 
-        method = BinningMethod(), 
+        m,
+        x,
+        d,
+        method = BinningMethod(),
         # no false images
         callback = domain_upper_hemisphere(),
         verbose = true,
